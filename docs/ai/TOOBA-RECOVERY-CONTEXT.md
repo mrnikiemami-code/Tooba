@@ -1,3 +1,18 @@
+# CURRENT — R19 CONSOLIDATED STORY CLOSURE ISSUED — 2026-11-21
+
+Task: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/TASK.md
+Source audit: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/SOURCE-AUDIT-AND-ISSUANCE.md
+Expected implementation base: d3de64c2c6692b551c8193e842bdd04fe99ceded; incorporates informal 16da85143/d3de64c2 work. Owner explicitly requests ONE task covering ALL confirmed audit defects; not another cosmetic-only result.
+Scope: connected admin/seller/public workflows; stop binding, query filters/state, truthful Approved display/seller return, verifiable receipts + safe uncertain retries, proper Story permissions/context, language/error/leave/picker state, media replacement, no persistent appended messages, public caption/cover/timing/eligibility, focused real-contract/mounted/served proof and release-build diagnosis.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+No Story/product/owner/release acceptance issued. Prior R18 worker PASS and later partial source acceptances are historical, not completion.
+Latest prior worker REPORTED deleting old stories and leaving four CTA test records; not independently verified. Do NOT carry R18 ZERO-live-write claim forward over that work. R19 authorizes no further live business mutations/cleanup/restore/grants/seeds/config/schema changes. Preserve R6 effects UNKNOWN and existing user data.
+Host5088 skip-bootstrap=1 / FE3000 only; production Html404 blocker requires truthful final build outcome. Preserve VendorShell, registered locale/permission/Media authorities, Returns and payout backlog.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — TB-282-R18 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/TASK.md` and

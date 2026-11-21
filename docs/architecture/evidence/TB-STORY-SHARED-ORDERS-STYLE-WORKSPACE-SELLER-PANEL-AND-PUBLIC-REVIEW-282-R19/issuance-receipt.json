@@ -1,0 +1,12 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "parentTask": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18",
+  "expectedBaseSHA": "d3de64c2c6692b551c8193e842bdd04fe99ceded",
+  "taskSHA256": "46abae2d81b23bf5f1ea651a38aba3b563082c6a1628e4feae2800ec66c39671",
+  "issuedDate": "2026-11-21",
+  "timezone": "Asia/Tehran",
+  "authority": "Owner explicitly requested one consolidated task fixing the complete confirmed source audit",
+  "bridge": "Not enqueued through Bridge here; exact committed TASK.md is canonical",
+  "implementationStatus": "ISSUED_NOT_EXECUTED",
+  "automaticNextImplementationTask": "NONE"
+}
