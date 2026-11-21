@@ -1,0 +1,43 @@
+{
+  "protocol": "TOOBA-DELIVERY-001",
+  "taskId": "REPLACE_WITH_ACTUAL_TASK_ID",
+  "baseSha": "REPLACE_WITH_40_HEX",
+  "codeSha": "REPLACE_WITH_FINAL_CODE_40_HEX",
+  "architecturePlan": "ARCHITECTURE-PLAN.md",
+  "waves": [
+    {
+      "id": "W1",
+      "dependsOn": [],
+      "requirementIds": [
+        "REQ-01"
+      ],
+      "status": "PLANNED"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "status": "OPEN",
+      "scenarios": [
+        {
+          "id": "S-01",
+          "kind": "mounted-transport-and-independent-reread",
+          "steps": "REPLACE_WITH_PRECONDITIONS_ACTION_AND_EXPECTED_EFFECT",
+          "status": "NOT_RUN",
+          "evidence": [
+            {
+              "file": "receipts/REPLACE_WITH_ACTUAL_LOG_FILE",
+              "kind": "REPLACE_WITH_ACTUAL_PROOF_LEVEL",
+              "provider": "REPLACE_WITH_ACTUAL_PROVIDER_OR_BROWSER",
+              "phase": "after",
+              "codeSha": "REPLACE_WITH_FINAL_CODE_40_HEX",
+              "sha256": "REPLACE_WITH_ACTUAL_FILE_SHA256"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "architecturePlanSha256": "REPLACE_WITH_PLAN_SHA256",
+  "planCommit": "REPLACE_WITH_PRE_IMPLEMENTATION_PLAN_COMMIT"
+}

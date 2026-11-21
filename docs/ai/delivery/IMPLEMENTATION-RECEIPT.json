@@ -1,0 +1,19 @@
+{
+  "protocol": "TOOBA-DELIVERY-001",
+  "version": "1.0",
+  "date": "2026-11-21",
+  "baseSha": "1fc58b2699b22cb51da6b1a00a2dca17f5878357",
+  "changeScope": "Governance documents, templates and local structural readiness checker only",
+  "checks": {
+    "command": "node --test docs/ai/delivery/check-readiness.test.mjs",
+    "passed": 6,
+    "failed": 0,
+    "environment": "controlled temporary fixtures, no application/DB/runtime use"
+  },
+  "limitations": [
+    "Not integrated with CI or Bridge runtime",
+    "Checker verifies completeness/hash/scope, not truth or sufficiency of evidence",
+    "No Story defect fixed or accepted by this change"
+  ],
+  "liveBusinessWrite": "NONE"
+}

@@ -272,3 +272,7 @@ The following are historical only and must not be used operationally:
 Current authority is a valid Task actually received from Bridge on the Worker's
 configured channel after a `BRIDGE-WAKE`. Historical task/result records remain
 unchanged.
+
+## Mandatory planning and delivery assurance — TOOBA-DELIVERY-001
+
+Read [the delivery architecture](../architecture/TOOBA-DELIVERY-ASSURANCE.md) before implementation or result review. Before production edits, the claimed task must have ARCHITECTURE-PLAN.md, fixed REQ/scenario coverage and ordered internal waves. Use the [established task template](delivery/TASK-TEMPLATE.task.md), [plan template](delivery/PLAN-TEMPLATE.md) and [delivery ledger](delivery/DELIVERY-TEMPLATE.json). Run the plan gate before edits and review gate before the final Result. Gate success is structural readiness only: Architect independently inspects source, tests, provider and served evidence. Missing mandatory scenarios/proof means PARTIAL/BLOCKED, not narrowed-scope PASS. This adds no Bridge enum, endpoint, idle activity or task-dispatch rule. Internal checkpoints continue within the same claimed task; no additional owner confirmation for routine authorized work. Worker PASS remains a technical claim; body Readiness may say READY_FOR_ARCHITECT_REVIEW, never Architect/owner acceptance.
