@@ -327,7 +327,7 @@ test("R20 A3b: content updates prove the requested text/media, not just the stor
     path: `/v1/admin/stories/${STORY}`,
     routeTargetId: STORY,
     expectedVersion: 8,
-    bodyText: JSON.stringify({ title: "عنوان تازه", locale: "fa", expectedVersion: 8, occurrenceKey: "occ-r20-update" }),
+    bodyText: JSON.stringify({ title: "عنوان تازه", locale: "fa", startAt: "2026-11-21T08:00:00Z", endAt: "2026-11-22T08:00:00Z", expectedVersion: 8, occurrenceKey: "occ-r20-update" }),
     uploadMeta: null,
     addBodyText: null,
     uploadedAssetId: null,
@@ -337,10 +337,20 @@ test("R20 A3b: content updates prove the requested text/media, not just the stor
     actorUserId: "actor-r20-admin",
     recordedAt: new Date().toISOString(),
   };
-  const oldStory = { data: { storyId: STORY, title: "عنوان قبلی", locale: "fa", versionToken: 9 } };
-  const newStory = { data: { storyId: STORY, title: "عنوان تازه", locale: "fa", versionToken: 9 } };
+  const oldStory = { data: { storyId: STORY, title: "عنوان قبلی", locale: "fa", startAt: "2026-11-20T08:00:00Z", endAt: "2026-11-23T08:00:00Z", versionToken: 9 } };
+  const newStory = { data: { storyId: STORY, title: "عنوان تازه", locale: "fa", startAt: "2026-11-21T08:00:00Z", endAt: "2026-11-22T08:00:00Z", versionToken: 9 } };
   assert.equal(verifyStorySuccessPayload(update, oldStory).ok, false);
   assert.equal(verifyStorySuccessPayload(update, newStory).ok, true);
+  assert.equal(
+    verifyStorySuccessPayload(update, { data: { ...newStory.data, startAt: "2026-11-21T09:00:00Z" } }).ok,
+    false,
+    "a different start window is not a completed save",
+  );
+  assert.equal(
+    verifyStorySuccessPayload(update, { data: { ...newStory.data, endAt: "2026-11-22T09:00:00Z" } }).ok,
+    false,
+    "a different end window is not a completed save",
+  );
 
   const updateItem: StoryIntentEnvelope = {
     ...update,

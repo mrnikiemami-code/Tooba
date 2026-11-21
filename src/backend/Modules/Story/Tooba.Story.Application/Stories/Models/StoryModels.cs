@@ -44,7 +44,8 @@ public sealed record AdminStoryItemSnapshot(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     /// <summary>عنوان محصول مالک برای CTA محصول؛ null یعنی ناموجود/غیرمجاز در scope فعلی.</summary>
-    string? CtaProductTitle = null);
+    string? CtaProductTitle = null,
+    string? CtaHref = null);
 
 /// <summary>نمای مدیریتی/فروشنده کامل استوری.</summary>
 public sealed record AdminStorySnapshot(

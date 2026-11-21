@@ -161,6 +161,14 @@ function sameNumber(expected: unknown, actual: unknown): boolean {
   return Number.isFinite(expectedNumber) && expectedNumber === actualNumber;
 }
 
+function sameInstant(expected: unknown, actual: unknown): boolean {
+  if (expected == null || expected === "") return actual == null || actual === "";
+  if (actual == null || actual === "") return false;
+  const expectedMs = Date.parse(String(expected));
+  const actualMs = Date.parse(String(actual));
+  return Number.isFinite(expectedMs) && Number.isFinite(actualMs) && expectedMs === actualMs;
+}
+
 function parseEnvelopeBody(envelope: StoryIntentEnvelope): Record<string, unknown> | null {
   if (!envelope.bodyText) return null;
   try {
@@ -187,6 +195,12 @@ function verifyContentEffect(
     }
     if (body.locale != null && normalizeText(body.locale) != null && !sameText(body.locale, snap.locale)) {
       return { ok: false, reason: "story_locale_unchanged" };
+    }
+    if (carries(body, "startAt") && !sameInstant(body.startAt, snap.startAt)) {
+      return { ok: false, reason: "story_start_unchanged" };
+    }
+    if (carries(body, "endAt") && !sameInstant(body.endAt, snap.endAt)) {
+      return { ok: false, reason: "story_end_unchanged" };
     }
     return { ok: true, data: snap };
   }

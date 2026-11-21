@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ImagePlus, Pause, Play } from "lucide-react";
+import { ImagePlus, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { StoryEmptyState } from "./story-management-ui";
 import type { StoryCopy } from "./story-management-copy";
 import type { AdminStoryItem } from "../story-api";
@@ -13,6 +13,33 @@ function isVideoItem(item: AdminStoryItem | undefined): boolean {
 function photoDurationMs(item: AdminStoryItem | undefined): number {
   const duration = item?.durationMs;
   return duration != null && duration > 0 ? duration : 5000;
+}
+
+function destinationLabel(item: AdminStoryItem, copy: StoryCopy): string {
+  const type = (item.ctaType ?? "").trim().toLowerCase();
+  if (type === "product") return item.ctaProductTitle?.trim() || copy.destinationProduct;
+  if (type === "external") return copy.destinationExternal;
+  if (type === "shop" || type === "seller") return copy.destinationShop;
+  if (type === "internal" || type === "category" || type === "article") return copy.destinationInternal;
+  return copy.destinationUnavailable;
+}
+
+function destinationHref(item: AdminStoryItem): string | null {
+  const type = (item.ctaType ?? "").trim().toLowerCase();
+  if (!type || type === "none") return null;
+  const raw = (item.ctaHref ?? item.ctaTarget ?? "").trim();
+  if (!raw) return null;
+  if (/^(javascript|data|vbscript):/i.test(raw)) return null;
+  if (type === "external") return /^https?:\/\//i.test(raw) ? raw : null;
+  if (!item.ctaHref && /^[0-9a-f-]{36}$/i.test(raw)) return null;
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  if (typeof window === "undefined") return path;
+  const prefix = window.location.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+  if (prefix === "fa" || prefix === "en") {
+    if (path === `/${prefix}` || path.startsWith(`/${prefix}/`)) return path;
+    return `/${prefix}${path}`;
+  }
+  return path;
 }
 
 export function StoryPreviewPlayer({
@@ -30,11 +57,13 @@ export function StoryPreviewPlayer({
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const current = items[index];
   const video = isVideoItem(current);
+  const ctaHref = current ? destinationHref(current) : null;
 
   useEffect(() => {
     setIndex((value) => Math.min(value, Math.max(0, items.length - 1)));
@@ -72,7 +101,6 @@ export function StoryPreviewPlayer({
     if (video) {
       const element = videoRef.current;
       if (!element) return;
-      element.muted = true;
       void element.play()?.catch(() => undefined);
       const onTime = () => {
         const duration = element.duration;
@@ -133,15 +161,29 @@ export function StoryPreviewPlayer({
     <aside className="rounded-xl border border-border bg-background/40 p-4" data-testid={testId}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-foreground">{copy.previewHeading}</h3>
-        <button
-          type="button"
-          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-surface"
-          aria-label={paused ? copy.previewPlay : copy.previewPause}
-          title={paused ? copy.previewPlay : copy.previewPause}
-          onClick={() => setPaused((value) => !value)}
-        >
-          {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-surface"
+            aria-label={paused ? copy.previewPlay : copy.previewPause}
+            title={paused ? copy.previewPlay : copy.previewPause}
+            onClick={() => setPaused((value) => !value)}
+          >
+            {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+          </button>
+          {video ? (
+            <button
+              type="button"
+              className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-surface"
+              aria-label={muted ? copy.previewUnmute : copy.previewMute}
+              title={muted ? copy.previewUnmute : copy.previewMute}
+              onClick={() => setMuted((value) => !value)}
+              data-testid="story-preview-mute"
+            >
+              {muted ? <VolumeX className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div
@@ -174,7 +216,7 @@ export function StoryPreviewPlayer({
             ref={videoRef}
             src={current.mediaUrl ?? undefined}
             className="aspect-[9/16] max-h-[22rem] w-full object-contain"
-            muted
+            muted={muted}
             playsInline
             autoPlay
             data-testid="story-preview-video"
@@ -200,6 +242,24 @@ export function StoryPreviewPlayer({
             <p className="mt-1 text-sm text-white" data-testid="story-preview-caption">
               {current.caption}
             </p>
+          ) : null}
+          {current.ctaType !== "none" ? (
+            <div className="pointer-events-auto mt-2 flex flex-wrap items-center gap-2" data-testid="story-preview-cta-destination">
+              <span className="text-xs text-white/75">
+                {copy.destinationPrefix} {destinationLabel(current, copy)}
+              </span>
+              {ctaHref ? (
+                <a
+                  href={ctaHref}
+                  className="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-black"
+                  data-testid="story-preview-cta"
+                >
+                  {copy.previewCta}
+                </a>
+              ) : (
+                <span className="text-xs font-bold text-amber-300">{copy.destinationUnavailable}</span>
+              )}
+            </div>
           ) : null}
         </div>
 

@@ -320,6 +320,13 @@ public sealed class StoryApprovalReadiness282R18Tests
         Assert.Equal($"/fa/products/{product:D}", card.Items.Single(row => row.CtaType == "product").CtaHref);
         Assert.Null(card.Items.Single(row => row.CtaType == "none").CtaHref);
 
+        var adminSnapshot = await directory.AdminGetAsync(Tenant, created.StoryId, CancellationToken.None);
+        Assert.NotNull(adminSnapshot);
+        Assert.Equal("https://example.com/story", adminSnapshot!.Items.Single(row => row.CtaType == "external").CtaHref);
+        Assert.Equal("/products", adminSnapshot.Items.Single(row => row.CtaType == "internal").CtaHref);
+        Assert.Equal($"/fa/products/{product:D}", adminSnapshot.Items.Single(row => row.CtaType == "product").CtaHref);
+        Assert.Null(adminSnapshot.Items.Single(row => row.CtaType == "none").CtaHref);
+
         Assert.Equal(("external", "https://example.com"), StoryRules.ValidateCta("external", "https://example.com"));
         Assert.Equal(("internal", "/products"), StoryRules.ValidateCta("internal", "/products"));
         Assert.Equal(("category", "/offers"), StoryRules.ValidateCta("category", "/offers"));

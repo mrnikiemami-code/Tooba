@@ -156,6 +156,9 @@ export type StoryCopy = {
   previewNext: string;
   previewPause: string;
   previewPlay: string;
+  previewCta: string;
+  previewMute: string;
+  previewUnmute: string;
   slidesEmptyHint: string;
   loadingProducts: string;
   loadMoreProducts: string;
@@ -368,6 +371,9 @@ export const faStoryCopy: StoryCopy = {
   previewNext: "اسلاید بعدی",
   previewPause: "توقف پخش",
   previewPlay: "ادامهٔ پخش",
+  previewCta: "مشاهدهٔ مقصد",
+  previewMute: "صدا خاموش",
+  previewUnmute: "صدا روشن",
   slidesEmptyHint: "پس از ذخیره، اسلاید عکس یا ویدیو و مقصد را اضافه کنید.",
   loadingProducts: "در حال بارگذاری…",
   loadMoreProducts: "نمایش محصولات بیشتر",
@@ -580,6 +586,9 @@ export const enStoryCopy: StoryCopy = {
   previewNext: "Next slide",
   previewPause: "Pause preview",
   previewPlay: "Resume preview",
+  previewCta: "Open destination",
+  previewMute: "Mute",
+  previewUnmute: "Unmute",
   slidesEmptyHint: "After saving, add a photo or video slide and its destination.",
   loadingProducts: "Loading…",
   loadMoreProducts: "Show more products",

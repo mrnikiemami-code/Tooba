@@ -1,8 +1,8 @@
-﻿import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
+import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import test from "node:test";
-import { ensureDom, flush, mount, q, waitFor } from "../../../features/order-carrier-execution/test-dom-harness.ts";
+import { click, ensureDom, flush, mount, q, waitFor } from "../../../features/order-carrier-execution/test-dom-harness.ts";
 import { StoryPreviewPlayer } from "./story-preview-player.tsx";
 import { faStoryCopy } from "./story-management-copy.ts";
 import type { AdminStoryItem } from "../story-api.ts";
@@ -75,5 +75,52 @@ test("admin preview waits for the real video ended event, not the photo timer", 
     () => /پس از ویدیو/.test(q(tree.container, '[data-testid="story-preview-caption"]')?.textContent ?? ""),
     { timeoutMs: 2000 },
   );
+  await tree.unmount();
+});
+
+test("admin preview exposes the slide CTA destination and a safe href", async () => {
+  const tree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({
+        storyItemId: "cta-1",
+        caption: "CTA",
+        ctaType: "external",
+        ctaTarget: "https://example.test/offer",
+        ctaHref: "https://example.test/offer",
+      })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  const cta = q(tree.container, '[data-testid="story-preview-cta"]') as HTMLAnchorElement | null;
+  assert.ok(cta);
+  assert.equal(cta!.getAttribute("href"), "https://example.test/offer");
+  assert.equal(cta!.getAttribute("target"), null);
+  assert.match(q(tree.container, '[data-testid="story-preview-cta-destination"]')?.textContent ?? "", /پیوند بیرونی/);
+  await tree.unmount();
+});
+
+test("admin preview video starts muted but can be unmuted", async () => {
+  const tree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({
+        storyItemId: "video-sound",
+        mediaType: "video",
+        mediaUrl: "https://cdn.example.test/sound.mp4",
+        caption: "ویدیو با صدا",
+      })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  const video = q(tree.container, '[data-testid="story-preview-video"]') as HTMLVideoElement;
+  assert.equal(video.muted, true);
+  await click(q(tree.container, '[data-testid="story-preview-mute"]'));
+  await flush();
+  assert.equal(video.muted, false);
   await tree.unmount();
 });

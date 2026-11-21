@@ -75,6 +75,7 @@ export interface AdminStoryItem {
   ctaTarget: string | null;
   /** Owning product title for product CTA when Catalog resolved it; null = unavailable. */
   ctaProductTitle?: string | null;
+  ctaHref?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -237,6 +238,7 @@ export function mapAdminStoryItem(value: unknown): AdminStoryItem | null {
     ctaType: text(prop(item, "ctaType", "CtaType"), "none"),
     ctaTarget: nullableText(prop(item, "ctaTarget", "CtaTarget")),
     ctaProductTitle: nullableText(prop(item, "ctaProductTitle", "CtaProductTitle")),
+    ctaHref: nullableText(prop(item, "ctaHref", "CtaHref")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
   };

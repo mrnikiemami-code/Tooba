@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Story.Application.Stories.Models;
+using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 using Tooba.Story.Domain.Aggregates;
 using Tooba.Story.Domain.Enums;
@@ -261,24 +262,53 @@ public sealed partial class StoryDirectory
         AdminStorySnapshot snapshot,
         CancellationToken cancellationToken)
     {
-        if (_productTitles is null || snapshot.Items.Count == 0)
+        if (snapshot.Items.Count == 0)
             return snapshot;
 
         var ids = new HashSet<Guid>();
         foreach (var item in snapshot.Items)
             CollectProductCta(item.CtaType, item.CtaTarget, ids);
-        if (ids.Count == 0)
-            return snapshot;
 
-        var titles = await _productTitles.GetProductTitlesByIdsAsync(ids, cancellationToken);
+        var paths = new Dictionary<Guid, string>();
+        if (_products is not null && ids.Count > 0)
+        {
+            if (_products is IStoryProductPathBatchPort batch)
+            {
+                var resolved = await batch.ResolvePublicProductPathsAsync(ids, cancellationToken);
+                foreach (var pair in resolved)
+                {
+                    if (!string.IsNullOrWhiteSpace(pair.Value))
+                        paths[pair.Key] = pair.Value;
+                }
+            }
+            else
+            {
+                foreach (var productId in ids)
+                {
+                    var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(path))
+                        paths[productId] = path;
+                }
+            }
+        }
+
+        IReadOnlyDictionary<Guid, string> titles = new Dictionary<Guid, string>();
+        if (_productTitles is not null && ids.Count > 0)
+            titles = await _productTitles.GetProductTitlesByIdsAsync(ids, cancellationToken);
+
         var items = snapshot.Items.Select(item =>
         {
+            var href = ResolveCtaHref(item.CtaType, item.CtaTarget, item.CtaHref, paths);
             if (!string.Equals(item.CtaType, "product", StringComparison.OrdinalIgnoreCase))
-                return item;
+                return item with { CtaHref = href };
             if (!Guid.TryParse(item.CtaTarget?.Trim(), out var productId) || productId == Guid.Empty)
-                return item with { CtaProductTitle = null };
+                return item with { CtaProductTitle = null, CtaHref = href };
             titles.TryGetValue(productId, out var title);
-            return item with { CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title };
+            return item with
+            {
+                CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title,
+                CtaHref = href,
+            };
         }).ToList();
         return snapshot with { Items = items };
     }
