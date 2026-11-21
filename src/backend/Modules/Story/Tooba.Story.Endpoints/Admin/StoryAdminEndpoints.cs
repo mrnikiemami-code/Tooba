@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Models;
@@ -143,7 +144,7 @@ public static class StoryAdminEndpoints
     private static Task<IResult> AdminApproveAndPublishAsync(
         Guid id, ReviewedStoryActionBody? body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
-        AdminMutationAsync(auth, http, tenant, api, StoryPermissionIds.Approve, cancellationToken,
+        AdminMutationAsync(auth, http, tenant, api, [StoryPermissionIds.Approve, StoryPermissionIds.Publish], cancellationToken,
             (tenantId, actor) => sender.Send(
                 new ApproveAndPublishAdminStoryCommand(
                     tenantId, id, actor, body?.ExpectedVersion, body?.OccurrenceKey), cancellationToken));
@@ -151,7 +152,7 @@ public static class StoryAdminEndpoints
     private static Task<IResult> AdminApproveAndScheduleAsync(
         Guid id, ApproveAndScheduleBody body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
         ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
-        AdminMutationAsync(auth, http, tenant, api, StoryPermissionIds.Approve, cancellationToken,
+        AdminMutationAsync(auth, http, tenant, api, [StoryPermissionIds.Approve, StoryPermissionIds.Publish], cancellationToken,
             (tenantId, actor) => sender.Send(
                 new ApproveAndScheduleAdminStoryCommand(
                     tenantId,
@@ -278,6 +279,39 @@ public static class StoryAdminEndpoints
                     tenantId, id, body.ItemIds, body.ExpectedVersion, body.OccurrenceKey),
                 cancellationToken));
 
+    private static Task<IResult> AdminMutationAsync<T>(
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        IReadOnlyList<string> permissionIds,
+        CancellationToken cancellationToken,
+        Func<Guid, Task<Result<T>>> action,
+        Func<T, string>? createdLocation = null)
+        => AdminMutationAsync(
+            auth, http, tenant, api, permissionIds, cancellationToken,
+            (tenantId, _) => action(tenantId), createdLocation);
+
+    private static async Task<IResult> AdminMutationAsync<T>(
+        IStoryAdminAuthorizer auth,
+        HttpContext http,
+        ICurrentTenant tenant,
+        ApiResponseFactory api,
+        IReadOnlyList<string> permissionIds,
+        CancellationToken cancellationToken,
+        Func<Guid, Guid, Task<Result<T>>> action,
+        Func<T, string>? createdLocation = null)
+    {
+        var actorUserId = await auth.RequireAllAuthorizedAsync(http, permissionIds, cancellationToken);
+
+        var tenantResult = StoryHttpErrors.ResolveTenantId(tenant);
+        if (tenantResult.IsFailure)
+            return api.From(tenantResult);
+        var result = await action(tenantResult.Value, actorUserId);
+        if (createdLocation is not null && result.IsSuccess)
+            return api.Created(createdLocation(result.Value), result);
+        return api.From(result);
+    }
     private static Task<IResult> AdminMutationAsync<T>(
         IStoryAdminAuthorizer auth,
         HttpContext http,

@@ -38,6 +38,27 @@ public sealed class Story282R20PermissionTests
     }
 
     [Fact]
+    public async Task Combined_publication_requires_every_owning_permission()
+    {
+        var approveOnly = new PermissionSetAuthorization(StoryPermissionIds.Approve);
+        var authorizer = new StoryAdminAuthorizer(new FakeAdminAccess(Actor), approveOnly, new FakeTenant());
+
+        var refused = await Assert.ThrowsAsync<SemanticException>(() => authorizer.RequireAllAuthorizedAsync(
+            new DefaultHttpContext(),
+            [StoryPermissionIds.Approve, StoryPermissionIds.Publish],
+            CancellationToken.None));
+        Assert.Equal(FoundationErrorCodes.AdminAuthorizationDenied, refused.Error.Code);
+        Assert.Equal([StoryPermissionIds.Approve, StoryPermissionIds.Publish], approveOnly.Checked);
+
+        var both = new PermissionSetAuthorization(StoryPermissionIds.Approve, StoryPermissionIds.Publish);
+        var allowed = await new StoryAdminAuthorizer(new FakeAdminAccess(Actor), both, new FakeTenant())
+            .RequireAllAuthorizedAsync(
+                new DefaultHttpContext(),
+                [StoryPermissionIds.Approve, StoryPermissionIds.Publish],
+                CancellationToken.None);
+        Assert.Equal(Actor, allowed);
+    }
+    [Fact]
     public async Task Admin_capability_deny_and_unavailable_are_refusals_not_allow()
     {
         var denied = new StoryAdminAuthorizer(
@@ -116,6 +137,16 @@ public sealed class Story282R20PermissionTests
         Assert.DoesNotContain("StoryPermissionIds.View", handler, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("/{id:guid}/approve-and-publish")]
+    [InlineData("/{id:guid}/approve-and-schedule")]
+    public void Combined_publication_route_requires_approve_and_publish(string route)
+    {
+        var source = File.ReadAllText(AdminEndpointsPath());
+        var handler = HandlerFor(source, route);
+        Assert.Contains("StoryPermissionIds.Approve", handler, StringComparison.Ordinal);
+        Assert.Contains("StoryPermissionIds.Publish", handler, StringComparison.Ordinal);
+    }
     [Fact]
     public void Seller_route_wiring_uses_submit_for_submit_and_view_for_reads()
     {
@@ -200,6 +231,21 @@ public sealed class Story282R20PermissionTests
         }
     }
 
+    private sealed class PermissionSetAuthorization(params string[] allowed) : IAuthorizationService
+    {
+        private readonly HashSet<string> _allowed = allowed.ToHashSet(StringComparer.Ordinal);
+        public List<string> Checked { get; } = [];
+
+        public Task<AuthorizationDecision> CanAsync(
+            AuthorizationCheck check,
+            CancellationToken cancellationToken)
+        {
+            Checked.Add(check.Resource.Id);
+            return Task.FromResult(_allowed.Contains(check.Resource.Id)
+                ? AuthorizationDecision.Allow()
+                : AuthorizationDecision.Deny());
+        }
+    }
     private sealed class FakeTenant : ICurrentTenant
     {
         public TenantContext? Current => null;
