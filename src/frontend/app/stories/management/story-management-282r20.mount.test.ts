@@ -18,7 +18,7 @@ import {
   setSelectValue,
   waitFor,
 } from "../../../features/order-carrier-execution/test-dom-harness.ts";
-import { runDurableUploadAdd, type StoryExecutorGate } from "./story-executor.ts";
+import { runDurableStoryMutation, runDurableUploadAdd, type StoryExecutorGate } from "./story-executor.ts";
 import { digestFile, listPendingStoryIntents, type StoryIntentEnvelope } from "./story-intent.ts";
 import {
   bindStoryEnvelopeRoute,
@@ -390,6 +390,119 @@ test("R20 A3b: content updates prove the requested text/media, not just the stor
   };
   assert.equal(verifyStorySuccessPayload(updateItem, oldItem).ok, false, "an unchanged slide is not a completed edit");
   assert.equal(verifyStorySuccessPayload(updateItem, newItem).ok, true);
+});
+test("R22 F04: remove, reorder, schedule and upload_add must prove their own effect", () => {
+  const other = "cccccccc-cccc-cccc-cccc-cccccccc20c1";
+  const story = (overrides: Record<string, unknown>) => ({
+    data: {
+      storyId: STORY,
+      title: "Story",
+      locale: "fa",
+      status: "Draft",
+      reviewStatus: "None",
+      versionToken: 9,
+      startAt: null,
+      endAt: null,
+      items: [
+        { storyItemId: ITEM, mediaType: "image", mediaAssetId: ASSET, mediaUrl: "https://cdn.example.test/item.jpg", caption: "item", durationMs: 5000, ctaType: "none", ctaTarget: null },
+        { storyItemId: other, mediaType: "image", mediaAssetId: null, mediaUrl: "https://cdn.example.test/other.jpg", caption: "other", durationMs: 5000, ctaType: "none", ctaTarget: null },
+      ],
+      ...overrides,
+    },
+  });
+  const envelope = (action: StoryIntentEnvelope["action"], body: Record<string, unknown>, extra: Partial<StoryIntentEnvelope> = {}): StoryIntentEnvelope => ({
+    version: 2,
+    action,
+    occurrenceKey: `occ-${action}`,
+    method: "POST",
+    path: `/v1/admin/stories/${STORY}`,
+    routeTargetId: STORY,
+    expectedVersion: 8,
+    bodyText: JSON.stringify(body),
+    uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
+    children: [],
+    role: "admin",
+    shopId: null,
+    actorUserId: "audit",
+    recordedAt: new Date().toISOString(),
+    ...extra,
+  });
+
+  const remove = envelope("remove_item", { expectedVersion: 8 }, { targetItemId: ITEM, path: `/v1/admin/stories/${STORY}/items/${ITEM}` });
+  assert.equal(verifyStorySuccessPayload(remove, story({})).ok, false);
+  assert.equal(verifyStorySuccessPayload(remove, story({ items: [{ storyItemId: other, mediaType: "image", mediaAssetId: null, mediaUrl: "/o.jpg", caption: "o", durationMs: 5000, ctaType: "none", ctaTarget: null }] })).ok, true);
+
+  const reorder = envelope("reorder_items", { itemIds: [other, ITEM], expectedVersion: 8 });
+  assert.equal(verifyStorySuccessPayload(reorder, story({})).ok, false);
+  assert.equal(verifyStorySuccessPayload(reorder, story({ items: [
+    { storyItemId: other, mediaType: "image", mediaAssetId: null, mediaUrl: "/o.jpg", caption: "o", durationMs: 5000, ctaType: "none", ctaTarget: null },
+    { storyItemId: ITEM, mediaType: "image", mediaAssetId: ASSET, mediaUrl: "/i.jpg", caption: "i", durationMs: 5000, ctaType: "none", ctaTarget: null },
+  ] })).ok, true);
+
+  const startAt = "2026-12-01T10:00:00Z";
+  const endAt = "2026-12-02T10:00:00Z";
+  const schedule = envelope("schedule", { startAt, endAt, expectedVersion: 8 });
+  assert.equal(verifyStorySuccessPayload(schedule, story({ status: "Scheduled", startAt: "2026-11-01T10:00:00Z", endAt: "2026-11-02T10:00:00Z" })).ok, false);
+  assert.equal(verifyStorySuccessPayload(schedule, story({ status: "Scheduled", startAt, endAt })).ok, true);
+
+  const addBody = { mediaType: "image", mediaAssetId: ASSET, mediaUrl: "https://cdn.example.test/item.jpg", caption: "item", durationMs: 5000, ctaType: "none", ctaTarget: null };
+  const add = envelope("upload_add", addBody, {
+    children: [{ step: "upload", occurrenceKey: "u", done: true }, { step: "add", occurrenceKey: "a", done: false }],
+    addBodyText: JSON.stringify(addBody),
+    uploadedAssetId: ASSET,
+  });
+  assert.equal(verifyStorySuccessPayload(add, { data: { storyId: STORY } }).ok, false);
+  assert.equal(verifyStorySuccessPayload(add, story({})).ok, true);
+});
+test("R22 F01: a stale response cannot leave the executor mutex locked", async () => {
+  const envelope: StoryIntentEnvelope = {
+    version: 2,
+    action: "update",
+    occurrenceKey: "occ-r22-stale-lock",
+    method: "PUT",
+    path: `/v1/admin/stories/${STORY}`,
+    routeTargetId: STORY,
+    expectedVersion: 8,
+    bodyText: JSON.stringify({ title: "after", locale: "fa", expectedVersion: 8, occurrenceKey: "occ-r22-stale-lock" }),
+    uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
+    children: [],
+    role: "admin",
+    shopId: null,
+    actorUserId: "actor-r22-admin",
+    recordedAt: new Date().toISOString(),
+  };
+  const response = () => new Response(
+    JSON.stringify({ data: { storyId: STORY, title: "after", locale: "fa", versionToken: 9, items: [] } }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
+  const original = globalThis.fetch;
+  let resolveFirst: ((value: Response) => void) | null = null;
+  let calls = 0;
+  globalThis.fetch = (() => new Promise<Response>((resolve) => {
+    calls += 1;
+    if (calls === 1) resolveFirst = resolve;
+    else resolve(response());
+  })) as typeof fetch;
+
+  const currentGate = gate();
+  const scope = { role: "admin" as const, shopId: null, actorUserId: "actor-r22-admin" };
+  const first = runDurableStoryMutation({ gate: currentGate, envelope, scope });
+  assert.equal(currentGate.inFlightRef.current, true);
+  currentGate.epochRef.current += 1;
+  resolveFirst!(response());
+  const stale = await first;
+  assert.equal(stale.state, "blocked");
+  assert.equal(stale.state === "blocked" && stale.reason, "stale_epoch");
+  assert.equal(currentGate.inFlightRef.current, false);
+
+  const second = await runDurableStoryMutation({ gate: currentGate, envelope, scope });
+  assert.equal(second.state, "ok");
+  assert.equal(currentGate.inFlightRef.current, false);
+  globalThis.fetch = original;
 });
 type BulkRow = AdminStorySnapshot;
 

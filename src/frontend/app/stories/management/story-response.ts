@@ -205,6 +205,49 @@ function verifyContentEffect(
     return { ok: true, data: snap };
   }
 
+  if (envelope.action === "schedule" || envelope.action === "approve_schedule") {
+    if (!body) return { ok: false, reason: "unverified_shape" };
+    if (!sameInstant(body.startAt, snap.startAt)) {
+      return { ok: false, reason: "story_start_unchanged" };
+    }
+    if (!sameInstant(body.endAt, snap.endAt)) {
+      return { ok: false, reason: "story_end_unchanged" };
+    }
+    return { ok: true, data: snap };
+  }
+
+  if (envelope.action === "remove_item") {
+    const targetItemId =
+      envelope.targetItemId ??
+      envelope.path.match(/\/items\/([0-9a-fA-F-]{36})(?:\/|$)/)?.[1] ??
+      null;
+    if (!targetItemId) return { ok: false, reason: "unverified_shape" };
+    if (snap.items.some((row) => row.storyItemId.toLowerCase() === targetItemId.toLowerCase())) {
+      return { ok: false, reason: "story_item_still_present" };
+    }
+    return null;
+  }
+
+  if (envelope.action === "reorder_items") {
+    const expected = Array.isArray(body?.itemIds)
+      ? body.itemIds.map((value) => String(value).toLowerCase())
+      : null;
+    if (!expected) return { ok: false, reason: "unverified_shape" };
+    const actual = snap.items.map((row) => row.storyItemId.toLowerCase());
+    if (actual.length !== expected.length || actual.some((id, index) => id !== expected[index])) {
+      return { ok: false, reason: "story_order_unchanged" };
+    }
+    return null;
+  }
+
+  if (envelope.action === "add_item") {
+    if (!body) return { ok: false, reason: "unverified_shape" };
+    if (!snap.items.some((item) => itemMatchesBody(item, body))) {
+      return { ok: false, reason: "story_item_missing" };
+    }
+    return null;
+  }
+
   if (envelope.action !== "update_item" && envelope.action !== "replace_media") {
     return null;
   }
@@ -220,17 +263,24 @@ function verifyContentEffect(
   );
   if (!item) return { ok: false, reason: "story_item_missing" };
 
-  const unchanged =
-    !sameText(body.mediaType, item.mediaType) ||
-    !sameText(body.mediaAssetId, item.mediaAssetId) ||
-    !sameText(body.mediaUrl, item.mediaUrl) ||
-    !sameText(body.caption, item.caption) ||
-    !sameNumber(body.durationMs, item.durationMs) ||
-    !sameText(body.ctaType ?? "none", item.ctaType) ||
-    !sameText(body.ctaTarget, item.ctaTarget);
-  return unchanged
-    ? { ok: false, reason: "story_item_unchanged" }
-    : { ok: true, data: snap };
+  return itemMatchesBody(item, body)
+    ? { ok: true, data: snap }
+    : { ok: false, reason: "story_item_unchanged" };
+}
+
+function itemMatchesBody(
+  item: NonNullable<ReturnType<typeof mapAdminStory>>["items"][number],
+  body: Record<string, unknown>,
+): boolean {
+  return (
+    sameText(body.mediaType, item.mediaType) &&
+    sameText(body.mediaAssetId, item.mediaAssetId) &&
+    sameText(body.mediaUrl, item.mediaUrl) &&
+    sameText(body.caption, item.caption) &&
+    sameNumber(body.durationMs, item.durationMs) &&
+    sameText(body.ctaType ?? "none", item.ctaType) &&
+    sameText(body.ctaTarget, item.ctaTarget)
+  );
 }
 
 function readInt(record: Record<string, unknown>, ...keys: string[]): number | null {
@@ -325,18 +375,20 @@ function verifyUploadOrAdd(
   root: Record<string, unknown>,
   mapped: unknown,
 ): StorySuccessVerification {
-  // After add child: Story snapshot or item identity.
   if (envelope.action === "upload_add" && envelope.children[0]?.done && envelope.addBodyText) {
-    const storyId = readGuid(root, "storyId", "StoryId");
-    const itemId = readGuid(root, "storyItemId", "StoryItemId");
-    if (storyId) {
-      if (envelope.routeTargetId && storyId !== envelope.routeTargetId) {
-        return { ok: false, reason: "add_story_mismatch" };
-      }
-      return { ok: true, data: mapped };
+    const snap = mapAdminStory(root) ?? mapAdminStory(mapped);
+    const body = parseEnvelopeBody(envelope);
+    if (!snap || !body) return { ok: false, reason: "add_missing_effect" };
+    if (
+      envelope.routeTargetId &&
+      snap.storyId.toLowerCase() !== envelope.routeTargetId.toLowerCase()
+    ) {
+      return { ok: false, reason: "add_story_mismatch" };
     }
-    if (itemId) return { ok: true, data: mapped };
-    return { ok: false, reason: "add_missing_identity" };
+    if (!snap.items.some((item) => itemMatchesBody(item, body))) {
+      return { ok: false, reason: "add_item_missing" };
+    }
+    return { ok: true, data: mapped };
   }
 
   const mediaAssetId = readGuid(root, "mediaAssetId", "MediaAssetId");

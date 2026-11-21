@@ -118,6 +118,27 @@ function looksLikeGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
+function slideDraftSignature(input: {
+  editingItemId: string | null;
+  caption: string;
+  durationSec: string;
+  ctaType: string;
+  ctaTarget: string;
+  productLabel: string;
+  file: File | null;
+}): string {
+  return JSON.stringify({
+    editingItemId: input.editingItemId,
+    caption: input.caption,
+    durationSec: input.durationSec,
+    ctaType: input.ctaType,
+    ctaTarget: input.ctaTarget,
+    productLabel: input.productLabel,
+    file: input.file
+      ? { name: input.file.name, size: input.file.size, lastModified: input.file.lastModified }
+      : null,
+  });
+}
 const OPEN_SLIDE_AFTER_LOAD_KEY = "tooba.story.openSlideAfterLoad";
 
 function destinationLabelForType(ctaType: string | null | undefined, copy: StoryCopy): string {
@@ -306,6 +327,7 @@ function StoryManagementScreenBody({
   const shopRequestRef = useRef(0);
   const shopSearchRef = useRef("");
   const [pendingActs, setPendingActs] = useState<StoryIntentEnvelope[]>([]);
+  const [pendingRevision, setPendingRevision] = useState(0);
   const [pendingRecoveryOpen, setPendingRecoveryOpen] = useState(false);
   const [previewConfirm, setPreviewConfirm] = useState<"publish" | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -329,6 +351,8 @@ function StoryManagementScreenBody({
   const [productLabelById, setProductLabelById] = useState<Record<string, string>>({});
   const [sellerShopLabel, setSellerShopLabel] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [slideBaseline, setSlideBaseline] = useState("");
+  const [slideDiscardOpen, setSlideDiscardOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -344,6 +368,19 @@ function StoryManagementScreenBody({
   const [slidePreviewUrl, setSlidePreviewUrl] = useState<string | null>(null);
   const slideFileInputRef = useRef<HTMLInputElement | null>(null);
   const ownedDraftIdRef = useRef<string | null>(initialStoryId);
+  const guardUrlRef = useRef<string | null>(null);
+  const slideDirty =
+    slideDialogOpen &&
+    slideDraftSignature({
+      editingItemId,
+      caption: slideCaption,
+      durationSec: slideDurationSec,
+      ctaType: slideCtaType,
+      ctaTarget: slideCtaTarget,
+      productLabel: selectedProductLabel,
+      file: slideFile,
+    }) !== slideBaseline;
+  const hasUnsavedChanges = dirty || slideDirty;
 
   function resolveShopDestinationName(target: string | null | undefined): string | null {
     const raw = target?.trim() ?? "";
@@ -381,6 +418,9 @@ function StoryManagementScreenBody({
   }
 
   function finishLeave(href: string) {
+    setSlideDialogOpen(false);
+    setSlideDiscardOpen(false);
+    setSlideBaseline("");
     if (href === basePath || href.endsWith(basePath)) {
       setSelectedId(null);
       setDetail(null);
@@ -391,7 +431,7 @@ function StoryManagementScreenBody({
   }
 
   function requestLeave(href: string) {
-    if (!dirty) {
+    if (!dirty && !slideDirty) {
       finishLeave(href);
       return;
     }
@@ -409,6 +449,15 @@ function StoryManagementScreenBody({
     setSelectedProductLabel("");
     setProductSearch("");
     setSlideCtaError(null);
+    setSlideBaseline(slideDraftSignature({
+      editingItemId: null,
+      caption: "",
+      durationSec: "5",
+      ctaType: "none",
+      ctaTarget: "",
+      productLabel: "",
+      file: null,
+    }));
     setSlideDialogOpen(true);
   }
 
@@ -426,16 +475,51 @@ function StoryManagementScreenBody({
         ? item.ctaProductTitle?.trim() || productLabelById[item.ctaTarget] || ""
         : "",
     );
+    const openedProductLabel =
+      item.ctaType === "product" && item.ctaTarget
+        ? item.ctaProductTitle?.trim() || productLabelById[item.ctaTarget] || ""
+        : "";
     setProductSearch("");
     setSlideCtaError(null);
+    setSlideBaseline(slideDraftSignature({
+      editingItemId: item.storyItemId,
+      caption: item.caption ?? "",
+      durationSec:
+        item.durationMs && item.durationMs > 0 ? String(Math.round(item.durationMs / 1000)) : "5",
+      ctaType: item.ctaType || "none",
+      ctaTarget: item.ctaTarget ?? "",
+      productLabel: openedProductLabel,
+      file: null,
+    }));
     setSlideDialogOpen(true);
+  }
+
+  function closeSlideEditor() {
+    if (slideDirty) {
+      setSlideDiscardOpen(true);
+      return;
+    }
+    setSlideDialogOpen(false);
+    setEditingItemId(null);
+    setSlideBaseline("");
+  }
+
+  function discardSlideEditor() {
+    setSlideDiscardOpen(false);
+    setSlideDialogOpen(false);
+    setEditingItemId(null);
+    setSlideBaseline("");
   }
   const epochRef = useRef(0);
   const inFlightRef = useRef(false);
   const scope = readStoryScope(capabilities.mode);
   const sellerShopId = scope.shopId;
   const actorId = scope.actorUserId || resolveActorId(capabilities.mode);
-  const gate = { inFlightRef, epochRef };
+  const gate = {
+    inFlightRef,
+    epochRef,
+    onIntentChanged: () => setPendingRevision((value) => value + 1),
+  };
 
   const bumpEpoch = useCallback(() => {
     epochRef.current += 1;
@@ -468,7 +552,7 @@ function StoryManagementScreenBody({
       .filter((row) => row.state === "ok")
       .map((row) => row.envelope);
     setPendingActs(pending);
-  }, [capabilities.mode, sellerShopId, actorId, reloadToken, scopeTick]);
+  }, [capabilities.mode, sellerShopId, actorId, reloadToken, scopeTick, pendingRevision]);
 
   const loadShopPage = useCallback(
     async (page: number, search: string, mode: "reset" | "append") => {
@@ -632,22 +716,29 @@ function StoryManagementScreenBody({
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (!dirty) return;
+      if (!hasUnsavedChanges) return;
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
+  }, [hasUnsavedChanges]);
 
   // Unsaved edits also protect soft navigation: sidebar links and browser Back go through the
   // existing DS leave dialog instead of silently discarding the editor state.
   const requestLeaveRef = useRef(requestLeave);
   requestLeaveRef.current = requestLeave;
   useEffect(() => {
-    if (!dirty) return;
-    // Same-URL sentinel: Back lands on this entry, so Cancel keeps BOTH the editor and the URL.
-    window.history.pushState({ storyDirtyGuard: true }, "", window.location.href);
+    if (!hasUnsavedChanges) {
+      if (window.history.state?.storyDirtyGuard) {
+        window.history.replaceState({}, "", window.location.href);
+      }
+      guardUrlRef.current = null;
+      return;
+    }
+    // Keep the editor URL as the guard entry so Cancel restores it exactly.
+    guardUrlRef.current = window.location.href;
+    window.history.pushState({ storyDirtyGuard: true }, "", guardUrlRef.current);
     const onDocumentClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
@@ -666,8 +757,10 @@ function StoryManagementScreenBody({
       requestLeaveRef.current(`${target.pathname}${target.search}`);
     };
     const onPopState = () => {
-      // Re-arm the guard before asking, so a cancelled leave never drops the user elsewhere.
-      window.history.pushState({ storyDirtyGuard: true }, "", window.location.href);
+      const editorUrl = guardUrlRef.current;
+      if (editorUrl) {
+        window.history.pushState({ storyDirtyGuard: true }, "", editorUrl);
+      }
       requestLeaveRef.current(basePath);
     };
     document.addEventListener("click", onDocumentClick, true);
@@ -676,7 +769,7 @@ function StoryManagementScreenBody({
       document.removeEventListener("click", onDocumentClick, true);
       window.removeEventListener("popstate", onPopState);
     };
-  }, [dirty, basePath]);
+  }, [hasUnsavedChanges, basePath]);
 
   useEffect(() => {
     if (!slideFile) {
@@ -2008,10 +2101,7 @@ function StoryManagementScreenBody({
 
       <Dialog
         open={slideDialogOpen}
-        onClose={() => {
-          setSlideDialogOpen(false);
-          setEditingItemId(null);
-        }}
+        onClose={closeSlideEditor}
         title={editingItemId ? copy.editSlideTitle : copy.newSlideTitle}
       >
         <div className="space-y-3 p-1" data-testid="story-slide-editor">
@@ -2710,6 +2800,33 @@ function StoryManagementScreenBody({
         </div>
       </Dialog>
 
+      <Dialog
+        open={slideDiscardOpen}
+        onClose={() => setSlideDiscardOpen(false)}
+        title={copy.unsavedLeaveTitle}
+      >
+        <div className="space-y-3 p-1" data-testid="story-slide-unsaved-dialog">
+          <p className="text-sm text-muted">{copy.unsavedLeaveBody}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className={storyButtonClass("secondary")}
+              data-testid="story-slide-unsaved-stay"
+              onClick={() => setSlideDiscardOpen(false)}
+            >
+              {copy.unsavedStay}
+            </button>
+            <button
+              type="button"
+              className={storyButtonClass("danger")}
+              data-testid="story-slide-unsaved-discard"
+              onClick={discardSlideEditor}
+            >
+              {copy.unsavedDiscard}
+            </button>
+          </div>
+        </div>
+      </Dialog>
       <Dialog
         open={leaveOpen}
         onClose={() => {

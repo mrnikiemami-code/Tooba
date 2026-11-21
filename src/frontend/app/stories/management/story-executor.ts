@@ -17,6 +17,7 @@ import { DEV_ACTOR_HEADER, SELLER_PARTY_HEADER } from "../../vendor-panel/seller
 export type StoryExecutorGate = {
   inFlightRef: { current: boolean };
   epochRef: { current: number };
+  onIntentChanged?: () => void;
 };
 
 export type StoryExecutorScope = {
@@ -98,6 +99,7 @@ export async function runDurableStoryMutation<T = unknown>(args: {
   if (!routeCheck.ok) return { state: "blocked", reason: "envelope" };
 
   if (!storeStoryIntent(args.envelope)) return { state: "blocked", reason: "storage" };
+  args.gate.onIntentChanged?.();
 
   args.gate.inFlightRef.current = true;
   const started = args.gate.epochRef.current;
@@ -105,17 +107,21 @@ export async function runDurableStoryMutation<T = unknown>(args: {
     const result = await dispatchFrozenEnvelope(args.envelope, args.uploadFile ?? null, args.mapOk);
     if (started !== args.gate.epochRef.current) return { state: "blocked", reason: "stale_epoch" };
     if (result.state === "ok") {
-      if (!result.retainIntent) clearStoryIntentIfCurrent(result.envelope);
+      if (!result.retainIntent) {
+        clearStoryIntentIfCurrent(result.envelope);
+        args.gate.onIntentChanged?.();
+      }
       return result;
     }
     // A definite refusal keeps nothing to continue: replaying the exact bytes would be refused again,
     // and the leftover envelope made the next attempt look like a bogus "storage/unknown" outcome.
     if (result.state === "failed" && isTerminalRefusal(result)) {
       clearStoryIntentIfCurrent(result.envelope);
+      args.gate.onIntentChanged?.();
     }
     return result;
   } finally {
-    if (started === args.gate.epochRef.current) args.gate.inFlightRef.current = false;
+    args.gate.inFlightRef.current = false;
   }
 }
 
@@ -240,6 +246,7 @@ export async function runDurableUploadAdd(args: {
         },
       };
       if (!storeStoryIntent(journal)) return { state: "blocked", reason: "storage" };
+      args.gate.onIntentChanged?.();
       const uploadBind = bindStoryEnvelopeRoute(journal);
       if (!uploadBind.ok) return { state: "blocked", reason: "envelope" };
       const uploaded = await dispatchFrozenEnvelope(journal, args.uploadFile);
@@ -306,8 +313,11 @@ export async function runDurableUploadAdd(args: {
         }
       }
       journal = advanced;
+      args.gate.onIntentChanged?.();
     } else if (!storeStoryIntent(journal)) {
       return { state: "blocked", reason: "storage" };
+    } else {
+      args.gate.onIntentChanged?.();
     }
 
     const addBind = bindStoryEnvelopeRoute(journal);
@@ -316,15 +326,19 @@ export async function runDurableUploadAdd(args: {
     if (started !== args.gate.epochRef.current) return { state: "blocked", reason: "stale_epoch" };
     if (addResult.state === "ok") {
       clearStoryIntentIfCurrent(journal);
+      args.gate.onIntentChanged?.();
       return addResult;
     }
     if (addResult.state === "failed") {
-      if (isTerminalRefusal(addResult)) clearStoryIntentIfCurrent(journal);
+      if (isTerminalRefusal(addResult)) {
+        clearStoryIntentIfCurrent(journal);
+        args.gate.onIntentChanged?.();
+      }
       return { state: "failed", message: addResult.message, envelope: journal, status: addResult.status, code: addResult.code };
     }
     return addResult;
   } finally {
-    if (started === args.gate.epochRef.current) args.gate.inFlightRef.current = false;
+    args.gate.inFlightRef.current = false;
   }
 }
 

@@ -2,7 +2,7 @@ import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import test from "node:test";
-import { click, ensureDom, flush, mount, q, qq, waitFor } from "../../../features/order-carrier-execution/test-dom-harness.ts";
+import { click, ensureDom, flush, mount, q, qq, setInputValue, waitFor } from "../../../features/order-carrier-execution/test-dom-harness.ts";
 import { StoryManagementScreen } from "./StoryManagementScreen.tsx";
 import { ADMIN_STORY_CAPABILITIES } from "./story-capabilities.ts";
 import { ADMIN_ACTOR_STORAGE_KEY } from "../../../lib/admin/admin-result.ts";
@@ -84,6 +84,7 @@ test("form replacement uploads once, keeps the advanced journal after a lost UPD
     await click(q(tree.container, '[data-testid="story-slide-save"]'));
     await waitFor(() => updates === 1);
     assert.equal(uploads, 1);
+    await waitFor(() => q(tree.container, '[data-testid="story-pending-recovery-open"]') != null);
     await tree.unmount();
 
     tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
@@ -97,6 +98,76 @@ test("form replacement uploads once, keeps the advanced journal after a lost UPD
     assert.equal(bodies.length, 2);
     assert.equal(bodies[1], bodies[0], "the resumed UPDATE must be byte-identical to the frozen one");
     assert.equal(qq(tree.container, '[data-testid="story-pending-recovery-open"]').length, 0);
+    await tree.unmount();
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("R22 F03: an edited slide asks before closing and Stay keeps the edit", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
+  window.sessionStorage.clear();
+  const current = story();
+  let calls = 0;
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    calls += 1;
+    const url = String(input);
+    if (url.includes("locale-options")) return new Response(JSON.stringify([{ code: "fa", name: "فارسی", isDefault: true }]), { status: 200, headers: { "Content-Type": "application/json" } });
+    if (url.includes("/stories/query")) return new Response(JSON.stringify({ items: [current], page: 1, pageSize: 50, totalCount: 1 }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(current), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
+    await flush();
+    await waitFor(() => q(tree.container, '[data-testid="story-detail-workspace"]') != null);
+    await click(q(tree.container, '[data-testid="story-slide-edit"]'));
+    await waitFor(() => qq(tree.container, "dialog[open]").length === 1);
+    await setInputValue(q(tree.container, '[data-testid="story-slide-caption"]'), "ویرایش ذخیره‌نشده");
+    const open = q(tree.container, "dialog[open]") as HTMLDialogElement;
+    const close = Array.from(open.querySelectorAll("button")).find((button) => button.textContent?.trim() === "بستن");
+    assert.ok(close);
+    const before = calls;
+    await click(close);
+    const discardOpen = () =>
+      Boolean((q(tree.container, '[data-testid="story-slide-unsaved-dialog"]') as Element | null)?.closest("dialog")?.open);
+    await waitFor(discardOpen);
+    await click(q(tree.container, '[data-testid="story-slide-unsaved-stay"]'));
+    await waitFor(() => !discardOpen());
+    assert.equal((q(tree.container, '[data-testid="story-slide-caption"]') as HTMLInputElement).value, "ویرایش ذخیره‌نشده");
+    assert.equal(calls, before, "closing a dirty slide and staying must not send a request");
+    await tree.unmount();
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("R22 F03: browser Back with unsaved form restores the editor URL on Stay", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
+  window.sessionStorage.clear();
+  window.history.replaceState({}, "", "/fa/admin/stories");
+  window.history.pushState({}, "", `/fa/admin/stories/${STORY}`);
+  const current = story();
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("locale-options")) return new Response(JSON.stringify([{ code: "fa", name: "فارسی", isDefault: true }]), { status: 200, headers: { "Content-Type": "application/json" } });
+    if (url.includes("/stories/query")) return new Response(JSON.stringify({ items: [current], page: 1, pageSize: 50, totalCount: 1 }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(current), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
+    await flush();
+    await waitFor(() => q(tree.container, '[data-testid="story-detail-workspace"]') != null);
+    await setInputValue(q(tree.container, '[data-testid="story-edit-title"]'), "عنوان ذخیره‌نشده");
+    await waitFor(() => window.history.state?.storyDirtyGuard === true);
+    window.history.back();
+    await waitFor(() => {
+      const dialog = q(tree.container, '[data-testid="story-unsaved-leave-dialog"]') as Element | null;
+      return Boolean(dialog?.closest("dialog")?.open);
+    });
+    await click(q(tree.container, '[data-testid="story-unsaved-stay"]'));
+    await waitFor(() => window.location.pathname === `/fa/admin/stories/${STORY}`);
     await tree.unmount();
   } finally {
     globalThis.fetch = original;
