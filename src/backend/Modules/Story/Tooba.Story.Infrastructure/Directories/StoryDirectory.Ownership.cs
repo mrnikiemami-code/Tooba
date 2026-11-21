@@ -58,14 +58,13 @@ public sealed partial class StoryDirectory
                     .ToListAsync(ct);
                 var byStory = items.GroupBy(x => x.StoryId)
                     .ToDictionary(g => g.Key, g => (IReadOnlyList<Domain.Aggregates.StoryItem>)g.ToList());
-                var snapshots = new List<AdminStorySnapshot>(rows.Count);
-                foreach (var story in rows)
+                var snapshots = rows.Select(story =>
                 {
                     story.AttachItems(byStory.GetValueOrDefault(story.StoryId, []));
-                    snapshots.Add(await EnrichAsync(MapAdmin(story, isAdmin: false), ct));
-                }
+                    return MapAdmin(story, isAdmin: false);
+                }).ToList();
 
-                return snapshots;
+                return await EnrichManyAsync(snapshots, ct);
             },
             cancellationToken);
     }

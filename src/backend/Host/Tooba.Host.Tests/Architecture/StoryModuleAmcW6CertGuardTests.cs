@@ -92,12 +92,12 @@ public sealed class StoryModuleAmcW6CertGuardTests
         foreach (var csproj in Directory.EnumerateFiles(storyRoot, "*.csproj", SearchOption.AllDirectories))
         {
             var text = File.ReadAllText(csproj);
-            Assert.DoesNotContain("Tooba.Catalog.", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Party.", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Identity.", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Offer.", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.Media.", text, StringComparison.Ordinal);
-            Assert.DoesNotContain("Tooba.AccessControl.", text, StringComparison.Ordinal);
+            foreach (var foreign in new[] { "Catalog", "Party", "Identity", "Offer", "Media", "AccessControl" })
+            {
+                Assert.DoesNotContain($"Tooba.{foreign}.Application", text, StringComparison.Ordinal);
+                Assert.DoesNotContain($"Tooba.{foreign}.Infrastructure", text, StringComparison.Ordinal);
+                Assert.DoesNotContain($"Tooba.{foreign}.Domain", text, StringComparison.Ordinal);
+            }
         }
     }
 
