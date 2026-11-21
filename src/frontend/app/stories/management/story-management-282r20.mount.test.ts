@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TB-282-R20 focused direct facts for the staged media-replacement journal, authoritative
  * refusal classification and response-effect verification. These exercise the REAL executor
  * against a controlled fetch, not a string helper.
@@ -115,7 +115,26 @@ const uploadOk = () =>
 const storySnapshot = (over: Record<string, unknown> = {}) =>
   new Response(
     JSON.stringify({
-      data: { storyId: STORY, status: "Draft", reviewStatus: "Approved", versionToken: 8, ...over },
+      data: {
+        storyId: STORY,
+        status: "Draft",
+        reviewStatus: "Approved",
+        versionToken: 8,
+        items: [
+          {
+            storyItemId: ITEM,
+            displayOrder: 0,
+            mediaType: "image",
+            mediaAssetId: ASSET,
+            mediaUrl: "https://cdn.example.test/new.jpg",
+            caption: "زیرنویس تازه",
+            durationMs: 6000,
+            ctaType: "none",
+            ctaTarget: null,
+          },
+        ],
+        ...over,
+      },
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
@@ -299,6 +318,69 @@ test("R20 A3: version regression and state-free approve are refused; real Approv
   );
 });
 
+test("R20 A3b: content updates prove the requested text/media, not just the story identity", () => {
+  const update: StoryIntentEnvelope = {
+    version: 2,
+    action: "update",
+    occurrenceKey: "occ-r20-update",
+    method: "PUT",
+    path: `/v1/admin/stories/${STORY}`,
+    routeTargetId: STORY,
+    expectedVersion: 8,
+    bodyText: JSON.stringify({ title: "عنوان تازه", locale: "fa", expectedVersion: 8, occurrenceKey: "occ-r20-update" }),
+    uploadMeta: null,
+    addBodyText: null,
+    uploadedAssetId: null,
+    children: [],
+    role: "admin",
+    shopId: null,
+    actorUserId: "actor-r20-admin",
+    recordedAt: new Date().toISOString(),
+  };
+  const oldStory = { data: { storyId: STORY, title: "عنوان قبلی", locale: "fa", versionToken: 9 } };
+  const newStory = { data: { storyId: STORY, title: "عنوان تازه", locale: "fa", versionToken: 9 } };
+  assert.equal(verifyStorySuccessPayload(update, oldStory).ok, false);
+  assert.equal(verifyStorySuccessPayload(update, newStory).ok, true);
+
+  const updateItem: StoryIntentEnvelope = {
+    ...update,
+    action: "update_item",
+    occurrenceKey: "occ-r20-item",
+    path: `/v1/admin/stories/${STORY}/items/${ITEM}`,
+    targetItemId: ITEM,
+    bodyText: JSON.stringify({
+      mediaType: "image",
+      mediaAssetId: ASSET,
+      mediaUrl: "https://cdn.example.test/new.jpg",
+      caption: "زیرنویس تازه",
+      durationMs: 6000,
+      ctaType: "none",
+      ctaTarget: null,
+      expectedVersion: 8,
+      occurrenceKey: "occ-r20-item",
+    }),
+  };
+  const oldItem = {
+    data: {
+      storyId: STORY,
+      title: "عنوان تازه",
+      locale: "fa",
+      versionToken: 9,
+      items: [{ storyItemId: ITEM, mediaType: "image", mediaAssetId: "old", mediaUrl: "old.jpg", caption: "قدیمی", durationMs: 5000, ctaType: "none", ctaTarget: null }],
+    },
+  };
+  const newItem = {
+    data: {
+      storyId: STORY,
+      title: "عنوان تازه",
+      locale: "fa",
+      versionToken: 9,
+      items: [{ storyItemId: ITEM, mediaType: "image", mediaAssetId: ASSET, mediaUrl: "https://cdn.example.test/new.jpg", caption: "زیرنویس تازه", durationMs: 6000, ctaType: "none", ctaTarget: null }],
+    },
+  };
+  assert.equal(verifyStorySuccessPayload(updateItem, oldItem).ok, false, "an unchanged slide is not a completed edit");
+  assert.equal(verifyStorySuccessPayload(updateItem, newItem).ok, true);
+});
 type BulkRow = AdminStorySnapshot;
 
 function bulkRow(index: number): BulkRow {

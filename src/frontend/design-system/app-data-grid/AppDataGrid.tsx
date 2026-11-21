@@ -91,6 +91,7 @@ export interface AppDataGridProps<T extends { id: string }> {
   statusFilterOptions?: StatusFilterOption[];
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
+  refreshToken?: number;
   /**
    * TB-266: ارتفاع ردیف برای گریدهایی که سلولشان بیش از یک عنصر تک‌خطی دارد. پیش‌فرض ۵۶ (و ۵۲ در موبایل) برای
    * یک برچسب کوتاه کافی است، اما ارتفاع ثابت باعث بریدگی عمودی محتوا می‌شود؛ این گزینه فقط همان گرید را
@@ -123,6 +124,7 @@ export function AppDataGrid<T extends { id: string }>({
   exportFilenameBase = "export",
   advancedFilterColumns = [],
   pageSelectionOnly = true,
+  refreshToken,
   defaultQuery = DEFAULT_GRID_QUERY,
   externalFilterFields = [],
   statusFilterOptions = [],
@@ -156,6 +158,7 @@ export function AppDataGrid<T extends { id: string }>({
   const [popupParent, setPopupParent] = useState<HTMLElement | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
+  const refreshTokenRef = useRef(refreshToken);
   const suppressGridEventsRef = useRef(false);
   const defaultLayoutRef = useRef<GridColumnLayout | null>(null);
 
@@ -331,6 +334,13 @@ export function AppDataGrid<T extends { id: string }>({
     void load(defaultQuery, { force: true });
     return () => abortRef.current?.abort();
   }, [load, defaultQuery]);
+
+  useEffect(() => {
+    if (refreshToken === undefined) return;
+    if (refreshTokenRef.current === refreshToken) return;
+    refreshTokenRef.current = refreshToken;
+    void load(queryRef.current, { force: true });
+  }, [refreshToken, load]);
 
   useEffect(() => {
     if (!savedViewStore) return;

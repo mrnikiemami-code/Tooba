@@ -118,10 +118,23 @@ test("edit form preserves story fields and validates every CTA before saving", a
     }
     if (url.includes(`/v1/admin/stories/${STORY_ID}`)) {
       calls.push({ method, url, body });
+      const parsedBody = body ? (JSON.parse(body) as Record<string, unknown>) : null;
       current = {
         ...current,
-        title: body && method === "PUT" && !url.includes("/items/") ? "عنوان تازه" : current.title,
+        title: parsedBody && method === "PUT" && !url.includes("/items/") ? "عنوان تازه" : current.title,
         versionToken: current.versionToken + 1,
+        items: parsedBody && method === "PUT" && url.includes("/items/")
+          ? current.items.map((item) => ({
+              ...item,
+              mediaType: String(parsedBody.mediaType ?? item.mediaType),
+              mediaAssetId: (parsedBody.mediaAssetId as string | null) ?? item.mediaAssetId,
+              mediaUrl: (parsedBody.mediaUrl as string | null) ?? item.mediaUrl,
+              caption: (parsedBody.caption as string | null) ?? item.caption,
+              durationMs: Number(parsedBody.durationMs ?? item.durationMs),
+              ctaType: String(parsedBody.ctaType ?? item.ctaType),
+              ctaTarget: (parsedBody.ctaTarget as string | null) ?? item.ctaTarget,
+            }))
+          : current.items,
       };
       return jsonResponse(current);
     }

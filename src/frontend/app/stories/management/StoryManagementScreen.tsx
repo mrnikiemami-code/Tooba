@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Eye, ImagePlus, Layers, Plus, Send, Store, Trash2, XCircle } from "lucide-react";
+import { AlertTriangle, Check, Eye, ImagePlus, Layers, Plus, Send, Store, Trash2, XCircle } from "lucide-react";
 import { storyToast } from "./story-toast.ts";
 import {
   StoryActionBar,
@@ -13,6 +13,7 @@ import {
   type StoryTone,
 } from "./story-management-ui";
 import { StoryPublicationWindowFields } from "./story-publication-window-fields";
+import { StoryPreviewPlayer } from "./story-preview-player";
 import {
   AppDataGrid,
   Dialog,
@@ -179,39 +180,7 @@ function StoryPreviewPanel({
   numberLocale: string;
   testId: string;
 }) {
-  return (
-    <aside className="rounded-xl border border-border bg-background/40 p-4" data-testid={testId}>
-      <h3 className="mb-3 text-sm font-bold text-foreground">{copy.previewHeading}</h3>
-      {items.length === 0 ? (
-        <StoryEmptyState
-          compact
-          title={copy.previewEmpty}
-          description={copy.slidesEmptyHint}
-          icon={<ImagePlus className="h-5 w-5" aria-hidden="true" />}
-        />
-      ) : (
-        <ul className="space-y-3">
-          {items.map((item, index) => (
-            <li key={item.storyItemId} className="overflow-hidden rounded-xl border border-border bg-surface">
-              {item.mediaType === "video" && item.mediaUrl ? (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
-                <video src={item.mediaUrl} className="max-h-40 w-full object-cover" muted playsInline controls />
-              ) : item.mediaUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.mediaUrl} alt="" className="max-h-40 w-full object-cover" />
-              ) : null}
-              <div className="p-3">
-                <p className="text-xs font-bold text-foreground">
-                  {(index + 1).toLocaleString(numberLocale)} · {item.mediaType === "video" ? copy.videoLabel : copy.photoLabel}
-                </p>
-                {item.caption ? <p className="mt-1 text-xs text-muted">{item.caption}</p> : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </aside>
-  );
+  return <StoryPreviewPlayer items={items} copy={copy} numberLocale={numberLocale} testId={testId} />;
 }
 
 function validateCtaInput(ctaType: string, ctaTarget: string, copy: StoryCopy): string | null {
@@ -337,6 +306,7 @@ function StoryManagementScreenBody({
   const shopRequestRef = useRef(0);
   const shopSearchRef = useRef("");
   const [pendingActs, setPendingActs] = useState<StoryIntentEnvelope[]>([]);
+  const [pendingRecoveryOpen, setPendingRecoveryOpen] = useState(false);
   const [previewConfirm, setPreviewConfirm] = useState<"publish" | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editLocale, setEditLocale] = useState("");
@@ -346,6 +316,8 @@ function StoryManagementScreenBody({
   const [productTotalCount, setProductTotalCount] = useState(0);
   const [productPage, setProductPage] = useState(1);
   const [productLoading, setProductLoading] = useState(false);
+  const [productError, setProductError] = useState<string | null>(null);
+  const [productReloadToken, setProductReloadToken] = useState(0);
   const [selectedProductLabel, setSelectedProductLabel] = useState("");
   const [slideCaption, setSlideCaption] = useState("");
   const [slideDurationSec, setSlideDurationSec] = useState("5");
@@ -595,6 +567,10 @@ function StoryManagementScreenBody({
   }, [capabilities.mode, sellerShopId, actorId, scopeTick]);
 
   useEffect(() => {
+    if (!slideDialogOpen || slideCtaType !== "product") {
+      setProductLoading(false);
+      return;
+    }
     const shop =
       capabilities.mode === "seller"
         ? sellerShopId
@@ -602,6 +578,7 @@ function StoryManagementScreenBody({
     const epoch = ++productEpochRef.current;
     setProductPage(1);
     setProductLoading(true);
+    setProductError(null);
     // Debounce keystrokes so a fast typist issues one owning query, not one per character.
     const timer = setTimeout(() => {
       void loadStoryProductOptions({
@@ -614,8 +591,20 @@ function StoryManagementScreenBody({
       })
         .then((page) => {
           if (epoch !== productEpochRef.current) return;
+          if (page.error) {
+            setProductError(copy.productLoadFailed);
+            setProductOptions([]);
+            setProductTotalCount(0);
+            return;
+          }
           setProductOptions(page.items);
           setProductTotalCount(page.totalCount);
+        })
+        .catch(() => {
+          if (epoch !== productEpochRef.current) return;
+          setProductError(copy.productLoadFailed);
+          setProductOptions([]);
+          setProductTotalCount(0);
         })
         .finally(() => {
           if (epoch !== productEpochRef.current) return;
@@ -635,6 +624,10 @@ function StoryManagementScreenBody({
     actorId,
     scopeTick,
     productSearch,
+    slideDialogOpen,
+    slideCtaType,
+    productReloadToken,
+    copy.productLoadFailed,
   ]);
 
   useEffect(() => {
@@ -1087,6 +1080,19 @@ function StoryManagementScreenBody({
         description={description}
         actions={
           <>
+            {pendingActs.length > 0 ? (
+              <button
+                type="button"
+                className={storyButtonClass("secondary")}
+                title={`${copy.pendingHeading} (${pendingActs.length.toLocaleString(numberLocale)})`}
+                aria-label={`${copy.pendingHeading} (${pendingActs.length.toLocaleString(numberLocale)})`}
+                data-testid="story-pending-recovery-open"
+                onClick={() => setPendingRecoveryOpen(true)}
+              >
+                <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only">{copy.pendingHeading}</span>
+              </button>
+            ) : null}
             {isListSurface && capabilities.canReview ? (
               <label className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs font-medium text-muted">
                 {copy.filterReviewLabel}
@@ -1121,98 +1127,6 @@ function StoryManagementScreenBody({
         }
       />
 
-      {pendingActs.length > 0 ? (
-        <details
-          className="mb-4 rounded-xl border border-border bg-surface-elevated text-sm"
-          data-testid="story-pending-recovery"
-        >
-          <summary
-            className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 text-muted transition-colors hover:text-foreground"
-            data-testid="story-pending-recovery-toggle"
-          >
-            <span className="font-bold text-foreground">
-              {copy.pendingHeading} ({pendingActs.length.toLocaleString(numberLocale)})
-            </span>
-            <span className="rounded-full bg-secondary px-2 py-1 text-xs">{copy.pendingExpandHint}</span>
-          </summary>
-          <ul className="space-y-2 border-t border-border px-4 py-3 text-muted">
-            {pendingActs.map((act) => (
-              <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
-                <span>{pendingStoryLabel(act)}</span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {(act.action === "upload" ||
-                    act.action === "upload_add" ||
-                    act.action === "replace_media") &&
-                  !act.children[0]?.done ? (
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      className="min-h-11 text-sm"
-                      data-testid="story-recovery-file"
-                      onChange={(e) => setRecoveryFile(e.target.files?.[0] ?? null)}
-                    />
-                  ) : null}
-                <button
-                  type="button"
-                  className={storyButtonClass("secondary")}
-                  data-testid="story-recovery-retry"
-                  onClick={() => {
-                    const scope = { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId };
-                    // Admin freezes story sellerPartyId on the envelope; session shop stays platform null.
-                    const shopMismatch =
-                      act.role === "seller" && (act.shopId ?? null) !== (scope.shopId ?? null);
-                    if (act.role !== scope.role || act.actorUserId !== scope.actorUserId || shopMismatch) {
-                      storyToast.error(copy.pendingContinueFailed);
-                      return;
-                    }
-                    void replayPendingStoryIntent({
-                      gate,
-                      envelope: act,
-                      scope: {
-                        role: act.role,
-                        shopId: act.role === "admin" ? act.shopId ?? null : scope.shopId,
-                        actorUserId: scope.actorUserId,
-                      },
-                      uploadFile: recoveryFile,
-                    }).then((outcome) => {
-                      if (outcome.state === "ok") {
-                        storyToast.success(copy.pendingContinued);
-                        setRecoveryFile(null);
-                        if (act.action === "create") {
-                          const id = extractCreatedStoryId(outcome.data);
-                          if (id) {
-                            // Resume create→Add on /new through one remount; otherwise open bound detail.
-                            adoptBoundCreatedDraft(id, {
-                              openSlideAfter: Boolean(createMode && !selectedId),
-                            });
-                          }
-                        }
-                        if (act.action === "delete") {
-                          setDeleteOpen(false);
-                          setDeleteTarget(null);
-                          const closedId = act.routeTargetId;
-                          if (closedId && (selectedId === closedId || detail?.storyId === closedId)) {
-                            setSelectedId(null);
-                            setDetail(null);
-                            ownedDraftIdRef.current = null;
-                            router.push(basePath);
-                          }
-                        }
-                        refreshGrid();
-                        setReloadToken((v) => v + 1);
-                      } else if (outcome.state === "failed") storyToast.error(outcome.message);
-                      else storyToast.error(copy.pendingContinueFailed);
-                    });
-                  }}
-                >
-                  {copy.pendingRetry}
-                </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
 
       {isListSurface ? (
         <StoryLiveGrid
@@ -2238,6 +2152,18 @@ function StoryManagementScreenBody({
                 data-testid="story-product-search"
               />
               {productLoading ? <p className="text-xs text-muted">{copy.loadingProducts}</p> : null}
+              {productError ? (
+                <div className="flex flex-wrap items-center gap-2" data-testid="story-product-error">
+                  <p className="text-xs text-danger">{copy.productLoadFailed}</p>
+                  <button
+                    type="button"
+                    className="min-h-9 rounded-lg border border-border px-2 text-xs"
+                    onClick={() => setProductReloadToken((value) => value + 1)}
+                  >
+                    {copy.productRetry}
+                  </button>
+                </div>
+              ) : null}
               <ul className="max-h-40 overflow-auto rounded-xl border border-border">
                 {productOptions.map((row) => (
                   <li key={`${row.productId}:${row.offerId}`}>
@@ -2261,7 +2187,7 @@ function StoryManagementScreenBody({
                   </li>
                 ))}
               </ul>
-              {!productLoading && productOptions.length === 0 ? (
+              {!productLoading && !productError && productOptions.length === 0 ? (
                 <p className="text-xs text-muted" data-testid="story-product-empty">
                   {copy.noProductsFound}
                 </p>
@@ -2279,6 +2205,7 @@ function StoryManagementScreenBody({
                     const next = productPage + 1;
                     const epoch = productEpochRef.current;
                     setProductLoading(true);
+                    setProductError(null);
                     void loadStoryProductOptions({
                       mode: capabilities.mode,
                       shopId: shop,
@@ -2289,11 +2216,19 @@ function StoryManagementScreenBody({
                     })
                       .then((page) => {
                         if (epoch !== productEpochRef.current) return;
+                        if (page.error) {
+                          setProductError(copy.productLoadFailed);
+                          return;
+                        }
                         const seen = new Set(productOptions.map((r) => r.productId));
                         const appended = page.items.filter((r) => !seen.has(r.productId));
                         setProductOptions((prev) => [...prev, ...appended]);
                         setProductTotalCount(page.totalCount);
                         setProductPage(next);
+                      })
+                      .catch(() => {
+                        if (epoch !== productEpochRef.current) return;
+                        setProductError(copy.productLoadFailed);
                       })
                       .finally(() => {
                         if (epoch !== productEpochRef.current) return;
@@ -2488,6 +2423,7 @@ function StoryManagementScreenBody({
                           ? `/v1/seller/stories/${detail.storyId}/items/${editingItemId}`
                           : `/v1/admin/stories/${detail.storyId}/items/${editingItemId}`,
                       routeTargetId: detail.storyId,
+                      targetItemId: editingItemId,
                       expectedVersion: detail.versionToken,
                       bodyText: JSON.stringify(body),
                       uploadMeta: null,
@@ -2586,6 +2522,101 @@ function StoryManagementScreenBody({
               }}
             >
               {editingItemId ? copy.saveSlideChanges : copy.addItem}
+            </button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={pendingRecoveryOpen}
+        onClose={() => setPendingRecoveryOpen(false)}
+        title={copy.pendingHeading}
+        showCloseButton={false}
+      >
+        <div className="space-y-3 p-1" data-testid="story-pending-recovery-dialog">
+          <p className="text-sm text-muted">{copy.pendingExpandHint}</p>
+          <ul className="space-y-2 rounded-xl border border-border px-4 py-3 text-sm text-muted">
+            {pendingActs.map((act) => (
+              <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
+                <span>{pendingStoryLabel(act)}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(act.action === "upload" ||
+                    act.action === "upload_add" ||
+                    act.action === "replace_media") &&
+                  !act.children[0]?.done ? (
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      className="min-h-11 text-sm"
+                      data-testid="story-recovery-file"
+                      onChange={(e) => setRecoveryFile(e.target.files?.[0] ?? null)}
+                    />
+                  ) : null}
+                  <button
+                    type="button"
+                    className={storyButtonClass("secondary")}
+                    data-testid="story-recovery-retry"
+                    onClick={() => {
+                      const scope = { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId };
+                      const shopMismatch =
+                        act.role === "seller" && (act.shopId ?? null) !== (scope.shopId ?? null);
+                      if (act.role !== scope.role || act.actorUserId !== scope.actorUserId || shopMismatch) {
+                        storyToast.error(copy.pendingContinueFailed);
+                        return;
+                      }
+                      void replayPendingStoryIntent({
+                        gate,
+                        envelope: act,
+                        scope: {
+                          role: act.role,
+                          shopId: act.role === "admin" ? act.shopId ?? null : scope.shopId,
+                          actorUserId: scope.actorUserId,
+                        },
+                        uploadFile: recoveryFile,
+                      }).then((outcome) => {
+                        if (outcome.state === "ok") {
+                          storyToast.success(copy.pendingContinued);
+                          setRecoveryFile(null);
+                          setPendingRecoveryOpen(false);
+                          if (act.action === "create") {
+                            const id = extractCreatedStoryId(outcome.data);
+                            if (id) {
+                              adoptBoundCreatedDraft(id, {
+                                openSlideAfter: Boolean(createMode && !selectedId),
+                              });
+                            }
+                          }
+                          if (act.action === "delete") {
+                            setDeleteOpen(false);
+                            setDeleteTarget(null);
+                            const closedId = act.routeTargetId;
+                            if (closedId && (selectedId === closedId || detail?.storyId === closedId)) {
+                              setSelectedId(null);
+                              setDetail(null);
+                              ownedDraftIdRef.current = null;
+                              router.push(basePath);
+                            }
+                          }
+                          refreshGrid();
+                          setReloadToken((v) => v + 1);
+                        } else if (outcome.state === "failed") storyToast.error(outcome.message);
+                        else storyToast.error(copy.pendingContinueFailed);
+                      });
+                    }}
+                  >
+                    {copy.pendingRetry}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className={storyButtonClass("secondary")}
+              onClick={() => setPendingRecoveryOpen(false)}
+            >
+              {copy.cancel}
             </button>
           </div>
         </div>
@@ -3238,7 +3269,6 @@ function StoryLiveGrid({
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
-      void reloadToken;
       if (capabilities.mode === "seller") {
         const result = await querySellerStories(query);
         if (result.state === "denied") {
@@ -3259,7 +3289,7 @@ function StoryLiveGrid({
         (message) => onErrorRef.current(message),
       )(query);
     },
-    [capabilities.mode, reloadToken, reviewFilter],
+    [capabilities.mode, reviewFilter],
   );
 
   const gridProps = useLegacyAdminGridDirectProps({
@@ -3283,6 +3313,7 @@ function StoryLiveGrid({
         ) : (
           <AppDataGrid<AdminStorySnapshot>
             {...gridProps}
+            refreshToken={reloadToken}
             capabilities={{ rowSelection: isAdmin }}
             bulkActions={bulkActions}
             pageSelectionOnly

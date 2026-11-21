@@ -152,10 +152,16 @@ export type StoryCopy = {
   saveForm: string;
   previewHeading: string;
   previewEmpty: string;
+  previewPrevious: string;
+  previewNext: string;
+  previewPause: string;
+  previewPlay: string;
   slidesEmptyHint: string;
   loadingProducts: string;
   loadMoreProducts: string;
   noProductsFound: string;
+  productLoadFailed: string;
+  productRetry: string;
   approveAndPublish: string;
   approveAndSchedule: string;
   approveConfirm: string;
@@ -358,10 +364,16 @@ export const faStoryCopy: StoryCopy = {
   saveForm: "ذخیره",
   previewHeading: "پیش‌نمایش اسلایدها",
   previewEmpty: "هنوز اسلایدی نیست.",
+  previewPrevious: "اسلاید قبلی",
+  previewNext: "اسلاید بعدی",
+  previewPause: "توقف پخش",
+  previewPlay: "ادامهٔ پخش",
   slidesEmptyHint: "پس از ذخیره، اسلاید عکس یا ویدیو و مقصد را اضافه کنید.",
   loadingProducts: "در حال بارگذاری…",
   loadMoreProducts: "نمایش محصولات بیشتر",
   noProductsFound: "محصولی برای این فروشگاه یا این جستجو پیدا نشد.",
+  productLoadFailed: "دریافت فهرست محصولات ممکن نشد.",
+  productRetry: "تلاش دوباره",
   approveAndPublish: "تأیید و انتشار",
   approveAndSchedule: "تأیید و زمان‌بندی",
   approveConfirm: "تأیید استوری‌ها",
@@ -564,10 +576,16 @@ export const enStoryCopy: StoryCopy = {
   saveForm: "Save",
   previewHeading: "Slide preview",
   previewEmpty: "No slides yet.",
+  previewPrevious: "Previous slide",
+  previewNext: "Next slide",
+  previewPause: "Pause preview",
+  previewPlay: "Resume preview",
   slidesEmptyHint: "After saving, add a photo or video slide and its destination.",
   loadingProducts: "Loading…",
   loadMoreProducts: "Show more products",
   noProductsFound: "No product was found for this shop or search.",
+  productLoadFailed: "Products could not be loaded.",
+  productRetry: "Try again",
   approveAndPublish: "Approve and publish",
   approveAndSchedule: "Approve and schedule",
   approveConfirm: "Approve stories",

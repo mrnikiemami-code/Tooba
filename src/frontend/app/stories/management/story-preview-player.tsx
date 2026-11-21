@@ -1,0 +1,227 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ImagePlus, Pause, Play } from "lucide-react";
+import { StoryEmptyState } from "./story-management-ui";
+import type { StoryCopy } from "./story-management-copy";
+import type { AdminStoryItem } from "../story-api";
+
+function isVideoItem(item: AdminStoryItem | undefined): boolean {
+  return (item?.mediaType ?? "").trim().toLowerCase() === "video";
+}
+
+function photoDurationMs(item: AdminStoryItem | undefined): number {
+  const duration = item?.durationMs;
+  return duration != null && duration > 0 ? duration : 5000;
+}
+
+export function StoryPreviewPlayer({
+  items,
+  copy,
+  numberLocale,
+  testId,
+}: {
+  items: AdminStoryItem[];
+  copy: StoryCopy;
+  numberLocale: string;
+  testId: string;
+}) {
+  const [index, setIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const current = items[index];
+  const video = isVideoItem(current);
+
+  useEffect(() => {
+    setIndex((value) => Math.min(value, Math.max(0, items.length - 1)));
+    setProgress(0);
+    setImageLoaded(false);
+    setPaused(false);
+  }, [items]);
+
+  useEffect(() => {
+    const onVisibility = () => setHidden(document.visibilityState === "hidden");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  const next = useCallback(() => {
+    setProgress(0);
+    setImageLoaded(false);
+    setIndex((value) => (items.length === 0 ? 0 : (value + 1) % items.length));
+  }, [items.length]);
+
+  const previous = useCallback(() => {
+    setProgress(0);
+    setImageLoaded(false);
+    setIndex((value) => (items.length === 0 ? 0 : (value - 1 + items.length) % items.length));
+  }, [items.length]);
+
+  useEffect(() => {
+    if (!current) return;
+    if (paused || hidden) {
+      if (video && videoRef.current) videoRef.current.pause();
+      return;
+    }
+
+    if (video) {
+      const element = videoRef.current;
+      if (!element) return;
+      element.muted = true;
+      void element.play()?.catch(() => undefined);
+      const onTime = () => {
+        const duration = element.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return;
+        setProgress(Math.min(100, (element.currentTime / duration) * 100));
+      };
+      const onEnded = () => {
+        setProgress(100);
+        next();
+      };
+      element.addEventListener("timeupdate", onTime);
+      element.addEventListener("ended", onEnded);
+      return () => {
+        element.removeEventListener("timeupdate", onTime);
+        element.removeEventListener("ended", onEnded);
+      };
+    }
+
+    if (!imageLoaded) return;
+    const duration = photoDurationMs(current);
+    const step = duration > 0 ? 100 / (duration / 50) : 100;
+    timerRef.current = setInterval(() => {
+      setProgress((value) => {
+        if (value >= 100) {
+          next();
+          return 0;
+        }
+        return Math.min(100, value + step);
+      });
+    }, 50);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [current, hidden, imageLoaded, next, paused, video]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  if (items.length === 0 || !current) {
+    return (
+      <aside className="rounded-xl border border-border bg-background/40 p-4" data-testid={testId}>
+        <h3 className="mb-3 text-sm font-bold text-foreground">{copy.previewHeading}</h3>
+        <StoryEmptyState
+          compact
+          title={copy.previewEmpty}
+          description={copy.slidesEmptyHint}
+          icon={<ImagePlus className="h-5 w-5" aria-hidden="true" />}
+        />
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="rounded-xl border border-border bg-background/40 p-4" data-testid={testId}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold text-foreground">{copy.previewHeading}</h3>
+        <button
+          type="button"
+          className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-surface"
+          aria-label={paused ? copy.previewPlay : copy.previewPause}
+          title={paused ? copy.previewPlay : copy.previewPause}
+          onClick={() => setPaused((value) => !value)}
+        >
+          {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      </div>
+
+      <div
+        className="relative overflow-hidden rounded-xl border border-border bg-black"
+        data-testid="story-preview-player"
+        data-preview-index={index + 1}
+        data-preview-paused={paused ? "true" : "false"}
+      >
+        <div className="absolute inset-x-0 top-0 z-10 flex gap-1 p-2">
+          {items.map((item, itemIndex) => (
+            <div key={item.storyItemId} className="h-1 flex-1 overflow-hidden rounded-full bg-white/25">
+              <div
+                className="h-full rounded-full bg-white transition-all duration-100"
+                style={{
+                  width:
+                    itemIndex === index
+                      ? `${progress}%`
+                      : itemIndex < index
+                        ? "100%"
+                        : "0%",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {video ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption
+          <video
+            ref={videoRef}
+            src={current.mediaUrl ?? undefined}
+            className="aspect-[9/16] max-h-[22rem] w-full object-contain"
+            muted
+            playsInline
+            autoPlay
+            data-testid="story-preview-video"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={current.mediaUrl ?? ""}
+            alt={current.caption ?? ""}
+            className="aspect-[9/16] max-h-[22rem] w-full object-contain"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
+            data-testid="story-preview-image"
+          />
+        )}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+          <p className="text-xs font-bold text-white/80">
+            {(index + 1).toLocaleString(numberLocale)} / {items.length.toLocaleString(numberLocale)} ·{" "}
+            {video ? copy.videoLabel : copy.photoLabel}
+          </p>
+          {current.caption ? (
+            <p className="mt-1 text-sm text-white" data-testid="story-preview-caption">
+              {current.caption}
+            </p>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          className="absolute right-1 top-1/2 z-20 flex min-h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white"
+          aria-label={copy.previewPrevious}
+          title={copy.previewPrevious}
+          onClick={previous}
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          className="absolute left-1 top-1/2 z-20 flex min-h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white"
+          aria-label={copy.previewNext}
+          title={copy.previewNext}
+          onClick={next}
+        >
+          ‹
+        </button>
+      </div>
+    </aside>
+  );
+}

@@ -199,7 +199,7 @@ test("durable executor refuses overwrite and remount shows pending recovery", as
     }),
   );
   await flush();
-  await waitFor(() => qq(tree.container, '[data-testid="story-pending-recovery"]').length === 1);
+  await waitFor(() => qq(tree.container, '[data-testid="story-pending-recovery-open"]').length === 1);
   assert.ok((tree.container.textContent ?? "").includes("اقدام ناتمام"));
   assert.equal(
     listPendingStoryIntents("seller", "22222222-2222-2222-2222-222222222222", "actor-seller-1").length,

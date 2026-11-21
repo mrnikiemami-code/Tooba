@@ -20,6 +20,7 @@ export type StoryProductOptionRow = {
 export type StoryProductOptionsPage = {
   items: StoryProductOptionRow[];
   totalCount: number;
+  error: string | null;
 };
 
 function adminHeaders(): Record<string, string> {
@@ -111,22 +112,22 @@ export async function loadStoryProductOptions(args: {
   if (args.search?.trim()) qs.set("search", args.search.trim());
 
   if (args.mode === "seller") {
-    if (!args.shopId) return { items: [], totalCount: 0 };
+    if (!args.shopId) return { items: [], totalCount: 0, error: null };
     const response = await fetch(`/v1/seller/stories/product-options?${qs}`, {
       headers: sellerHeaders(args.shopId, args.actorUserId),
     });
-    if (!response.ok) return { items: [], totalCount: 0 };
+    if (!response.ok) return { items: [], totalCount: 0, error: "story.products.load_failed" };
     const payload = await response.json().catch(() => null);
     const items = mapProductRows(asArray(payload));
-    return { items, totalCount: readTotalCount(payload, items.length) };
+    return { items, totalCount: readTotalCount(payload, items.length), error: null };
   }
 
   if (args.shopId) qs.set("sellerPartyId", args.shopId);
   const response = await fetch(`/v1/admin/stories/product-options?${qs}`, { headers: adminHeaders() });
-  if (!response.ok) return { items: [], totalCount: 0 };
+  if (!response.ok) return { items: [], totalCount: 0, error: "story.products.load_failed" };
   const payload = await response.json().catch(() => null);
   const items = mapProductRows(asArray(payload));
-  return { items, totalCount: readTotalCount(payload, items.length) };
+  return { items, totalCount: readTotalCount(payload, items.length), error: null };
 }
 
 function mapProductRows(rows: unknown[]): StoryProductOptionRow[] {

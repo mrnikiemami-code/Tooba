@@ -130,6 +130,10 @@ function verifyStoryTarget(
 
   // Deletes are tombstones/replays: identity (and version) is the whole contract the wire owns.
   if (envelope.action === "delete") return { ok: true, data: mapped };
+  if (!snap) return { ok: false, reason: "unverified_shape" };
+
+  const contentEffect = verifyContentEffect(envelope, root, snap);
+  if (contentEffect) return contentEffect;
 
   const effect = requiredEffect(envelope.action);
   if (!effect) return { ok: true, data: mapped };
@@ -138,6 +142,81 @@ function verifyStoryTarget(
   const effective = effectSatisfied(effect, root, snap);
   if (effective.ok) return { ok: true, data: mapped };
   return { ok: false, reason: effective.reason };
+}
+
+function normalizeText(value: unknown): string | null {
+  if (value == null) return null;
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
+function sameText(expected: unknown, actual: unknown): boolean {
+  return normalizeText(expected) === normalizeText(actual);
+}
+
+function sameNumber(expected: unknown, actual: unknown): boolean {
+  if (expected == null || expected === "") return actual == null;
+  const expectedNumber = Number(expected);
+  const actualNumber = actual == null ? null : Number(actual);
+  return Number.isFinite(expectedNumber) && expectedNumber === actualNumber;
+}
+
+function parseEnvelopeBody(envelope: StoryIntentEnvelope): Record<string, unknown> | null {
+  if (!envelope.bodyText) return null;
+  try {
+    const parsed = JSON.parse(envelope.bodyText) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function verifyContentEffect(
+  envelope: StoryIntentEnvelope,
+  root: Record<string, unknown>,
+  snap: NonNullable<ReturnType<typeof mapAdminStory>>,
+): StorySuccessVerification | null {
+  const body = parseEnvelopeBody(envelope);
+
+  if (envelope.action === "update") {
+    if (!body) return { ok: false, reason: "unverified_shape" };
+    if (!carries(root, "title", "Title") || !sameText(body.title, snap.title)) {
+      return { ok: false, reason: "story_title_unchanged" };
+    }
+    if (body.locale != null && normalizeText(body.locale) != null && !sameText(body.locale, snap.locale)) {
+      return { ok: false, reason: "story_locale_unchanged" };
+    }
+    return { ok: true, data: snap };
+  }
+
+  if (envelope.action !== "update_item" && envelope.action !== "replace_media") {
+    return null;
+  }
+  const targetItemId = envelope.targetItemId
+    ?? envelope.path.match(/\/items\/([0-9a-fA-F-]{36})(?:\/|$)/)?.[1]
+    ?? null;
+  if (!body || !targetItemId) {
+    return { ok: false, reason: "unverified_shape" };
+  }
+
+  const item = snap.items.find(
+    (row) => row.storyItemId.toLowerCase() === targetItemId.toLowerCase(),
+  );
+  if (!item) return { ok: false, reason: "story_item_missing" };
+
+  const unchanged =
+    !sameText(body.mediaType, item.mediaType) ||
+    !sameText(body.mediaAssetId, item.mediaAssetId) ||
+    !sameText(body.mediaUrl, item.mediaUrl) ||
+    !sameText(body.caption, item.caption) ||
+    !sameNumber(body.durationMs, item.durationMs) ||
+    !sameText(body.ctaType ?? "none", item.ctaType) ||
+    !sameText(body.ctaTarget, item.ctaTarget);
+  return unchanged
+    ? { ok: false, reason: "story_item_unchanged" }
+    : { ok: true, data: snap };
 }
 
 function readInt(record: Record<string, unknown>, ...keys: string[]): number | null {

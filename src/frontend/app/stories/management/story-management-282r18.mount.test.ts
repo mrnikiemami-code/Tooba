@@ -196,14 +196,10 @@ test("R18: Story toast uses the app container but expires at 3000ms and keeps er
   await flush();
   await waitFor(() => qq(tree.container, ".ag-row").length >= 1, { timeoutMs: 5000 });
 
-  const recovery = q(tree.container, '[data-testid="story-pending-recovery"]');
-  assert.equal(recovery.tagName, "DETAILS", "recovery must be a compact control, not a banner card");
-  assert.equal((recovery as HTMLDetailsElement).open, false, "recovery starts collapsed");
-  assert.match(
-    q(tree.container, '[data-testid="story-pending-recovery-toggle"]').textContent ?? "",
-    /۱|1/,
-    "collapsed control exposes the pending count",
-  );
+  const recovery = q(tree.container, '[data-testid="story-pending-recovery-open"]');
+  assert.equal(recovery.tagName, "BUTTON", "recovery is a compact header action, not a banner card");
+  assert.match(recovery.getAttribute("aria-label") ?? "", /۱|1/, "header action exposes the pending count");
+  assert.equal(qq(tree.container, 'dialog[open] [data-testid="story-pending-recovery-dialog"]').length, 0, "recovery dialog starts closed");
 
   await selectFirstRow(tree.container);
   await click(q(tree.container, '[data-testid="app-grid-bulk-story-bulk-approve"]'));
@@ -229,6 +225,8 @@ test("R18: Story toast uses the app container but expires at 3000ms and keeps er
   assert.equal(qq(document.body, ".Toastify__toast").length, 1);
 
   // The stored command is preserved for exact retry (opening the control does not auto-send).
+  await click(q(tree.container, '[data-testid="story-pending-recovery-open"]'));
+  await waitFor(() => qq(tree.container, 'dialog[open] [data-testid="story-pending-recovery-dialog"]').length === 1);
   assert.equal(qq(tree.container, '[data-testid="story-recovery-retry"]').length, 1);
 
   fetchSpy.restore();
@@ -277,7 +275,7 @@ test("R18: one definite refusal names the Persian reason, stays error, and clear
   assert.equal(qq(document.body, '[data-testid="story-admin-op-result"]').length, 0);
 
   // A terminal refusal is a definite non-effect: nothing is left to replay as an uncertain command.
-  await waitFor(() => qq(tree.container, '[data-testid="story-pending-recovery"]').length === 0, {
+  await waitFor(() => qq(tree.container, '[data-testid="story-pending-recovery-open"]').length === 0, {
     timeoutMs: 3000,
   });
 

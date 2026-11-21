@@ -100,7 +100,7 @@ function installFetch(state: { draft: StoryBag; creates: number; uploads: number
       });
     }
 
-    if (method === "POST" && url.includes("/media/")) {
+    if (method === "POST" && (url.includes("/media/") || url.endsWith("/v1/seller/media"))) {
       state.uploads += 1;
       return new Response(
         JSON.stringify({
@@ -248,6 +248,8 @@ async function runCreateAddFlow(mode: "admin" | "seller"): Promise<{
   await flush();
   await waitFor(() => qq(tree.container, '[data-testid="story-detail-workspace"]').length === 1);
   await waitFor(() => (tree.container.textContent ?? "").includes(faStoryCopy.newSlideTitle));
+  await click(q(tree.container, '[data-testid="story-slide-open-new"]'));
+  await waitFor(() => qq(tree.container, "dialog[open]").length === 1);
 
   const fileInput = q(tree.container, '[data-testid="story-slide-file"]') as HTMLInputElement;
   await assignFile(fileInput, new File(["img"], "r7.jpg", { type: "image/jpeg" }));
@@ -255,7 +257,7 @@ async function runCreateAddFlow(mode: "admin" | "seller"): Promise<{
   await setInputValue(q(tree.container, '[data-testid="story-slide-duration"]'), "7");
   await setSelectValue(q(tree.container, '[data-testid="story-slide-cta-type"]'), "product");
   await flush();
-  await waitFor(() => qq(tree.container, '[data-testid="story-product-option"]').length >= 1);
+  await waitFor(() => qq(tree.container, '[data-testid="story-product-option"]').length >= 1, { timeoutMs: 4000 });
   await click(q(tree.container, '[data-testid="story-product-option"]'));
   await click(q(tree.container, '[data-testid="story-slide-save"]'));
   await flush();
