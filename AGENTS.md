@@ -1,3 +1,17 @@
+# CURRENT — R19 PARTIAL; LOCAL OWNER TEST ALLOWED, NOT DELIVERY — 2026-11-21
+
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/ARCHITECT-REVIEW.md
+Code 8fb403cfe17b40729f7f582acdf9aea5a238ee89; reviewed origin abb102c3bab9219c0c12b69e2f6d22a5ca1826a1.
+Canonical task A–F/1–16 is broader than worker's relabelled A–G subset. Source fixes accepted narrowly; original permissions/query-state/locale/product fencing/route errors/feedback/public expiry and connected proof remain incomplete. Identity-only success still accepted; replacement upload/update recovery not durable. Production build blocked; refreshed running backend not evidenced.
+State: PARTIAL_LOCAL_OWNER_EXPLORATION_ALLOWED
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+Owner asked to test current UI; allow deliberate test-record exploration. Not full delivery, release or owner acceptance. Complete SAME R19; no R20 or new dispatch issued. Architect source/evidence review only, no Windows runtime rerun.
+Preserve user data/VendorShell/Media/locale/permission authorities/Returns/payout/R6 UNKNOWN. Historical reported old-story deletion/four CTA fixtures are not rewritten as ZERO; no further live write/cleanup/grant/seed authorized.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — TB-282-R19 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/TASK.md` and
