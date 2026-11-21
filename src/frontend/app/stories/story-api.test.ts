@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapAdminStory, mapPublicStory } from "./story-api.ts";
+import { fetchPublicStories, mapAdminStory, mapPublicStory } from "./story-api.ts";
 
 test("mapPublicStory maps PascalCase storefront payload", () => {
   const story = mapPublicStory({
@@ -171,4 +171,15 @@ test("mapAdminStory maps origin/review/seller ownership fields (camel + Pascal)"
   assert.equal(pascal?.status, "Draft");
   assert.equal(pascal?.submittedByActorUserId, "actor-2");
   assert.equal(pascal?.reviewedByActorUserId, null);
+});
+
+test("fetchPublicStories separates a service failure from an empty catalogue", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = (async () => new Response("{}", { status: 503 })) as typeof fetch;
+  try {
+    const result = await fetchPublicStories("fa");
+    assert.equal(result.state, "error");
+  } finally {
+    globalThis.fetch = original;
+  }
 });

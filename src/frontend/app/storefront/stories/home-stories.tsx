@@ -20,13 +20,15 @@ import "swiper/css/free-mode";
  */
 export type StoryLayout = "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts";
 
-const STORIES_RAIL_COPY: Record<"fa" | "en", { heading: string; shortcuts: string; empty: string; story: string; initialFallback: string }> = {
+const STORIES_RAIL_COPY: Record<"fa" | "en", { heading: string; shortcuts: string; empty: string; story: string; initialFallback: string; error: string; retry: string }> = {
   fa: {
     heading: "استوری‌ها",
     shortcuts: "میانبرها",
     empty: "استوری فعالی برای نمایش نیست.",
     story: "استوری",
     initialFallback: "س",
+    error: "استوری‌ها فعلاً بارگذاری نشدند.",
+    retry: "تلاش دوباره",
   },
   en: {
     heading: "Stories",
@@ -34,6 +36,8 @@ const STORIES_RAIL_COPY: Record<"fa" | "en", { heading: string; shortcuts: strin
     empty: "No active story to show.",
     story: "Story",
     initialFallback: "S",
+    error: "Stories could not be loaded.",
+    retry: "Try again",
   },
 };
 
@@ -69,16 +73,24 @@ export function HomeStoriesSection({
   const copy = STORIES_RAIL_COPY[locale === "en" ? "en" : "fa"];
   const [stories, setStories] = useState<PublicStoryCard[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [revalidateTick, setRevalidateTick] = useState(0);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
+  const [coverErrors, setCoverErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
-    void fetchPublicStories(locale).then((rows) => {
+    void fetchPublicStories(locale).then((result) => {
       if (cancelled) return;
-      const eligible = rows.filter((story) => story.items.length > 0);
+      if (result.state === "error") {
+        setLoadError(result.message);
+        setLoaded(true);
+        return;
+      }
+      setLoadError(null);
+      const eligible = result.stories.filter((story) => story.items.length > 0);
       setStories(eligible);
       setLoaded(true);
       // A story that stopped/expired while the tab was open must not stay playable.
@@ -98,16 +110,19 @@ export function HomeStoriesSection({
     };
   }, [locale, revalidateTick]);
 
+  const soonestEnd = useMemo(() => {
+    const ends = stories
+      .map((story) => (story.endAt ? Date.parse(story.endAt) : Number.NaN))
+      .filter((value) => Number.isFinite(value) && value > Date.now());
+    return ends.length > 0 ? Math.min(...ends) : Number.NaN;
+  }, [stories]);
+
   // Bounded revalidation: one timer to the nearest publication-window end (never a poll loop),
   // plus a single check when the tab comes back to the foreground.
   useEffect(() => {
     if (typeof window === "undefined" || stories.length === 0) return;
-    const endpoints = stories
-      .map((story) => (story.endAt ? Date.parse(story.endAt) : Number.NaN))
-      .filter((value) => Number.isFinite(value) && value > Date.now());
-    const soonest = endpoints.length > 0 ? Math.min(...endpoints) : Number.NaN;
-    const delay = Number.isFinite(soonest)
-      ? Math.min(Math.max(soonest - Date.now() + 1000, 1000), STORY_REVALIDATE_MAX_MS)
+    const delay = Number.isFinite(soonestEnd)
+      ? Math.min(Math.max(soonestEnd - Date.now() + 1000, 1000), STORY_REVALIDATE_MAX_MS)
       : STORY_REVALIDATE_MAX_MS;
     const timer = setTimeout(() => setRevalidateTick((v) => v + 1), delay);
     const onVisible = () => {
@@ -118,8 +133,15 @@ export function HomeStoriesSection({
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [stories]);
+  }, [soonestEnd, stories.length]);
 
+  useEffect(() => {
+    if (!modalOpen || !selectedStoryId) return;
+    if (!stories.some((story) => story.storyId === selectedStoryId)) {
+      setSelectedStoryId(null);
+      setModalOpen(false);
+    }
+  }, [stories, modalOpen, selectedStoryId]);
   const displayStories = useMemo(() => {
     if (!storePreviewFill) return stories;
     return applyPreviewFill({
@@ -130,10 +152,34 @@ export function HomeStoriesSection({
     }).items;
   }, [storePreviewFill, stories, previewLocale, previewVariantKey]);
 
+  const errorNotice = loadError ? (
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" data-testid="home-stories-error">
+      <span>{copy.error}</span>
+      <button type="button" className="min-h-11 rounded-lg border border-amber-300 bg-surface px-3 py-1 font-bold" onClick={() => setRevalidateTick((value) => value + 1)}>
+        {copy.retry}
+      </button>
+    </div>
+  ) : null;
   if (!loaded && !storePreviewFill) {
     return null;
   }
 
+  if (loadError && displayStories.length === 0 && !storePreviewFill) {
+    return (
+      <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-story-error="true" data-storefront-surface-role="section">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+          <span className="w-1 h-5 bg-primary rounded-full" />
+          {copy.heading}
+        </h3>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-center text-sm text-amber-900">
+          <p>{copy.error}</p>
+          <button type="button" className="mt-3 min-h-11 rounded-xl border border-amber-300 bg-surface px-4 py-2 font-bold" onClick={() => setRevalidateTick((value) => value + 1)}>
+            {copy.retry}
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (displayStories.length === 0) {
     return (
       <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-empty="true" data-storefront-surface-role="section">
@@ -162,6 +208,7 @@ export function HomeStoriesSection({
             {copy.shortcuts}
           </h3>
         </div>
+        {errorNotice}
         <div className="flex gap-3 overflow-x-auto pb-2">
           {displayStories.map((story) => {
             const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl;
@@ -206,6 +253,7 @@ export function HomeStoriesSection({
             {copy.heading}
           </h3>
         </div>
+        {errorNotice}
 
         <div className="flex items-center gap-3 pb-4 scrollbar-hide">
           <div className="flex-1 overflow-x-hidden">
@@ -223,11 +271,12 @@ export function HomeStoriesSection({
               className="w-full"
             >
               {displayStories.map((story) => {
-                const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "/images/stories/1.jpg";
-                // The cover decides how it is rendered: a JPEG cover of a video story is a photo.
-                const coverItem =
-                  story.items.find((item) => (item.mediaUrl ?? "") === cover) ?? story.items[0];
+                const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "";
+                // Only an exact matching slide can identify the cover; never borrow the first slide.
+                const coverItem = story.items.find((item) => (item.mediaUrl ?? "") === cover);
                 const coverIsVideo = coverLooksLikeVideo(cover, coverItem?.mediaType);
+                const coverFailed = coverErrors[story.storyId] === true;
+                const coverInitial = story.title.trim().slice(0, 1) || copy.initialFallback;
                 return (
                   <SwiperSlide
                     key={story.storyId}
@@ -252,33 +301,26 @@ export function HomeStoriesSection({
                       >
                         <div className={`w-full h-full p-[2px] bg-surface dark:bg-zinc-950 ${layout === "rounded-cards" ? "rounded-3xl" : "rounded-full"}`}>
                           <div className={`relative w-full h-full overflow-hidden bg-gray-200 dark:bg-zinc-800 ${layout === "rounded-cards" ? "rounded-[1.25rem]" : "rounded-full"}`}>
-                            {coverIsVideo ? (
+                            {coverFailed || !cover ? (
+                              <span className="flex h-full w-full items-center justify-center bg-surface text-lg font-black text-primary">{coverInitial}</span>
+                            ) : coverIsVideo ? (
                               // eslint-disable-next-line jsx-a11y/media-has-caption
                               <video
+                                key={cover}
                                 src={cover}
                                 className="w-full h-full object-cover"
                                 muted
                                 loop
                                 playsInline
                                 autoPlay
-                                onError={(e) => {
-                                  const target = e.currentTarget;
-                                  target.style.display = "none";
-                                  const parent = target.parentElement;
-                                  if (!parent) return;
-                                  const img = document.createElement("img");
-                                  img.src = "/images/stories/1.jpg";
-                                  img.className = "w-full h-full object-cover";
-                                  img.alt = story.title;
-                                  parent.appendChild(img);
-                                }}
+                                onError={() => setCoverErrors((prev) => ({ ...prev, [story.storyId]: true }))}
                               />
                             ) : (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={cover} alt={story.title} className="w-full h-full object-cover" loading="lazy" />
+                              <img key={cover} src={cover} alt={story.title} className="w-full h-full object-cover" loading="lazy" onError={() => setCoverErrors((prev) => ({ ...prev, [story.storyId]: true }))} />
                             )}
 
-                            {coverIsVideo ? (
+                            {coverIsVideo && !coverFailed ? (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border border-white/30">
                                   <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white ml-0.5" />

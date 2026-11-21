@@ -137,3 +137,37 @@ test("R20 D15: a hidden document pauses the photo dwell and resumes when visible
 
   await tree.unmount();
 });
+
+test("R22 F05: a data refresh keeps the current story and slide instead of resetting to the first", async () => {
+  const storyA = story([item({ storyItemId: "a-1", caption: "A یک", mediaUrl: "https://cdn.example.test/a1.jpg" })], { storyId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a1", title: "A" });
+  const storyB = story([
+    item({ storyItemId: "b-1", caption: "B یک", mediaUrl: "https://cdn.example.test/b1.jpg" }),
+    item({ storyItemId: "b-2", caption: "B دو", mediaUrl: "https://cdn.example.test/b2.jpg" }),
+  ], { storyId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b1", title: "B" });
+  const tree = await mount(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [storyA, storyB], initialStoryId: storyA.storyId }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  assert.equal(captionOf(tree.container), "B دو");
+
+  const refreshedB = story(storyB.items, { storyId: storyB.storyId, title: "B" });
+  await tree.rerender(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [storyA, refreshedB], initialStoryId: storyA.storyId }));
+  await flush();
+  assert.equal(captionOf(tree.container), "B دو", "refresh must preserve the current story/item");
+  await tree.unmount();
+});
+
+test("R22 F05: removing the current story closes the player instead of switching silently", async () => {
+  const storyA = story([item({ storyItemId: "ra-1", caption: "A", mediaUrl: "https://cdn.example.test/ra.jpg" })], { storyId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a2", title: "A" });
+  const storyB = story([item({ storyItemId: "rb-1", caption: "B", mediaUrl: "https://cdn.example.test/rb.jpg" })], { storyId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b2", title: "B" });
+  let closed = false;
+  const tree = await mount(createElement(StoryModal, { isOpen: true, onClose: () => { closed = true; }, stories: [storyA, storyB], initialStoryId: storyB.storyId }));
+  await flush();
+  await tree.rerender(createElement(StoryModal, { isOpen: true, onClose: () => { closed = true; }, stories: [storyA], initialStoryId: storyB.storyId }));
+  await flush();
+  assert.equal(closed, true);
+  assert.equal(qq(tree.container, '[data-testid="story-modal"]').length, 0);
+  await tree.unmount();
+});

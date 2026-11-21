@@ -163,3 +163,53 @@ test("admin preview localizes an internal CTA through the shared locale authorit
   assert.equal(cta?.getAttribute("href"), "/fa/products/two");
   await tree.unmount();
 });
+
+test("R22 F12: a single video stops at ended and a single image stops at the end", async () => {
+  const videoTree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({ storyItemId: "only-video", mediaType: "video", mediaUrl: "https://cdn.example.test/only.mp4", caption: "تنها ویدیو" })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  q(videoTree.container, '[data-testid="story-preview-video"]')?.dispatchEvent(new Event("ended"));
+  await flush();
+  const videoPlayer = q(videoTree.container, '[data-testid="story-preview-player"]');
+  assert.equal(videoPlayer?.getAttribute("data-preview-paused"), "true");
+  assert.equal(videoPlayer?.getAttribute("data-preview-index"), "1");
+  await videoTree.unmount();
+
+  const imageTree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({ storyItemId: "only-image", mediaUrl: "https://cdn.example.test/only.jpg", caption: "تنها عکس" })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  await click(q(imageTree.container, '[aria-label="اسلاید بعدی"]'));
+  await flush();
+  const imagePlayer = q(imageTree.container, '[data-testid="story-preview-player"]');
+  assert.equal(imagePlayer?.getAttribute("data-preview-paused"), "true");
+  assert.equal(imagePlayer?.getAttribute("data-preview-index"), "1");
+  await imageTree.unmount();
+});
+
+test("R22 F12: a failed image is a visible media error, not a completed dwell", async () => {
+  const tree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({ storyItemId: "broken", mediaUrl: "https://cdn.example.test/broken.jpg", caption: "خراب" })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  q(tree.container, '[data-testid="story-preview-image"]')?.dispatchEvent(new Event("error"));
+  await flush();
+  assert.ok(q(tree.container, '[data-testid="story-preview-media-error"]'));
+  await tree.unmount();
+});

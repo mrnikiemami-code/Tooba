@@ -145,6 +145,8 @@ export function StoryModal({
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const storiesRef = useRef(stories);
+  storiesRef.current = stories;
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -195,14 +197,36 @@ export function StoryModal({
   }, [currentItemIndex, currentStoryIndex, stories]);
 
   useEffect(() => {
-    if (isOpen && initialStoryId) {
-      const index = stories.findIndex((s) => s.storyId === initialStoryId);
-      if (index !== -1) {
-        setCurrentStoryIndex(index);
-        setCurrentItemIndex(0);
-      }
+    if (!isOpen || !initialStoryId) return;
+    const index = storiesRef.current.findIndex((s) => s.storyId === initialStoryId);
+    if (index !== -1) {
+      setCurrentStoryIndex(index);
+      setCurrentItemIndex(0);
     }
-  }, [isOpen, initialStoryId, stories]);
+  }, [isOpen, initialStoryId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (stories.length === 0 || !currentStory) {
+      onClose();
+      return;
+    }
+    const storyIndex = stories.findIndex((story) => story.storyId === currentStory.storyId);
+    if (storyIndex < 0) {
+      onClose();
+      return;
+    }
+    if (storyIndex !== currentStoryIndex) setCurrentStoryIndex(storyIndex);
+    const nextItems = stories[storyIndex]?.items ?? [];
+    const itemIndex = currentItem?.storyItemId
+      ? nextItems.findIndex((item) => item.storyItemId === currentItem.storyItemId)
+      : -1;
+    if (itemIndex >= 0) {
+      if (itemIndex !== currentItemIndex) setCurrentItemIndex(itemIndex);
+    } else if (currentItemIndex >= nextItems.length) {
+      setCurrentItemIndex(Math.max(0, nextItems.length - 1));
+    }
+  }, [stories, isOpen, currentStory?.storyId, currentItem?.storyItemId, currentStoryIndex, currentItemIndex, onClose]);
 
   useEffect(() => {
     setProgress(0);
@@ -219,7 +243,7 @@ export function StoryModal({
     }
     // Intentionally omit isMuted — mute toggle must not reset progress.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStoryIndex, currentItemIndex, currentStory]);
+  }, [currentStory?.storyId, currentItem?.storyItemId, mediaUrl]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -318,7 +342,7 @@ export function StoryModal({
     return () => {
       if (progressTimer.current) clearInterval(progressTimer.current);
     };
-  }, [isOpen, isHeld, isVideo, imageLoaded, currentStoryIndex, currentItemIndex, currentItem, currentStory, items.length, goToNextItem]);
+  }, [isOpen, isHeld, isVideo, imageLoaded, currentStoryIndex, currentItemIndex, currentItem?.storyItemId, currentItem?.durationMs, mediaUrl, items.length, goToNextItem]);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -158,6 +158,7 @@ export type StoryCopy = {
   previewPlay: string;
   previewCta: string;
   previewMute: string;
+  previewMediaError: string;
   previewUnmute: string;
   slidesEmptyHint: string;
   loadingProducts: string;
@@ -373,6 +374,7 @@ export const faStoryCopy: StoryCopy = {
   previewPlay: "ادامهٔ پخش",
   previewCta: "مشاهدهٔ مقصد",
   previewMute: "صدا خاموش",
+  previewMediaError: "رسانهٔ این اسلاید بارگذاری نشد.",
   previewUnmute: "صدا روشن",
   slidesEmptyHint: "پس از ذخیره، اسلاید عکس یا ویدیو و مقصد را اضافه کنید.",
   loadingProducts: "در حال بارگذاری…",
@@ -588,6 +590,7 @@ export const enStoryCopy: StoryCopy = {
   previewPlay: "Resume preview",
   previewCta: "Open destination",
   previewMute: "Mute",
+  previewMediaError: "This slide media could not be loaded.",
   previewUnmute: "Unmute",
   slidesEmptyHint: "After saving, add a photo or video slide and its destination.",
   loadingProducts: "Loading…",

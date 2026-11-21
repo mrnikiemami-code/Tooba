@@ -1,4 +1,4 @@
-﻿/**
+/**
  * کلاینت عمومی/ادمین Story — فقط دادهٔ زندهٔ Host.
  */
 
@@ -343,7 +343,11 @@ async function adminJsonResult<T>(
   return { state: "ok", data: mapped, status: response.status };
 }
 
-export async function fetchPublicStories(locale?: string): Promise<PublicStoryCard[]> {
+export type PublicStoriesResult =
+  | { state: "ok"; stories: PublicStoryCard[] }
+  | { state: "error"; message: string };
+
+export async function fetchPublicStories(locale?: string): Promise<PublicStoriesResult> {
   const params = new URLSearchParams();
   if (locale) params.set("locale", locale);
   const query = params.toString();
@@ -352,15 +356,16 @@ export async function fetchPublicStories(locale?: string): Promise<PublicStoryCa
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
-    if (!response.ok) return [];
+    if (!response.ok) return { state: "error", message: `story.http.${response.status}` };
     const payload = await response.json();
-    if (!Array.isArray(payload)) return [];
-    return payload
+    if (!Array.isArray(payload)) return { state: "error", message: "story.invalid_response" };
+    const stories = payload
       .map(mapPublicStory)
       .filter((row): row is PublicStoryCard => row !== null)
       .sort((a, b) => a.displayOrder - b.displayOrder);
+    return { state: "ok", stories };
   } catch {
-    return [];
+    return { state: "error", message: "story.unreachable" };
   }
 }
 

@@ -54,6 +54,8 @@ export function StoryPreviewPlayer({
   const [hidden, setHidden] = useState(false);
   const [muted, setMuted] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
+  const [mediaReloadKey, setMediaReloadKey] = useState(0);
   const localizePath = useLocalizedPath();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -65,6 +67,7 @@ export function StoryPreviewPlayer({
     setIndex((value) => Math.min(value, Math.max(0, items.length - 1)));
     setProgress(0);
     setImageLoaded(false);
+    setMediaError(false);
     setPaused(false);
   }, [items]);
 
@@ -78,17 +81,40 @@ export function StoryPreviewPlayer({
   const next = useCallback(() => {
     setProgress(0);
     setImageLoaded(false);
-    setIndex((value) => (items.length === 0 ? 0 : (value + 1) % items.length));
+    setMediaError(false);
+    if (items.length <= 1) {
+      setProgress(100);
+      setPaused(true);
+      return;
+    }
+    setIndex((value) => (value + 1) % items.length);
   }, [items.length]);
 
   const previous = useCallback(() => {
     setProgress(0);
     setImageLoaded(false);
-    setIndex((value) => (items.length === 0 ? 0 : (value - 1 + items.length) % items.length));
+    setMediaError(false);
+    if (items.length <= 1) {
+      setPaused(false);
+      setMediaReloadKey((value) => value + 1);
+      return;
+    }
+    setIndex((value) => (value - 1 + items.length) % items.length);
   }, [items.length]);
 
+  const togglePaused = useCallback(() => {
+    if (paused && progress >= 100) {
+      setProgress(0);
+      setImageLoaded(false);
+      setMediaError(false);
+      setMediaReloadKey((value) => value + 1);
+      setPaused(false);
+      return;
+    }
+    setPaused((value) => !value);
+  }, [paused, progress]);
   useEffect(() => {
-    if (!current) return;
+    if (!current || mediaError) return;
     if (paused || hidden) {
       if (video && videoRef.current) videoRef.current.pause();
       return;
@@ -115,7 +141,7 @@ export function StoryPreviewPlayer({
       };
     }
 
-    if (!imageLoaded) return;
+    if (!imageLoaded || mediaError) return;
     const duration = photoDurationMs(current);
     const step = duration > 0 ? 100 / (duration / 50) : 100;
     timerRef.current = setInterval(() => {
@@ -131,7 +157,7 @@ export function StoryPreviewPlayer({
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [current, hidden, imageLoaded, next, paused, video]);
+  }, [current, hidden, imageLoaded, mediaError, mediaReloadKey, next, paused, video]);
 
   useEffect(() => {
     return () => {
@@ -163,7 +189,7 @@ export function StoryPreviewPlayer({
             className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full border border-border bg-surface"
             aria-label={paused ? copy.previewPlay : copy.previewPause}
             title={paused ? copy.previewPlay : copy.previewPause}
-            onClick={() => setPaused((value) => !value)}
+            onClick={togglePaused}
           >
             {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
           </button>
@@ -210,24 +236,33 @@ export function StoryPreviewPlayer({
           // eslint-disable-next-line jsx-a11y/media-has-caption
           <video
             ref={videoRef}
+            key={`${current.storyItemId}:${mediaReloadKey}`}
             src={current.mediaUrl ?? undefined}
             className="aspect-[9/16] max-h-[22rem] w-full object-contain"
             muted={muted}
             playsInline
             autoPlay
+            onError={() => setMediaError(true)}
             data-testid="story-preview-video"
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            key={`${current.storyItemId}:${mediaReloadKey}`}
             src={current.mediaUrl ?? ""}
             alt={current.caption ?? ""}
             className="aspect-[9/16] max-h-[22rem] w-full object-contain"
             onLoad={() => setImageLoaded(true)}
-            onError={() => setImageLoaded(true)}
+            onError={() => { setMediaError(true); setImageLoaded(true); }}
             data-testid="story-preview-image"
           />
         )}
+
+        {mediaError ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/60 p-4 text-center" data-testid="story-preview-media-error">
+            <p className="text-sm font-bold text-white">{copy.previewMediaError}</p>
+          </div>
+        ) : null}
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
           <p className="text-xs font-bold text-white/80">
