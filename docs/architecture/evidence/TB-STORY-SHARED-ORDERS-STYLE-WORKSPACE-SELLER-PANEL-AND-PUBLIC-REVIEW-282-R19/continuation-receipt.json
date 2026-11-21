@@ -1,0 +1,15 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "instructionRevision": 2,
+  "continuationOfSameTask": true,
+  "expectedContinuationBaseSHA": "0de110784dadb883c91bbf0ea88f5c6e23832103",
+  "originalExpectedBaseSHA": "d3de64c2c6692b551c8193e842bdd04fe99ceded",
+  "sha256": "55a7bc19e7c5ee7c62aa9f4ff6d4b402c691c695c64a08ee63daa403e583abf2",
+  "issuedDate": "2026-11-21",
+  "timezone": "Asia/Tehran",
+  "authority": "Explicit owner request to finish all remaining work in same R19",
+  "originalTaskPreserved": true,
+  "bridge": "Not dispatched/claimed or duplicated in Bridge here; committed exact CONTINUATION.md is canonical revision 2",
+  "status": "ISSUED_NOT_EXECUTED",
+  "automaticNextImplementationTask": "NONE"
+}

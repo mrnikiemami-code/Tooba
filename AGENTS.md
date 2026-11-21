@@ -1,3 +1,19 @@
+# CURRENT — SAME R19 CONTINUATION REVISION 2 ISSUED; FULL CLOSURE REQUIRED — 2026-11-21
+
+Original: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/TASK.md
+Current completion direction: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/CONTINUATION.md
+Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/ARCHITECT-REVIEW.md
+Continuation base: 0de110784dadb883c91bbf0ea88f5c6e23832103; prior 8fb403cfe source fixes retained. Owner explicitly requests a directive that finishes ALL remaining work in SAME R19, no R20.
+Original A–F/1–16 remains binding. Revision 2 specifies unresolved implementations, connected proof and a final original-scope checklist. Cannot shrink to worker A–G subset or call missing mandatory proof a harmless limit. PASS_COMPLETE_R19 requires all issued feature gates, final production build and matching served backend/FE; otherwise PARTIAL/BLOCKED.
+activeTask: TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19
+instructionRevision: 2
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+This is an issued continuation, NOT executed completion, Architect ACCEPT or owner acceptance. Owner local testing is allowed but not a substitute for engineering proof. Bridge not enqueued or duplicated by architect.
+Preserve canonical Host5088 skip-bootstrap=1 / FE3000 and user data. ZERO new live worker mutations/cleanup/restore/grants/seeds/schema/config bypass. Historical old-story deletion/CTA fixtures remain REPORTED, R6 effects UNKNOWN; no retrospective ZERO claim. Preserve VendorShell, languages/permissions/Media authorities, Returns/payout.
+
+# HISTORICAL — prior records preserved below
+
 # CURRENT — R19 PARTIAL; LOCAL OWNER TEST ALLOWED, NOT DELIVERY — 2026-11-21
 
 Review: docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/ARCHITECT-REVIEW.md
