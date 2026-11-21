@@ -54,7 +54,8 @@ public sealed class StoryModule : IToobaModule
             new StoryProductOptionsAdapter(
                 sp.GetService<IOfferSellerProductIdLookup>(),
                 sp.GetService<ICatalogAdminProductTitleIdLookup>(),
-                sp.GetService<ICatalogPublishedProductSearchLookup>()));
+                sp.GetService<ICatalogPublishedProductSearchLookup>(),
+                sp.GetService<ICatalogStorefrontProductCardLookup>()));
         services.AddScoped<StoryDirectory>(sp => new StoryDirectory(
             sp.GetRequiredService<StoryDbContext>(),
             sp.GetService<IPartyAdminSellerReadGateway>(),

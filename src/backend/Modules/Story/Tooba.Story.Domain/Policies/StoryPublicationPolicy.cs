@@ -119,7 +119,9 @@ public static class StoryPublicationPolicy
                 if (story.Status is StoryStatus.Active or StoryStatus.Scheduled)
                     codes.Add("stop");
                 // After stop (Disabled) the seller must still be able to return → edit → resubmit.
-                if (story.Status is StoryStatus.Active or StoryStatus.Scheduled or StoryStatus.Disabled)
+                // Approved+Draft is the same lawful repair: the domain lets the owner take an approved
+                // story that was never published back to an editable draft, so the action must be offered.
+                if (story.Status is StoryStatus.Active or StoryStatus.Scheduled or StoryStatus.Disabled or StoryStatus.Draft)
                     codes.Add("return_to_draft");
             }
         }

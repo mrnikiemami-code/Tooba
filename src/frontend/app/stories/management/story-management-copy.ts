@@ -76,6 +76,9 @@ export type StoryCopy = {
   pickFile: string;
   pickedFilePrefix: string;
   keepMediaHint: string;
+  replaceMediaPick: string;
+  replaceMediaHint: string;
+  mediaReplaceFailed: string;
   captionLabel: string;
   durationLabel: string;
   publicationWindowHeading: string;
@@ -124,6 +127,8 @@ export type StoryCopy = {
   displayScheduled: string;
   displayStopped: string;
   displayDraft: string;
+  /** Approved but not published yet — must never read as «در ویترین». */
+  displayApprovedUnpublished: string;
   deniedTitle: string;
   deniedDetail: string;
   breadcrumbHome: string;
@@ -271,6 +276,9 @@ export const faStoryCopy: StoryCopy = {
   pickFile: "انتخاب فایل",
   pickedFilePrefix: "انتخاب‌شده:",
   keepMediaHint: "رسانهٔ فعلی حفظ می‌شود مگر اینکه بعداً مسیر تعویض رسانه را جداگانه استفاده کنید.",
+  replaceMediaPick: "تعویض فایل این اسلاید",
+  replaceMediaHint: "فقط اگر فایل تازه را انتخاب کنید، پس از آپلود موفق و ثبت، رسانهٔ قبلی جایگزین می‌شود.",
+  mediaReplaceFailed: "آپلود فایل تازه تأیید نشد؛ رسانهٔ قبلی دست‌نخورده ماند.",
   captionLabel: "زیرنویس",
   durationLabel: "مدت نمایش این عکس (ثانیه)",
   publicationWindowHeading: "بازهٔ انتشار",
@@ -320,6 +328,7 @@ export const faStoryCopy: StoryCopy = {
   displayScheduled: "زمان‌بندی‌شده",
   displayStopped: "متوقف",
   displayDraft: "پیش‌نویس",
+  displayApprovedUnpublished: "تأییدشده، منتشر نشده",
   deniedTitle: "دسترسی مجاز نیست",
   deniedDetail: "برای این بخش مجوز ندارید. از منوی پنل خارج نشوید؛ در صورت نیاز دوباره وارد شوید.",
   breadcrumbHome: "خانه",
@@ -467,6 +476,9 @@ export const enStoryCopy: StoryCopy = {
   pickFile: "Choose file",
   pickedFilePrefix: "Selected:",
   keepMediaHint: "Current media is kept unless you deliberately replace it later.",
+  replaceMediaPick: "Replace this slide file",
+  replaceMediaHint: "Only when you pick a new file does it replace the old media, after a successful upload and update.",
+  mediaReplaceFailed: "The new file upload was not confirmed; the previous media is unchanged.",
   captionLabel: "Caption",
   durationLabel: "Photo display duration (seconds)",
   publicationWindowHeading: "Publication window",
@@ -516,6 +528,7 @@ export const enStoryCopy: StoryCopy = {
   displayScheduled: "Scheduled",
   displayStopped: "Stopped",
   displayDraft: "Draft",
+  displayApprovedUnpublished: "Approved, not published",
   deniedTitle: "Access denied",
   deniedDetail: "You do not have permission for this section. Stay in the panel menu; sign in again if needed.",
   breadcrumbHome: "Home",

@@ -8,7 +8,8 @@ namespace Tooba.Story.Infrastructure.Adapters;
 public sealed class StoryProductOptionsAdapter(
     IOfferSellerProductIdLookup? sellerProducts,
     ICatalogAdminProductTitleIdLookup? titles,
-    ICatalogPublishedProductSearchLookup? publishedSearch) : IStoryProductOptionsPort
+    ICatalogPublishedProductSearchLookup? publishedSearch,
+    ICatalogStorefrontProductCardLookup? cards = null) : IStoryProductOptionsPort
 {
     /// <inheritdoc />
     public async Task<StoryProductOptionsPage> SearchForSellerAsync(
@@ -30,8 +31,13 @@ public sealed class StoryProductOptionsAdapter(
             return new StoryProductOptionsPage([], 0);
 
         var titleMap = await titles.GetProductTitlesByIdsAsync(ids, cancellationToken);
+        // A product CTA must point at a sellable/public product page. Seller ownership alone can include
+        // unpublished/unpriced products whose story href would resolve to null.
+        var publicProductIds = cards is null
+            ? null
+            : (await cards.ComposeProductCardsAsync(ids, cancellationToken)).Keys.ToHashSet();
         IEnumerable<StoryProductOption> eligible = ids
-            .Where(titleMap.ContainsKey)
+            .Where(id => titleMap.ContainsKey(id) && (publicProductIds is null || publicProductIds.Contains(id)))
             .Select(id => new StoryProductOption(id, titleMap[id]));
 
         if (term.Length > 0)

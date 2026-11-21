@@ -108,6 +108,27 @@ function looksLikeGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
+/** Read the Media upload receipt without inventing fields the server did not send. */
+function readUploadedStoryMedia(
+  payload: unknown,
+): { mediaAssetId: string; contentType: string; displayUrl: string | null } | null {
+  if (!payload || typeof payload !== "object") return null;
+  const record = payload as Record<string, unknown>;
+  const root =
+    record.data && typeof record.data === "object" && !Array.isArray(record.data)
+      ? (record.data as Record<string, unknown>)
+      : record;
+  const id = root.mediaAssetId ?? root.MediaAssetId;
+  if (typeof id !== "string" || !id.trim()) return null;
+  const type = root.contentType ?? root.ContentType;
+  const url = root.displayUrl ?? root.DisplayUrl;
+  return {
+    mediaAssetId: id.trim(),
+    contentType: typeof type === "string" ? type : "",
+    displayUrl: typeof url === "string" && url.trim() ? url : null,
+  };
+}
+
 const OPEN_SLIDE_AFTER_LOAD_KEY = "tooba.story.openSlideAfterLoad";
 
 function destinationLabelForType(ctaType: string | null | undefined, copy: StoryCopy): string {
@@ -139,6 +160,11 @@ function displayState(row: AdminStorySnapshot, copy: StoryCopy, nowMs: number = 
   if (row.status === "Active" && row.startAt) {
     const start = Date.parse(row.startAt);
     if (!Number.isNaN(start) && start > nowMs) return copy.displayScheduled;
+  }
+  // Approval is not publication: an approved story still in Draft (or Active without an
+  // effectively-public window) must not read as «پیش‌نویس» nor as «در ویترین».
+  if (row.reviewStatus === "Approved" && (row.status === "Draft" || row.status === "Active")) {
+    return copy.displayApprovedUnpublished;
   }
   if (row.status === "Draft" || row.reviewStatus === "None" || row.status === "Active") {
     return copy.displayDraft;
@@ -2024,6 +2050,25 @@ function StoryManagementScreenBody({
                   )}
                 </div>
               ) : null}
+              {/* Explicit replacement: the old slide stays until the new file uploads AND the owning
+                  update command completes; a caption/CTA-only edit never uploads anything. */}
+              <input
+                ref={slideFileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="sr-only"
+                onChange={(e) => setSlideFile(e.target.files?.[0] ?? null)}
+                data-testid="story-replace-file"
+              />
+              <button
+                type="button"
+                className={storyButtonClass("secondary")}
+                onClick={() => slideFileInputRef.current?.click()}
+                data-testid="story-replace-file-pick"
+              >
+                {slideFile ? `${copy.pickedFilePrefix} ${slideFile.name}` : copy.replaceMediaPick}
+              </button>
+              <p className="text-xs text-muted">{copy.replaceMediaHint}</p>
             </div>
           )}
           <label className="block text-sm">
@@ -2037,7 +2082,9 @@ function StoryManagementScreenBody({
           </label>
           {(!editingItemId && isVideoFile(slideFile)) ||
           (editingItemId &&
-            detail?.items.find((row) => row.storyItemId === editingItemId)?.mediaType === "video") ? null : (
+            (slideFile
+              ? isVideoFile(slideFile)
+              : detail?.items.find((row) => row.storyItemId === editingItemId)?.mediaType === "video")) ? null : (
             <label className="block text-sm">
               <span className="mb-1 block text-muted">{copy.durationLabel}</span>
               <input
@@ -2230,11 +2277,66 @@ function StoryManagementScreenBody({
                       return;
                     }
                     const key = mintOccurrence();
-                    const isVideo = existing.mediaType === "video";
+                    let mediaType = existing.mediaType;
+                    let mediaAssetId = existing.mediaAssetId;
+                    let mediaUrl = existing.mediaUrl;
+                    // Deliberate media replacement: upload first, then the owning update_item.
+                    // The old slide stays untouched on the server until both steps succeed.
+                    if (slideFile) {
+                      const uploadKey = mintOccurrence();
+                      const uploadPath =
+                        capabilities.mode === "seller"
+                          ? "/v1/seller/media"
+                          : detail.sellerPartyId
+                            ? "/v1/admin/media/upload-for-shop"
+                            : "/v1/admin/media/upload-story-platform";
+                      const uploadEnvelope: StoryIntentEnvelope = {
+                        version: 2,
+                        action: "upload",
+                        occurrenceKey: uploadKey,
+                        method: "POST",
+                        path: uploadPath,
+                        routeTargetId: detail.storyId,
+                        expectedVersion: detail.versionToken,
+                        bodyText: null,
+                        uploadMeta: {
+                          fileName: slideFile.name,
+                          fileType: slideFile.type,
+                          fileSize: slideFile.size,
+                          digestHex: "pending",
+                        },
+                        addBodyText: null,
+                        uploadedAssetId: null,
+                        children: [],
+                        role: capabilities.mode,
+                        shopId: detail.sellerPartyId ?? sellerShopId,
+                        actorUserId: actorId,
+                        recordedAt: new Date().toISOString(),
+                      };
+                      const upload = await runDurableStoryMutation({
+                        gate,
+                        envelope: uploadEnvelope,
+                        scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
+                        uploadFile: slideFile,
+                      });
+                      if (upload.state !== "ok") {
+                        storyToast.error(upload.state === "failed" ? upload.message : copy.sendFailed);
+                        return;
+                      }
+                      const uploaded = readUploadedStoryMedia(upload.data);
+                      if (!uploaded) {
+                        storyToast.error(copy.mediaReplaceFailed);
+                        return;
+                      }
+                      mediaType = uploaded.contentType.startsWith("video/") ? "video" : "image";
+                      mediaAssetId = uploaded.mediaAssetId;
+                      mediaUrl = uploaded.displayUrl ?? existing.mediaUrl;
+                    }
+                    const isVideo = mediaType === "video";
                     const body = {
-                      mediaType: existing.mediaType,
-                      mediaAssetId: existing.mediaAssetId,
-                      mediaUrl: existing.mediaUrl,
+                      mediaType,
+                      mediaAssetId,
+                      mediaUrl,
                       caption: slideCaption.trim() || null,
                       durationMs: isVideo ? null : Math.max(1, Number(slideDurationSec) || 5) * 1000,
                       ctaType: slideCtaType,
@@ -2299,7 +2401,7 @@ function StoryManagementScreenBody({
                     method: "POST",
                     path:
                       capabilities.mode === "seller"
-                        ? "/v1/seller/media/upload-story"
+                        ? "/v1/seller/media"
                         : detail.sellerPartyId
                           ? "/v1/admin/media/upload-for-shop"
                           : "/v1/admin/media/upload-story-platform",

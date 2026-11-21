@@ -116,12 +116,64 @@ function verifyStoryTarget(
     if (envelope.routeTargetId && snap.storyId !== envelope.routeTargetId) {
       return { ok: false, reason: "story_target_mismatch" };
     }
-    return { ok: true, data: mapped };
+    return effectSatisfied(envelope, root, snap) ? { ok: true, data: mapped } : { ok: false, reason: "story_state_unchanged" };
   }
   if (envelope.routeTargetId && storyId !== envelope.routeTargetId) {
     return { ok: false, reason: "story_target_mismatch" };
   }
+  const snap = mapAdminStory(root) ?? mapAdminStory(mapped);
+  if (snap && snap.storyId === storyId && !effectSatisfied(envelope, root, snap)) {
+    return { ok: false, reason: "story_state_unchanged" };
+  }
   return { ok: true, data: mapped };
+}
+
+function carries(record: Record<string, unknown>, ...keys: string[]): boolean {
+  return keys.some((key) => Object.prototype.hasOwnProperty.call(record, key));
+}
+
+/**
+ * A 2xx snapshot must show the effect the frozen action owns. A same-id unchanged Draft
+ * (e.g. approve returning the untouched row) is not completion. Only fields the reply
+ * actually carries are asserted, so partial-but-truthful replies stay valid.
+ */
+function effectSatisfied(
+  envelope: StoryIntentEnvelope,
+  root: Record<string, unknown>,
+  snap: NonNullable<ReturnType<typeof mapAdminStory>>,
+): boolean {
+  const carriesStatus = carries(root, "status", "Status");
+  const carriesReview = carries(root, "reviewStatus", "ReviewStatus");
+  const carriesVersion = carries(root, "versionToken", "VersionToken");
+  const carriesPublic = carries(root, "effectivelyPublic", "EffectivelyPublic");
+
+  // When the reply exposes no state at all, the existing identity binding is what the server owns.
+  if (!carriesStatus && !carriesReview && !carriesVersion && !carriesPublic) return true;
+
+  switch (envelope.action) {
+    case "approve":
+      return !carriesReview || snap.reviewStatus === "Approved";
+    case "approve_publish":
+      if (carriesReview && snap.reviewStatus !== "Approved") return false;
+      return !carriesStatus || snap.status === "Active" || (carriesPublic && snap.effectivelyPublic);
+    case "approve_schedule":
+      if (carriesReview && snap.reviewStatus !== "Approved") return false;
+      return !carriesStatus || snap.status === "Scheduled";
+    case "reject":
+      return !carriesReview || snap.reviewStatus === "Rejected";
+    case "submit":
+      return !carriesReview || snap.reviewStatus === "Submitted";
+    case "publish_now":
+      return !carriesStatus || snap.status === "Active" || (carriesPublic && snap.effectivelyPublic);
+    case "schedule":
+      return !carriesStatus || snap.status === "Scheduled";
+    case "stop":
+      return !carriesStatus || snap.status === "Disabled";
+    case "return_to_draft":
+      return !carriesStatus || snap.status === "Draft";
+    default:
+      return true;
+  }
 }
 
 function verifyUploadOrAdd(
@@ -173,7 +225,7 @@ export function bindStoryEnvelopeRoute(
   // Anchored: reject appended/foreign path suffixes (e.g. …/upload-story/../other).
   const mediaUpload =
     role === "seller"
-      ? /^\/v1\/seller\/media\/upload-story\/?$/
+      ? /^\/v1\/seller\/media\/?$/
       : /^\/v1\/admin\/media\/upload-(?:story-platform|for-shop)\/?$/;
 
   const storyRoot = role === "seller" ? sellerStory : adminStory;
@@ -199,9 +251,16 @@ export function bindStoryEnvelopeRoute(
           path.includes(envelope.routeTargetId!)
         );
       case "stop":
+        // The owning stop command is role-specific: seller /stop, admin /disable (AdminDisableAsync).
+        // Accepting only the seller route made every admin stop a client-side "route_binding" failure.
         return (
           Boolean(envelope.routeTargetId) &&
-          expect("POST", new RegExp(`^/v1/seller/stories/${guid}/stop/?$`)) &&
+          expect(
+            "POST",
+            role === "seller"
+              ? new RegExp(`^/v1/seller/stories/${guid}/stop/?$`)
+              : new RegExp(`^/v1/admin/stories/${guid}/disable/?$`),
+          ) &&
           path.includes(envelope.routeTargetId!)
         );
       case "return_to_draft":

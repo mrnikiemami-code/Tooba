@@ -15,7 +15,7 @@ public static class StoryAdminGridPolicies
 
     private static readonly HashSet<string> SortableFields = new(StringComparer.Ordinal)
     {
-        "title", "status", "reviewStatus", "origin", "locale", "market", "displayOrder", "items",
+        "title", "status", "reviewStatus", "origin", "locale", "market", "displayOrder", "items", "updatedAt",
     };
 
     private static readonly Dictionary<string, HashSet<string>> OperatorsByField = new(StringComparer.Ordinal)
@@ -28,6 +28,13 @@ public static class StoryAdminGridPolicies
         ["market"] = GridQueryOperators.Text,
         ["displayOrder"] = GridQueryOperators.Number,
         ["items"] = GridQueryOperators.Number,
+        // The workspace grid offers these columns/filters; refusing them here made every
+        // shop/date filter a 400 that the UI silently dropped.
+        ["shopDisplayName"] = GridQueryOperators.Text,
+        ["shopName"] = GridQueryOperators.Text,
+        ["startAt"] = GridQueryOperators.Date,
+        ["endAt"] = GridQueryOperators.Date,
+        ["updatedAt"] = GridQueryOperators.Date,
     };
 
     /// <summary>Normalize درخواست گرید استوری Admin؛ خطای اعتبارسنجی را به PlatformHttpException نگاشت می‌کند.</summary>

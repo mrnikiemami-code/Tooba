@@ -27,6 +27,19 @@ function imageProgressStep(item: PublicStoryItem | undefined): number {
   return 1;
 }
 
+const VIDEO_URL_RE = /\.(mp4|m4v|webm|mov|ogv|ogg)(?:[?#]|$)/i;
+
+/**
+ * Video detection belongs to the slide, not the story: a story that contains a video slide
+ * still has a JPEG cover, and that cover must dwell like a photo (not wait for `ended`).
+ */
+function itemIsVideo(item: PublicStoryItem | undefined): boolean {
+  const type = (item?.mediaType ?? "").trim().toLowerCase();
+  if (type === "video") return true;
+  if (type === "image") return false;
+  return VIDEO_URL_RE.test((item?.mediaUrl ?? "").trim());
+}
+
 function isExternalHttp(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -75,8 +88,12 @@ export function StoryModal({
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -87,7 +104,8 @@ export function StoryModal({
   const items = currentStory?.items?.length ? currentStory.items : [];
   const currentItem = items[currentItemIndex];
   const totalStories = stories.length;
-  const isVideo = (currentItem?.mediaType ?? (currentStory?.isVideo ? "video" : "image")) === "video";
+  const isVideo = itemIsVideo(currentItem);
+  const isHeld = isPaused || isHidden;
   const mediaUrl = currentItem?.mediaUrl ?? currentStory?.coverMediaUrl ?? "";
   const avatarUrl = currentStory?.coverMediaUrl ?? items[0]?.mediaUrl ?? "";
   const shopName = currentStory?.shopDisplayName?.trim() || null;
@@ -138,6 +156,7 @@ export function StoryModal({
   useEffect(() => {
     setProgress(0);
     setIsPaused(false);
+    setImageLoaded(false);
     setMediaError(false);
     setShareNotice(null);
     if (videoRef.current) {
@@ -150,8 +169,28 @@ export function StoryModal({
   }, [currentStoryIndex, currentItemIndex, currentStory]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const onVisibility = () => setIsHidden(document.visibilityState === "hidden");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus?.();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen || !currentStory || items.length === 0) return;
-    if (isPaused) {
+    if (isHeld) {
       if (progressTimer.current) clearInterval(progressTimer.current);
       if (isVideo && videoRef.current) videoRef.current.pause();
       return;
@@ -181,6 +220,10 @@ export function StoryModal({
       return;
     }
 
+    // A photo's dwell starts only after the image actually painted; otherwise a slow or
+    // failed load would consume the slide's time and jump to the next item.
+    if (!imageLoaded) return;
+
     const step = imageProgressStep(currentItem);
     progressTimer.current = setInterval(() => {
       setProgress((prev) => {
@@ -196,7 +239,7 @@ export function StoryModal({
     return () => {
       if (progressTimer.current) clearInterval(progressTimer.current);
     };
-  }, [isOpen, isPaused, isVideo, currentStoryIndex, currentItemIndex, currentItem, currentStory, items.length, goToNextItem]);
+  }, [isOpen, isHeld, isVideo, imageLoaded, currentStoryIndex, currentItemIndex, currentItem, currentStory, items.length, goToNextItem]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -286,6 +329,10 @@ export function StoryModal({
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={currentStory.title || "استوری"}
       data-testid="story-modal"
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center p-2 sm:p-4"
     >
@@ -315,6 +362,7 @@ export function StoryModal({
         </div>
 
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -346,7 +394,10 @@ export function StoryModal({
               alt={currentStory.title}
               className="w-full h-full object-contain"
               onError={() => setMediaError(true)}
-              onLoad={() => setMediaError(false)}
+              onLoad={() => {
+                setMediaError(false);
+                setImageLoaded(true);
+              }}
             />
           )}
 
@@ -422,6 +473,15 @@ export function StoryModal({
               </div>
             </div>
           </div>
+
+          {currentItem?.caption?.trim() ? (
+            <p
+              className="absolute bottom-32 left-4 right-4 z-20 text-center text-sm font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
+              data-testid="story-caption"
+            >
+              {currentItem.caption.trim()}
+            </p>
+          ) : null}
 
           {cta ? (
             <div className="absolute bottom-20 left-4 right-4 z-20 flex justify-center">

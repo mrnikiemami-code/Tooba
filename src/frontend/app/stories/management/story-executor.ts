@@ -430,12 +430,25 @@ async function finalizeResponse<T>(
       }
     }
     if (!response.ok) {
+      // Only a parsed platform error envelope (with an owned error code) is an authoritative
+      // no-effect refusal. An HTML/proxy/gateway 4xx must stay uncertain: it may have been
+      // produced after the command ran, and erasing the frozen intent would hide that.
+      const code = parseCode(payload);
+      if (parseFailed || !code) {
+        return {
+          state: "failed",
+          message: "پاسخ سرور قابل تأیید نبود؛ نتیجه نامشخص است و اقدام قابل ادامه است.",
+          envelope,
+          status: response.status,
+          code: "story.response.unverified",
+        };
+      }
       return {
         state: "failed",
         message: parseMessage(payload, "اقدام ممکن نشد."),
         envelope,
         status: response.status,
-        code: parseCode(payload),
+        code,
       };
     }
     if (response.status < 200 || response.status >= 300) {
