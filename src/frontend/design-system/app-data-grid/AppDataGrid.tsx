@@ -293,6 +293,11 @@ export function AppDataGrid<T extends { id: string }>({
       try {
         const page = await queryAdapter(nextQuery);
         if (controller.signal.aborted) return;
+        const totalPages = Math.max(1, Math.ceil(page.total / Math.max(1, nextQuery.pageSize)));
+        if (nextQuery.page > totalPages) {
+          await load({ ...nextQuery, page: totalPages }, { force: true });
+          return;
+        }
         setRows(page.rows);
         setTotal(page.total);
         setQuery(nextQuery);

@@ -81,9 +81,55 @@ public sealed partial class StoryDirectory
             "locale" => EfGridQuery.ApplyTextFilter(source, x => x.Locale, filter),
             "market" => EfGridQuery.ApplyTextFilter(source, x => x.Market, filter),
             "displayOrder" => EfGridQuery.ApplyIntFilter(source, x => x.DisplayOrder, filter),
+            "updatedAt" => EfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
+            "startAt" => ApplyNullableDateFilter(source, nameof(StoryEntity.StartAt), filter),
+            "endAt" => ApplyNullableDateFilter(source, nameof(StoryEntity.EndAt), filter),
             _ => source,
         };
 
+    private static IQueryable<StoryEntity> ApplyNullableDateFilter(
+        IQueryable<StoryEntity> source,
+        string column,
+        GridFilterRequest filter)
+    {
+        var op = (filter.Operator ?? string.Empty).Trim();
+        if (op == "blank")
+            return source.Where(x => EF.Property<DateTimeOffset?>(x, column) == null);
+        if (op == "notBlank")
+            return source.Where(x => EF.Property<DateTimeOffset?>(x, column) != null);
+
+        if (!TryParseSellerDay(filter.Value, out var fromDay))
+            return source.Where(_ => false);
+        var toDay = TryParseSellerDay(filter.ValueTo ?? filter.Value, out var parsedTo) ? parsedTo : fromDay;
+        var from = new DateTimeOffset(fromDay.Year, fromDay.Month, fromDay.Day, 0, 0, 0, TimeSpan.Zero);
+        var toExclusive = new DateTimeOffset(toDay.Year, toDay.Month, toDay.Day, 0, 0, 0, TimeSpan.Zero).AddDays(1);
+        var afterFrom = toExclusive.AddDays(-1);
+
+        return op switch
+        {
+            "on" => source.Where(x => EF.Property<DateTimeOffset?>(x, column) >= from
+                && EF.Property<DateTimeOffset?>(x, column) < toExclusive),
+            "before" => source.Where(x => EF.Property<DateTimeOffset?>(x, column) < from),
+            "after" => source.Where(x => EF.Property<DateTimeOffset?>(x, column) >= afterFrom),
+            "between" => source.Where(x => EF.Property<DateTimeOffset?>(x, column) >= from
+                && EF.Property<DateTimeOffset?>(x, column) < toExclusive),
+            _ => source,
+        };
+    }
+
+    private static bool TryParseSellerDay(string? value, out DateTime day)
+    {
+        day = default;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+        var text = value.Trim();
+        if (text.Length >= 10
+            && DateTime.TryParse(text[..10], System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind, out day))
+            return true;
+        return DateTimeOffset.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind, out var dto) && (day = dto.UtcDateTime) == day;
+    }
     private static IQueryable<StoryEntity> OrderSeller(IQueryable<StoryEntity> source, GridSortRequest sort)
     {
         var asc = sort.Direction == "asc";
@@ -98,6 +144,15 @@ public sealed partial class StoryDirectory
             "reviewStatus" => asc
                 ? source.OrderBy(x => x.ReviewStatus).ThenBy(x => x.Title)
                 : source.OrderByDescending(x => x.ReviewStatus).ThenBy(x => x.Title),
+            "updatedAt" => asc
+                ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.Title)
+                : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.Title),
+            "startAt" => asc
+                ? source.OrderBy(x => x.StartAt).ThenBy(x => x.Title)
+                : source.OrderByDescending(x => x.StartAt).ThenBy(x => x.Title),
+            "endAt" => asc
+                ? source.OrderBy(x => x.EndAt).ThenBy(x => x.Title)
+                : source.OrderByDescending(x => x.EndAt).ThenBy(x => x.Title),
             _ => asc
                 ? source.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title)
                 : source.OrderByDescending(x => x.DisplayOrder).ThenBy(x => x.Title),

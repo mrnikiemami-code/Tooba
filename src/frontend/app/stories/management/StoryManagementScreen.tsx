@@ -3236,7 +3236,7 @@ function StoryLiveGrid({
         ),
         width: 140,
         minWidth: 110,
-        filterKind: "text",
+        filterKind: isAdmin ? "text" : undefined,
       },
       {
         id: "displayState",
@@ -3430,6 +3430,7 @@ function StoryLiveGrid({
         ) : (
           <AppDataGrid<AdminStorySnapshot>
             {...gridProps}
+            advancedFilterColumns={isAdmin ? gridProps.advancedFilterColumns : []}
             refreshToken={reloadToken}
             capabilities={{ rowSelection: isAdmin }}
             bulkActions={bulkActions}
