@@ -1,5 +1,32 @@
-> CURRENT — TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20
-> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. Implementation and all mandatory proof pending; NOT Architect ACCEPT or owner acceptance. STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask NONE.
+# CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/{TASK.md,RESULT.md,RECEIPTS.md,COMPLETION-CHECKLIST.md,user-review.md,claimed.json,ISSUANCE-RECEIPT.json}`.
+Status **PASS_COMPLETE_R20** over the issued A–F / R19 1–16 scope: owning admin `/disable` vs seller `/stop`, Approved+Draft
+seller `return-to-draft`, truthful «تأییدشده، منتشر نشده», state-effect success verification, authoritative-refusal-only intent
+retirement, registered Story capability enforcement with fail-closed DENY/Unavailable and no demo-shop fallback, DB-native
+shop/`updatedAt`/nullable-date grid filters, staged `replace_media` journal (frozen SHA-256 digest + UPDATE bytes), one native
+toast with a user-invoked recovery `<details>`, slide-level public player with loaded-photo dwell / video `ended` / hidden pause
+/ focus trap / `aria-modal`, bounded `EndAt` revalidation, SQL window pruning and batched CTA resolution.
+**The production Next build now passes** — BUILD_ID `qrCkTUiLY-AzikCO6XrYO`; Host 5088 DLL
+`96F060C4EFBCA12277E35E16ACE0D2B849966E272363EB340A3AF23F006427CC` skip-bootstrap=1, SingleStore/store-alpha healthy.
+Focused backend 12/12 + 3/3 + 25/25; mounts 17/17 (new player 3/3, 1000-row plan 6/6); story unit/guard 13/13;
+`npm run test:stories` exit 0; tsc 0; Release build 0 errors; served `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`,
+`/en/admin/stories`, `/fa/admin/stories/new` 200; 1440/390 zero overflow. ZERO migration/DDL/seed/grant/key/provider/money/
+stock; ZERO live Story/Media write; R19 deletion and four CTA rows remain REPORTED historical mutation; R6 effects UNKNOWN.
+Decision `CONSOLIDATED_R20_A_TO_F_COMPLETE_OWNING_STOP_AND_SELLER_MEDIA_AND_RETURN_TO_DRAFT_BOUND_STATE_EFFECT_SUCCESS_VERIFICATION_AUTHORITATIVE_REFUSAL_ONLY_SERVER_CAPABILITY_ENFORCEMENT_DB_NATIVE_SHOP_AND_NULLABLE_DATE_GRID_FILTERS_ONE_LOCALE_PRESERVING_WORKSPACE_STAGED_MEDIA_REPLACEMENT_JOURNAL_NATIVE_TOAST_WITH_USER_INVOKED_RECOVERY_SLIDE_LEVEL_PUBLIC_PLAYER_WITH_LOADED_DWELL_VIDEO_ENDED_HIDDEN_PAUSE_AND_BATCHED_CTA_WINDOW_REVALIDATION_NEXT_PRODUCTION_BUILD_PASSES_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. Expected-Base `9c43563891c77a64a89f99f4bec248bad1fdc9e2`; claim base HEAD
+`d6126b6afbc1ce727823bd121b844658c8fc2be2`. Honest limits: nullable-date SQL has no dedicated PostgreSQL rollback test;
+mounts are jsdom; served dwell advance unmeasurable under Chrome background-throttling; batched CTA port has no query-plan
+measurement; no live Approved+Draft row existed; `StoryManagementScreen.tsx` (3294) and `story-api.ts` (1319) remain oversized
+with `FE-SIZE` failing identically at base (28 violations), `FE-FOLDER-002` (9) and `FE-BOUNDARY-001` (23) base-identical.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — R20 ISSUED (superseded by the worker PASS above) — 2026-11-21
+
+> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. NOT Architect ACCEPT or owner acceptance.
 
 ---
 

@@ -68,7 +68,8 @@ public sealed partial class StoryDirectory
             story.CtaType,
             story.CtaTarget,
             items,
-            story.SellerPartyId);
+            story.SellerPartyId,
+            EndAt: story.EndAt);
     }
 
     private static PublicStoryItem MapPublicItem(StoryItem item) => new(

@@ -11,8 +11,57 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { useLocalizedPath } from "../../../lib/i18n/locale-context.tsx";
+import { useLocale, useLocalizedPath } from "../../../lib/i18n/locale-context.tsx";
 import type { PublicStoryCard, PublicStoryItem } from "../../stories/story-api.ts";
+
+type StoryModalCopy = {
+  dialogLabel: string;
+  close: string;
+  previous: string;
+  next: string;
+  share: string;
+  shareCopied: string;
+  muteOn: string;
+  muteOff: string;
+  viewCta: string;
+  mediaFailed: string;
+  goNextSlide: string;
+  platformStorefront: string;
+  shareTitle: string;
+};
+
+const STORY_MODAL_COPY: Record<"fa" | "en", StoryModalCopy> = {
+  fa: {
+    dialogLabel: "استوری",
+    close: "بستن",
+    previous: "قبلی",
+    next: "بعدی",
+    share: "اشتراک",
+    shareCopied: "لینک کپی شد",
+    muteOn: "صدا روشن",
+    muteOff: "صدا خاموش",
+    viewCta: "مشاهده",
+    mediaFailed: "نمایش این بخش ممکن نشد",
+    goNextSlide: "برو به اسلاید بعد",
+    platformStorefront: "ویترین اصلی",
+    shareTitle: "استوری توبا",
+  },
+  en: {
+    dialogLabel: "Story",
+    close: "Close",
+    previous: "Previous",
+    next: "Next",
+    share: "Share",
+    shareCopied: "Link copied",
+    muteOn: "Unmute",
+    muteOff: "Mute",
+    viewCta: "View",
+    mediaFailed: "This part cannot be shown",
+    goNextSlide: "Next slide",
+    platformStorefront: "Main storefront",
+    shareTitle: "Tooba story",
+  },
+};
 
 const toPersianDigits = (n: number | string | null | undefined) => {
   if (n === null || n === undefined) return "";
@@ -83,6 +132,8 @@ export function StoryModal({
   initialStoryId: string | null;
 }) {
   const localizePath = useLocalizedPath();
+  const locale = useLocale();
+  const t = STORY_MODAL_COPY[locale === "en" ? "en" : "fa"];
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
@@ -162,7 +213,9 @@ export function StoryModal({
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.muted = isMuted;
-      void videoRef.current.play().catch(() => undefined);
+      const played = videoRef.current.play();
+      // Some embedded/webview players return no promise; never turn that into a render crash.
+      void played?.catch(() => undefined);
     }
     // Intentionally omit isMuted — mute toggle must not reset progress.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,7 +235,33 @@ export function StoryModal({
     document.body.style.overflow = "hidden";
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
+
+    // Keep keyboard focus inside the dialog while it is the only visible surface.
+    const FOCUSABLE =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const onTab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const root = dialogRef.current;
+      if (!root) return;
+      const nodes = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (node) => node.offsetParent !== null || node === document.activeElement,
+      );
+      if (nodes.length === 0) return;
+      const first = nodes[0]!;
+      const last = nodes[nodes.length - 1]!;
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !root.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !root.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onTab);
+
     return () => {
+      document.removeEventListener("keydown", onTab);
       document.body.style.overflow = previousOverflow;
       previousFocus?.focus?.();
     };
@@ -200,7 +279,7 @@ export function StoryModal({
       if (progressTimer.current) clearInterval(progressTimer.current);
       const video = videoRef.current;
       if (video) {
-        void video.play().catch(() => undefined);
+        void video.play()?.catch(() => undefined);
         const onTime = () => {
           const duration = video.duration;
           if (!Number.isFinite(duration) || duration <= 0) return;
@@ -270,8 +349,8 @@ export function StoryModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: currentStory?.title ?? "استوری توبا",
-          text: shopName ? `${shopName} · ${currentStory?.title ?? ""}` : currentStory?.title ?? "استوری توبا",
+          title: currentStory?.title ?? t.shareTitle,
+          text: shopName ? `${shopName} · ${currentStory?.title ?? ""}` : currentStory?.title ?? t.shareTitle,
           url: shareUrl,
         });
         return;
@@ -281,7 +360,7 @@ export function StoryModal({
     }
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setShareNotice("لینک کپی شد");
+      setShareNotice(t.shareCopied);
     } catch {
       setShareNotice(shareUrl);
     }
@@ -332,7 +411,7 @@ export function StoryModal({
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label={currentStory.title || "استوری"}
+      aria-label={currentStory.title || t.dialogLabel}
       data-testid="story-modal"
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center p-2 sm:p-4"
     >
@@ -369,7 +448,7 @@ export function StoryModal({
             onClose();
           }}
           className="absolute top-3 right-3 z-30 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-all border border-white/10"
-          aria-label="بستن"
+          aria-label={t.close}
         >
           <X className="w-5 h-5" />
         </button>
@@ -405,7 +484,7 @@ export function StoryModal({
             <div className="w-full h-full flex items-center justify-center text-white/30 absolute inset-0 bg-black/60">
               <div className="text-center px-4">
                 <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-sm text-white/80">نمایش این بخش ممکن نشد</p>
+                <p className="text-sm text-white/80">{t.mediaFailed}</p>
                 <button
                   type="button"
                   className="mt-4 min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-white"
@@ -414,7 +493,7 @@ export function StoryModal({
                     goToNextItem();
                   }}
                 >
-                  برو به اسلاید بعد
+                  {t.goNextSlide}
                 </button>
               </div>
             </div>
@@ -427,7 +506,7 @@ export function StoryModal({
               goToPrevItem();
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-all border border-white/10"
-            aria-label="قبلی"
+            aria-label={t.previous}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -438,7 +517,7 @@ export function StoryModal({
               goToNextItem();
             }}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-all border border-white/10"
-            aria-label="بعدی"
+            aria-label={t.next}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -467,7 +546,7 @@ export function StoryModal({
                   </a>
                 ) : (
                   <span className="truncate" data-testid="story-shop-name">
-                    {shopName ?? "ویترین اصلی"}
+                    {shopName ?? t.platformStorefront}
                   </span>
                 )}
               </div>
@@ -490,7 +569,7 @@ export function StoryModal({
                 onClick={handleCta}
                 className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-bold shadow-lg hover:bg-primary-strong transition-colors min-h-11"
               >
-                مشاهده
+                {t.viewCta}
               </button>
             </div>
           ) : null}
@@ -504,7 +583,7 @@ export function StoryModal({
                   void handleShare();
                 }}
                 className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 min-h-11 min-w-11 flex items-center justify-center"
-                aria-label="اشتراک"
+                aria-label={t.share}
                 data-testid="story-share"
               >
                 <Share2 className="w-6 h-6 text-white" />
@@ -518,7 +597,7 @@ export function StoryModal({
                     toggleMute();
                   }}
                   className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all border border-white/10 min-h-11 min-w-11 flex items-center justify-center"
-                  aria-label={isMuted ? "صدا روشن" : "صدا خاموش"}
+                  aria-label={isMuted ? t.muteOn : t.muteOff}
                 >
                   {isMuted ? <VolumeX className="w-6 h-6 text-white" /> : <Volume2 className="w-6 h-6 text-white" />}
                 </button>

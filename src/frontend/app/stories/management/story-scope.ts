@@ -5,7 +5,6 @@ import {
   ACTOR_STORAGE_KEY,
   SELLER_PARTY_STORAGE_KEY,
   readActorUserId,
-  readSellerPartyId,
 } from "../../vendor-panel/seller-api";
 import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
 
@@ -25,7 +24,8 @@ export function readStoryScope(role: "admin" | "seller"): StoryScopeSnapshot {
     return {
       role,
       actorUserId: readActorUserId() ?? "",
-      shopId: readSellerPartyId(window.location.search),
+      // No demo-shop fallback: a missing seller context shows the choose-context state instead.
+      shopId: readStorySellerShopId(window.location.search),
     };
   }
   return {
@@ -33,6 +33,19 @@ export function readStoryScope(role: "admin" | "seller"): StoryScopeSnapshot {
     actorUserId: window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? DEFAULT_ADMIN_ACTOR_ID,
     shopId: null,
   };
+}
+
+/** Seller shop strictly from an explicit choice (storage or query); never a demo default. */
+export function readStorySellerShopId(search?: string): string | null {
+  if (typeof window === "undefined") return null;
+  const stored = window.localStorage.getItem(SELLER_PARTY_STORAGE_KEY);
+  if (stored && stored.trim().length > 0) return stored.trim();
+  if (search) {
+    const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+    const fromQuery = params.get("sellerPartyId") ?? params.get("seller");
+    if (fromQuery && fromQuery.trim().length > 0) return fromQuery.trim();
+  }
+  return null;
 }
 
 export function emitStoryScopeChanged(): void {

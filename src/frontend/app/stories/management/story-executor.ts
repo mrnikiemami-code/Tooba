@@ -10,7 +10,7 @@ import {
   validateStoryEnvelope,
   type StoryIntentEnvelope,
 } from "./story-intent";
-import { bindStoryEnvelopeRoute, verifyStorySuccessPayload } from "./story-response";
+import { bindStoryEnvelopeRoute, isAuthoritativeStoryRefusal, verifyStorySuccessPayload } from "./story-response";
 import { ADMIN_DEV_ACTOR_HEADER } from "../../admin/admin-api";
 import { DEV_ACTOR_HEADER, SELLER_PARTY_HEADER } from "../../vendor-panel/seller-api";
 
@@ -67,13 +67,15 @@ function parseCode(payload: unknown): string | undefined {
   return undefined;
 }
 
-/** Terminal HTTP refusal: the server evaluated the frozen envelope and refused it; replay cannot help. */
+/** Terminal HTTP refusal: the owning Story module evaluated the frozen envelope and refused it. */
 function isTerminalRefusal(result: Extract<StoryExecutorResult, { state: "failed" }>): boolean {
   if (result.code === "story.transport.rejected" || result.code === "story.response.unverified") return false;
   const status = result.status;
   if (status < 400 || status >= 500) return false;
   // Request timeout / too-early / throttling are retryable-uncertain, not a verdict on the intent.
-  return status !== 408 && status !== 425 && status !== 429;
+  if (status === 408 || status === 425 || status === 429) return false;
+  // Only the Story module's own `story.*` namespace is authoritative; proxy/foreign codes stay uncertain.
+  return Boolean(result.code && /^story\.[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)*$/.test(result.code));
 }
 
 /**
@@ -156,6 +158,40 @@ function buildAddFromJournal(
   }
 }
 
+/**
+ * Staged media replacement: same upload→continuation journal as `upload_add`, but the continuation
+ * is the owning `update_item` PUT for the SAME slide. The old media stays authoritative until both
+ * the upload and the update complete; a lost upload resumes that exact file, a lost update retries
+ * ONLY the frozen update bytes.
+ */
+function buildReplaceFromJournal(
+  journal: StoryIntentEnvelope,
+  uploaded: { mediaAssetId: string; contentType: string; displayUrl: string },
+): { path: string; body: Record<string, unknown> } | null {
+  if (!journal.bodyText || !journal.routeTargetId || !journal.targetItemId || !journal.children[1]) return null;
+  try {
+    const planned = JSON.parse(journal.bodyText) as Record<string, unknown>;
+    const mediaType = uploaded.contentType.startsWith("video/") ? "video" : "image";
+    const rawDuration = Number(planned.durationSec ?? planned.durationMs ?? 5);
+    const durationSec = Number.isFinite(rawDuration) ? Math.max(1, Math.round(rawDuration)) : 5;
+    const body = {
+      mediaType,
+      mediaAssetId: uploaded.mediaAssetId,
+      mediaUrl: uploaded.displayUrl,
+      caption: typeof planned.caption === "string" ? planned.caption : null,
+      durationMs: mediaType === "image" ? durationSec * 1000 : null,
+      ctaType: planned.ctaType ?? "none",
+      ctaTarget: planned.ctaTarget ?? null,
+      expectedVersion: planned.expectedVersion ?? journal.expectedVersion,
+      occurrenceKey: journal.children[1].occurrenceKey,
+    };
+    const root = journal.role === "seller" ? "/v1/seller/stories" : "/v1/admin/stories";
+    return { path: `${root}/${journal.routeTargetId}/items/${journal.targetItemId}`, body };
+  } catch {
+    return null;
+  }
+}
+
 /** Upload then add — advances journal with asset id + frozen add body; after unknown add retries ONLY add. */
 export async function runDurableUploadAdd(args: {
   gate: StoryExecutorGate;
@@ -168,7 +204,9 @@ export async function runDurableUploadAdd(args: {
   };
 }): Promise<StoryExecutorResult> {
   if (args.gate.inFlightRef.current) return { state: "blocked", reason: "in_flight" };
-  if (args.envelope.action !== "upload_add") return { state: "blocked", reason: "envelope" };
+  if (args.envelope.action !== "upload_add" && args.envelope.action !== "replace_media") {
+    return { state: "blocked", reason: "envelope" };
+  }
 
   // Mutex BEFORE async digest.
   args.gate.inFlightRef.current = true;
@@ -228,7 +266,10 @@ export async function runDurableUploadAdd(args: {
           status: uploaded.status,
         };
       }
-      const built = buildAddFromJournal(journal, { mediaAssetId, contentType, displayUrl }, args.buildAddBody);
+      const built =
+        journal.action === "replace_media"
+          ? buildReplaceFromJournal(journal, { mediaAssetId, contentType, displayUrl })
+          : buildAddFromJournal(journal, { mediaAssetId, contentType, displayUrl }, args.buildAddBody);
       if (!built) {
         return {
           state: "failed",
@@ -245,7 +286,7 @@ export async function runDurableUploadAdd(args: {
         ],
         uploadedAssetId: mediaAssetId,
         addBodyText: JSON.stringify(built.body),
-        method: "POST",
+        method: journal.action === "replace_media" ? "PUT" : "POST",
         path: built.path,
         bodyText: JSON.stringify(built.body),
       };
@@ -298,19 +339,23 @@ async function dispatchFrozenEnvelope<T>(
     return { state: "blocked", reason: "envelope" };
   }
 
-  // upload_add: if upload child done and add body frozen → only POST add; never reupload.
-  if (envelope.action === "upload_add" && envelope.children[0]?.done && envelope.addBodyText && envelope.uploadedAssetId) {
-    const addPath =
-      envelope.role === "seller"
-        ? `/v1/seller/stories/${envelope.routeTargetId}/items`
-        : `/v1/admin/stories/${envelope.routeTargetId}/items`;
-    const addEnvelope: StoryIntentEnvelope = { ...envelope, method: "POST", path: addPath, bodyText: envelope.addBodyText };
-    const addRoute = bindStoryEnvelopeRoute(addEnvelope);
-    if (!addRoute.ok) return { state: "blocked", reason: "envelope" };
-    return sendJsonRequest(addEnvelope, "POST", addPath, envelope.addBodyText, mapOk);
+  // Staged continuation: upload child done and the next body frozen → send ONLY that continuation
+  // (add-item POST or replace-media PUT); never re-upload the bytes.
+  const staged = envelope.action === "upload_add" || envelope.action === "replace_media";
+  if (staged && envelope.children[0]?.done && envelope.addBodyText && envelope.uploadedAssetId) {
+    if (envelope.bodyText == null) return { state: "blocked", reason: "envelope" };
+    const continuation: StoryIntentEnvelope = {
+      ...envelope,
+      method: envelope.method,
+      path: envelope.path,
+      bodyText: envelope.addBodyText,
+    };
+    const continuationRoute = bindStoryEnvelopeRoute(continuation);
+    if (!continuationRoute.ok) return { state: "blocked", reason: "envelope" };
+    return sendJsonRequest(continuation, envelope.method, envelope.path, envelope.addBodyText, mapOk);
   }
 
-  if (envelope.action === "upload" || envelope.action === "upload_add") {
+  if (envelope.action === "upload" || staged) {
     if (!uploadFile) {
       return {
         state: "failed",
@@ -430,11 +475,12 @@ async function finalizeResponse<T>(
       }
     }
     if (!response.ok) {
-      // Only a parsed platform error envelope (with an owned error code) is an authoritative
-      // no-effect refusal. An HTML/proxy/gateway 4xx must stay uncertain: it may have been
-      // produced after the command ran, and erasing the frozen intent would hide that.
+      // Only a parsed owning Story refusal (4xx ProblemDetails with a `story.*` errorCode) is an
+      // authoritative no-effect verdict. An HTML/proxy/gateway body, a foreign code or an unknown
+      // shape must stay uncertain: it may have been produced after the command ran, so erasing the
+      // frozen intent would hide that.
       const code = parseCode(payload);
-      if (parseFailed || !code) {
+      if (parseFailed || !code || !isAuthoritativeStoryRefusal(response.status, payload)) {
         return {
           state: "failed",
           message: "پاسخ سرور قابل تأیید نبود؛ نتیجه نامشخص است و اقدام قابل ادامه است.",
@@ -499,7 +545,7 @@ export async function replayPendingStoryIntent<T = unknown>(args: {
   uploadFile?: File | null;
   mapOk?: (payload: unknown) => T;
 }): Promise<StoryExecutorResult<T>> {
-  if (args.envelope.action === "upload_add") {
+  if (args.envelope.action === "upload_add" || args.envelope.action === "replace_media") {
     return runDurableUploadAdd({
       gate: args.gate,
       envelope: args.envelope,

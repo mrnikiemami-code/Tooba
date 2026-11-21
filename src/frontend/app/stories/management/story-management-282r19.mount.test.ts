@@ -88,9 +88,14 @@ test("R19 A: same-id unchanged Draft is not approve completion; a real Approved 
   });
   assert.equal(approved.ok, true);
 
-  // A partial-but-truthful reply with no state fields keeps the existing identity binding.
+  // R20 tightened this: a reply carrying no state field cannot prove the approve effect, so it is
+  // retained as uncertain (never silently accepted). Identity-only actions such as delete stay bound.
   const partial = verifyStorySuccessPayload(approve, { data: { storyId: ID_A } });
-  assert.equal(partial.ok, true);
+  assert.equal(partial.ok, false);
+  assert.equal(partial.ok === false && partial.reason, "unverified_shape");
+
+  const remove = envelope({ action: "delete", method: "DELETE", path: `/v1/admin/stories/${ID_A}` });
+  assert.equal(verifyStorySuccessPayload(remove, { data: { storyId: ID_A } }).ok, true);
 
   const stop = envelope({ action: "stop", path: `/v1/admin/stories/${ID_A}/disable` });
   assert.equal(verifyStorySuccessPayload(stop, { data: { storyId: ID_A, status: "Active" } }).ok, false);

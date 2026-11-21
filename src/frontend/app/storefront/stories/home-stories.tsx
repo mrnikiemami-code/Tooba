@@ -20,6 +20,39 @@ import "swiper/css/free-mode";
  */
 export type StoryLayout = "circle" | "image-circles" | "rounded-cards" | "icon-shortcuts";
 
+const STORIES_RAIL_COPY: Record<"fa" | "en", { heading: string; shortcuts: string; empty: string; story: string; initialFallback: string }> = {
+  fa: {
+    heading: "استوری‌ها",
+    shortcuts: "میانبرها",
+    empty: "استوری فعالی برای نمایش نیست.",
+    story: "استوری",
+    initialFallback: "س",
+  },
+  en: {
+    heading: "Stories",
+    shortcuts: "Shortcuts",
+    empty: "No active story to show.",
+    story: "Story",
+    initialFallback: "S",
+  },
+};
+
+const VIDEO_EXT_RE = /\.(mp4|m4v|webm|mov|ogv|ogg)(?:[?#]|$)/i;
+/** One bounded revalidation window; a live story rail never polls faster than this. */
+const STORY_REVALIDATE_MAX_MS = 5 * 60 * 1000;
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif|gif|bmp|svg)(?:[?#]|$)/i;
+
+/**
+ * Whether the rendered cover is itself a video. A story that contains a video slide still has its
+ * own cover, and when that cover is a JPEG the rail must render it as a photo (no <video> for a still).
+ */
+function coverLooksLikeVideo(coverUrl: string, itemMediaType: string | undefined): boolean {
+  const url = (coverUrl ?? "").trim();
+  if (IMAGE_EXT_RE.test(url)) return false;
+  if (VIDEO_EXT_RE.test(url)) return true;
+  return (itemMediaType ?? "").trim().toLowerCase() === "video";
+}
+
 export function HomeStoriesSection({
   layout = "circle",
   storePreviewFill = false,
@@ -33,8 +66,10 @@ export function HomeStoriesSection({
   previewVariantKey?: string;
 } = {}) {
   const locale = useLocale();
+  const copy = STORIES_RAIL_COPY[locale === "en" ? "en" : "fa"];
   const [stories, setStories] = useState<PublicStoryCard[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [revalidateTick, setRevalidateTick] = useState(0);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
@@ -46,6 +81,11 @@ export function HomeStoriesSection({
       const eligible = rows.filter((story) => story.items.length > 0);
       setStories(eligible);
       setLoaded(true);
+      // A story that stopped/expired while the tab was open must not stay playable.
+      setSelectedStoryId((prev) =>
+        prev && eligible.some((story) => story.storyId === prev) ? prev : null,
+      );
+      if (revalidateTick > 0) return;
       if (typeof window === "undefined") return;
       const wanted = new URLSearchParams(window.location.search).get("story");
       if (wanted && eligible.some((s) => s.storyId === wanted)) {
@@ -56,7 +96,29 @@ export function HomeStoriesSection({
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, revalidateTick]);
+
+  // Bounded revalidation: one timer to the nearest publication-window end (never a poll loop),
+  // plus a single check when the tab comes back to the foreground.
+  useEffect(() => {
+    if (typeof window === "undefined" || stories.length === 0) return;
+    const endpoints = stories
+      .map((story) => (story.endAt ? Date.parse(story.endAt) : Number.NaN))
+      .filter((value) => Number.isFinite(value) && value > Date.now());
+    const soonest = endpoints.length > 0 ? Math.min(...endpoints) : Number.NaN;
+    const delay = Number.isFinite(soonest)
+      ? Math.min(Math.max(soonest - Date.now() + 1000, 1000), STORY_REVALIDATE_MAX_MS)
+      : STORY_REVALIDATE_MAX_MS;
+    const timer = setTimeout(() => setRevalidateTick((v) => v + 1), delay);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setRevalidateTick((v) => v + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [stories]);
 
   const displayStories = useMemo(() => {
     if (!storePreviewFill) return stories;
@@ -77,10 +139,10 @@ export function HomeStoriesSection({
       <div className="w-full px-2 sm:px-4 py-6 md:py-8 bg-section-surface" data-testid="home-stories" data-story-layout={layout} data-empty="true" data-storefront-surface-role="section">
         <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
           <span className="w-1 h-5 bg-primary rounded-full" />
-          استوری‌ها
+          {copy.heading}
         </h3>
         <p className="rounded-2xl border border-dashed border-gray-200 bg-surface px-4 py-6 text-center text-sm text-gray-500">
-          استوری فعالی برای نمایش نیست.
+          {copy.empty}
         </p>
       </div>
     );
@@ -97,13 +159,13 @@ export function HomeStoriesSection({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
             <span className="w-1 h-5 bg-primary rounded-full" />
-            میانبرها
+            {copy.shortcuts}
           </h3>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {displayStories.map((story) => {
             const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl;
-            const initial = story.title.trim().slice(0, 1) || "س";
+            const initial = story.title.trim().slice(0, 1) || copy.initialFallback;
             return (
               <button
                 key={story.storyId}
@@ -141,7 +203,7 @@ export function HomeStoriesSection({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <span className="w-1 h-5 bg-primary rounded-full" />
-            استوری‌ها
+            {copy.heading}
           </h3>
         </div>
 
@@ -157,12 +219,15 @@ export function HomeStoriesSection({
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true,
               }}
-              dir="rtl"
+              dir={locale === "en" ? "ltr" : "rtl"}
               className="w-full"
             >
               {displayStories.map((story) => {
                 const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "/images/stories/1.jpg";
-                const isVideo = story.isVideo || story.items.some((item) => item.mediaType === "video");
+                // The cover decides how it is rendered: a JPEG cover of a video story is a photo.
+                const coverItem =
+                  story.items.find((item) => (item.mediaUrl ?? "") === cover) ?? story.items[0];
+                const coverIsVideo = coverLooksLikeVideo(cover, coverItem?.mediaType);
                 return (
                   <SwiperSlide
                     key={story.storyId}
@@ -187,7 +252,7 @@ export function HomeStoriesSection({
                       >
                         <div className={`w-full h-full p-[2px] bg-surface dark:bg-zinc-950 ${layout === "rounded-cards" ? "rounded-3xl" : "rounded-full"}`}>
                           <div className={`relative w-full h-full overflow-hidden bg-gray-200 dark:bg-zinc-800 ${layout === "rounded-cards" ? "rounded-[1.25rem]" : "rounded-full"}`}>
-                            {isVideo ? (
+                            {coverIsVideo ? (
                               // eslint-disable-next-line jsx-a11y/media-has-caption
                               <video
                                 src={cover}
@@ -213,7 +278,7 @@ export function HomeStoriesSection({
                               <img src={cover} alt={story.title} className="w-full h-full object-cover" loading="lazy" />
                             )}
 
-                            {isVideo ? (
+                            {coverIsVideo ? (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border border-white/30">
                                   <Play className="w-4 h-4 md:w-5 md:h-5 text-white fill-white ml-0.5" />
@@ -234,7 +299,7 @@ export function HomeStoriesSection({
                         }`}
                       >
                         <Eye className="w-2.5 h-2.5 inline ml-1" />
-                        استوری
+                        {copy.story}
                       </div>
                     </button>
                   </SwiperSlide>

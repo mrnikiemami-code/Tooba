@@ -56,7 +56,11 @@ public sealed partial class StoryDirectory : IStoryDirectory
             .Where(story => story.TenantId == tenantId
                 && (story.Status == StoryStatus.Active || story.Status == StoryStatus.Scheduled)
                 && (story.Origin == StoryOrigin.Admin
-                    || story.ReviewStatus == StoryReviewStatus.Approved))
+                    || story.ReviewStatus == StoryReviewStatus.Approved)
+                // DB-side superset of IsPubliclyVisible: a closed/not-started window is excluded before
+                // its slides are materialized. The domain policy below stays the single authority.
+                && (story.StartAt == null || story.StartAt <= now)
+                && (story.EndAt == null || story.EndAt > now))
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
             .ToListAsync(cancellationToken);

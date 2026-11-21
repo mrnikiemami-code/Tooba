@@ -26,7 +26,7 @@ import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-sy
 import { ADMIN_STORY_GRID_VIEW_KEY } from "../../admin/saved-view-store";
 import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
 import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
-import { queryAdminSellersGrid, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
+import { queryAdminSellersGrid, type AdminSellerRow } from "../../../features/admin-sellers";
 import { loadSellerDevContexts, readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
 import { JalaliDatePicker } from "../../../design-system/app-data-grid/jalali-date-picker";
 import {
@@ -53,6 +53,7 @@ import {
   type StoryScheduleDraft,
 } from "./story-schedule-time";
 import {
+  digestFile,
   listPendingStoryIntents,
   newStoryOccurrenceKey as mintOccurrence,
   pendingStoryLabel,
@@ -74,6 +75,14 @@ import {
 const SELLER_STORY_GRID_VIEW_KEY = "seller.stories.grid.v1";
 const SHOP_PAGE_SIZE = 50;
 const SHOP_SEARCH_DEBOUNCE_MS = 300;
+const PRODUCT_SEARCH_DEBOUNCE_MS = 300;
+
+/** Preserve the active locale prefix (`/fa`, `/en`) on every Story route transition. */
+function storyLocalePrefix(): string {
+  if (typeof window === "undefined") return "";
+  const segment = window.location.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+  return segment === "fa" || segment === "en" ? `/${segment}` : "";
+}
 
 function hasAction(row: AdminStorySnapshot, code: string): boolean {
   return (row.actionCodes ?? []).includes(code);
@@ -106,27 +115,6 @@ function shopLabel(row: AdminStorySnapshot, copy: StoryCopy): string {
 
 function looksLikeGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
-}
-
-/** Read the Media upload receipt without inventing fields the server did not send. */
-function readUploadedStoryMedia(
-  payload: unknown,
-): { mediaAssetId: string; contentType: string; displayUrl: string | null } | null {
-  if (!payload || typeof payload !== "object") return null;
-  const record = payload as Record<string, unknown>;
-  const root =
-    record.data && typeof record.data === "object" && !Array.isArray(record.data)
-      ? (record.data as Record<string, unknown>)
-      : record;
-  const id = root.mediaAssetId ?? root.MediaAssetId;
-  if (typeof id !== "string" || !id.trim()) return null;
-  const type = root.contentType ?? root.ContentType;
-  const url = root.displayUrl ?? root.DisplayUrl;
-  return {
-    mediaAssetId: id.trim(),
-    contentType: typeof type === "string" ? type : "",
-    displayUrl: typeof url === "string" && url.trim() ? url : null,
-  };
 }
 
 const OPEN_SLIDE_AFTER_LOAD_KEY = "tooba.story.openSlideAfterLoad";
@@ -270,7 +258,9 @@ export function StoryManagementScreen({
       else if (typeof window !== "undefined") window.history.pushState({}, "", href);
     },
   };
-  const basePath = capabilities.mode === "seller" ? "/vendor-panel/stories" : "/admin/stories";
+  const basePath = `${storyLocalePrefix()}${
+    capabilities.mode === "seller" ? "/vendor-panel/stories" : "/admin/stories"
+  }`;
   // continue as single body — keep previous Body signature by aliasing
   return (
     <StoryManagementScreenBody
@@ -309,11 +299,14 @@ function StoryManagementScreenBody({
   const [showCreate, setShowCreate] = useState(createMode);
   const [selectedId, setSelectedId] = useState<string | null>(initialStoryId);
   const [detail, setDetail] = useState<AdminStorySnapshot | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<string>("");
   const [adminOpPlan, setAdminOpPlan] = useState<StoryAdminOpPlan | null>(null);
   const [adminOpReason, setAdminOpReason] = useState("");
   const [adminOpBusy, setAdminOpBusy] = useState(false);
   const adminOpCancelledRef = useRef(false);
+  const productEpochRef = useRef(0);
   const runSubmitRef = useRef<(row: AdminStorySnapshot) => void>(() => undefined);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState<"schedule" | "approve_schedule">("schedule");
@@ -606,21 +599,33 @@ function StoryManagementScreenBody({
       capabilities.mode === "seller"
         ? sellerShopId
         : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
+    const epoch = ++productEpochRef.current;
     setProductPage(1);
     setProductLoading(true);
-    void loadStoryProductOptions({
-      mode: capabilities.mode,
-      shopId: shop,
-      actorUserId: actorId,
-      search: productSearch,
-      page: 1,
-      pageSize: 20,
-    })
-      .then((page) => {
-        setProductOptions(page.items);
-        setProductTotalCount(page.totalCount);
+    // Debounce keystrokes so a fast typist issues one owning query, not one per character.
+    const timer = setTimeout(() => {
+      void loadStoryProductOptions({
+        mode: capabilities.mode,
+        shopId: shop,
+        actorUserId: actorId,
+        search: productSearch,
+        page: 1,
+        pageSize: 20,
       })
-      .finally(() => setProductLoading(false));
+        .then((page) => {
+          if (epoch !== productEpochRef.current) return;
+          setProductOptions(page.items);
+          setProductTotalCount(page.totalCount);
+        })
+        .finally(() => {
+          if (epoch !== productEpochRef.current) return;
+          setProductLoading(false);
+        });
+    }, PRODUCT_SEARCH_DEBOUNCE_MS);
+    return () => {
+      clearTimeout(timer);
+      productEpochRef.current += 1;
+    };
   }, [
     capabilities.mode,
     sellerShopId,
@@ -641,6 +646,44 @@ function StoryManagementScreenBody({
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
+
+  // Unsaved edits also protect soft navigation: sidebar links and browser Back go through the
+  // existing DS leave dialog instead of silently discarding the editor state.
+  const requestLeaveRef = useRef(requestLeave);
+  requestLeaveRef.current = requestLeave;
+  useEffect(() => {
+    if (!dirty) return;
+    // Same-URL sentinel: Back lands on this entry, so Cancel keeps BOTH the editor and the URL.
+    window.history.pushState({ storyDirtyGuard: true }, "", window.location.href);
+    const onDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+      const anchor = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      if (anchor.target && anchor.target !== "_self") return;
+      if (anchor.hasAttribute("download")) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+      const target = new URL(href, window.location.href);
+      if (target.origin !== window.location.origin) return;
+      if (target.pathname === window.location.pathname && target.search === window.location.search) return;
+      event.preventDefault();
+      event.stopPropagation();
+      requestLeaveRef.current(`${target.pathname}${target.search}`);
+    };
+    const onPopState = () => {
+      // Re-arm the guard before asking, so a cancelled leave never drops the user elsewhere.
+      window.history.pushState({ storyDirtyGuard: true }, "", window.location.href);
+      requestLeaveRef.current(basePath);
+    };
+    document.addEventListener("click", onDocumentClick, true);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      document.removeEventListener("click", onDocumentClick, true);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [dirty, basePath]);
 
   useEffect(() => {
     if (!slideFile) {
@@ -673,18 +716,25 @@ function StoryManagementScreenBody({
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setDetailError(null);
+      setDetailLoading(false);
       return;
     }
     const started = epochRef.current;
+    setDetailLoading(true);
+    setDetailError(null);
     const load = async () => {
       const result =
         capabilities.mode === "seller" ? await getSellerStory(selectedId) : await getAdminStory(selectedId);
       if (started !== epochRef.current) return;
+      setDetailLoading(false);
       if (result.state === "ok" && result.data) {
+        setDetailError(null);
         setDetail(result.data);
         ownedDraftIdRef.current = result.data.storyId;
         setEditTitle(result.data.title);
-        setEditLocale(result.data.locale || editLocale);
+        const nextLocale = result.data.locale;
+        setEditLocale((prev) => nextLocale || prev);
         const start = isoToScheduleDraft(result.data.startAt);
         const end = isoToScheduleDraft(result.data.endAt);
         setDraftWindow({
@@ -717,11 +767,11 @@ function StoryManagementScreenBody({
       } else if (result.state === "denied") setState("denied");
       else {
         setDetail(null);
-        storyToast.error(result.message ?? copy.detailLoadFailed);
+        setDetailError(result.message ?? copy.detailLoadFailed);
       }
     };
     void load();
-  }, [selectedId, capabilities.mode, reloadToken]);
+  }, [selectedId, capabilities.mode, reloadToken, copy.detailLoadFailed]);
 
   const openDetail = useCallback(
     (id: string) => {
@@ -1002,6 +1052,22 @@ function StoryManagementScreenBody({
 
   if (state === "denied") return <Denied retry={refreshGrid} copy={copy} />;
 
+  // Seller without an explicit shop: no silent demo-shop fallback, ask for a lawful context.
+  if (capabilities.mode === "seller" && !sellerShopId) {
+    return (
+      <main data-testid="seller-stories">
+        <div data-testid="story-choose-context" className="mx-auto max-w-xl p-6">
+          <ErrorState
+            title={copy.chooseShopTitle}
+            detail={copy.chooseShopDetail}
+            onRetry={() => router.push(`${storyLocalePrefix()}/vendor-panel`)}
+            retryLabel={copy.chooseShopAction}
+          />
+        </div>
+      </main>
+    );
+  }
+
   const title = capabilities.mode === "seller" ? copy.sellerTitle : copy.adminTitle;
   const description = capabilities.mode === "seller" ? copy.sellerDescription : copy.adminDescription;
   const testId = capabilities.mode === "seller" ? "seller-stories" : "admin-stories";
@@ -1074,7 +1140,10 @@ function StoryManagementScreenBody({
               <li key={`${act.action}:${act.occurrenceKey}`} className="flex flex-wrap items-center justify-between gap-2">
                 <span>{pendingStoryLabel(act)}</span>
                 <div className="flex flex-wrap items-center gap-2">
-                  {(act.action === "upload" || act.action === "upload_add") && !act.children[0]?.done ? (
+                  {(act.action === "upload" ||
+                    act.action === "upload_add" ||
+                    act.action === "replace_media") &&
+                  !act.children[0]?.done ? (
                     <input
                       type="file"
                       accept="image/*,video/*"
@@ -1388,6 +1457,48 @@ function StoryManagementScreenBody({
             icon={<Layers className="h-5 w-5" aria-hidden="true" />}
           />
         </StorySectionCard>
+      ) : null}
+      {selectedId && !detail && detailError ? (
+        <section
+          className="mt-5 rounded-2xl border border-danger/40 bg-danger-soft/40 px-5 py-6"
+          data-testid="story-detail-error"
+          role="alert"
+        >
+          <p className="text-sm font-bold text-danger">{copy.detailLoadFailed}</p>
+          <p className="mt-1 text-xs text-muted">{detailError}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={storyButtonClass("primary")}
+              data-testid="story-detail-error-retry"
+              disabled={detailLoading}
+              onClick={() => setReloadToken((v) => v + 1)}
+            >
+              {detailLoading ? copy.detailLoading : copy.detailRetry}
+            </button>
+            <button
+              type="button"
+              className={storyButtonClass("secondary")}
+              data-testid="story-detail-error-back"
+              onClick={() => {
+                setSelectedId(null);
+                setDetail(null);
+                setDetailError(null);
+                router.push(basePath);
+              }}
+            >
+              {copy.detailBack}
+            </button>
+          </div>
+        </section>
+      ) : selectedId && !detail && detailLoading ? (
+        <section
+          className="mt-5 rounded-2xl border border-border bg-surface-elevated px-5 py-6 text-sm text-muted"
+          data-testid="story-detail-loading"
+          aria-busy="true"
+        >
+          {copy.detailLoading}
+        </section>
       ) : null}
       {selectedId && detail ? (
         <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm" data-testid="story-detail-workspace">
@@ -2166,6 +2277,7 @@ function StoryManagementScreenBody({
                         ? sellerShopId
                         : detail?.sellerPartyId ?? (adminShopMode === "shop" ? adminShopId : null);
                     const next = productPage + 1;
+                    const epoch = productEpochRef.current;
                     setProductLoading(true);
                     void loadStoryProductOptions({
                       mode: capabilities.mode,
@@ -2176,13 +2288,17 @@ function StoryManagementScreenBody({
                       pageSize: 20,
                     })
                       .then((page) => {
+                        if (epoch !== productEpochRef.current) return;
                         const seen = new Set(productOptions.map((r) => r.productId));
                         const appended = page.items.filter((r) => !seen.has(r.productId));
                         setProductOptions((prev) => [...prev, ...appended]);
                         setProductTotalCount(page.totalCount);
                         setProductPage(next);
                       })
-                      .finally(() => setProductLoading(false));
+                      .finally(() => {
+                        if (epoch !== productEpochRef.current) return;
+                        setProductLoading(false);
+                      });
                   }}
                 >
                   {copy.loadMoreProducts} ({productOptions.length} از {productTotalCount})
@@ -2276,67 +2392,85 @@ function StoryManagementScreenBody({
                       storyToast.error(copy.slideMissing);
                       return;
                     }
-                    const key = mintOccurrence();
-                    let mediaType = existing.mediaType;
-                    let mediaAssetId = existing.mediaAssetId;
-                    let mediaUrl = existing.mediaUrl;
-                    // Deliberate media replacement: upload first, then the owning update_item.
-                    // The old slide stays untouched on the server until both steps succeed.
+                    // Explicit media replacement: ONE staged journal freezes the file digest, the
+                    // exact upload and the owning update bytes BEFORE dispatch. The old slide stays
+                    // authoritative until both steps succeed; a lost upload resumes that same file
+                    // and a lost update retries only the frozen update (no second asset, no orphan).
                     if (slideFile) {
                       const uploadKey = mintOccurrence();
+                      const itemKey = mintOccurrence();
                       const uploadPath =
                         capabilities.mode === "seller"
                           ? "/v1/seller/media"
                           : detail.sellerPartyId
                             ? "/v1/admin/media/upload-for-shop"
                             : "/v1/admin/media/upload-story-platform";
-                      const uploadEnvelope: StoryIntentEnvelope = {
+                      const digestHex = await digestFile(slideFile);
+                      if (inFlightRef.current) return;
+                      const plannedReplacement = {
+                        caption: slideCaption.trim() || null,
+                        durationSec: Math.max(1, Number(slideDurationSec) || 5),
+                        ctaType: slideCtaType,
+                        ctaTarget: slideCtaType === "none" ? null : slideCtaTarget || null,
+                        expectedVersion: detail.versionToken,
+                        itemOccurrenceKey: itemKey,
+                      };
+                      const replaceEnvelope: StoryIntentEnvelope = {
                         version: 2,
-                        action: "upload",
+                        action: "replace_media",
                         occurrenceKey: uploadKey,
                         method: "POST",
                         path: uploadPath,
                         routeTargetId: detail.storyId,
+                        targetItemId: editingItemId,
                         expectedVersion: detail.versionToken,
-                        bodyText: null,
+                        bodyText: JSON.stringify(plannedReplacement),
                         uploadMeta: {
                           fileName: slideFile.name,
                           fileType: slideFile.type,
                           fileSize: slideFile.size,
-                          digestHex: "pending",
+                          digestHex,
                         },
                         addBodyText: null,
                         uploadedAssetId: null,
-                        children: [],
+                        children: [
+                          { step: "upload", occurrenceKey: uploadKey, done: false },
+                          { step: "update_item", occurrenceKey: itemKey, done: false },
+                        ],
                         role: capabilities.mode,
                         shopId: detail.sellerPartyId ?? sellerShopId,
                         actorUserId: actorId,
                         recordedAt: new Date().toISOString(),
                       };
-                      const upload = await runDurableStoryMutation({
+                      const replacement = await runDurableUploadAdd({
                         gate,
-                        envelope: uploadEnvelope,
+                        envelope: replaceEnvelope,
                         scope: { role: capabilities.mode, shopId: sellerShopId, actorUserId: actorId },
                         uploadFile: slideFile,
                       });
-                      if (upload.state !== "ok") {
-                        storyToast.error(upload.state === "failed" ? upload.message : copy.sendFailed);
-                        return;
+                      if (replacement.state === "ok") {
+                        storyToast.success(copy.slideUpdated);
+                        if (slideCtaType === "product" && slideCtaTarget && selectedProductLabel) {
+                          setProductLabelById((prev) => ({ ...prev, [slideCtaTarget]: selectedProductLabel }));
+                        }
+                        setSlideFile(null);
+                        setSlideDialogOpen(false);
+                        setEditingItemId(null);
+                        setReloadToken((v) => v + 1);
+                        refreshGrid();
+                      } else if (replacement.state === "failed") {
+                        storyToast.error(replacement.message);
+                      } else {
+                        storyToast.error(copy.sendFailed);
                       }
-                      const uploaded = readUploadedStoryMedia(upload.data);
-                      if (!uploaded) {
-                        storyToast.error(copy.mediaReplaceFailed);
-                        return;
-                      }
-                      mediaType = uploaded.contentType.startsWith("video/") ? "video" : "image";
-                      mediaAssetId = uploaded.mediaAssetId;
-                      mediaUrl = uploaded.displayUrl ?? existing.mediaUrl;
+                      return;
                     }
-                    const isVideo = mediaType === "video";
+                    const key = mintOccurrence();
+                    const isVideo = existing.mediaType === "video";
                     const body = {
-                      mediaType,
-                      mediaAssetId,
-                      mediaUrl,
+                      mediaType: existing.mediaType,
+                      mediaAssetId: existing.mediaAssetId,
+                      mediaUrl: existing.mediaUrl,
                       caption: slideCaption.trim() || null,
                       durationMs: isVideo ? null : Math.max(1, Number(slideDurationSec) || 5) * 1000,
                       ctaType: slideCtaType,
@@ -2386,6 +2520,9 @@ function StoryManagementScreenBody({
                   if (!slideFile) return;
                   const uploadKey = mintOccurrence();
                   const itemKey = mintOccurrence();
+                  // Freeze the cryptographic digest before the journal exists (never a literal marker).
+                  const uploadDigest = await digestFile(slideFile);
+                  if (inFlightRef.current) return;
                   const plannedAdd = {
                     caption: slideCaption.trim() || null,
                     durationSec: isVideoFile(slideFile) ? null : Math.max(1, Number(slideDurationSec) || 5),
@@ -2412,7 +2549,7 @@ function StoryManagementScreenBody({
                       fileName: slideFile.name,
                       fileType: slideFile.type,
                       fileSize: slideFile.size,
-                      digestHex: "pending",
+                      digestHex: uploadDigest,
                     },
                     addBodyText: null,
                     uploadedAssetId: null,

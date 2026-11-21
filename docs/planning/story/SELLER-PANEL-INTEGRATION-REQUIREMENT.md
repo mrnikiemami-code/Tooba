@@ -1,5 +1,24 @@
-> CURRENT — TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20
-> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. Implementation and all mandatory proof pending; NOT Architect ACCEPT or owner acceptance. STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask NONE.
+# CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/{TASK.md,RESULT.md,RECEIPTS.md,COMPLETION-CHECKLIST.md,user-review.md,claimed.json,ISSUANCE-RECEIPT.json}`.
+Status **PASS_COMPLETE_R20**. Seller remains inside the existing `vendor-panel/layout.tsx` → `VendorShell`, menu «استوری‌ها» /
+`story.view` / `/vendor-panel/stories`; no parallel shell, menu or login (guard test still passes). Seller now owns
+`return-to-draft` for Approved+Draft, the real `POST /v1/seller/media` upload path, the staged `replace_media` journal, a
+choose-shop state instead of a demo shop, and server-side `story.*` capability enforcement (DENY/Unavailable fail closed,
+cross-shop refused, seller moderation refused). Production Next build passes — BUILD_ID `qrCkTUiLY-AzikCO6XrYO`; served
+`/fa/vendor-panel/stories` 200 with 2 own-shop rows and zero horizontal overflow at 1440 and 390; seller list 200 for the lawful
+actor+party, 403 for a foreign party and for admin-as-seller.
+NOT Architect ACCEPT, NOT owner acceptance. Expected-Base `9c43563891c77a64a89f99f4bec248bad1fdc9e2`; claim base HEAD
+`d6126b6afbc1ce727823bd121b844658c8fc2be2`. ZERO migration/seed/grant/key/provider/money/stock; ZERO live Story/Media write;
+R6 effects UNKNOWN.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — R20 ISSUED (superseded by the worker PASS above) — 2026-11-21
+
+> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. NOT Architect ACCEPT or owner acceptance.
 
 ---
 

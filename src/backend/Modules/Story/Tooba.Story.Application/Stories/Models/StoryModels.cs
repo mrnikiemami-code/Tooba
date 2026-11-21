@@ -26,7 +26,9 @@ public sealed record PublicStoryCard(
     Guid? SellerPartyId = null,
     string? ShopDisplayName = null,
     string? ShopPublicId = null,
-    string? CtaHref = null);
+    string? CtaHref = null,
+    /// <summary>پایان پنجرهٔ انتشار؛ برای اعتبارسنجی مجدد محدود در سمت مشتری.</summary>
+    DateTimeOffset? EndAt = null);
 
 /// <summary>آیتم مدیریتی استوری.</summary>
 public sealed record AdminStoryItemSnapshot(

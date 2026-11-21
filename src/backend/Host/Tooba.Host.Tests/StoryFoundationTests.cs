@@ -8,6 +8,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Host.Admin.Access;
 using Tooba.Host.Security.Seller;
+using Tooba.Media.Contracts.Assets;
 using Tooba.Persistence;
 using global::Tooba.Story.Application.Stories.Models;
 using global::Tooba.Story.Application.Stories.Ports;
@@ -27,6 +28,12 @@ namespace Tooba.Host.Tests;
 [Collection("PostgresSerial")]
 public sealed class StoryFoundationTests : IAsyncLifetime
 {
+    /// <summary>
+    /// شناسهٔ رسانهٔ fixture که سناریوهای foundation با آن ساخته می‌شوند؛ رسانهٔ واقعی Media
+    /// در تست‌های Media پوشش داده می‌شود و این fixture فقط پورت اجباری StoryDirectory را تأمین می‌کند.
+    /// </summary>
+    private static readonly Guid FoundationMediaAssetId = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c6");
+
     private PostgreSqlContainer? _container;
     private bool _dockerAvailable;
 
@@ -81,7 +88,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var directory = new StoryDirectory(db);
+        var directory = new StoryDirectory(db, media: new FoundationStoryMediaPort());
         var tenantId = StoryTenantIds.StoreAlpha;
         var now = new DateTimeOffset(2026, 8, 27, 12, 0, 0, TimeSpan.Zero);
 
@@ -97,7 +104,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var draft = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-1"),
+            new CreateStoryCommand("پیش‌نویس", "fa", null, FoundationMediaAssetId, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-1"),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Draft, draft.Status);
         Assert.DoesNotContain(
@@ -108,7 +115,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         var clock = DateTimeOffset.UtcNow;
         var scheduled = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("آینده", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-2"),
+            new CreateStoryCommand("آینده", "fa", null, FoundationMediaAssetId, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-2"),
+            CancellationToken.None);
+        scheduled = await directory.AdminAddItemAsync(
+            tenantId, scheduled.StoryId,
+            new AddStoryItemCommand("image", FoundationMediaAssetId, "/images/stories/1.jpg", "اسلاید", 5000, "none", null, 1, OccurrenceKey: "foundation-item-sched", ExpectedVersion: scheduled.VersionToken),
             CancellationToken.None);
         scheduled = await directory.AdminSetScheduleAsync(
             tenantId,
@@ -123,7 +134,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var expired = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("منقضی", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-3"),
+            new CreateStoryCommand("منقضی", "fa", null, FoundationMediaAssetId, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-3"),
+            CancellationToken.None);
+        expired = await directory.AdminAddItemAsync(
+            tenantId, expired.StoryId,
+            new AddStoryItemCommand("image", FoundationMediaAssetId, "/images/stories/1.jpg", "اسلاید", 5000, "none", null, 1, OccurrenceKey: "foundation-item-expired", ExpectedVersion: expired.VersionToken),
             CancellationToken.None);
         expired = await directory.AdminSetScheduleAsync(
             tenantId,
@@ -138,7 +153,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         var disabled = await directory.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand("خاموش", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-4"),
+            new CreateStoryCommand("خاموش", "fa", null, FoundationMediaAssetId, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-4"),
+            CancellationToken.None);
+        disabled = await directory.AdminAddItemAsync(
+            tenantId, disabled.StoryId,
+            new AddStoryItemCommand("image", FoundationMediaAssetId, "/images/stories/1.jpg", "اسلاید", 5000, "none", null, 1, OccurrenceKey: "foundation-item-disabled", ExpectedVersion: disabled.VersionToken),
             CancellationToken.None);
         await directory.AdminSetStatusAsync(tenantId, disabled.StoryId, StoryStatus.Active, disabled.VersionToken, CancellationToken.None, "foundation-status-3");
         disabled = await directory.AdminGetAsync(tenantId, disabled.StoryId, CancellationToken.None)
@@ -156,7 +175,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                     "ناامن",
                     "fa",
                     null,
-                    null,
+                    FoundationMediaAssetId,
                     "/images/stories/1.jpg",
                     null,
                     "external",
@@ -208,7 +227,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var directory = new StoryDirectory(db);
+        var directory = new StoryDirectory(db, media: new FoundationStoryMediaPort());
         var tenantId = StoryTenantIds.StoreAlpha;
         var now = new DateTimeOffset(2026, 8, 27, 14, 0, 0, TimeSpan.Zero);
         var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
@@ -231,7 +250,11 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             tenantId,
             sellerA,
             actorA,
-            new CreateStoryCommand("فروشنده پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-6"),
+            new CreateStoryCommand("فروشنده پیش‌نویس", "fa", null, FoundationMediaAssetId, "/images/stories/1.jpg", null, "none", null, OccurrenceKey: "foundation-create-6"),
+            CancellationToken.None);
+        draft = await directory.SellerAddItemAsync(
+            tenantId, sellerA, draft.StoryId,
+            new AddStoryItemCommand("image", FoundationMediaAssetId, "/images/stories/1.jpg", "اسلاید", 5000, "none", null, 1, OccurrenceKey: "foundation-item-seller", ExpectedVersion: draft.VersionToken),
             CancellationToken.None);
         Assert.Equal(StoryOrigin.Seller, draft.Origin);
         Assert.Equal(StoryReviewStatus.None, draft.ReviewStatus);
@@ -240,7 +263,8 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             story => story.StoryId == draft.StoryId);
 
         var submitted = await directory.SellerSubmitAsync(
-            tenantId, sellerA, draft.StoryId, actorA, CancellationToken.None);
+            tenantId, sellerA, draft.StoryId, actorA, CancellationToken.None,
+            occurrenceKey: "foundation-submit-1", expectedVersion: draft.VersionToken);
         Assert.Equal(StoryReviewStatus.Submitted, submitted.ReviewStatus);
         Assert.DoesNotContain(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
@@ -259,7 +283,8 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, string.Empty, submitted.VersionToken, CancellationToken.None));
 
         var rejected = await directory.AdminRejectAsync(
-            tenantId, submitted.StoryId, adminActor, "نیاز به پوشش بهتر", submitted.VersionToken, CancellationToken.None);
+            tenantId, submitted.StoryId, adminActor, "نیاز به پوشش بهتر", submitted.VersionToken, CancellationToken.None,
+            occurrenceKey: "foundation-reject-1");
         Assert.Equal(StoryReviewStatus.Rejected, rejected.ReviewStatus);
         Assert.Equal("نیاز به پوشش بهتر", rejected.RejectionReason);
         Assert.Equal(StoryStatus.Draft, rejected.Status);
@@ -268,19 +293,22 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             story => story.StoryId == rejected.StoryId);
 
         var resubmitted = await directory.SellerSubmitAsync(
-            tenantId, sellerA, rejected.StoryId, actorA, CancellationToken.None);
+            tenantId, sellerA, rejected.StoryId, actorA, CancellationToken.None,
+            occurrenceKey: "foundation-submit-2", expectedVersion: rejected.VersionToken);
         Assert.Equal(StoryReviewStatus.Submitted, resubmitted.ReviewStatus);
         Assert.Null(resubmitted.RejectionReason);
 
         var approved = await directory.AdminApproveAsync(
-            tenantId, resubmitted.StoryId, adminActor, resubmitted.VersionToken, CancellationToken.None);
+            tenantId, resubmitted.StoryId, adminActor, resubmitted.VersionToken, CancellationToken.None,
+            occurrenceKey: "foundation-approve-1");
         Assert.Equal(StoryReviewStatus.Approved, approved.ReviewStatus);
         Assert.DoesNotContain(
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
             story => story.StoryId == approved.StoryId);
 
         var approvedAgain = await directory.AdminApproveAsync(
-            tenantId, approved.StoryId, adminActor, approved.VersionToken, CancellationToken.None);
+            tenantId, approved.StoryId, adminActor, resubmitted.VersionToken, CancellationToken.None,
+            occurrenceKey: "foundation-approve-1");
         Assert.Equal(StoryReviewStatus.Approved, approvedAgain.ReviewStatus);
         Assert.Equal(adminActor, approvedAgain.ReviewedByActorUserId);
 
@@ -295,7 +323,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             tenantId,
             sellerB,
             actorB,
-            new CreateStoryCommand("استوری فروشنده B", "fa", null, null, "/images/stories/2.jpg", null, "none", null, OccurrenceKey: "foundation-create-7"),
+            new CreateStoryCommand("استوری فروشنده B", "fa", null, FoundationMediaAssetId, "/images/stories/2.jpg", null, "none", null, OccurrenceKey: "foundation-create-7"),
             CancellationToken.None);
         var listA = await directory.SellerListAsync(tenantId, sellerA, CancellationToken.None);
         Assert.DoesNotContain(listA, story => story.StoryId == foreign.StoryId);
@@ -414,5 +442,35 @@ public sealed class StoryFoundationTests : IAsyncLifetime
     private sealed class StubCurrentTenant(TenantContext? current) : ICurrentTenant
     {
         public TenantContext? Current { get; } = current;
+    }
+
+    /// <summary>
+    /// پورت رسانهٔ Story برای این fixture: دارایی از پیش‌ثبت‌شدهٔ fixture را مجاز می‌کند و URL عمومی
+    /// همان fixture را برمی‌گرداند. اعتبارسنجی واقعی مالکیت/Ready بودن در تست‌های Media پوشش دارد.
+    /// </summary>
+    private sealed class FoundationStoryMediaPort : IStoryMediaAssetPort
+    {
+        public Task<StoryMediaAssetAuthorization> AuthorizeForStoryAsync(
+            Guid mediaAssetId,
+            Guid tenantId,
+            Guid? sellerPartyId,
+            bool allowUnscopedAdminAssets,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new StoryMediaAssetAuthorization(
+                mediaAssetId, "image/jpeg", "/images/stories/1.jpg", IsVideo: false, sellerPartyId));
+
+        public Task<StoryMediaAssetAuthorization> UploadForSellerAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid sellerPartyId,
+            Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("StoryFoundationTests uses pre-bound fixture media.");
+
+        public Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId,
+            string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotSupportedException("StoryFoundationTests uses pre-bound fixture media.");
+
+        public Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
+            Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
     }
 }

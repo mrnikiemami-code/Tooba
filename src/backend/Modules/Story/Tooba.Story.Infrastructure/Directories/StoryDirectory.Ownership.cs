@@ -337,13 +337,26 @@ public sealed partial class StoryDirectory
         }
 
         var paths = new Dictionary<Guid, string>();
-        if (_products is not null)
+        if (_products is not null && productIds.Count > 0)
         {
-            foreach (var productId in productIds)
+            if (_products is IStoryProductPathBatchPort batch)
             {
-                var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
-                if (!string.IsNullOrWhiteSpace(path))
-                    paths[productId] = path;
+                // One owning Catalog composition per page, not one serial lookup per CTA.
+                var resolved = await batch.ResolvePublicProductPathsAsync(productIds, cancellationToken);
+                foreach (var pair in resolved)
+                {
+                    if (!string.IsNullOrWhiteSpace(pair.Value))
+                        paths[pair.Key] = pair.Value;
+                }
+            }
+            else
+            {
+                foreach (var productId in productIds)
+                {
+                    var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(path))
+                        paths[productId] = path;
+                }
             }
         }
 

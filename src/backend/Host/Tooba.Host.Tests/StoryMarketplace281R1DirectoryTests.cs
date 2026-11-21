@@ -23,7 +23,7 @@ public sealed class StoryMarketplace281R1DirectoryTests
         var seller = Guid.Parse("01a03628-3f68-7000-844d-99f1cadb54b0");
         var admin = Guid.Parse("01a036c2-970e-7000-8eb7-94bf5cc2d8db");
         var mediaId = Guid.Parse("01a0aaaa-0001-7000-8000-000000000001");
-        var now = DateTimeOffset.Parse("2026-11-19T12:00:00Z");
+        var now = DateTimeOffset.UtcNow;
 
         await using (var write = CreateDb(dbName))
         {
@@ -58,7 +58,8 @@ public sealed class StoryMarketplace281R1DirectoryTests
                 admin,
                 scheduled!.VersionToken,
                 new SetStoryScheduleCommand(now.AddMinutes(-1), now.AddHours(2)),
-                CancellationToken.None);
+                CancellationToken.None,
+                "occ-approve-schedule-32");
         }
 
         await using var read = CreateDb(dbName);

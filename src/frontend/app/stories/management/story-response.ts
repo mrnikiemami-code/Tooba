@@ -76,6 +76,11 @@ export function verifyStorySuccessPayload(
     case "delete":
     case "reorder_items":
       return verifyStoryTarget(envelope, root, mapped);
+    case "replace_media":
+      // Stage 1 answers the Media receipt; stage 2 answers the owning Story snapshot.
+      return envelope.children[0]?.done
+        ? verifyStoryTarget(envelope, root, mapped)
+        : verifyUploadOrAdd(envelope, root, mapped);
     case "upload":
     case "upload_add":
       return verifyUploadOrAdd(envelope, root, mapped);
@@ -106,74 +111,120 @@ function verifyStoryTarget(
   root: Record<string, unknown>,
   mapped: unknown,
 ): StorySuccessVerification {
-  const storyId = readGuid(root, "storyId", "StoryId", "id", "Id");
-  if (!storyId) {
-    // Boolean true replies are not bound evidence for Story mutations.
-    if (typeof mapped === "boolean") return { ok: false, reason: "boolean_without_story" };
-    // Prefer full snapshot when present.
-    const snap = mapAdminStory(root) ?? mapAdminStory(mapped);
-    if (!snap?.storyId) return { ok: false, reason: "missing_story_id" };
-    if (envelope.routeTargetId && snap.storyId !== envelope.routeTargetId) {
-      return { ok: false, reason: "story_target_mismatch" };
-    }
-    return effectSatisfied(envelope, root, snap) ? { ok: true, data: mapped } : { ok: false, reason: "story_state_unchanged" };
-  }
-  if (envelope.routeTargetId && storyId !== envelope.routeTargetId) {
+  // Boolean true replies are not bound evidence for Story mutations.
+  if (typeof mapped === "boolean") return { ok: false, reason: "boolean_without_story" };
+  const snap = mapAdminStory(root) ?? mapAdminStory(mapped);
+  const storyId = readGuid(root, "storyId", "StoryId") ?? snap?.storyId ?? null;
+  if (!storyId) return { ok: false, reason: "missing_story_id" };
+  if (envelope.routeTargetId && storyId.toLowerCase() !== envelope.routeTargetId.toLowerCase()) {
     return { ok: false, reason: "story_target_mismatch" };
   }
-  const snap = mapAdminStory(root) ?? mapAdminStory(mapped);
-  if (snap && snap.storyId === storyId && !effectSatisfied(envelope, root, snap)) {
-    return { ok: false, reason: "story_state_unchanged" };
+
+  // A version the reply carries must not regress behind the version the frozen command targeted.
+  // A reply that carries no version field must not be read as version 0 from the mapper default.
+  const version = readInt(root, "versionToken", "VersionToken")
+    ?? (carries(root, "versionToken", "VersionToken") ? snap?.versionToken ?? null : null);
+  if (envelope.expectedVersion != null && version != null && version < envelope.expectedVersion) {
+    return { ok: false, reason: "story_version_regressed" };
   }
-  return { ok: true, data: mapped };
+
+  // Deletes are tombstones/replays: identity (and version) is the whole contract the wire owns.
+  if (envelope.action === "delete") return { ok: true, data: mapped };
+
+  const effect = requiredEffect(envelope.action);
+  if (!effect) return { ok: true, data: mapped };
+
+  // Content edits own no assertable state beyond the bound snapshot identity/version above.
+  const effective = effectSatisfied(effect, root, snap);
+  if (effective.ok) return { ok: true, data: mapped };
+  return { ok: false, reason: effective.reason };
+}
+
+function readInt(record: Record<string, unknown>, ...keys: string[]): number | null {
+  for (const key of keys) {
+    const raw = record[key];
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    if (typeof raw === "string" && /^\d+$/.test(raw.trim())) return Number(raw.trim());
+  }
+  return null;
 }
 
 function carries(record: Record<string, unknown>, ...keys: string[]): boolean {
   return keys.some((key) => Object.prototype.hasOwnProperty.call(record, key));
 }
 
+type StoryEffect = {
+  /** Review state the owning command must leave behind, when it owns one. */
+  review?: "Approved" | "Rejected" | "Submitted";
+  /** Publication state the owning command must leave behind. */
+  status?: "Active" | "Scheduled" | "Disabled" | "Draft";
+  /** publish_now may also satisfy the effect through effective public eligibility. */
+  acceptPublic?: boolean;
+};
+
 /**
- * A 2xx snapshot must show the effect the frozen action owns. A same-id unchanged Draft
- * (e.g. approve returning the untouched row) is not completion. Only fields the reply
- * actually carries are asserted, so partial-but-truthful replies stay valid.
+ * The state each reviewed/publication command actually owns in the real endpoint contract
+ * (`AdminStorySnapshot` returned by every Story mutation). Content-only edits own no state.
+ */
+function requiredEffect(action: StoryIntentEnvelope["action"]): StoryEffect | null {
+  switch (action) {
+    case "approve":
+      return { review: "Approved" };
+    case "reject":
+      return { review: "Rejected" };
+    case "submit":
+      return { review: "Submitted" };
+    case "approve_publish":
+      return { review: "Approved", status: "Active", acceptPublic: true };
+    case "approve_schedule":
+      return { review: "Approved", status: "Scheduled" };
+    case "publish_now":
+      return { status: "Active", acceptPublic: true };
+    case "schedule":
+      return { status: "Scheduled" };
+    case "stop":
+      return { status: "Disabled" };
+    case "return_to_draft":
+      return { status: "Draft" };
+    default:
+      return null;
+  }
+}
+
+/**
+ * A 2xx reply must show the effect the frozen action owns. A same-id unchanged Draft
+ * (e.g. approve returning the untouched row) or a reply that carries no state at all is NOT
+ * completion — the owning Story mutations always return `AdminStorySnapshot`, so missing state
+ * means the response shape cannot prove the effect and the command stays uncertain/replayable.
  */
 function effectSatisfied(
-  envelope: StoryIntentEnvelope,
+  effect: StoryEffect,
   root: Record<string, unknown>,
-  snap: NonNullable<ReturnType<typeof mapAdminStory>>,
-): boolean {
-  const carriesStatus = carries(root, "status", "Status");
+  snap: NonNullable<ReturnType<typeof mapAdminStory>> | null,
+): { ok: true } | { ok: false; reason: string } {
   const carriesReview = carries(root, "reviewStatus", "ReviewStatus");
-  const carriesVersion = carries(root, "versionToken", "VersionToken");
+  const carriesStatus = carries(root, "status", "Status");
   const carriesPublic = carries(root, "effectivelyPublic", "EffectivelyPublic");
 
-  // When the reply exposes no state at all, the existing identity binding is what the server owns.
-  if (!carriesStatus && !carriesReview && !carriesVersion && !carriesPublic) return true;
+  if (!snap) return { ok: false, reason: "unverified_shape" };
 
-  switch (envelope.action) {
-    case "approve":
-      return !carriesReview || snap.reviewStatus === "Approved";
-    case "approve_publish":
-      if (carriesReview && snap.reviewStatus !== "Approved") return false;
-      return !carriesStatus || snap.status === "Active" || (carriesPublic && snap.effectivelyPublic);
-    case "approve_schedule":
-      if (carriesReview && snap.reviewStatus !== "Approved") return false;
-      return !carriesStatus || snap.status === "Scheduled";
-    case "reject":
-      return !carriesReview || snap.reviewStatus === "Rejected";
-    case "submit":
-      return !carriesReview || snap.reviewStatus === "Submitted";
-    case "publish_now":
-      return !carriesStatus || snap.status === "Active" || (carriesPublic && snap.effectivelyPublic);
-    case "schedule":
-      return !carriesStatus || snap.status === "Scheduled";
-    case "stop":
-      return !carriesStatus || snap.status === "Disabled";
-    case "return_to_draft":
-      return !carriesStatus || snap.status === "Draft";
-    default:
-      return true;
+  if (effect.review) {
+    if (!carriesReview) return { ok: false, reason: "unverified_shape" };
+    if (snap.reviewStatus !== effect.review) return { ok: false, reason: "story_state_unchanged" };
   }
+
+  if (effect.status) {
+    const publicOk = Boolean(effect.acceptPublic && carriesPublic && snap.effectivelyPublic);
+    if (!carriesStatus) {
+      if (publicOk) return { ok: true };
+      return { ok: false, reason: "unverified_shape" };
+    }
+    if (snap.status !== effect.status && !publicOk) {
+      return { ok: false, reason: "story_state_unchanged" };
+    }
+  }
+
+  return { ok: true };
 }
 
 function verifyUploadOrAdd(
@@ -209,6 +260,33 @@ function verifyUploadOrAdd(
   return { ok: true, data: mapped };
 }
 
+/**
+ * The Story module owns the `story.*` error namespace (`StoryErrorCodes` + `StoryValidators`).
+ * Only a parsed 4xx ProblemDetails carrying one of those codes is an authoritative no-effect
+ * refusal. HTML error pages, proxy/gateway bodies, foreign-module codes, 408/425/429 and any
+ * ambiguous response stay uncertain: they can be produced after the command already ran.
+ */
+const STORY_OWNING_CODE = /^story\.[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)*$/;
+
+export function isAuthoritativeStoryRefusal(status: number, payload: unknown): boolean {
+  if (!Number.isFinite(status) || status < 400 || status >= 500) return false;
+  // Retryable/timeout classes never prove the server evaluated the intent.
+  if (status === 408 || status === 425 || status === 429) return false;
+  if (!payload || typeof payload !== "object") return false;
+  const record = payload as Record<string, unknown>;
+  const rootCode = typeof record.errorCode === "string" ? record.errorCode.trim() : "";
+  if (rootCode && STORY_OWNING_CODE.test(rootCode)) return true;
+  const errors = record.errors;
+  if (Array.isArray(errors)) {
+    for (const entry of errors) {
+      if (!entry || typeof entry !== "object") continue;
+      const code = (entry as Record<string, unknown>).code;
+      if (typeof code === "string" && STORY_OWNING_CODE.test(code.trim())) return true;
+    }
+  }
+  return false;
+}
+
 /** Known Story/Media route binding — nonempty strings alone are not enough. */
 export function bindStoryEnvelopeRoute(
   envelope: StoryIntentEnvelope,
@@ -229,7 +307,13 @@ export function bindStoryEnvelopeRoute(
       : /^\/v1\/admin\/media\/upload-(?:story-platform|for-shop)\/?$/;
 
   const storyRoot = role === "seller" ? sellerStory : adminStory;
-  if (!storyRoot.test(path) && !mediaUpload.test(path) && action !== "upload" && action !== "upload_add") {
+  if (
+    !storyRoot.test(path) &&
+    !mediaUpload.test(path) &&
+    action !== "upload" &&
+    action !== "upload_add" &&
+    action !== "replace_media"
+  ) {
     return { ok: false, reason: "foreign_module_path" };
   }
 
@@ -343,6 +427,23 @@ export function bindStoryEnvelopeRoute(
             Boolean(envelope.routeTargetId) &&
             expect("POST", new RegExp(`^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/items/?$`)) &&
             path.includes(envelope.routeTargetId!)
+          );
+        }
+        return expect("POST", mediaUpload);
+      }
+      case "replace_media": {
+        // Stage 1 is the same platform media upload; stage 2 is the owning update_item PUT for the
+        // SAME slide, so the old media stays authoritative until both steps have completed.
+        if (envelope.children[0]?.done && envelope.addBodyText) {
+          return (
+            Boolean(envelope.routeTargetId) &&
+            Boolean(envelope.targetItemId) &&
+            expect(
+              "PUT",
+              new RegExp(`^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/items/${guid}/?$`),
+            ) &&
+            path.includes(envelope.routeTargetId!) &&
+            path.includes(envelope.targetItemId!)
           );
         }
         return expect("POST", mediaUpload);

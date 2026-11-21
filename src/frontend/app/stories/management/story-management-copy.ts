@@ -56,6 +56,9 @@ export type StoryCopy = {
   sellerShopFixedPrefix: string;
   sellerShopFixedHint: string;
   sellerShopFallback: string;
+  chooseShopTitle: string;
+  chooseShopDetail: string;
+  chooseShopAction: string;
   platformStorefront: string;
   destinationNone: string;
   destinationProduct: string;
@@ -190,6 +193,9 @@ export type StoryCopy = {
   returnedToast: string;
   actorMissing: string;
   detailLoadFailed: string;
+  detailLoading: string;
+  detailRetry: string;
+  detailBack: string;
   stopFailed: string;
   returnFailed: string;
   pendingStorageBlocked: string;
@@ -256,6 +262,9 @@ export const faStoryCopy: StoryCopy = {
   sellerShopFixedPrefix: "فروشگاه:",
   sellerShopFixedHint: "این استوری فقط برای همین فروشگاه ثبت می‌شود.",
   sellerShopFallback: "فروشگاه فعلی شما",
+  chooseShopTitle: "ابتدا فروشگاه را انتخاب کنید",
+  chooseShopDetail: "برای دیدن و ساخت استوری، از پنل فروشنده فروشگاه خود را انتخاب کنید.",
+  chooseShopAction: "بازگشت به پنل فروشنده",
   platformStorefront: "ویترین اصلی",
   destinationNone: "بدون لینک",
   destinationProduct: "محصول",
@@ -390,6 +399,9 @@ export const faStoryCopy: StoryCopy = {
   returnedToast: "به پیش‌نویس برگشت.",
   actorMissing: "شناسهٔ کاربر برای ثبت امن اقدام مشخص نیست.",
   detailLoadFailed: "بارگذاری جزئیات ممکن نشد.",
+  detailLoading: "در حال بارگذاری جزئیات…",
+  detailRetry: "تلاش دوباره",
+  detailBack: "بازگشت به فهرست",
   stopFailed: "توقف ممکن نشد.",
   returnFailed: "بازگشت ممکن نشد.",
   pendingStorageBlocked: "اقدام ناتمام قبلی هنوز باز است یا ذخیره ممکن نیست.",
@@ -456,6 +468,9 @@ export const enStoryCopy: StoryCopy = {
   sellerShopFixedPrefix: "Shop:",
   sellerShopFixedHint: "This story is recorded only for your current shop.",
   sellerShopFallback: "Your current shop",
+  chooseShopTitle: "Choose a shop first",
+  chooseShopDetail: "Open the seller panel and choose your shop before viewing or creating stories.",
+  chooseShopAction: "Back to seller panel",
   platformStorefront: "Main storefront",
   destinationNone: "No link",
   destinationProduct: "Product",
@@ -590,6 +605,9 @@ export const enStoryCopy: StoryCopy = {
   returnedToast: "Returned to draft.",
   actorMissing: "A user identity is required to record this action safely.",
   detailLoadFailed: "Could not load the details.",
+  detailLoading: "Loading details…",
+  detailRetry: "Try again",
+  detailBack: "Back to list",
   stopFailed: "Stop failed.",
   returnFailed: "Return to draft failed.",
   pendingStorageBlocked: "A previous unfinished action is still open or storage is unavailable.",

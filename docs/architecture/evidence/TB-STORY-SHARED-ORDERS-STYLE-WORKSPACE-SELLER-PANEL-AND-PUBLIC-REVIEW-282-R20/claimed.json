@@ -1,0 +1,18 @@
+{
+  "bridgeRowId": "cf4a33b2-3ab4-4730-b83b-23e80ab55856",
+  "channelId": "tooba-main",
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20",
+  "parentTaskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "workerId": "tooba-worker-01",
+  "agentType": "cursor",
+  "claimedAtUtc": "2026-11-21T04:31:00Z",
+  "expectedBaseSha": "9c43563891c77a64a89f99f4bec248bad1fdc9e2",
+  "claimHeadSha": "d6126b6afbc1ce727823bd121b844658c8fc2be2",
+  "expectedBaseIsAncestor": true,
+  "sourceDriftOnClaim": "none (issuance commit is docs-only)",
+  "taskBytesSha256": "0C496ABF09472EAD082A26AAFDF0A0CE22B61B611C307230AE9619C0517E8014",
+  "taskBytesLength": 15753,
+  "envelopeCopiesIdentical": true,
+  "recordedIssuanceReceiptTaskSha256": "2b8b822a7a8cbe754083caab50e67fe5ecdffc30d947a1f1d2c15b5bb438e180",
+  "note": "Claimed via GET /api/tasks/next?channelId=tooba-main. The repo TASK.md bytes hash differs from the delivery-form hash recorded in ISSUANCE-RECEIPT.json; the repo bytes are canonical and were not rewritten."
+}

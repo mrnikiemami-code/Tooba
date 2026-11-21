@@ -1,5 +1,25 @@
-> CURRENT — TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20
-> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. Implementation and all mandatory proof pending; NOT Architect ACCEPT or owner acceptance. STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask NONE.
+# CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/{TASK.md,RESULT.md,RECEIPTS.md,COMPLETION-CHECKLIST.md,user-review.md,claimed.json,ISSUANCE-RECEIPT.json}`.
+Status **PASS_COMPLETE_R20** over A–F / R19 1–16: owning admin `/disable` vs seller `/stop`, Approved+Draft seller
+`return-to-draft`, truthful «تأییدشده، منتشر نشده», state-effect success verification, authoritative-refusal-only intent
+retirement, registered Story capability enforcement (fail-closed), no demo-shop fallback, DB-native shop/`updatedAt`/nullable
+date grid filters, staged `replace_media` journal, one native toast with user-invoked recovery, slide-level public player
+(loaded-photo dwell, video `ended`, hidden pause, focus trap, `aria-modal`), bounded `EndAt` revalidation, SQL window pruning
+and batched CTA resolution. Production Next build passes — BUILD_ID `qrCkTUiLY-AzikCO6XrYO`; Host 5088 DLL
+`96F060C4EFBCA12277E35E16ACE0D2B849966E272363EB340A3AF23F006427CC` skip-bootstrap=1 SingleStore/store-alpha.
+NOT Architect ACCEPT, NOT owner acceptance. Expected-Base `9c43563891c77a64a89f99f4bec248bad1fdc9e2`,
+claim base HEAD `d6126b6afbc1ce727823bd121b844658c8fc2be2`. Tests: backend 12/12 + 3/3 + 25/25, mounts 17/17, unit/guard 13/13,
+`npm run test:stories` exit 0, tsc 0, Release build 0 errors. ZERO migration/seed/grant/key/provider/money/stock; ZERO live
+Story/Media write; R19 deletion and four CTA rows remain REPORTED historical mutation; R6 effects UNKNOWN.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+# HISTORICAL — R20 ISSUED (superseded by the worker PASS above) — 2026-11-21
+
+> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. NOT Architect ACCEPT or owner acceptance.
 
 ---
 

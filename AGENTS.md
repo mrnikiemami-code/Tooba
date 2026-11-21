@@ -1,5 +1,52 @@
-> CURRENT — TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20
-> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. Implementation and all mandatory proof pending; NOT Architect ACCEPT or owner acceptance. STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask NONE.
+# CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/{TASK.md,RESULT.md,RECEIPTS.md,COMPLETION-CHECKLIST.md,user-review.md,claimed.json,ISSUANCE-RECEIPT.json}`.
+Status **PASS_COMPLETE_R20** over the whole issued A–F / R19 1–16 scope. Admin stop binds the owning
+`POST /v1/admin/stories/{id}/disable` (seller keeps `/stop`) and cross-role envelopes are refused; Approved+Draft offers and
+executes `POST /v1/seller/stories/{id}/return-to-draft`; «تأییدشده، منتشر نشده» is a distinct display and `effectivelyPublic`
+stays the only «در ویترین» authority. Success is verified against the owning response (`effectSatisfied` state + version
+regression refused), never a bare `storyId`. Only an owning `story.*` 4xx retires an intent — HTML/proxy 404, 408/425/429,
+ambiguous 5xx and malformed 2xx stay uncertain and exactly replayable from the frozen envelope. Server authorization now uses
+the registered Story capability set (`story.view|create|edit|submit|approve|reject|publish` from `PermissionCatalog`), DENY and
+Unavailable fail closed, cross-shop and seller-moderation are refused, and the demo-shop fallback is replaced by a choose-shop
+state. The admin grid is DB-native for `shopDisplayName/shopName`, `updatedAt` sort and nullable `startAt`/`endAt` via
+`EF.Property<DateTimeOffset?>` translation, with seller parity. Slide media replacement is a staged `replace_media` journal
+freezing the SHA-256 digest, slide identity, reviewed version and the exact UPDATE bytes before dispatch: a lost upload resumes
+that upload, a lost UPDATE retries only the frozen UPDATE, and metadata-only edits upload nothing. Feedback is one native toast
+(3000 ms, no hover/focus pause, semantic severity) with recovery behind a user-invoked `<details>` count. The public player
+decides video-ness per SLIDE, dwells a photo only after the image painted, advances a video on the real `ended` event, pauses
+when the document is hidden, traps focus with `role="dialog" aria-modal="true"`, locks background scroll, exposes
+`PublicStoryCard.EndAt` for a bounded expiry timer and resolves every page CTA through one batched Catalog composition; the
+public reader constrains the window in SQL. **The production Next build now passes** — BUILD_ID `qrCkTUiLY-AzikCO6XrYO`.
+Focused backend 12/12 + 3/3 + 25/25; mounts 17/17 incl. new player 3/3 and 1000-row plan 6/6; story unit/guard 13/13;
+`npm run test:stories` exit 0; tsc 0; Release build 0 errors; Host 5088 PID 25312 DLL
+`96F060C4EFBCA12277E35E16ACE0D2B849966E272363EB340A3AF23F006427CC` skip-bootstrap=1 with `/health`, `/health/ready`
+(SingleStore, messaging Healthy) and `store-alpha`; served `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`,
+`/en/admin/stories`, `/fa/admin/stories/new` all 200; served chunk `9758-2b1c47fcd351ec72.js` carries `replace_media`,
+`return-to-draft`, `/disable` and the new status copy. Served geometry: 1440 and 390 with zero horizontal overflow for admin and
+VendorShell; live authorization 200/403/403/403 and seller `/approve` 404. ZERO migration/DDL/seed/grant/key/provider/money/
+stock/notification; ZERO live Story/Media business write (reads and grid queries only); the R19 old-story deletion and four CTA
+rows stay **REPORTED historical mutation**; R6 bootstrap effects UNKNOWN; 6 existing stories inspected read-only and nothing
+deleted or restored. Report, not silently relocated: `StoryManagementScreen.tsx` (3294) and `story-api.ts` (1319) remain
+oversized and `FE-SIZE` fails identically at base (28 violations); `FE-FOLDER-002` (9) and `FE-BOUNDARY-001` (23) are also
+base-identical. The feature deep import was moved to the `features/admin-sellers` public barrel (guard now 1/1).
+Decision `CONSOLIDATED_R20_A_TO_F_COMPLETE_OWNING_STOP_AND_SELLER_MEDIA_AND_RETURN_TO_DRAFT_BOUND_STATE_EFFECT_SUCCESS_VERIFICATION_AUTHORITATIVE_REFUSAL_ONLY_SERVER_CAPABILITY_ENFORCEMENT_DB_NATIVE_SHOP_AND_NULLABLE_DATE_GRID_FILTERS_ONE_LOCALE_PRESERVING_WORKSPACE_STAGED_MEDIA_REPLACEMENT_JOURNAL_NATIVE_TOAST_WITH_USER_INVOKED_RECOVERY_SLIDE_LEVEL_PUBLIC_PLAYER_WITH_LOADED_DWELL_VIDEO_ENDED_HIDDEN_PAUSE_AND_BATCHED_CTA_WINDOW_REVALIDATION_NEXT_PRODUCTION_BUILD_PASSES_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`.
+Expected-Base `9c43563891c77a64a89f99f4bec248bad1fdc9e2`. Claim base HEAD `d6126b6afbc1ce727823bd121b844658c8fc2be2`.
+Honest limits: nullable-date SQL is exercised live but has no dedicated PostgreSQL rollback test; mounts are jsdom, not
+geometry; the served tab's dwell advance is unmeasurable under Chrome background-timer throttling (proven in the mount); the
+batched CTA port has no query-plan measurement; no live Approved+Draft row existed to display «تأییدشده، منتشر نشده»;
+Architect review and owner acceptance pending. Preserve VendorShell/i18n/date layout/Returns/payout/user data, R16 typing,
+R17 toast presentation, R18 approval readiness and R6 effects UNKNOWN.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+
+# HISTORICAL — R20 ISSUED (superseded by the worker PASS above) — 2026-11-21
+
+> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. NOT Architect ACCEPT or owner acceptance.
 
 ---
 

@@ -401,9 +401,17 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         }
 
         // (c) Seller/admin actor and sellerPartyId are derived from the authorization seam, never from a body.
-        Assert.Contains("await auth.RequireAuthorizedAsync(http, cancellationToken)", seller, StringComparison.Ordinal);
-        Assert.Contains("var (actorUserId, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);", seller, StringComparison.Ordinal);
-        Assert.Contains("var actorUserId = await auth.RequireAuthorizedAsync(http, cancellationToken);", admin, StringComparison.Ordinal);
+        //     The capability a caller hides in the UI must also travel through that same seam, so every
+        //     call carries the owning Story capability from the Access Control catalog and none is ungated.
+        Assert.Contains("var (actorUserId, sellerPartyId) = await auth.RequireAuthorizedAsync(http, permissionId, cancellationToken);", seller, StringComparison.Ordinal);
+        Assert.Contains("var actorUserId = await auth.RequireAuthorizedAsync(http, permissionId, cancellationToken);", admin, StringComparison.Ordinal);
+        Assert.Contains("var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, StoryPermissionIds.View, cancellationToken);", seller, StringComparison.Ordinal);
+        Assert.Contains("await auth.RequireAuthorizedAsync(http, StoryPermissionIds.View, cancellationToken);", admin, StringComparison.Ordinal);
+        var capabilityCalls = Regex.Matches(
+            seller + admin,
+            @"auth\.RequireAuthorizedAsync\(\s*http\s*,\s*(?<cap>StoryPermissionIds\.\w+|permissionId)\s*,\s*cancellationToken\s*\)");
+        var allCalls = Regex.Matches(seller + admin, @"auth\.RequireAuthorizedAsync\(");
+        Assert.Equal(allCalls.Count, capabilityCalls.Count);
 
         // (d) No client-readable identity shortcut exists in any endpoint file.
         foreach (var file in new[] { storefront, seller, admin })

@@ -13,7 +13,7 @@ namespace Tooba.Story.Infrastructure.Adapters;
 public sealed class CatalogStoryProductTargetAdapter(
     ICatalogStorefrontProductCardLookup products,
     IOfferSellerProductIdLookup? sellerProducts = null)
-    : IStoryProductTargetPort
+    : IStoryProductTargetPort, IStoryProductPathBatchPort
 {
     /// <inheritdoc />
     public async Task EnsureOwnedBySellerAsync(
@@ -56,5 +56,25 @@ public sealed class CatalogStoryProductTargetAdapter(
         if (!cards.TryGetValue(productId, out var card) || string.IsNullOrWhiteSpace(card.Slug))
             return null;
         return "/products/" + Uri.EscapeDataString(card.Slug.Trim());
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> ResolvePublicProductPathsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = productIds.Where(id => id != Guid.Empty).Distinct().ToList();
+        var paths = new Dictionary<Guid, string>(ids.Count);
+        if (ids.Count == 0)
+            return paths;
+
+        // ONE Catalog composition for the whole page instead of one call per CTA.
+        var cards = await products.ComposeProductCardsAsync(ids, cancellationToken);
+        foreach (var id in ids)
+        {
+            if (cards.TryGetValue(id, out var card) && !string.IsNullOrWhiteSpace(card.Slug))
+                paths[id] = "/products/" + Uri.EscapeDataString(card.Slug.Trim());
+        }
+        return paths;
     }
 }

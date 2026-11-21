@@ -234,7 +234,8 @@ test("R17: mixed reject → compact counts, typing stable, one toast, no result 
   assert.equal(qq(document.body, '[data-testid="story-admin-op-skipped-group"]').length, 1);
 
   const input = q(document.body, '[data-testid="story-reject-reason-input"]') as HTMLInputElement;
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set!;
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+  assert.ok(setter, "native value setter must exist");
   let value = "";
   for (const ch of "ناقص") {
     value += ch;

@@ -20,7 +20,8 @@ export type StoryIntentAction =
   | "stop"
   | "return_to_draft"
   | "upload"
-  | "upload_add";
+  | "upload_add"
+  | "replace_media";
 
 export type StoryUploadMeta = {
   fileName: string;
@@ -49,6 +50,8 @@ export type StoryIntentEnvelope = {
   /** After upload success: exact next add-item body frozen before send. */
   addBodyText: string | null;
   uploadedAssetId: string | null;
+  /** Existing slide a staged media replacement rewrites; null for every other action. */
+  targetItemId?: string | null;
   children: StoryIntentChild[];
   role: "admin" | "seller";
   shopId: string | null;
@@ -83,6 +86,7 @@ const KNOWN_ACTIONS = new Set<StoryIntentAction>([
   "return_to_draft",
   "upload",
   "upload_add",
+  "replace_media",
 ]);
 
 function storageKey(
@@ -118,11 +122,16 @@ export function validateStoryEnvelope(
     return { ok: false, reason: "body" };
   }
   if (
-    (envelope.action === "upload" || envelope.action === "upload_add") &&
+    (envelope.action === "upload" ||
+      envelope.action === "upload_add" ||
+      envelope.action === "replace_media") &&
     (!envelope.uploadMeta?.digestHex || !envelope.uploadMeta.fileName) &&
     !(envelope.children[0]?.done && envelope.addBodyText && envelope.uploadedAssetId)
   ) {
     return { ok: false, reason: "upload_meta" };
+  }
+  if (envelope.action === "replace_media" && !envelope.targetItemId?.trim()) {
+    return { ok: false, reason: "target_item" };
   }
   if (current) {
     if (envelope.role !== current.role) return { ok: false, reason: "role_scope" };
@@ -142,6 +151,7 @@ function samePayload(a: StoryIntentEnvelope, b: StoryIntentEnvelope): boolean {
     a.bodyText === b.bodyText &&
     a.addBodyText === b.addBodyText &&
     a.uploadedAssetId === b.uploadedAssetId &&
+    (a.targetItemId ?? null) === (b.targetItemId ?? null) &&
     JSON.stringify(a.uploadMeta) === JSON.stringify(b.uploadMeta) &&
     JSON.stringify(a.children) === JSON.stringify(b.children) &&
     a.role === b.role &&
@@ -201,7 +211,10 @@ export function advanceStoryUploadJournal(
 ): boolean {
   if (!storage()) return false;
   if (previous.occurrenceKey !== next.occurrenceKey) return false;
-  if (previous.action !== "upload_add" || next.action !== "upload_add") return false;
+  const staged = (action: StoryIntentAction) => action === "upload_add" || action === "replace_media";
+  if (!staged(previous.action) || !staged(next.action)) return false;
+  if (previous.action !== next.action) return false;
+  if ((previous.targetItemId ?? null) !== (next.targetItemId ?? null)) return false;
   if (previous.actorUserId !== next.actorUserId) return false;
   if ((previous.shopId ?? null) !== (next.shopId ?? null)) return false;
   if (previous.role !== next.role) return false;
@@ -354,6 +367,8 @@ export function pendingStoryLabel(envelope: StoryIntentEnvelope): string {
     case "upload":
     case "add_item":
       return "افزودن اسلاید هنوز تمام نشده";
+    case "replace_media":
+      return "جایگزینی رسانهٔ اسلاید هنوز تمام نشده";
     case "submit":
       return "ارسال برای تأیید هنوز تمام نشده";
     case "approve":

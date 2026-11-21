@@ -55,6 +55,8 @@ export interface PublicStoryCard {
   shopDisplayName?: string | null;
   shopPublicId?: string | null;
   ctaHref?: string | null;
+  /** Publication window end from the owning Story; null when the window has no end. */
+  endAt?: string | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
   /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
@@ -215,6 +217,7 @@ export function mapPublicStory(value: unknown): PublicStoryCard | null {
     shopDisplayName: nullableText(prop(item, "shopDisplayName", "ShopDisplayName")),
     shopPublicId: nullableText(prop(item, "shopPublicId", "ShopPublicId")),
     ctaHref: nullableText(prop(item, "ctaHref", "CtaHref")),
+    endAt: nullableText(prop(item, "endAt", "EndAt")),
   };
 }
 
