@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20",
+  "parentTask": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "expectedBaseSHA": "9c43563891c77a64a89f99f4bec248bad1fdc9e2",
+  "issuedDate": "2026-11-21",
+  "taskSHA256": "2b8b822a7a8cbe754083caab50e67fe5ecdffc30d947a1f1d2c15b5bb438e180",
+  "status": "ISSUED_NOT_IMPLEMENTED",
+  "supersedes": "R19-COMPLETION / R19 Instruction-Revision 2 naming only; remaining scope retained",
+  "automaticNextImplementationTask": "NONE"
+}

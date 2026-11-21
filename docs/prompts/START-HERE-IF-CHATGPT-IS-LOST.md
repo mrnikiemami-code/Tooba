@@ -1,3 +1,8 @@
+> CURRENT — TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20
+> Issued 2026-11-21: one consolidated completion of remaining R19 obligations; R19 remains PARTIAL. Standard R20 Task-ID / Parent R19 replaces the nonstandard R19-COMPLETION revision naming. Exact scope: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md. Implementation and all mandatory proof pending; NOT Architect ACCEPT or owner acceptance. STOP_FOR_ARCHITECT_AND_USER_REVIEW; automaticNextImplementationTask NONE.
+
+---
+
 # CURRENT — SAME R19 CONTINUATION REVISION 2 ISSUED; FULL CLOSURE REQUIRED — 2026-11-21
 
 Original: docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/TASK.md
