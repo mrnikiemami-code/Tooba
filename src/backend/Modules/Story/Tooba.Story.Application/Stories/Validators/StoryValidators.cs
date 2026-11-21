@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Tooba.Story.Application.Stories.Commands.Admin;
 using Tooba.Story.Application.Stories.Commands.Seller;
 using Tooba.Story.Application.Stories.Queries.Admin;
@@ -296,6 +296,27 @@ public sealed class ApproveAdminStoryCommandValidator : AbstractValidator<Approv
 }
 
 /// <summary>اعتبارسنجی تأیید و انتشار اتمی (نسخه از body اختیاری است؛ دامنه الزام می‌کند).</summary>
+public sealed class SubmitAdminStoryCommandValidator : AbstractValidator<SubmitAdminStoryCommand>
+{
+    public SubmitAdminStoryCommandValidator()
+    {
+    }
+}
+
+public sealed class DeleteAdminStoryCommandValidator : AbstractValidator<DeleteAdminStoryCommand>
+{
+    public DeleteAdminStoryCommandValidator()
+    {
+    }
+}
+
+public sealed class DeleteSellerStoryCommandValidator : AbstractValidator<DeleteSellerStoryCommand>
+{
+    public DeleteSellerStoryCommandValidator()
+    {
+    }
+}
+
 public sealed class ApproveAndPublishAdminStoryCommandValidator : AbstractValidator<ApproveAndPublishAdminStoryCommand>
 {
     public ApproveAndPublishAdminStoryCommandValidator()

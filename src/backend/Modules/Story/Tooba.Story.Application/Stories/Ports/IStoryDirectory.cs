@@ -43,6 +43,15 @@ public interface IStoryDirectory
         CreateStoryCommand command,
         CancellationToken cancellationToken);
 
+    /// <summary>ارسال پیش‌نویس فروشگاه به بازبینی توسط ادمین مجاز.</summary>
+    Task<AdminStorySnapshot> AdminSubmitForShopAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null);
+
     /// <summary>تأیید و انتشار اتمی با نسخهٔ دیده‌شده.</summary>
     Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
         Guid tenantId,

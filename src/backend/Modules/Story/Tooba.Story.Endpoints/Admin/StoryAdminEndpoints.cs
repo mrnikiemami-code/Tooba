@@ -36,6 +36,7 @@ public static class StoryAdminEndpoints
         admin.MapPost("/{id:guid}/enable", AdminEnableAsync);
         admin.MapPost("/{id:guid}/disable", AdminDisableAsync);
         admin.MapPost("/{id:guid}/schedule", AdminScheduleAsync);
+        admin.MapPost("/{id:guid}/submit", AdminSubmitAsync);
         admin.MapPost("/{id:guid}/approve", AdminApproveAsync);
         admin.MapPost("/{id:guid}/approve-and-publish", AdminApproveAndPublishAsync);
         admin.MapPost("/{id:guid}/approve-and-schedule", AdminApproveAndScheduleAsync);
@@ -209,6 +210,15 @@ public static class StoryAdminEndpoints
         AdminMutationAsync(auth, http, tenant, api, cancellationToken,
             tenantId => sender.Send(
                 new ScheduleAdminStoryCommand(tenantId, id, StoryBodyMapping.ToSchedule(body)), cancellationToken));
+
+    private static Task<IResult> AdminSubmitAsync(
+        Guid id, ReviewedStoryActionBody? body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,
+        ICurrentTenant tenant, ApiResponseFactory api, CancellationToken cancellationToken) =>
+        AdminMutationAsync(auth, http, tenant, api, cancellationToken,
+            (tenantId, actor) => sender.Send(
+                new SubmitAdminStoryCommand(
+                    tenantId, id, actor, body?.ExpectedVersion, body?.OccurrenceKey),
+                cancellationToken));
 
     private static Task<IResult> AdminApproveAsync(
         Guid id, ReviewedStoryActionBody? body, ISender sender, IStoryAdminAuthorizer auth, HttpContext http,

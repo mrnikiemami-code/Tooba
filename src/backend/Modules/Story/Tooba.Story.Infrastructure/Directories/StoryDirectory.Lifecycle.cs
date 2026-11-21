@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
@@ -76,6 +76,54 @@ public sealed partial class StoryDirectory
             story = await LoadStoryAsync(tenantId, foldedShopStoryId, track: false, cancellationToken)
                 ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
         }
+        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+    }
+
+    /// <summary>
+    /// ارسال پیش‌نویس متعلق به فروشگاه به بازبینی توسط ادمین مجاز.
+    /// فقط استوری Seller در Draft/None|Rejected با محتوای معتبر؛ seller scope خودِ استوری است.
+    /// </summary>
+    public async Task<AdminStorySnapshot> AdminSubmitForShopAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null)
+    {
+        if (adminActorUserId == Guid.Empty)
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+
+        var key = RequireOccurrenceKey(occurrenceKey);
+        var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        if (story.Origin != StoryOrigin.Seller
+            || story.SellerPartyId is not Guid sellerPartyId
+            || sellerPartyId == Guid.Empty)
+        {
+            throw new SemanticException(new SemanticError(StoryErrorCodes.MutationRejected));
+        }
+
+        var intent = HashLifecycleIntent(storyId, expectedVersion, "admin_submit_for_shop");
+        var replay = await TryReplayLifecycleAsync(
+            tenantId, sellerPartyId, "admin_submit_for_shop", key, intent, isAdmin: true, cancellationToken);
+        if (replay is not null)
+            return replay;
+
+        story.EnsureExpectedVersion(expectedVersion);
+        await EnsureStoredContentAuthorizedAsync(story, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        story.SubmitForReview(adminActorUserId, now);
+        await RecordOccurrenceAsync(
+            tenantId,
+            sellerPartyId,
+            "admin_submit_for_shop",
+            key,
+            intent,
+            story.StoryId,
+            adminActorUserId,
+            now,
+            cancellationToken);
+        story = await SaveStoryAsync(story, key, intent, cancellationToken);
         return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
     }
 

@@ -50,6 +50,7 @@ export function JalaliDatePicker({
   const [text, setText] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [panelStyle, setPanelStyle] = useState<{ top: number; left: number; width: number }>({
     top: 0,
     left: 0,
@@ -79,11 +80,20 @@ export function JalaliDatePicker({
     let left = rect.left;
     const maxLeft = window.innerWidth - width - 8;
     if (left > maxLeft) left = Math.max(8, maxLeft);
-    setPanelStyle({
-      top: rect.bottom + 6,
-      left,
-      width,
-    });
+
+    const margin = 8;
+    const panelHeight = panelRef.current?.offsetHeight ?? 320;
+    let top = rect.bottom + 6;
+    const spaceBelow = window.innerHeight - top - margin;
+    const spaceAbove = rect.top - margin;
+    // Flip above when the calendar cannot fit below; otherwise clamp so the last week stays clickable.
+    if (panelHeight > spaceBelow && panelHeight <= spaceAbove) {
+      top = rect.top - panelHeight - 6;
+    } else if (panelHeight > spaceBelow) {
+      top = Math.max(margin, window.innerHeight - panelHeight - margin);
+    }
+
+    setPanelStyle({ top, left, width });
   }
 
   useEffect(() => {
@@ -110,6 +120,14 @@ export function JalaliDatePicker({
       window.removeEventListener("scroll", onLayout, true);
     };
   }, [open, panelMinWidth]);
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => repositionPanel());
+    return () => cancelAnimationFrame(frame);
+    // Re-place with the real panel height after it mounts or its month changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, viewMonth, viewYear]);
 
   const days = useMemo(() => {
     const first = dayjs()
@@ -186,6 +204,10 @@ export function JalaliDatePicker({
 
   const selectedJalali = value ? isoToJalaliDisplay(value) : null;
   const today = dayjs().calendar("jalali");
+  // Native <dialog> sits in the top layer; a body portal would render behind it and become unclickable.
+  // Portal the floating panel into the owning dialog when present, otherwise keep body for normal pages.
+  const portalContainer =
+    typeof document !== "undefined" ? (inputRef.current?.closest("dialog") as HTMLElement | null) : null;
 
   return (
     <div ref={rootRef} className="relative w-full">
@@ -209,10 +231,11 @@ export function JalaliDatePicker({
         dir={locale === "fa" ? "rtl" : "ltr"}
       />
       {open && locale === "fa" ? (
-        <Portal>
+        <Portal container={portalContainer}>
           <div
+            ref={panelRef}
             data-jalali-picker-panel
-            className="fixed z-[var(--z-popover)] rounded-ds border border-border bg-surface-elevated p-3 shadow-ds"
+            className="fixed z-[var(--z-popover)] max-h-[calc(100vh-1rem)] overflow-y-auto rounded-ds border border-border bg-surface-elevated p-3 shadow-ds"
             style={{
               top: panelStyle.top,
               left: panelStyle.left,

@@ -18,6 +18,25 @@ public sealed class CreateAdminStoryCommandHandler(StoryPresentationComposer com
             () => composer.AdminCreateAsync(request.TenantId, request.ActorUserId, request.Input, cancellationToken));
 }
 
+/// <summary>ارسال پیش‌نویس فروشگاه به بازبینی توسط ادمین.</summary>
+public sealed record SubmitAdminStoryCommand(
+    Guid TenantId,
+    Guid StoryId,
+    Guid AdminActorUserId,
+    int? ExpectedVersion = null,
+    string? OccurrenceKey = null)
+    : IRequest<Result<AdminStorySnapshot>>;
+
+public sealed class SubmitAdminStoryCommandHandler(StoryPresentationComposer composer)
+    : IRequestHandler<SubmitAdminStoryCommand, Result<AdminStorySnapshot>>
+{
+    public Task<Result<AdminStorySnapshot>> Handle(SubmitAdminStoryCommand request, CancellationToken cancellationToken)
+        => StoryOperation.ExecuteAsync(
+            () => composer.AdminSubmitForShopAsync(
+                request.TenantId, request.StoryId, request.AdminActorUserId, request.ExpectedVersion,
+                cancellationToken, request.OccurrenceKey));
+}
+
 /// <summary>تأیید و انتشار اتمی.</summary>
 public sealed record ApproveAndPublishAdminStoryCommand(
     Guid TenantId, Guid StoryId, Guid AdminActorUserId, int? ExpectedVersion, string? OccurrenceKey = null)

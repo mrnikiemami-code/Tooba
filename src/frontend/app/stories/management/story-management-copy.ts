@@ -49,6 +49,10 @@ export type StoryCopy = {
   shopSearchPlaceholder: string;
   shopPickRequired: string;
   selectedShopPrefix: string;
+  loadingShops: string;
+  noShopsFound: string;
+  shopLoadFailed: string;
+  shopScrollHint: string;
   sellerShopFixedPrefix: string;
   sellerShopFixedHint: string;
   sellerShopFallback: string;
@@ -143,6 +147,7 @@ export type StoryCopy = {
   slidesEmptyHint: string;
   loadingProducts: string;
   loadMoreProducts: string;
+  noProductsFound: string;
   approveAndPublish: string;
   approveAndSchedule: string;
   approveConfirm: string;
@@ -239,6 +244,10 @@ export const faStoryCopy: StoryCopy = {
   shopSearchPlaceholder: "جستجوی نام فروشگاه",
   shopPickRequired: "فروشگاه را از فهرست نام‌ها انتخاب کنید.",
   selectedShopPrefix: "انتخاب‌شده:",
+  loadingShops: "در حال بارگذاری فروشگاه‌ها…",
+  noShopsFound: "فروشگاهی با این نام پیدا نشد.",
+  shopLoadFailed: "بارگذاری فروشگاه‌ها ممکن نشد.",
+  shopScrollHint: "برای دیدن فروشگاه‌های بیشتر اسکرول کنید.",
   sellerShopFixedPrefix: "فروشگاه:",
   sellerShopFixedHint: "این استوری فقط برای همین فروشگاه ثبت می‌شود.",
   sellerShopFallback: "فروشگاه فعلی شما",
@@ -334,6 +343,7 @@ export const faStoryCopy: StoryCopy = {
   slidesEmptyHint: "پس از ذخیره، اسلاید عکس یا ویدیو و مقصد را اضافه کنید.",
   loadingProducts: "در حال بارگذاری…",
   loadMoreProducts: "نمایش محصولات بیشتر",
+  noProductsFound: "محصولی برای این فروشگاه یا این جستجو پیدا نشد.",
   approveAndPublish: "تأیید و انتشار",
   approveAndSchedule: "تأیید و زمان‌بندی",
   approveConfirm: "تأیید استوری‌ها",
@@ -430,6 +440,10 @@ export const enStoryCopy: StoryCopy = {
   shopSearchPlaceholder: "Search shop name",
   shopPickRequired: "Pick a shop from the named list.",
   selectedShopPrefix: "Selected:",
+  loadingShops: "Loading shops…",
+  noShopsFound: "No shop matches this search.",
+  shopLoadFailed: "Shops could not be loaded.",
+  shopScrollHint: "Scroll for more shops.",
   sellerShopFixedPrefix: "Shop:",
   sellerShopFixedHint: "This story is recorded only for your current shop.",
   sellerShopFallback: "Your current shop",
@@ -525,6 +539,7 @@ export const enStoryCopy: StoryCopy = {
   slidesEmptyHint: "After saving, add a photo or video slide and its destination.",
   loadingProducts: "Loading…",
   loadMoreProducts: "Show more products",
+  noProductsFound: "No product was found for this shop or search.",
   approveAndPublish: "Approve and publish",
   approveAndSchedule: "Approve and schedule",
   approveConfirm: "Approve stories",

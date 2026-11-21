@@ -71,6 +71,53 @@ public sealed class StoryApprovalReadiness282R18Tests
     }
 
     [Fact]
+    public async Task Admin_can_submit_a_shop_owned_draft_then_approve_it()
+    {
+        var (db, directory, shop, media, _) = CreateDirectory();
+        var admin = Guid.NewGuid();
+
+        var created = await directory.AdminCreateForShopAsync(
+            Tenant,
+            admin,
+            shop,
+            new CreateStoryCommand("استوری فروشگاه توسط ادمین", "fa", null, null, null, null, "none", null,
+                OccurrenceKey: "r18-admin-shop-create"),
+            CancellationToken.None);
+        var added = await directory.AdminAddItemAsync(
+            Tenant, created.StoryId,
+            new AddStoryItemCommand("image", media, null, null, 5000, "none", null, 0,
+                "r18-admin-shop-item", created.VersionToken),
+            CancellationToken.None);
+
+        var adminView = await directory.AdminGetAsync(Tenant, created.StoryId, CancellationToken.None);
+        Assert.NotNull(adminView);
+        Assert.Contains("submit", adminView!.ActionCodes!);
+        Assert.DoesNotContain("approve", adminView.ActionCodes!);
+
+        var submitted = await directory.AdminSubmitForShopAsync(
+            Tenant, created.StoryId, admin, added.VersionToken, CancellationToken.None, "r18-admin-shop-submit");
+        Assert.Equal(StoryReviewStatus.Submitted, submitted.ReviewStatus);
+        Assert.Equal(shop, submitted.SellerPartyId);
+        Assert.Equal(admin, submitted.SubmittedByActorUserId);
+
+        var submittedView = await directory.AdminGetAsync(Tenant, created.StoryId, CancellationToken.None);
+        Assert.NotNull(submittedView);
+        Assert.Contains("approve", submittedView!.ActionCodes!);
+        Assert.Contains("reject", submittedView.ActionCodes!);
+        Assert.DoesNotContain("submit", submittedView.ActionCodes!);
+
+        var approved = await directory.AdminApproveAsync(
+            Tenant, created.StoryId, admin, submittedView.VersionToken, CancellationToken.None, "r18-admin-shop-approve");
+        Assert.Equal(StoryReviewStatus.Approved, approved.ReviewStatus);
+
+        var occurrence = await db.CommandOccurrences.SingleAsync(o => o.OccurrenceKey == "r18-admin-shop-submit");
+        Assert.Equal("admin_submit_for_shop", occurrence.ActionCode);
+        Assert.Equal(created.StoryId, occurrence.StoryId);
+        Assert.Equal(shop, occurrence.SellerPartyId);
+        Assert.Equal(admin, occurrence.ActorUserId);
+    }
+
+    [Fact]
     public async Task Legacy_url_only_submitted_story_is_not_offered_and_real_approve_refuses_content_not_ready()
     {
         var (db, directory, shop, media, _) = CreateDirectory();

@@ -195,7 +195,7 @@ export function bindStoryEnvelopeRoute(
       case "submit":
         return (
           Boolean(envelope.routeTargetId) &&
-          expect("POST", new RegExp(`^/v1/seller/stories/${guid}/submit/?$`)) &&
+          expect("POST", new RegExp(`^/v1/${role === "seller" ? "seller" : "admin"}/stories/${guid}/submit/?$`)) &&
           path.includes(envelope.routeTargetId!)
         );
       case "stop":

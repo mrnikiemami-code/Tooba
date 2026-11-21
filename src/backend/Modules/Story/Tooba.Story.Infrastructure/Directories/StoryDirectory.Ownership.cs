@@ -143,13 +143,13 @@ public sealed partial class StoryDirectory
     }
 
     /// <summary>
-    /// Update must not silently drop existing media. A slide whose media is unchanged (by owned asset,
-    /// or by the same legacy URL) keeps exactly what is stored, so caption/CTA edits stay possible on
-    /// legacy shop slides. A genuinely changed media still goes through the owning authorization.
+    /// به‌روزرسانی نباید رسانهٔ موجود را بی‌صدا حذف کند؛ رسانهٔ بدون تغییر (دارایی مالک یا همان URL قدیمی)
+    /// دقیقاً حفظ می‌شود تا ویرایش زیرنویس/CTA برای اسلایدهای قدیمی ممکن بماند. تغییر واقعی رسانه
+    /// همچنان از مجوز مالک عبور می‌کند.
     /// </summary>
     /// <summary>
-    /// Story-level update must not drop an unchanged legacy cover URL. Omitted cover fields preserve
-    /// exactly what is stored; a genuinely changed value still passes the owning media authorization.
+    /// به‌روزرسانی سطح استوری نباید URL کاور قدیمیِ بدون تغییر را حذف کند؛ فیلدهای خالی همان مقدار
+    /// ذخیره‌شده را حفظ می‌کنند و مقدار واقعاً تغییرکرده از مجوز مالک رسانه عبور می‌کند.
     /// </summary>
     private async Task<(Guid? AssetId, string? DisplayUrl)> BindUpdatedCoverAsync(
         StoryEntity story,

@@ -50,10 +50,10 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
     private const string StorefrontQueryFile =
         "Tooba.Story.Application/Stories/Queries/Storefront/GetPublicStoriesQuery.cs";
 
-    private const int ExpectedRouteCount = 34;
+    private const int ExpectedRouteCount = 37;
     // Admin+seller locale/product lookup routes share two request types (lawful dual-audience reads).
-    private const int ExpectedDistinctRequestCount = 32;
-    private const int ExpectedValidatorRequiredCount = 28;
+    private const int ExpectedDistinctRequestCount = 35;
+    private const int ExpectedValidatorRequiredCount = 31;
     private const int ExpectedExemptCount = 4;
 
     private static readonly HashSet<string> SupportedVerbs =
@@ -66,6 +66,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "QuerySellerStoriesQuery",
         "CreateAdminStoryCommand",
         "UpdateAdminStoryCommand",
+        "DeleteAdminStoryCommand",
         "ReorderAdminStoriesCommand",
         "ScheduleAdminStoryCommand",
         "RejectAdminStoryCommand",
@@ -74,6 +75,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "ReorderAdminStoryItemsCommand",
         "CreateSellerStoryDraftCommand",
         "UpdateSellerStoryCommand",
+        "DeleteSellerStoryCommand",
         "AddSellerStoryItemCommand",
         "UpdateSellerStoryItemCommand",
         "ReorderSellerStoryItemsCommand",
@@ -83,6 +85,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         "ReturnSellerStoryToDraftCommand",
         "StopSellerStoryCommand",
         "SubmitSellerStoryCommand",
+        "SubmitAdminStoryCommand",
         "EnableAdminStoryCommand",
         "DisableAdminStoryCommand",
         "ApproveAdminStoryCommand",
@@ -110,6 +113,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("seller", "Get", "/v1/seller/stories/{id:guid}", "SellerGetAsync", "GetSellerStoryQuery"),
         ("seller", "Post", "/v1/seller/stories", "SellerCreateAsync", "CreateSellerStoryDraftCommand"),
         ("seller", "Put", "/v1/seller/stories/{id:guid}", "SellerUpdateAsync", "UpdateSellerStoryCommand"),
+        ("seller", "Delete", "/v1/seller/stories/{id:guid}", "SellerDeleteAsync", "DeleteSellerStoryCommand"),
         ("seller", "Post", "/v1/seller/stories/{id:guid}/submit", "SellerSubmitAsync", "SubmitSellerStoryCommand"),
         ("seller", "Post", "/v1/seller/stories/{id:guid}/return-to-draft", "SellerReturnToDraftAsync", "ReturnSellerStoryToDraftCommand"),
         ("seller", "Post", "/v1/seller/stories/{id:guid}/stop", "SellerStopAsync", "StopSellerStoryCommand"),
@@ -124,10 +128,12 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("admin", "Get", "/v1/admin/stories/{id:guid}", "AdminGetAsync", "GetAdminStoryQuery"),
         ("admin", "Post", "/v1/admin/stories", "AdminCreateAsync", "CreateAdminStoryCommand"),
         ("admin", "Put", "/v1/admin/stories/{id:guid}", "AdminUpdateAsync", "UpdateAdminStoryCommand"),
+        ("admin", "Delete", "/v1/admin/stories/{id:guid}", "AdminDeleteAsync", "DeleteAdminStoryCommand"),
         ("admin", "Put", "/v1/admin/stories/reorder", "AdminReorderAsync", "ReorderAdminStoriesCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/enable", "AdminEnableAsync", "EnableAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/disable", "AdminDisableAsync", "DisableAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/schedule", "AdminScheduleAsync", "ScheduleAdminStoryCommand"),
+        ("admin", "Post", "/v1/admin/stories/{id:guid}/submit", "AdminSubmitAsync", "SubmitAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/approve", "AdminApproveAsync", "ApproveAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/approve-and-publish", "AdminApproveAndPublishAsync", "ApproveAndPublishAdminStoryCommand"),
         ("admin", "Post", "/v1/admin/stories/{id:guid}/approve-and-schedule", "AdminApproveAndScheduleAsync", "ApproveAndScheduleAdminStoryCommand"),
@@ -145,6 +151,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("QuerySellerStoriesQuery", typeof(QuerySellerStoriesQueryValidator)),
         ("CreateAdminStoryCommand", typeof(CreateAdminStoryCommandValidator)),
         ("UpdateAdminStoryCommand", typeof(UpdateAdminStoryCommandValidator)),
+        ("DeleteAdminStoryCommand", typeof(DeleteAdminStoryCommandValidator)),
         ("ReorderAdminStoriesCommand", typeof(ReorderAdminStoriesCommandValidator)),
         ("ScheduleAdminStoryCommand", typeof(ScheduleAdminStoryCommandValidator)),
         ("RejectAdminStoryCommand", typeof(RejectAdminStoryCommandValidator)),
@@ -153,6 +160,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("ReorderAdminStoryItemsCommand", typeof(ReorderAdminStoryItemsCommandValidator)),
         ("CreateSellerStoryDraftCommand", typeof(CreateSellerStoryDraftCommandValidator)),
         ("UpdateSellerStoryCommand", typeof(UpdateSellerStoryCommandValidator)),
+        ("DeleteSellerStoryCommand", typeof(DeleteSellerStoryCommandValidator)),
         ("AddSellerStoryItemCommand", typeof(AddSellerStoryItemCommandValidator)),
         ("UpdateSellerStoryItemCommand", typeof(UpdateSellerStoryItemCommandValidator)),
         ("ReorderSellerStoryItemsCommand", typeof(ReorderSellerStoryItemsCommandValidator)),
@@ -162,6 +170,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         ("ReturnSellerStoryToDraftCommand", typeof(ReturnSellerStoryToDraftCommandValidator)),
         ("StopSellerStoryCommand", typeof(StopSellerStoryCommandValidator)),
         ("SubmitSellerStoryCommand", typeof(SubmitSellerStoryCommandValidator)),
+        ("SubmitAdminStoryCommand", typeof(SubmitAdminStoryCommandValidator)),
         ("EnableAdminStoryCommand", typeof(EnableAdminStoryCommandValidator)),
         ("DisableAdminStoryCommand", typeof(DisableAdminStoryCommandValidator)),
         ("ApproveAdminStoryCommand", typeof(ApproveAdminStoryCommandValidator)),
@@ -206,7 +215,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
             Assert.Equal(expected[i].Request, actual[i].Request);
         }
 
-        // 34 routes → 32 distinct request types (locale/product shared by admin+seller) → one handler each.
+        // 35 routes → 33 distinct request types (locale/product shared by admin+seller) → one handler each.
         Assert.Equal(ExpectedDistinctRequestCount, derived.Select(d => d.Request).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(
             ExpectedRouteCount,
@@ -552,7 +561,7 @@ public sealed class StoryModuleAmsc001W3R2SetEqualityGuardTests
         var legacyNamesBefore = LegacyConstructedRequestNames(admin).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         var legacyNamesAfter = LegacyConstructedRequestNames(remapped).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(legacyNamesBefore, legacyNamesAfter);
-        Assert.Equal(19, legacyNamesBefore.Length);
+        Assert.Equal(21, legacyNamesBefore.Length);
 
         // The corrupted route now dispatches the wrong (still in-set) request, and its original handler is
         // orphaned — a route/handler shape the exact map rejects.

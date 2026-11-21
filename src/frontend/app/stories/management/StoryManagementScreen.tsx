@@ -26,7 +26,7 @@ import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-sy
 import { ADMIN_STORY_GRID_VIEW_KEY } from "../../admin/saved-view-store";
 import { formatAdminDate, type AdminLoadState } from "../../admin/admin-api";
 import { ADMIN_ACTOR_STORAGE_KEY, DEFAULT_ADMIN_ACTOR_ID } from "../../../lib/admin/admin-result";
-import { loadAdminSellers, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
+import { queryAdminSellersGrid, type AdminSellerRow } from "../../../features/admin-sellers/api/sellers-api";
 import { loadSellerDevContexts, readActorUserId, readSellerPartyId } from "../../vendor-panel/seller-api";
 import { JalaliDatePicker } from "../../../design-system/app-data-grid/jalali-date-picker";
 import {
@@ -72,6 +72,8 @@ import {
 } from "./story-admin-ops";
 
 const SELLER_STORY_GRID_VIEW_KEY = "seller.stories.grid.v1";
+const SHOP_PAGE_SIZE = 50;
+const SHOP_SEARCH_DEBOUNCE_MS = 300;
 
 function hasAction(row: AdminStorySnapshot, code: string): boolean {
   return (row.actionCodes ?? []).includes(code);
@@ -306,6 +308,15 @@ function StoryManagementScreenBody({
   const [adminShopName, setAdminShopName] = useState("");
   const [shopOptions, setShopOptions] = useState<AdminSellerRow[]>([]);
   const [shopSearch, setShopSearch] = useState("");
+  const [shopLoading, setShopLoading] = useState(false);
+  const [shopLoadingMore, setShopLoadingMore] = useState(false);
+  const [shopHasMore, setShopHasMore] = useState(false);
+  const [shopError, setShopError] = useState<string | null>(null);
+  const shopPageRef = useRef(0);
+  const shopHasMoreRef = useRef(false);
+  const shopLoadingRef = useRef(false);
+  const shopRequestRef = useRef(0);
+  const shopSearchRef = useRef("");
   const [pendingActs, setPendingActs] = useState<StoryIntentEnvelope[]>([]);
   const [previewConfirm, setPreviewConfirm] = useState<"publish" | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -468,14 +479,69 @@ function StoryManagementScreenBody({
     setPendingActs(pending);
   }, [capabilities.mode, sellerShopId, actorId, reloadToken, scopeTick]);
 
-  useEffect(() => {
-    if (capabilities.mode !== "admin") return;
-    void loadAdminSellers().then((result) => {
-      if (result.state === "ok" && result.data) {
-        setShopOptions(result.data.filter((row) => row.status.toLowerCase() === "active"));
+  const loadShopPage = useCallback(
+    async (page: number, search: string, mode: "reset" | "append") => {
+      if (mode === "append" && shopLoadingRef.current) return;
+
+      const requestId = ++shopRequestRef.current;
+      shopSearchRef.current = search;
+      shopLoadingRef.current = true;
+      if (mode === "reset") {
+        setShopLoading(true);
+        setShopLoadingMore(false);
+        setShopOptions([]);
+        setShopHasMore(false);
+        shopHasMoreRef.current = false;
+        shopPageRef.current = 0;
+        setShopError(null);
+      } else {
+        setShopLoadingMore(true);
       }
-    });
-  }, [capabilities.mode]);
+
+      try {
+        const result = await queryAdminSellersGrid({
+          page,
+          pageSize: SHOP_PAGE_SIZE,
+          sorts: [{ columnId: "name", direction: "asc" }],
+          filters: {},
+          search: search.trim() || undefined,
+        });
+        if (requestId !== shopRequestRef.current) return;
+        if (result.source === "error") {
+          setShopError(result.message ?? copy.shopLoadFailed);
+          return;
+        }
+
+        const rows = result.page.rows.filter((row) => row.status.toLowerCase() === "active");
+        const hasMore = page * SHOP_PAGE_SIZE < result.page.total;
+        shopPageRef.current = page;
+        shopHasMoreRef.current = hasMore;
+        setShopHasMore(hasMore);
+        setShopOptions((previous) => {
+          if (mode === "reset") return rows;
+          const seen = new Set(previous.map((row) => row.sellerPartyId));
+          return [...previous, ...rows.filter((row) => !seen.has(row.sellerPartyId))];
+        });
+      } catch {
+        if (requestId === shopRequestRef.current) setShopError(copy.shopLoadFailed);
+      } finally {
+        if (requestId === shopRequestRef.current) {
+          shopLoadingRef.current = false;
+          setShopLoading(false);
+          setShopLoadingMore(false);
+        }
+      }
+    },
+    [copy.shopLoadFailed],
+  );
+
+  useEffect(() => {
+    if (capabilities.mode !== "admin" || adminShopMode !== "shop") return;
+    const timer = window.setTimeout(() => {
+      void loadShopPage(1, shopSearch, "reset");
+    }, SHOP_SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [capabilities.mode, adminShopMode, shopSearch, loadShopPage]);
 
   useEffect(() => {
     if (capabilities.mode !== "seller") {
@@ -740,12 +806,13 @@ function StoryManagementScreenBody({
     }
     const occurrenceKey = mintOccurrence();
     const body = { expectedVersion: row.versionToken, occurrenceKey };
+    const isAdmin = capabilities.mode === "admin";
     const envelope: StoryIntentEnvelope = {
       version: 2,
       action: "submit",
       occurrenceKey,
       method: "POST",
-      path: `/v1/seller/stories/${row.storyId}/submit`,
+      path: isAdmin ? `/v1/admin/stories/${row.storyId}/submit` : `/v1/seller/stories/${row.storyId}/submit`,
       routeTargetId: row.storyId,
       expectedVersion: row.versionToken,
       bodyText: JSON.stringify(body),
@@ -753,7 +820,7 @@ function StoryManagementScreenBody({
       addBodyText: null,
       uploadedAssetId: null,
       children: [],
-      role: "seller",
+      role: isAdmin ? "admin" : "seller",
       shopId: row.sellerPartyId,
       actorUserId: actorId,
       recordedAt: new Date().toISOString(),
@@ -761,7 +828,9 @@ function StoryManagementScreenBody({
     const outcome = await runDurableStoryMutation({
       gate,
       envelope,
-      scope: { role: "seller", shopId: row.sellerPartyId, actorUserId: actorId },
+      scope: isAdmin
+        ? { role: "admin", shopId: null, actorUserId: actorId }
+        : { role: "seller", shopId: row.sellerPartyId, actorUserId: actorId },
     });
     if (outcome.state === "ok") {
       storyToast.success(copy.submittedToast);
@@ -913,11 +982,10 @@ function StoryManagementScreenBody({
   const showCreateWorkspace = createMode && !selectedId;
   const isListSurface = !createMode && !selectedId;
   const sellerEditable = detail ? hasAction(detail, "update") || hasAction(detail, "add_item") : false;
-  const filteredShops = shopOptions.filter((row) => {
-    const q = shopSearch.trim();
-    if (!q) return true;
-    return row.displayName.includes(q) || row.sellerPartyId.includes(q);
-  });
+  const loadMoreShops = () => {
+    if (shopLoadingRef.current || !shopHasMoreRef.current) return;
+    void loadShopPage(shopPageRef.current + 1, shopSearchRef.current, "append");
+  };
 
   return (
     <main data-testid={testId}>
@@ -1138,6 +1206,7 @@ function StoryManagementScreenBody({
                         <input
                           type="radio"
                           checked={adminShopMode === "platform"}
+                          data-testid="story-admin-platform-mode"
                           onChange={() => {
                             setAdminShopMode("platform");
                             setAdminShopId("");
@@ -1147,7 +1216,12 @@ function StoryManagementScreenBody({
                         {copy.mainStorefront}
                       </label>
                       <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 hover:bg-secondary">
-                        <input type="radio" checked={adminShopMode === "shop"} onChange={() => setAdminShopMode("shop")} />
+                        <input
+                          type="radio"
+                          checked={adminShopMode === "shop"}
+                          data-testid="story-admin-shop-mode"
+                          onChange={() => setAdminShopMode("shop")}
+                        />
                         {copy.forOneShop}
                       </label>
                     </div>
@@ -1168,8 +1242,16 @@ function StoryManagementScreenBody({
                         ) : (
                           <p className="text-sm text-danger">{copy.shopPickRequired}</p>
                         )}
-                        <ul className="max-h-48 overflow-auto rounded-xl border border-border bg-surface">
-                          {filteredShops.map((row) => (
+                        <ul
+                          className="max-h-48 overflow-auto rounded-xl border border-border bg-surface"
+                          data-testid="story-admin-shop-list"
+                          aria-busy={shopLoading || shopLoadingMore}
+                          onScroll={(event) => {
+                            const el = event.currentTarget;
+                            if (el.scrollHeight - el.scrollTop - el.clientHeight <= 48) loadMoreShops();
+                          }}
+                        >
+                          {shopOptions.map((row) => (
                             <li key={row.sellerPartyId}>
                               <button
                                 type="button"
@@ -1185,6 +1267,33 @@ function StoryManagementScreenBody({
                             </li>
                           ))}
                         </ul>
+                        {shopLoading || shopLoadingMore ? (
+                          <p className="text-xs text-muted" data-testid="story-admin-shop-loading">
+                            {copy.loadingShops}
+                          </p>
+                        ) : null}
+                        {shopError ? (
+                          <div className="flex flex-wrap items-center gap-2" data-testid="story-admin-shop-error">
+                            <p className="text-xs text-danger">{shopError}</p>
+                            <button
+                              type="button"
+                              className={storyButtonClass("secondary")}
+                              onClick={() => void loadShopPage(1, shopSearch, "reset")}
+                            >
+                              {faWorkspaceMessages.retry}
+                            </button>
+                          </div>
+                        ) : null}
+                        {!shopLoading && !shopLoadingMore && !shopError && shopOptions.length === 0 ? (
+                          <p className="text-xs text-muted" data-testid="story-admin-shop-empty">
+                            {copy.noShopsFound}
+                          </p>
+                        ) : null}
+                        {!shopLoading && !shopLoadingMore && !shopError && shopHasMore ? (
+                          <p className="text-xs text-muted" data-testid="story-admin-shop-more">
+                            {copy.shopScrollHint}
+                          </p>
+                        ) : null}
                       </div>
                     ) : null}
                   </fieldset>
@@ -1505,9 +1614,10 @@ function StoryManagementScreenBody({
               <button
                 type="button"
                 className={storyButtonClass("primary")}
+                data-testid="story-detail-submit"
                 onClick={() => void runSubmit(detail)}
               >
-                ارسال برای تأیید
+                {copy.rowSubmit}
               </button>
             ) : null}
           </StoryActionBar>
@@ -1993,6 +2103,11 @@ function StoryManagementScreenBody({
                   </li>
                 ))}
               </ul>
+              {!productLoading && productOptions.length === 0 ? (
+                <p className="text-xs text-muted" data-testid="story-product-empty">
+                  {copy.noProductsFound}
+                </p>
+              ) : null}
               {productOptions.length < productTotalCount ? (
                 <button
                   type="button"
@@ -2798,7 +2913,7 @@ function StoryLiveGrid({
           const actions: AppGridRowAction<AdminStorySnapshot>[] = [
             { id: "view", label: copy.rowReview, icon: Eye, onClick: (r) => onOpenDetailRef.current(r.storyId) },
           ];
-          if (capabilities.canSubmit && hasAction(row, "submit")) {
+          if ((capabilities.canSubmit || isAdmin) && hasAction(row, "submit")) {
             actions.push({
               id: "submit",
               label: copy.rowSubmit,

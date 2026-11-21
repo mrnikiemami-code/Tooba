@@ -137,12 +137,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var endpointSources = Sources(endpoints);
         var applicationSources = Sources(application);
 
-        // 34 routes: 19 admin + 14 seller + 1 storefront (TB-282-R2 locale/product lookup reads).
-        Assert.Equal(34, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
-        Assert.Equal(19, Regex.Matches(
+        // 37 routes: 21 admin + 15 seller + 1 storefront (TB-282-R2 locale/product lookup reads).
+        Assert.Equal(37, endpointSources.Sum(s => Regex.Matches(s, @"\.Map(Get|Post|Put|Patch|Delete)\(").Count));
+        Assert.Equal(21, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Admin", "StoryAdminEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
-        Assert.Equal(14, Regex.Matches(
+        Assert.Equal(15, Regex.Matches(
             File.ReadAllText(Path.Combine(endpoints, "Seller", "StorySellerEndpoints.cs")),
             @"\.Map(Get|Post|Put|Patch|Delete)\(").Count);
         Assert.Equal(1, Regex.Matches(
@@ -159,12 +159,12 @@ public sealed class StoryModuleAmsc001W3CertGuardTests
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("app.MapStoryModuleEndpoints();", program, StringComparison.Ordinal);
 
-        // CQRS: 32 real requests/handlers (TB-282-R2 + locale/product lookup reads), dispatched through ISender.
+        // CQRS: 35 real requests/handlers (TB-282-R2 + locale/product lookup reads), dispatched through ISender.
         var joinedApplication = string.Join("\n", applicationSources);
-        Assert.Equal(32, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
-        Assert.Equal(32, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
-        Assert.Equal(28, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
-        Assert.Equal(34, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
+        Assert.Equal(35, Regex.Matches(joinedApplication, @": IRequest(<|\s|$)").Count);
+        Assert.Equal(35, Regex.Matches(joinedApplication, @"IRequestHandler<").Count);
+        Assert.Equal(31, Regex.Matches(joinedApplication, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(37, endpointSources.Sum(s => Regex.Matches(s, @"sender\.Send\(").Count));
 
         // No endpoint reaches persistence directly.
         Assert.DoesNotContain("DbContext", string.Join("\n", endpointSources), StringComparison.Ordinal);

@@ -52,6 +52,17 @@ public sealed class StoryPresentationComposer
             ? _stories.AdminCreateForShopAsync(tenantId, actorUserId, shop, command, cancellationToken)
             : _stories.AdminCreateAsync(tenantId, command, cancellationToken));
 
+    /// <summary>ارسال پیش‌نویس متعلق به فروشگاه به بازبینی توسط ادمین.</summary>
+    public Task<AdminStorySnapshot> AdminSubmitForShopAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        int? expectedVersion,
+        CancellationToken cancellationToken,
+        string? occurrenceKey = null) =>
+        Guard(() => _stories.AdminSubmitForShopAsync(
+            tenantId, storyId, adminActorUserId, expectedVersion, cancellationToken, occurrenceKey));
+
     /// <summary>تأیید و انتشار اتمی.</summary>
     public Task<AdminStorySnapshot> AdminApproveAndPublishAsync(
         Guid tenantId, Guid storyId, Guid adminActorUserId, int? expectedVersion, CancellationToken cancellationToken,

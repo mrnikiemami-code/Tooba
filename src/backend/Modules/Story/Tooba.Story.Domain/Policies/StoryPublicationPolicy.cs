@@ -74,6 +74,8 @@ public static class StoryPublicationPolicy
             codes.Add("update");
             codes.Add("add_item");
             codes.Add("delete");
+            if (story.Origin == StoryOrigin.Seller && story.IsSellerContentEditable() && ready)
+                codes.Add("submit");
             if (story.Origin == StoryOrigin.Seller && story.ReviewStatus == StoryReviewStatus.Submitted)
             {
                 // Approve is only truthful when the owning approve command would accept the content:

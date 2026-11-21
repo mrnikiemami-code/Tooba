@@ -123,7 +123,7 @@ public sealed class StoryModuleAmsc001W1MigrateGuardTests
         Assert.DoesNotContain("WithMessage(", validators, StringComparison.Ordinal);
 
         // Transport validators — one per VALIDATOR_REQUIRED endpoint-reachable request (TB-281-R3 pins).
-        Assert.Equal(28, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
+        Assert.Equal(31, Regex.Matches(validators, @"class \w+Validator : AbstractValidator<").Count);
     }
 
     [Fact]

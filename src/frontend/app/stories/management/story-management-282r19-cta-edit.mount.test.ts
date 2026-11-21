@@ -205,3 +205,68 @@ test("edit form preserves story fields and validates every CTA before saving", a
     globalThis.fetch = originalFetch;
   }
 });
+
+test("admin can submit a seller-owned shop draft from the shared detail surface", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, "actor-admin-submit");
+  window.sessionStorage.clear();
+  const originalFetch = globalThis.fetch;
+  const calls: Call[] = [];
+  let current: AdminStorySnapshot = {
+    ...story(),
+    origin: "Seller",
+    sellerPartyId: "99999999-9999-9999-9999-999999999999",
+    shopDisplayName: "فروشگاه آزمایشی",
+    reviewStatus: "None",
+    actionCodes: ["update", "add_item", "delete", "submit"],
+  };
+
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (method === "GET" && url.includes("/locale-options")) {
+      return jsonResponse([{ code: "fa", name: "فارسی", isDefault: true }]);
+    }
+    if (method === "GET" && url.includes("/product-options")) {
+      return jsonResponse({ items: [], totalCount: 0 });
+    }
+    if (method === "GET" && url.includes(`/v1/admin/stories/${STORY_ID}`)) {
+      return jsonResponse(current);
+    }
+    if (method === "POST" && url.includes("/stories/query")) {
+      return jsonResponse({ items: [current], page: 1, pageSize: 50, totalCount: 1 });
+    }
+    if (method === "POST" && url.includes(`/v1/admin/stories/${STORY_ID}/submit`)) {
+      calls.push({ method, url, body: typeof init?.body === "string" ? init.body : null });
+      current = {
+        ...current,
+        reviewStatus: "Submitted",
+        versionToken: current.versionToken + 1,
+        actionCodes: ["update", "add_item", "delete", "approve", "reject"],
+      };
+      return jsonResponse(current);
+    }
+    return jsonResponse({});
+  }) as typeof fetch;
+
+  try {
+    const tree = await mount(
+      createElement(StoryManagementScreen, {
+        capabilities: ADMIN_STORY_CAPABILITIES,
+        initialStoryId: STORY_ID,
+        navigate: () => undefined,
+      }),
+    );
+    await flush();
+    await waitFor(() => qq(tree.container, '[data-testid="story-detail-workspace"]').length === 1);
+    await click(q(tree.container, '[data-testid="story-detail-submit"]'));
+    await waitFor(() => calls.length === 1);
+    assert.match(calls[0]!.url, new RegExp(`/v1/admin/stories/${STORY_ID}/submit$`));
+    const body = JSON.parse(calls[0]!.body!) as Record<string, unknown>;
+    assert.equal(body.expectedVersion, 4);
+    assert.ok(body.occurrenceKey);
+    await waitFor(() => qq(tree.container, '[data-testid="story-detail-approve"]').length === 1);
+    await tree.unmount();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
