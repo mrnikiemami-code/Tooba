@@ -1,0 +1,10 @@
+{
+  "bridgeRowId": "80faea2c-6881-40fa-a0d8-4bd3a4439179",
+  "channelId": "tooba-main",
+  "claimHeadSha": "d3de64c2c6692b551c8193e842bdd04fe99ceded",
+  "workerId": "tooba-worker-01",
+  "claimedAtUtc": "2026-11-21T03:24:18Z",
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "expectedBaseSha": "d3de64c2c6692b551c8193e842bdd04fe99ceded",
+  "note": "Claimed via /api/tasks/next; claim HEAD equals the Expected-Base, so no source drift arrived. Envelope text was not repo-tracked at claim time; TASK.md is the restatement recorded in issuance-receipt.json."
+}

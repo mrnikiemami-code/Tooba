@@ -1,0 +1,11 @@
+{
+  "taskId": "TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19",
+  "expectedBaseSHA": "d3de64c2c6692b551c8193e842bdd04fe99ceded",
+  "taskSHA256": "C20C4932E2147972D63E9D5229C44D4D6FBD75F3301A905438E163C4D22D9065",
+  "date": "2026-11-21",
+  "timezone": "Asia/Tehran",
+  "authority": "Owner: finish the audited Story workflow, operator UI, recovery and public playback in ONE delivery",
+  "bridge": "Enqueued and claimed via Bridge row 80faea2c-6881-40fa-a0d8-4bd3a4439179",
+  "envelopeProvenance": "Delivered by BRIDGE-WAKE claim; no repo-tracked bytes existed, so TASK.md is the recorded restatement with this SHA",
+  "automaticNextImplementationTask": "NONE"
+}

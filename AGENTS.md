@@ -1,4 +1,37 @@
-# CURRENT — TB-282-R18 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
+# CURRENT — TB-282-R19 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+
+Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/TASK.md` and
+`docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R19/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
+Status **PASS** within issued A–G. Admin stop now binds the owning `/v1/admin/stories/{id}/disable` (seller keeps
+`/stop`); seller media upload uses the real `POST /v1/seller/media` (the old `/v1/seller/media/upload-story` never existed
+and is refused by the negative control). A 2xx must show the effect the frozen action owns (`story_state_unchanged`
+otherwise, intent retained); a non-platform 4xx is uncertainty, not a definite refusal. `Approved` + not-public reads
+«تأییدشده، منتشر نشده». `Approved + Draft` (never published) now offers and executes the owning
+`/v1/seller/stories/{id}/return-to-draft` instead of being a dead end. The admin grid admits
+`shopDisplayName/shopName/startAt/endAt/updatedAt` and translates nullable date windows to SQL. The public player decides
+video-ness per SLIDE (a JPEG cover of a video story dwells as a photo), waits for the image to load, renders the caption
+and exposes dialog semantics. Slide media can be explicitly replaced only after upload AND the owning `update_item`
+succeed; caption/CTA-only edits upload nothing. Focused backend 3/3; Story set 168 passed with 6 failures proven
+identical at HEAD (pre-existing fixtures/exception drift); Release build 0 errors; tsc 0; story unit 22/22 + mount 6/6;
+R19 mount 5/5; `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa` all 200 with the new copy/endpoints in the served
+dev chunks. Reported, NOT silently relocated: `Story.Infrastructure → Catalog.Contracts` direct project reference fails
+the module's own W6 coupling guard and predates R19.
+Decision `OWNING_STOP_AND_SELLER_MEDIA_ROUTES_BOUND_STATE_EFFECT_VERIFIED_SUCCESS_HONEST_APPROVED_UNPUBLISHED_SELLER_RETURN_TO_DRAFT_DB_NATIVE_SHOP_DATE_FILTERS_AND_UPDATED_SORT_SLIDE_LEVEL_PUBLIC_PLAYER_WITH_LOADED_DWELL_CAPTION_AND_DIALOG_SEMANTICS_EXPLICIT_MEDIA_REPLACEMENT_PRESERVING_OLD_MEDIA_ZERO_MIGRATION_ZERO_LIVE_WRITE`.
+NOT Architect ACCEPT, NOT owner acceptance. User-Review-URLs: `/fa/admin/stories`, `/fa/vendor-panel/stories`, `/fa`.
+Expected-Base `d3de64c2c6692b551c8193e842bdd04fe99ceded`. Final implementation SHA `8fb403cfe17b40729f7f582acdf9aea5a238ee89`.
+ZERO migration/config/grant/seed; ZERO live Story/Media write. Honest limits: no browser geometry/RTL and no real
+`<video>` `ended` runtime measurement; grid proven on the real engine over InMemory, not PostgreSQL; the legacy
+`MediaUrl`-only record still needs a seller re-upload; Html404 production build blocker unchanged.
+Preserve VendorShell/i18n/date layout/Returns/payout/user data, R16 typing, R17 toast presentation, R18 approval
+readiness and R6 effects UNKNOWN.
+activeTask: NONE
+automaticNextImplementationTask: NONE
+Stop-State: STOP_FOR_ARCHITECT_AND_USER_REVIEW
+
+
+# HISTORICAL — prior records preserved below
+
+# HISTORICAL — TB-282-R18 WORKER PASS; AWAIT ARCHITECT AND USER REVIEW — 2026-11-20
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R18/{TASK.md,RESULT.md,RECEIPTS.md,result-contract.txt,COMPLETION-LEDGER.md,CORRECTION-ADDENDUM.md,user-review.md,claimed.json,issuance-receipt.json}`.
