@@ -158,3 +158,8 @@ rows deleted / restored ............. 0  (the R19 deletion is recorded as REPORT
 canonical DB ........................ tooba_alpha@127.0.0.1:5432 / SingleStore store-alpha (unchanged)
 R6 bootstrap effects ................ UNKNOWN (preserved)
 ```
+
+Final implementation SHA ........... 063f86f1823627a82c53bab7431680dda331cb57  (40 files, source + evidence)
+Final pointer commit ................ this docs-only commit (records the SHA above)
+Origin parity ....................... origin/main == final pointer commit, working tree clean
+

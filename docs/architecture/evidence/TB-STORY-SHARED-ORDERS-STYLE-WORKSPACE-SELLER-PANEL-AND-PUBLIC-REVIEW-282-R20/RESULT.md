@@ -109,3 +109,9 @@ shared DS/grid/Media authorities are preserved.
    inspection time (all three Approved rows are Active), so that copy is proven on the mount and in the served
    chunk, not on a live row.
 7. Architect review and owner acceptance are still pending. This file is not a product/release acceptance.
+
+## Final SHAs
+
+Implementation + evidence commit (all 40 files, source and docs): `063f86f1823627a82c53bab7431680dda331cb57`.
+This docs-only pointer commit records that SHA; `origin/main` parity is confirmed immediately after it.
+
