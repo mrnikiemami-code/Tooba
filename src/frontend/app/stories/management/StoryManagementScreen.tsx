@@ -356,6 +356,11 @@ function StoryManagementScreenBody({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [destructiveConfirm, setDestructiveConfirm] = useState<{
+    title: string;
+    body: string;
+    run: () => void;
+  } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminStorySnapshot | null>(null);
   const [draftWindow, setDraftWindow] = useState<StoryScheduleDraft>({
     startDayIso: "",
@@ -430,6 +435,9 @@ function StoryManagementScreenBody({
     router.push(href);
   }
 
+  function confirmDestructive(title: string, body: string, run: () => void) {
+    setDestructiveConfirm({ title, body, run });
+  }
   function requestLeave(href: string) {
     if (!dirty && !slideDirty) {
       finishLeave(href);
@@ -663,6 +671,8 @@ function StoryManagementScreenBody({
     setProductPage(1);
     setProductLoading(true);
     setProductError(null);
+    setProductOptions([]);
+    setProductTotalCount(0);
     // Debounce keystrokes so a fast typist issues one owning query, not one per character.
     const timer = setTimeout(() => {
       void loadStoryProductOptions({
@@ -1669,7 +1679,7 @@ function StoryManagementScreenBody({
               <button
                 type="button"
                 className={storyButtonClass("danger")}
-                onClick={() => {
+                onClick={() => confirmDestructive(copy.stopDisplay, copy.unsavedLeaveBody, () => {
                   if (!actorId) return;
                   const key = mintOccurrence();
                   const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
@@ -1706,7 +1716,7 @@ function StoryManagementScreenBody({
                     } else if (outcome.state === "failed") storyToast.error(outcome.message);
                     else storyToast.error(copy.stopFailed);
                   });
-                }}
+                })}
               >
                 {copy.stopDisplay}
               </button>
@@ -1715,7 +1725,7 @@ function StoryManagementScreenBody({
               <button
                 type="button"
                 className={storyButtonClass("secondary")}
-                onClick={() => {
+                onClick={() => confirmDestructive(copy.returnToDraft, copy.unsavedLeaveBody, () => {
                   if (!actorId) return;
                   const key = mintOccurrence();
                   const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
@@ -1749,7 +1759,7 @@ function StoryManagementScreenBody({
                     } else if (outcome.state === "failed") storyToast.error(outcome.message);
                     else storyToast.error(copy.returnFailed);
                   });
-                }}
+                })}
               >
                 {copy.returnToDraft}
               </button>
@@ -2047,7 +2057,7 @@ function StoryManagementScreenBody({
                       <button
                         type="button"
                         className={storyButtonClass("danger")}
-                        onClick={() => {
+                        onClick={() => confirmDestructive(copy.removeSlide, copy.unsavedLeaveBody, () => {
                           if (!actorId) return;
                           const key = mintOccurrence();
                           const body = { expectedVersion: detail.versionToken, occurrenceKey: key };
@@ -2084,7 +2094,7 @@ function StoryManagementScreenBody({
                             } else if (outcome.state === "failed") storyToast.error(outcome.message);
                             else storyToast.error(copy.sendFailed);
                           });
-                        }}
+                        })}
                       >
                         {copy.removeSlide}
                       </button>
@@ -2238,7 +2248,12 @@ function StoryManagementScreenBody({
                 placeholder={copy.productSearchPlaceholder}
                 aria-label={copy.productSearchPlaceholder}
                 value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
+                onChange={(e) => {
+                  setProductSearch(e.target.value);
+                  setProductOptions([]);
+                  setProductTotalCount(0);
+                  setProductError(null);
+                }}
                 data-testid="story-product-search"
               />
               {productLoading ? <p className="text-xs text-muted">{copy.loadingProducts}</p> : null}
@@ -2262,6 +2277,7 @@ function StoryManagementScreenBody({
                       className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
                       data-testid="story-product-option"
                       data-product-id={row.productId}
+                      disabled={productLoading}
                       onClick={() => {
                         if (!row.productId) {
                           storyToast.error(copy.productIdInvalid);
@@ -2800,6 +2816,37 @@ function StoryManagementScreenBody({
         </div>
       </Dialog>
 
+      <Dialog
+        open={Boolean(destructiveConfirm)}
+        onClose={() => setDestructiveConfirm(null)}
+        title={destructiveConfirm?.title ?? copy.confirmAction}
+      >
+        <div className="space-y-3 p-1" data-testid="story-destructive-dialog">
+          <p className="text-sm text-muted">{destructiveConfirm?.body ?? copy.unsavedLeaveBody}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className={storyButtonClass("secondary")}
+              data-testid="story-destructive-cancel"
+              onClick={() => setDestructiveConfirm(null)}
+            >
+              {copy.cancel}
+            </button>
+            <button
+              type="button"
+              className={storyButtonClass("danger")}
+              data-testid="story-destructive-confirm-yes"
+              onClick={() => {
+                const run = destructiveConfirm?.run;
+                setDestructiveConfirm(null);
+                run?.();
+              }}
+            >
+              {copy.confirmAction}
+            </button>
+          </div>
+        </div>
+      </Dialog>
       <Dialog
         open={slideDiscardOpen}
         onClose={() => setSlideDiscardOpen(false)}

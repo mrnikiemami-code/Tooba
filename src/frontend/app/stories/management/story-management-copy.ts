@@ -16,6 +16,7 @@ export type StoryCopy = {
   createAndPublish: string;
   createDraft: string;
   cancel: string;
+  confirmAction: string;
   close: string;
   details: string;
   enable: string;
@@ -232,6 +233,7 @@ export const faStoryCopy: StoryCopy = {
   createAndPublish: "ایجاد و فعال‌سازی",
   createDraft: "ایجاد پیش‌نویس",
   cancel: "انصراف",
+  confirmAction: "تأیید",
   close: "بستن",
   details: "جزئیات",
   enable: "فعال",
@@ -448,6 +450,7 @@ export const enStoryCopy: StoryCopy = {
   createAndPublish: "Create and publish",
   createDraft: "Create draft",
   cancel: "Cancel",
+  confirmAction: "Confirm",
   close: "Close",
   details: "Details",
   enable: "Enable",

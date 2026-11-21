@@ -173,3 +173,34 @@ test("R22 F03: browser Back with unsaved form restores the editor URL on Stay", 
     globalThis.fetch = original;
   }
 });
+
+test("R22 F13: slide delete asks first and Cancel sends no request", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
+  window.sessionStorage.clear();
+  const current = story({ actionCodes: ["remove_item", "update"] });
+  let calls = 0;
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    calls += 1;
+    const url = String(input);
+    if (url.includes("locale-options")) return new Response(JSON.stringify([{ code: "fa", name: "فارسی", isDefault: true }]), { status: 200, headers: { "Content-Type": "application/json" } });
+    if (url.includes("/stories/query")) return new Response(JSON.stringify({ items: [current], page: 1, pageSize: 50, totalCount: 1 }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(current), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
+    await flush();
+    await waitFor(() => q(tree.container, '[data-testid="story-detail-workspace"]') != null);
+    const remove = Array.from(tree.container.querySelectorAll("button")).find((button) => button.textContent?.trim() === "حذف");
+    assert.ok(remove);
+    const before = calls;
+    await click(remove);
+    const dialog = q(tree.container, '[data-testid="story-destructive-dialog"]') as Element | null;
+    assert.equal(dialog?.closest("dialog")?.open, true);
+    await click(q(tree.container, '[data-testid="story-destructive-cancel"]'));
+    assert.equal(calls, before, "Cancel must not send a delete request");
+    await tree.unmount();
+  } finally {
+    globalThis.fetch = original;
+  }
+});

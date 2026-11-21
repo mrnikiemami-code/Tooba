@@ -40,7 +40,7 @@ function sellerHeaders(shopId: string, actorUserId: string): Record<string, stri
   };
 }
 
-function asArray(payload: unknown): unknown[] {
+function asArray(payload: unknown): unknown[] | null {
   if (Array.isArray(payload)) return payload;
   if (payload && typeof payload === "object") {
     const record = payload as Record<string, unknown>;
@@ -51,7 +51,7 @@ function asArray(payload: unknown): unknown[] {
       if (Array.isArray(inner.items)) return inner.items;
     }
   }
-  return [];
+  return null;
 }
 
 function readTotalCount(payload: unknown, itemCount: number): number {
@@ -81,7 +81,7 @@ export async function loadStoryLocaleOptions(args: {
   const response = await fetch(url, { headers });
   if (!response.ok) return [];
   const payload = await response.json().catch(() => null);
-  return asArray(payload)
+  return (asArray(payload) ?? [])
     .map((row) => {
       if (!row || typeof row !== "object") return null;
       const r = row as Record<string, unknown>;
@@ -118,7 +118,10 @@ export async function loadStoryProductOptions(args: {
     });
     if (!response.ok) return { items: [], totalCount: 0, error: "story.products.load_failed" };
     const payload = await response.json().catch(() => null);
-    const items = mapProductRows(asArray(payload));
+    const rows = asArray(payload);
+    if (!rows) return { items: [], totalCount: 0, error: "story.products.invalid_response" };
+    const items = mapProductRows(rows);
+    if (rows.length > 0 && items.length === 0) return { items: [], totalCount: 0, error: "story.products.invalid_response" };
     return { items, totalCount: readTotalCount(payload, items.length), error: null };
   }
 
@@ -126,7 +129,10 @@ export async function loadStoryProductOptions(args: {
   const response = await fetch(`/v1/admin/stories/product-options?${qs}`, { headers: adminHeaders() });
   if (!response.ok) return { items: [], totalCount: 0, error: "story.products.load_failed" };
   const payload = await response.json().catch(() => null);
-  const items = mapProductRows(asArray(payload));
+  const rows = asArray(payload);
+  if (!rows) return { items: [], totalCount: 0, error: "story.products.invalid_response" };
+  const items = mapProductRows(rows);
+  if (rows.length > 0 && items.length === 0) return { items: [], totalCount: 0, error: "story.products.invalid_response" };
   return { items, totalCount: readTotalCount(payload, items.length), error: null };
 }
 

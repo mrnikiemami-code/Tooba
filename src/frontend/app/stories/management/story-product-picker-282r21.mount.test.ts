@@ -1,4 +1,4 @@
-﻿import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
+import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import test from "node:test";
@@ -64,7 +64,7 @@ function story(): AdminStorySnapshot {
   };
 }
 
-function installFetch(options: { failProducts: boolean }) {
+function installFetch(options: { failProducts: boolean; malformedProducts?: boolean }) {
   const calls: string[] = [];
   const original = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
@@ -75,6 +75,7 @@ function installFetch(options: { failProducts: boolean }) {
     }
     if (url.includes("product-options")) {
       if (options.failProducts) return new Response("{}", { status: 500 });
+      if (options.malformedProducts) return new Response("<html>bad</html>", { status: 200, headers: { "Content-Type": "text/html" } });
       return new Response(JSON.stringify({ items: [{ productId: "55555555-5555-5555-5555-555555555555", title: "محصول" }], totalCount: 1 }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
     if (url.includes(`/stories/${STORY}`)) {
@@ -110,6 +111,23 @@ test("a product lookup failure is shown as an error, not as an empty catalogue",
   window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
   window.sessionStorage.clear();
   const spy = installFetch({ failProducts: true });
+  try {
+    const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
+    await flush();
+    await waitFor(() => qq(tree.container, '[data-testid="story-detail-workspace"]').length === 1);
+    await click(q(tree.container, '[data-testid="story-slide-edit"]'));
+    await waitFor(() => qq(tree.container, '[data-testid="story-product-error"]').length === 1);
+    assert.equal(qq(tree.container, '[data-testid="story-product-empty"]').length, 0);
+    await tree.unmount();
+  } finally {
+    spy.restore();
+  }
+});
+
+test("a malformed 200 product payload is an error, not a successful empty catalogue", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
+  window.sessionStorage.clear();
+  const spy = installFetch({ failProducts: false, malformedProducts: true });
   try {
     const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
     await flush();
