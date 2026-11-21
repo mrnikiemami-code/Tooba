@@ -339,6 +339,35 @@ public sealed class StoryApprovalReadiness282R18Tests
         Assert.Throws<SemanticException>(() => StoryRules.ValidateCta("category", "bad"));
         Assert.Throws<SemanticException>(() => StoryRules.ValidateCta("article", "//evil.example"));
     }
+    [Fact]
+    public async Task Admin_update_is_saved_even_when_optional_product_link_enrichment_fails()
+    {
+        var (db, directory, _, media, product) = CreateDirectory(new FailingPathProducts());
+        _ = db;
+        var created = await directory.AdminCreateAsync(
+            Tenant,
+            new CreateStoryCommand("قبل", "fa", null, null, null, null, "none", null,
+                OccurrenceKey: "enrich-create"),
+            CancellationToken.None);
+        var added = await directory.AdminAddItemAsync(
+            Tenant,
+            created.StoryId,
+            new AddStoryItemCommand(
+                "image", media, null, null, 5000, "product", product.ToString("D"), 0,
+                "enrich-add", created.VersionToken),
+            CancellationToken.None);
+
+        var updated = await directory.AdminUpdateAsync(
+            Tenant,
+            created.StoryId,
+            new UpdateStoryCommand("بعد", "fa", null, null, null, "none", null,
+                ExpectedVersion: added.VersionToken, OccurrenceKey: "enrich-update"),
+            CancellationToken.None);
+
+        Assert.Equal("بعد", updated.Title);
+        Assert.True(updated.VersionToken > added.VersionToken);
+        Assert.Null(updated.Items.Single().CtaHref);
+    }
     private static void SetPrivate(object target, string propertyName, object? value)
     {
         var setter = target.GetType()
@@ -347,7 +376,7 @@ public sealed class StoryApprovalReadiness282R18Tests
         setter.Invoke(target, [value]);
     }
 
-    private static (StoryDbContext db, StoryDirectory directory, Guid shop, Guid media, Guid product) CreateDirectory()
+    private static (StoryDbContext db, StoryDirectory directory, Guid shop, Guid media, Guid product) CreateDirectory(IStoryProductTargetPort? products = null)
     {
         var options = new DbContextOptionsBuilder<StoryDbContext>()
             .UseInMemoryDatabase("r18-approval-" + Guid.NewGuid().ToString("N"))
@@ -360,7 +389,7 @@ public sealed class StoryApprovalReadiness282R18Tests
             db,
             new StubParty(shop),
             new StubMedia(media),
-            new StubProducts(shop, product));
+            products ?? new StubProducts(shop, product));
         return (db, directory, shop, media, product);
     }
 
@@ -408,6 +437,17 @@ public sealed class StoryApprovalReadiness282R18Tests
             Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
     }
 
+    private sealed class FailingPathProducts : IStoryProductTargetPort
+    {
+        public Task EnsureOwnedBySellerAsync(Guid productId, Guid sellerPartyId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task EnsurePublishedExistsAsync(Guid productId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<string?> TryResolvePublicProductPathAsync(Guid productId, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("catalog path unavailable");
+    }
     private sealed class StubProducts(Guid shop, Guid owned) : IStoryProductTargetPort
     {
         public Task EnsureOwnedBySellerAsync(Guid productId, Guid sellerPartyId, CancellationToken cancellationToken)

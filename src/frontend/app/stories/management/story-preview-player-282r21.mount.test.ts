@@ -124,3 +124,42 @@ test("admin preview video starts muted but can be unmuted", async () => {
   assert.equal(video.muted, false);
   await tree.unmount();
 });
+
+test("admin preview never double-prefixes an already localized CTA", async () => {
+  const tree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({
+        storyItemId: "cta-localized",
+        ctaType: "internal",
+        ctaTarget: "/en/products/one",
+        ctaHref: "/en/products/one",
+      })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  const cta = q(tree.container, '[data-testid="story-preview-cta"]') as HTMLAnchorElement | null;
+  assert.equal(cta?.getAttribute("href"), "/en/products/one");
+  await tree.unmount();
+});
+
+test("admin preview localizes an internal CTA through the shared locale authority", async () => {
+  const tree = await mount(
+    createElement(StoryPreviewPlayer, {
+      items: [item({
+        storyItemId: "cta-internal",
+        ctaType: "internal",
+        ctaTarget: "/products/two",
+      })],
+      copy: faStoryCopy,
+      numberLocale: "fa-IR",
+      testId: "story-edit-preview",
+    }),
+  );
+  await flush();
+  const cta = q(tree.container, '[data-testid="story-preview-cta"]') as HTMLAnchorElement | null;
+  assert.equal(cta?.getAttribute("href"), "/fa/products/two");
+  await tree.unmount();
+});

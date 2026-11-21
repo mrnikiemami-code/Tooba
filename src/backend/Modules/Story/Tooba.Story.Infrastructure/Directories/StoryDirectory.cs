@@ -166,7 +166,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             story = await LoadStoryAsync(tenantId, foldedStoryId, track: false, cancellationToken)
                 ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
         }
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -205,7 +205,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, story.SellerPartyId, "admin_update", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -410,7 +410,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, story.SellerPartyId, "admin_add_item", key, itemIntent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, itemIntent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -447,7 +447,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, story.SellerPartyId, "admin_update_item", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -664,7 +664,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             story = await LoadStoryAsync(tenantId, foldedSellerStoryId, track: false, cancellationToken)
                 ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
         }
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -704,7 +704,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, sellerPartyId, "seller_update", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -772,7 +772,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, sellerPartyId, "seller_submit", key, intent,
             story.StoryId, actorUserId, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -828,7 +828,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             now,
             cancellationToken);
         story = await SaveStoryAsync(story, key, itemIntent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -866,7 +866,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
             tenantId, sellerPartyId, "seller_update_item", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, DateTimeOffset.UtcNow, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <inheritdoc />

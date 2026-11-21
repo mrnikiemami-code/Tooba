@@ -5,6 +5,7 @@ import { ImagePlus, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { StoryEmptyState } from "./story-management-ui";
 import type { StoryCopy } from "./story-management-copy";
 import type { AdminStoryItem } from "../story-api";
+import { useLocalizedPath } from "../../../lib/i18n/locale-context.tsx";
 
 function isVideoItem(item: AdminStoryItem | undefined): boolean {
   return (item?.mediaType ?? "").trim().toLowerCase() === "video";
@@ -24,7 +25,7 @@ function destinationLabel(item: AdminStoryItem, copy: StoryCopy): string {
   return copy.destinationUnavailable;
 }
 
-function destinationHref(item: AdminStoryItem): string | null {
+function destinationHref(item: AdminStoryItem, localizePath: (path: string) => string): string | null {
   const type = (item.ctaType ?? "").trim().toLowerCase();
   if (!type || type === "none") return null;
   const raw = (item.ctaHref ?? item.ctaTarget ?? "").trim();
@@ -33,13 +34,7 @@ function destinationHref(item: AdminStoryItem): string | null {
   if (type === "external") return /^https?:\/\//i.test(raw) ? raw : null;
   if (!item.ctaHref && /^[0-9a-f-]{36}$/i.test(raw)) return null;
   const path = raw.startsWith("/") ? raw : `/${raw}`;
-  if (typeof window === "undefined") return path;
-  const prefix = window.location.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
-  if (prefix === "fa" || prefix === "en") {
-    if (path === `/${prefix}` || path.startsWith(`/${prefix}/`)) return path;
-    return `/${prefix}${path}`;
-  }
-  return path;
+  return /^\/(fa|en)(\/|$)/.test(path) ? path : localizePath(path);
 }
 
 export function StoryPreviewPlayer({
@@ -59,11 +54,12 @@ export function StoryPreviewPlayer({
   const [hidden, setHidden] = useState(false);
   const [muted, setMuted] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const localizePath = useLocalizedPath();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const current = items[index];
   const video = isVideoItem(current);
-  const ctaHref = current ? destinationHref(current) : null;
+  const ctaHref = current ? destinationHref(current, localizePath) : null;
 
   useEffect(() => {
     setIndex((value) => Math.min(value, Math.max(0, items.length - 1)));

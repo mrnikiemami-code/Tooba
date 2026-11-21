@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Story.Application.Stories.Models;
-using Tooba.Story.Application.Stories.Ports;
 using Tooba.Story.Contracts.Errors;
 using Tooba.Story.Domain.Aggregates;
 using Tooba.Story.Domain.Enums;
@@ -77,7 +76,7 @@ public sealed partial class StoryDirectory
             story = await LoadStoryAsync(tenantId, foldedShopStoryId, track: false, cancellationToken)
                 ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
         }
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <summary>
@@ -125,7 +124,7 @@ public sealed partial class StoryDirectory
             now,
             cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <summary>نسخهٔ بازبینی‌شده را تأیید و فوراً منتشر می‌کند.</summary>
@@ -152,7 +151,7 @@ public sealed partial class StoryDirectory
             tenantId, story.SellerPartyId, "admin_approve_and_publish", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <summary>نسخهٔ بازبینی‌شده را تأیید و زمان‌بندی را در یک انتقال مالک اعمال می‌کند.</summary>
@@ -185,7 +184,7 @@ public sealed partial class StoryDirectory
             tenantId, story.SellerPartyId, "admin_approve_and_schedule", key, intent,
             story.StoryId, adminActorUserId, DateTimeOffset.UtcNow, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     /// <summary>فروشنده استوری تأییدشده را به پیش‌نویس برمی‌گرداند و انتشار را متوقف می‌کند.</summary>
@@ -212,7 +211,7 @@ public sealed partial class StoryDirectory
             tenantId, sellerPartyId, "seller_return_to_draft", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <summary>فروشنده انتشار زنده/زمان‌بندی‌شدهٔ خود را متوقف می‌کند.</summary>
@@ -239,7 +238,7 @@ public sealed partial class StoryDirectory
             tenantId, sellerPartyId, "seller_stop", key, intent,
             story.StoryId, story.CreatedByActorUserId ?? Guid.Empty, now, cancellationToken);
         story = await SaveStoryAsync(story, key, intent, cancellationToken);
-        return await EnrichAsync(MapAdmin(story, isAdmin: false), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: false, cancellationToken);
     }
 
     /// <summary>نام فروشگاه و عنوان محصول CTA هر اسلاید را از Contracts مالک غنی می‌کند.</summary>
@@ -255,62 +254,18 @@ public sealed partial class StoryDirectory
             withShop = snapshot with { ShopDisplayName = name };
         }
 
-        return await EnrichProductTitlesAsync(withShop, cancellationToken);
+        return await EnrichAdminPresentationAsync(withShop, cancellationToken);
     }
 
-    private async Task<AdminStorySnapshot> EnrichProductTitlesAsync(
+    private async Task<AdminStorySnapshot> EnrichAdminPresentationAsync(
         AdminStorySnapshot snapshot,
         CancellationToken cancellationToken)
     {
         if (snapshot.Items.Count == 0)
             return snapshot;
 
-        var ids = new HashSet<Guid>();
-        foreach (var item in snapshot.Items)
-            CollectProductCta(item.CtaType, item.CtaTarget, ids);
-
-        var paths = new Dictionary<Guid, string>();
-        if (_products is not null && ids.Count > 0)
-        {
-            if (_products is IStoryProductPathBatchPort batch)
-            {
-                var resolved = await batch.ResolvePublicProductPathsAsync(ids, cancellationToken);
-                foreach (var pair in resolved)
-                {
-                    if (!string.IsNullOrWhiteSpace(pair.Value))
-                        paths[pair.Key] = pair.Value;
-                }
-            }
-            else
-            {
-                foreach (var productId in ids)
-                {
-                    var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
-                    if (!string.IsNullOrWhiteSpace(path))
-                        paths[productId] = path;
-                }
-            }
-        }
-
-        IReadOnlyDictionary<Guid, string> titles = new Dictionary<Guid, string>();
-        if (_productTitles is not null && ids.Count > 0)
-            titles = await _productTitles.GetProductTitlesByIdsAsync(ids, cancellationToken);
-
-        var items = snapshot.Items.Select(item =>
-        {
-            var href = ResolveCtaHref(item.CtaType, item.CtaTarget, item.CtaHref, paths);
-            if (!string.Equals(item.CtaType, "product", StringComparison.OrdinalIgnoreCase))
-                return item with { CtaHref = href };
-            if (!Guid.TryParse(item.CtaTarget?.Trim(), out var productId) || productId == Guid.Empty)
-                return item with { CtaProductTitle = null, CtaHref = href };
-            titles.TryGetValue(productId, out var title);
-            return item with
-            {
-                CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title,
-                CtaHref = href,
-            };
-        }).ToList();
-        return snapshot with { Items = items };
+        var (paths, titles) = await ResolveAdminItemFactsAsync(snapshot.Items, cancellationToken);
+        return snapshot with { Items = ApplyAdminItemFacts(snapshot.Items, paths, titles) };
     }
 
     private async Task EnsureShopEligibleAsync(Guid sellerPartyId, CancellationToken cancellationToken)
@@ -350,7 +305,7 @@ public sealed partial class StoryDirectory
 
         var story = await LoadStoryAsync(tenantId, existing.StoryId, track: false, cancellationToken)
             ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
-        return await EnrichAsync(MapAdmin(story, isAdmin: true), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin: true, cancellationToken);
     }
 
     private async Task RecordOccurrenceAsync(

@@ -271,58 +271,11 @@ public sealed partial class StoryDirectory
             return row;
         }).ToList();
 
-        var productIds = new HashSet<Guid>();
-        foreach (var row in withShops)
-        {
-            foreach (var item in row.Items)
-                CollectProductCta(item.CtaType, item.CtaTarget, productIds);
-        }
-
-        var paths = new Dictionary<Guid, string>();
-        if (_products is not null && productIds.Count > 0)
-        {
-            if (_products is IStoryProductPathBatchPort batch)
-            {
-                var resolved = await batch.ResolvePublicProductPathsAsync(productIds, cancellationToken);
-                foreach (var pair in resolved)
-                {
-                    if (!string.IsNullOrWhiteSpace(pair.Value))
-                        paths[pair.Key] = pair.Value;
-                }
-            }
-            else
-            {
-                foreach (var productId in productIds)
-                {
-                    var path = await _products.TryResolvePublicProductPathAsync(productId, cancellationToken);
-                    if (!string.IsNullOrWhiteSpace(path))
-                        paths[productId] = path;
-                }
-            }
-        }
-
-        IReadOnlyDictionary<Guid, string> titles = new Dictionary<Guid, string>();
-        if (_productTitles is not null && productIds.Count > 0)
-            titles = await _productTitles.GetProductTitlesByIdsAsync(productIds, cancellationToken);
-
-        return withShops.Select(row =>
-        {
-            var items = row.Items.Select(item =>
-            {
-                var href = ResolveCtaHref(item.CtaType, item.CtaTarget, item.CtaHref, paths);
-                if (!string.Equals(item.CtaType, "product", StringComparison.OrdinalIgnoreCase))
-                    return item with { CtaHref = href };
-                if (!Guid.TryParse(item.CtaTarget?.Trim(), out var productId) || productId == Guid.Empty)
-                    return item with { CtaProductTitle = null, CtaHref = href };
-                titles.TryGetValue(productId, out var title);
-                return item with
-                {
-                    CtaProductTitle = string.IsNullOrWhiteSpace(title) ? null : title,
-                    CtaHref = href,
-                };
-            }).ToList();
-            return row with { Items = items };
-        }).ToList();
+        var allItems = withShops.SelectMany(row => row.Items).ToList();
+        var (paths, titles) = await ResolveAdminItemFactsAsync(allItems, cancellationToken);
+        return withShops
+            .Select(row => row with { Items = ApplyAdminItemFacts(row.Items, paths, titles) })
+            .ToList();
     }
 
     private async Task<IReadOnlyList<PublicStoryCard>> EnrichPublicAsync(
@@ -524,7 +477,7 @@ public sealed partial class StoryDirectory
 
         var story = await LoadStoryAsync(tenantId, existing.StoryId, track: false, cancellationToken)
             ?? throw new SemanticException(new SemanticError(StoryErrorCodes.Missing));
-        return await EnrichAsync(MapAdmin(story, isAdmin), cancellationToken);
+        return await EnrichForCommandAsync(story, isAdmin, cancellationToken);
     }
 
     /// <summary>
