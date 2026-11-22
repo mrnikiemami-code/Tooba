@@ -140,3 +140,24 @@ test("a malformed 200 product payload is an error, not a successful empty catalo
     spy.restore();
   }
 });
+test("the current product is explicit and selecting another marks both the option and the card", async () => {
+  window.localStorage.setItem(ADMIN_ACTOR_STORAGE_KEY, ACTOR);
+  window.sessionStorage.clear();
+  const spy = installFetch({ failProducts: false });
+  try {
+    const tree = await mount(createElement(StoryManagementScreen, { capabilities: ADMIN_STORY_CAPABILITIES, initialStoryId: STORY, navigate: () => undefined }));
+    await flush();
+    await waitFor(() => qq(tree.container, '[data-testid="story-detail-workspace"]').length === 1);
+    await click(q(tree.container, '[data-testid="story-slide-edit"]'));
+    await waitFor(() => qq(tree.container, '[data-testid="story-product-option"]').length === 1);
+    assert.equal(q(tree.container, '[data-testid="story-product-selected-name"]').textContent?.trim(), "محصول قبلی");
+    await click(q(tree.container, '[data-testid="story-product-option"]'));
+    assert.equal(q(tree.container, '[data-testid="story-product-selected-name"]').textContent?.trim(), "محصول");
+    const selected = qq(tree.container, '[data-testid="story-product-option"]').find((row) => row.getAttribute("aria-pressed") === "true");
+    assert.ok(selected, "the selected option must expose aria-pressed=true");
+    assert.ok(selected?.textContent?.includes("انتخاب‌شده"));
+    await tree.unmount();
+  } finally {
+    spy.restore();
+  }
+});

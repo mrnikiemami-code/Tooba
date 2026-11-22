@@ -2242,11 +2242,42 @@ function StoryManagementScreenBody({
             </select>
           </label>
           {slideCtaType === "product" ? (
-            <div className="space-y-2" data-testid="story-product-picker">
+            <div className="space-y-2" data-testid="story-product-picker" dir={uiLocale === "en" ? "ltr" : "rtl"}>
+              {slideCtaTarget ? (
+                <div
+                  className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-3"
+                  data-testid="story-product-selected"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-primary">{copy.productSelectedTitle}</p>
+                      <p className="break-words text-sm font-bold leading-6 text-foreground" data-testid="story-product-selected-name">
+                        {selectedProductLabel.trim() || copy.productSelectedFallback}
+                      </p>
+                      <p className="mt-1 break-words text-xs leading-5 text-muted">{copy.productChangeHint}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full border border-primary/30 bg-surface px-2 py-1 text-[11px] font-bold text-primary">
+                      {copy.productSelectedBadge}
+                    </span>
+                  </div>
+                  {!productLoading && !productError && productOptions.length > 0 && !productOptions.some((row) => row.productId === slideCtaTarget) ? (
+                    <p className="mt-2 break-words border-t border-primary/15 pt-2 text-xs leading-5 text-muted" data-testid="story-product-selected-outside">
+                      {copy.productOutsideResults}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <input
-                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+                className="min-h-11 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 placeholder={copy.productSearchPlaceholder}
                 aria-label={copy.productSearchPlaceholder}
+                aria-controls="story-product-results"
+                dir="auto"
                 value={productSearch}
                 onChange={(e) => {
                   setProductSearch(e.target.value);
@@ -2256,42 +2287,66 @@ function StoryManagementScreenBody({
                 }}
                 data-testid="story-product-search"
               />
-              {productLoading ? <p className="text-xs text-muted">{copy.loadingProducts}</p> : null}
+              {productLoading ? (
+                <p className="text-xs text-muted" role="status" aria-live="polite" data-testid="story-product-loading">
+                  {copy.loadingProducts}
+                </p>
+              ) : null}
               {productError ? (
                 <div className="flex flex-wrap items-center gap-2" data-testid="story-product-error">
                   <p className="text-xs text-danger">{copy.productLoadFailed}</p>
                   <button
                     type="button"
-                    className="min-h-9 rounded-lg border border-border px-2 text-xs"
+                    className="min-h-11 rounded-lg border border-border px-3 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    data-testid="story-product-retry"
                     onClick={() => setProductReloadToken((value) => value + 1)}
                   >
                     {copy.productRetry}
                   </button>
                 </div>
               ) : null}
-              <ul className="max-h-40 overflow-auto rounded-xl border border-border">
-                {productOptions.map((row) => (
-                  <li key={`${row.productId}:${row.offerId}`}>
-                    <button
-                      type="button"
-                      className="flex min-h-11 w-full items-center px-3 py-2 text-right text-sm hover:bg-secondary"
-                      data-testid="story-product-option"
-                      data-product-id={row.productId}
-                      disabled={productLoading}
-                      onClick={() => {
-                        if (!row.productId) {
-                          storyToast.error(copy.productIdInvalid);
-                          return;
-                        }
-                        setSlideCtaTarget(row.productId);
-                        setSelectedProductLabel(row.productTitle);
-                        setProductLabelById((prev) => ({ ...prev, [row.productId]: row.productTitle }));
-                      }}
-                    >
-                      {row.productTitle}
-                    </button>
-                  </li>
-                ))}
+              <ul
+                id="story-product-results"
+                className="max-h-48 overflow-auto rounded-xl border border-border"
+                aria-busy={productLoading}
+              >
+                {productOptions.map((row) => {
+                  const selected = Boolean(slideCtaTarget) && row.productId === slideCtaTarget;
+                  return (
+                    <li key={`${row.productId}:${row.offerId}`}>
+                      <button
+                        type="button"
+                        className={`flex min-h-11 w-full items-start gap-2 px-3 py-2 text-start text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40 ${
+                          selected
+                            ? "border-s-4 border-primary bg-primary/5 font-bold text-foreground"
+                            : "border-s-4 border-transparent hover:bg-secondary"
+                        }`}
+                        data-testid="story-product-option"
+                        data-product-id={row.productId}
+                        data-selected={selected ? "true" : "false"}
+                        aria-pressed={selected}
+                        disabled={productLoading}
+                        onClick={() => {
+                          if (!row.productId) {
+                            storyToast.error(copy.productIdInvalid);
+                            return;
+                          }
+                          setSlideCtaTarget(row.productId);
+                          setSelectedProductLabel(row.productTitle);
+                          setProductLabelById((prev) => ({ ...prev, [row.productId]: row.productTitle }));
+                        }}
+                      >
+                        <span className="min-w-0 flex-1 break-words leading-6">{row.productTitle}</span>
+                        {selected ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-surface px-2 py-1 text-[11px] font-bold text-primary">
+                            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                            {copy.productSelectedBadge}
+                          </span>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
               {!productLoading && !productError && productOptions.length === 0 ? (
                 <p className="text-xs text-muted" data-testid="story-product-empty">
@@ -2301,7 +2356,7 @@ function StoryManagementScreenBody({
               {productOptions.length < productTotalCount ? (
                 <button
                   type="button"
-                  className="min-h-11 w-full rounded-xl border border-border text-sm"
+                  className="min-h-11 w-full rounded-xl border border-border text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   data-testid="story-product-load-more"
                   onClick={() => {
                     const shop =
@@ -2342,13 +2397,8 @@ function StoryManagementScreenBody({
                       });
                   }}
                 >
-                  {copy.loadMoreProducts} ({productOptions.length} از {productTotalCount})
+                  {copy.loadMoreProducts} ({productOptions.length} {copy.productRowsOf} {productTotalCount})
                 </button>
-              ) : null}
-              {slideCtaTarget ? (
-                <p className="text-xs text-muted" data-testid="story-product-selected">
-                  {copy.productSelectedPrefix} {selectedProductLabel || copy.productSelectedFallback}
-                </p>
               ) : null}
             </div>
           ) : null}

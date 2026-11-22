@@ -77,6 +77,11 @@ export type StoryCopy = {
   productSelectedPrefix: string;
   productUnknown: string;
   productSelectedFallback: string;
+  productSelectedTitle: string;
+  productSelectedBadge: string;
+  productChangeHint: string;
+  productOutsideResults: string;
+  productRowsOf: string;
   pickFile: string;
   pickedFilePrefix: string;
   keepMediaHint: string;
@@ -292,6 +297,11 @@ export const faStoryCopy: StoryCopy = {
   ctaInvalidPath: "مسیر داخلی باید با / شروع شود و شامل // یا \\ نباشد.",
   productSearchPlaceholder: "جستجوی نام محصول در فهرست مجاز",
   productSelectedPrefix: "محصول انتخاب‌شده:",
+  productSelectedTitle: "محصول انتخاب‌شده",
+  productSelectedBadge: "انتخاب‌شده",
+  productChangeHint: "برای تغییر، یک محصول دیگر را از فهرست انتخاب کنید.",
+  productOutsideResults: "این محصول در نتایج فعلی نیست؛ انتخاب فعلی حفظ شده است.",
+  productRowsOf: "از",
   productUnknown: "محصول (نامشخص)",
   productSelectedFallback: "محصول انتخاب‌شده",
   pickFile: "انتخاب فایل",
@@ -509,6 +519,11 @@ export const enStoryCopy: StoryCopy = {
   ctaInvalidPath: "Internal path must start with / and must not contain // or \\.",
   productSearchPlaceholder: "Search eligible product names",
   productSelectedPrefix: "Selected product:",
+  productSelectedTitle: "Selected product",
+  productSelectedBadge: "Selected",
+  productChangeHint: "Choose another product from the list to change it.",
+  productOutsideResults: "This product is not in the current results; the current selection is kept.",
+  productRowsOf: "of",
   productUnknown: "Product (unknown)",
   productSelectedFallback: "Selected product",
   pickFile: "Choose file",

@@ -152,6 +152,12 @@ export function Dialog({
     <dialog
       ref={ref}
       onClose={onClose}
+      onCancel={(event) => {
+        // Native Escape closes the dialog before React can update the owning state.
+        // Route it through the existing controlled onClose so dirty-form guards still run.
+        event.preventDefault();
+        onClose();
+      }}
       className={cn(
         "z-[var(--z-modal)] box-border max-h-[90vh] overflow-x-hidden overflow-y-auto whitespace-normal rounded-ds border border-border bg-surface p-4 shadow-ds",
         widthClass,
