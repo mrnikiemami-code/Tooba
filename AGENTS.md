@@ -4,7 +4,29 @@ Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE
 
 ---
 
-# CURRENT — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
+# CURRENT — TB-STORY-R22 PUBLIC PLAYER IDENTITY, REVALIDATION AND CONNECTED EVIDENCE — 2026-11-21
+
+Read `docs/architecture/evidence/TB-STORY-PUBLIC-PLAYER-IDENTITY-AND-EVIDENCE-282-R22/{PLAN.md,RESULT.md,RECEIPT.md}`.
+Code SHA `d971d4895`; previous reviewed code `c19e36ee5`. The four requested closures are delivered:
+parent-owned current story (`onCurrentStoryChange`), a real capped revalidation hook with a 20-minute
+behavior test and failed-refresh expiry filtering, explicit Media-owned cover kind, PostgreSQL seller
+grid search/filter/sort/count proof, and real browser edit → save → reload → restore.
+
+Verification: `test:stories` 87/87; `test:home` 7/7; `tsc` 0; PostgreSQL seller-grid test 1/1;
+solution build 0 errors; Next build `BUILD_ID g2-RnFpbxKuOTAPCDN4ZZ`; `/fa` 200.
+Browser proof on story `01a1f9d8-31af-7000-8e47-5da09230ff0d` changed
+`CTA-internal-164417` → `CTA-internal-164417-R22`, independently reread after reload, then restored and
+reread the original. This is a reported controlled Story title write/restore, not a zero-write claim.
+
+Honest limits: Host `5088` was NOT republished/restarted, so the new public `CoverIsVideo` field is built
+but not served until the next Host refresh; the Home player test mounts the real modal with a host that
+owns selection/removal rather than the Swiper component; `StoryManagementScreen` remains oversized; the
+pre-existing `test:critical-storefront` `bg-white` failure is unchanged. No migration/schema/seed/grant.
+NOT Architect ACCEPT, NOT owner acceptance. `STOP_FOR_ARCHITECT_AND_USER_REVIEW`.
+
+---
+
+# HISTORICAL — TB-282-R20 WORKER PASS_COMPLETE_R20; AWAIT ARCHITECT AND USER REVIEW — 2026-11-21
 
 Read `docs/ai/tasks/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/TASK.md` and
 `docs/architecture/evidence/TB-STORY-SHARED-ORDERS-STYLE-WORKSPACE-SELLER-PANEL-AND-PUBLIC-REVIEW-282-R20/{TASK.md,RESULT.md,RECEIPTS.md,COMPLETION-CHECKLIST.md,user-review.md,claimed.json,ISSUANCE-RECEIPT.json}`.
