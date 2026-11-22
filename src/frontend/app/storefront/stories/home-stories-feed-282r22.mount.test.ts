@@ -1,4 +1,4 @@
-﻿import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
+import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
 import { createElement } from "react";
 import test from "node:test";
@@ -70,9 +70,10 @@ test("R22 F05: a stale locale response cannot replace the current locale feed", 
   await waitFor(() => calls.length === 1, { timeoutMs: 1000 });
   await tree.rerender(createElement(Probe, { locale: "en" }));
   await waitFor(() => calls.length === 2, { timeoutMs: 1000 });
-  pending.get("en")!({ state: "ok", stories: [story("en-live", null)] });
-  await flush();
   pending.get("fa")!({ state: "ok", stories: [story("fa-stale", null)] });
+  await flush();
+  assert.deepEqual(feed!.stories.map((row) => row.storyId), []);
+  pending.get("en")!({ state: "ok", stories: [story("en-live", null)] });
   await flush();
   assert.deepEqual(feed!.stories.map((row) => row.storyId), ["en-live"]);
   await tree.unmount();

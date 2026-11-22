@@ -400,6 +400,42 @@ public sealed class StoryMarketplace281R4RelationalTests
         _output.WriteLine($"R22 seller grid filter/sort/count committedRows=0 tag={_runTag}");
     }
 
+    [SkippableFact]
+    public async Task R22_seller_grid_honours_secondary_sort_columns_rollback_only()
+    {
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        await using var db = CreateStoryDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
+        var now = DateTimeOffset.UtcNow;
+        var tenant = StoryTenantIds.StoreAlpha;
+        var shop = Guid.NewGuid();
+        var rows = new List<StoryEntity>();
+        for (var order = 0; order < 3; order += 1)
+        {
+            var story = StoryEntity.CreateSellerDraft(
+                tenant, shop, Guid.NewGuid(), _runTag + "tie", order, now.AddMinutes(order), null, null, null, null, null, null);
+            rows.Add(story);
+            db.Stories.Add(story);
+        }
+        await db.SaveChangesAsync();
+
+        var directory = new StoryDirectory(db);
+        var page = await directory.SellerQueryAsync(
+            tenant,
+            shop,
+            new GridQueryRequest(1, 10, null, [
+                new GridSortRequest("title", "asc"),
+                new GridSortRequest("displayOrder", "desc"),
+            ], []),
+            CancellationToken.None);
+
+        Assert.Equal(3, page.TotalCount);
+        Assert.Equal(new[] { 2, 1, 0 }, page.Items.Select(row => row.DisplayOrder));
+
+        await caller.RollbackAsync();
+        Assert.Equal(0L, await CountTaggedStoriesAsync());
+    }
     private sealed class VideoCoverMedia : IStoryMediaAssetPort
     {
         public Task<StoryMediaAssetAuthorization> AuthorizeForStoryAsync(

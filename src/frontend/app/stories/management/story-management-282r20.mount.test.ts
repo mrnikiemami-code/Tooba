@@ -27,7 +27,7 @@ import {
 } from "./story-response.ts";
 import { StoryManagementScreen } from "./StoryManagementScreen.tsx";
 import { ADMIN_STORY_CAPABILITIES } from "./story-capabilities.ts";
-import type { AdminStorySnapshot } from "../story-api.ts";
+import { mapAdminStory, type AdminStorySnapshot } from "../story-api.ts";
 import { ADMIN_ACTOR_STORAGE_KEY } from "../../../lib/admin/admin-result.ts";
 
 ensureDom();
@@ -432,6 +432,9 @@ test("R22 F04: remove, reorder, schedule and upload_add must prove their own eff
 
   const remove = envelope("remove_item", { expectedVersion: 8 }, { targetItemId: ITEM, path: `/v1/admin/stories/${STORY}/items/${ITEM}` });
   assert.equal(verifyStorySuccessPayload(remove, story({})).ok, false);
+  const noItems = mapAdminStory({ StoryId: STORY, VersionToken: 9 });
+  assert.equal(noItems?.itemsPresent, false);
+  assert.equal(verifyStorySuccessPayload(remove, { data: { StoryId: STORY, VersionToken: 9 } }).ok, false, "omitted items cannot prove deletion");
   assert.equal(verifyStorySuccessPayload(remove, story({ items: [{ storyItemId: other, mediaType: "image", mediaAssetId: null, mediaUrl: "/o.jpg", caption: "o", durationMs: 5000, ctaType: "none", ctaTarget: null }] })).ok, true);
 
   const reorder = envelope("reorder_items", { itemIds: [other, ITEM], expectedVersion: 8 });

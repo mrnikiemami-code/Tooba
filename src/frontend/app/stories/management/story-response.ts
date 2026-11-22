@@ -217,6 +217,7 @@ function verifyContentEffect(
   }
 
   if (envelope.action === "remove_item") {
+    if (snap.itemsPresent === false) return { ok: false, reason: "unverified_shape" };
     const targetItemId =
       envelope.targetItemId ??
       envelope.path.match(/\/items\/([0-9a-fA-F-]{36})(?:\/|$)/)?.[1] ??
@@ -229,6 +230,7 @@ function verifyContentEffect(
   }
 
   if (envelope.action === "reorder_items") {
+    if (snap.itemsPresent === false) return { ok: false, reason: "unverified_shape" };
     const expected = Array.isArray(body?.itemIds)
       ? body.itemIds.map((value) => String(value).toLowerCase())
       : null;
@@ -241,6 +243,7 @@ function verifyContentEffect(
   }
 
   if (envelope.action === "add_item") {
+    if (snap.itemsPresent === false) return { ok: false, reason: "unverified_shape" };
     if (!body) return { ok: false, reason: "unverified_shape" };
     if (!snap.items.some((item) => itemMatchesBody(item, body))) {
       return { ok: false, reason: "story_item_missing" };
@@ -254,7 +257,7 @@ function verifyContentEffect(
   const targetItemId = envelope.targetItemId
     ?? envelope.path.match(/\/items\/([0-9a-fA-F-]{36})(?:\/|$)/)?.[1]
     ?? null;
-  if (!body || !targetItemId) {
+  if (!body || !targetItemId || snap.itemsPresent === false) {
     return { ok: false, reason: "unverified_shape" };
   }
 

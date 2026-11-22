@@ -108,6 +108,8 @@ export interface AdminStorySnapshot {
   createdAt: string;
   updatedAt: string;
   items: AdminStoryItem[];
+  /** False when the server response omitted `items`; an empty array alone does not prove deletion. */
+  itemsPresent?: boolean;
   id: string;
   createdByActorUserId: string | null;
   shopDisplayName: string | null;
@@ -283,6 +285,7 @@ export function mapAdminStory(value: unknown): AdminStorySnapshot | null {
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
     items,
+    itemsPresent: Array.isArray(itemsRaw),
     id: storyId,
     createdByActorUserId: nullableText(prop(item, "createdByActorUserId", "CreatedByActorUserId")),
     shopDisplayName: nullableText(prop(item, "shopDisplayName", "ShopDisplayName")),

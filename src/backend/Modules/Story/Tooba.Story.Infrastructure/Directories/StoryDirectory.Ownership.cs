@@ -42,11 +42,11 @@ public sealed partial class StoryDirectory
         foreach (var filter in request.Filters)
             q = ApplySellerFilter(q, filter);
 
-        var sort = request.Sort.FirstOrDefault() ?? new GridSortRequest("displayOrder", "asc");
+        var sorts = request.Sort;
         return await EfGridQuery.PageAsync<StoryEntity, AdminStorySnapshot>(
             q,
             request,
-            filtered => OrderSeller(filtered, sort),
+            filtered => OrderSeller(filtered, sorts),
             async (rows, ct) =>
             {
                 if (rows.Count == 0)
@@ -129,35 +129,51 @@ public sealed partial class StoryDirectory
         return DateTimeOffset.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
             System.Globalization.DateTimeStyles.RoundtripKind, out var dto) && (day = dto.UtcDateTime) == day;
     }
-    private static IQueryable<StoryEntity> OrderSeller(IQueryable<StoryEntity> source, GridSortRequest sort)
+    private static IOrderedQueryable<StoryEntity> OrderSeller(
+        IQueryable<StoryEntity> source,
+        IReadOnlyList<GridSortRequest> sorts)
     {
-        var asc = sort.Direction == "asc";
-        return sort.Field switch
+        var effective = sorts.Count > 0 ? sorts : [new GridSortRequest("displayOrder", "asc")];
+        IOrderedQueryable<StoryEntity>? ordered = null;
+        foreach (var sort in effective)
         {
-            "title" => asc
-                ? source.OrderBy(x => x.Title).ThenBy(x => x.DisplayOrder)
-                : source.OrderByDescending(x => x.Title).ThenBy(x => x.DisplayOrder),
-            "status" => asc
-                ? source.OrderBy(x => x.Status).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.Status).ThenBy(x => x.Title),
-            "reviewStatus" => asc
-                ? source.OrderBy(x => x.ReviewStatus).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.ReviewStatus).ThenBy(x => x.Title),
-            "updatedAt" => asc
-                ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.Title),
-            "startAt" => asc
-                ? source.OrderBy(x => x.StartAt).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.StartAt).ThenBy(x => x.Title),
-            "endAt" => asc
-                ? source.OrderBy(x => x.EndAt).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.EndAt).ThenBy(x => x.Title),
-            _ => asc
-                ? source.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title)
-                : source.OrderByDescending(x => x.DisplayOrder).ThenBy(x => x.Title),
-        };
+            var asc = string.Equals(sort.Direction, "asc", StringComparison.OrdinalIgnoreCase);
+            ordered = ordered is null
+                ? OrderSellerFirst(source, sort.Field, asc)
+                : OrderSellerThen(ordered, sort.Field, asc);
+        }
+        return ordered ?? source.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title);
     }
 
+    private static IOrderedQueryable<StoryEntity> OrderSellerFirst(
+        IQueryable<StoryEntity> source,
+        string field,
+        bool asc) =>
+        field switch
+        {
+            "title" => asc ? source.OrderBy(x => x.Title) : source.OrderByDescending(x => x.Title),
+            "status" => asc ? source.OrderBy(x => x.Status) : source.OrderByDescending(x => x.Status),
+            "reviewStatus" => asc ? source.OrderBy(x => x.ReviewStatus) : source.OrderByDescending(x => x.ReviewStatus),
+            "updatedAt" => asc ? source.OrderBy(x => x.UpdatedAt) : source.OrderByDescending(x => x.UpdatedAt),
+            "startAt" => asc ? source.OrderBy(x => x.StartAt) : source.OrderByDescending(x => x.StartAt),
+            "endAt" => asc ? source.OrderBy(x => x.EndAt) : source.OrderByDescending(x => x.EndAt),
+            _ => asc ? source.OrderBy(x => x.DisplayOrder) : source.OrderByDescending(x => x.DisplayOrder),
+        };
+
+    private static IOrderedQueryable<StoryEntity> OrderSellerThen(
+        IOrderedQueryable<StoryEntity> source,
+        string field,
+        bool asc) =>
+        field switch
+        {
+            "title" => asc ? source.ThenBy(x => x.Title) : source.ThenByDescending(x => x.Title),
+            "status" => asc ? source.ThenBy(x => x.Status) : source.ThenByDescending(x => x.Status),
+            "reviewStatus" => asc ? source.ThenBy(x => x.ReviewStatus) : source.ThenByDescending(x => x.ReviewStatus),
+            "updatedAt" => asc ? source.ThenBy(x => x.UpdatedAt) : source.ThenByDescending(x => x.UpdatedAt),
+            "startAt" => asc ? source.ThenBy(x => x.StartAt) : source.ThenByDescending(x => x.StartAt),
+            "endAt" => asc ? source.ThenBy(x => x.EndAt) : source.ThenByDescending(x => x.EndAt),
+            _ => asc ? source.ThenBy(x => x.DisplayOrder) : source.ThenByDescending(x => x.DisplayOrder),
+        };
     private async Task<(Guid? AssetId, string? DisplayUrl)> BindCoverAsync(
         Guid tenantId,
         Guid? sellerPartyId,
