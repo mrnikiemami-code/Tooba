@@ -1,11 +1,11 @@
 # TOOBA — OpenCode Architect Delivery Method
 
 Protocol: **TOOBA-OPENCODE-DELIVERY-V1**
-Version: **1.2.0**
+Version: **1.3.0**
 Adopted: **2026-11-22**
 Owner: **Tooba architect**
 Status: **ACTIVE for new OpenCode tasks only**
-Supersedes: **1.1.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md)); prior [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
+Supersedes: **1.2.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.2.0.md)); older [v1.1.0](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md), [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
 Revision authority: **owner explicit approval on 2026-11-22**
 Pilot evidence: 283 → connected 284 → TB-OCC-284 independent acceptance. The owner explicitly authorized recording this method **only on success**, and subsequently confirmed adoption.
 Reviewed code: `611f97a85ec7c2e464e4f649820992202ca3754c`.
@@ -106,9 +106,26 @@ Each task produces under `docs/opencode/tasks/<Task-ID>/`: immutable `TASK.md` a
 
 The manifest declares `protocol`, task and parent identity, fixed REQ IDs, each test result (PASS/FAIL/NOT_RUN), named assertions with observed facts, evidence grade/provider, repo-relative path and SHA256, source SHA, served Frontend/Host identity, and cleanup. For data writes include actor/tenant/seller/offer/position, request methods/paths/bodies/counts, before-state, independently obtained GET and SQL after-state, unintended effects, and no-duplicate-write proof.
 
-The checker MUST independently parse the manifest, immutable issued acceptance matrix and evidence file bytes, enforce exact requirement IDs, atomic invariant IDs, test IDs and case types, SHA256, code/build identity, required provider grade and cleanup. It must reject malformed status/REQ lists, tampered evidence, missing asserted facts, wrong expected values; negative self-tests must prove rejection. It does not certify the authenticity of worker-authored logs by itself; independent architect inspection remains mandatory.
+The checker MUST independently parse the manifest, immutable issued acceptance matrix and evidence file bytes, enforce exact requirement IDs, atomic invariant IDs, test IDs and case types, SHA256, code/build identity, required provider grade and cleanup. The material facts and source-to-result provenance rules of §5A are mandatory in the same acceptance run. It must reject malformed status/REQ lists, tampered evidence, missing asserted facts, wrong expected values; negative self-tests must prove rejection. It does not certify the authenticity of worker-authored logs by itself; independent architect inspection remains mandatory.
 
 **Historical truth:** Cursor's failed 284 structure gate remains `KNOWN_FORMAT_INCOMPATIBILITY` and is neither product PASS nor FAIL. Do not fabricate a passing Cursor gate, edit its original task, or hide its failure.
+
+## 5A. Evidence integrity at first execution; no verification cascade — v1.3.0
+
+**Owner directive (2026-11-22):** A simple task must not turn into an unlimited sequence of architect-requested repairs. The gap seen in 285 was not a lack of *more testing rounds*; it was a missing source-to-result and semantic assertion check **during the original run**.
+
+**One integrated gate, not new phases:**
+1. At PRE-ISSUE, the architect defines only **material, risk-based** invariants and one executable oracle per invariant; reuse the same acceptance matrix and test harness. Do not inflate a task by adding unrelated scenarios or ritual tool runs. Atomic assertions may be grouped into one real test execution.
+2. Each required test MUST directly emit its observed facts from its actual code path and provider (HTTP, independent GET/SQL where persistence matters). Never manually enrich evidence JSON after the script runs. A script/result mismatch is `NOT_PROVEN`, not PASS. Preserve timestamps, source revision, test command/exit and relevant environment identity.
+3. The task-local checker MUST, within the **same final acceptance run**, recompute artifact hashes **and** parse actual result values against the fixed issued expectations. Reject missing/unproduced properties and nonzero unexpected effects; for claims of zero Pricing/Inventory effects, require measured before/after values on the owning tables or equivalent authoritative journal, not merely an Offer-row count. Reject extra asserted fields with no generator provenance when material to the claim.
+4. Include a **single targeted checker mutation self-test** that flips a material observed fact or removes a required fact and proves rejection. Reuse existing self-test infrastructure; no separate testing task, duplicate harness or repeated full matrix for this rule.
+5. **Smallest sufficient proof:** use focused unit/component tests for local logic; real browser→owning Host→isolated DB only when UI and durable business flows are in scope; targeted controlled-error simulation for unreachable error branches, accurately labeled. Skip inapplicable providers with a recorded reason. No screenshots or repeated builds as ceremony.
+6. **Finite outcome:** one initial complete matrix; at most **one consolidated repair** for genuine failed criteria; one final complete rerun. Architect review is a **decision**, not a hidden new development phase. If the gate fails after the repair, report `BLOCKED`, name the exact unresolved fact and STOP. A further verification or implementation request needs a new, **explicit owner decision**, never auto-generated.
+7. **Proportionality and time/token discipline:** front-load obvious negative/boundary cases in the initial matrix; use one collection of evidence and one verifier; concise tool output with preserved full logs. Do not divide a straightforward correction into multiple tickets, artificially increase test count, or repeatedly reread/retest unchanged material.
+
+**Lesson recorded from 285:** `request-id-285.json` included facts absent from the committed producing script/log, while its checker counted four new assertions without parsing their actual values. This must be caught in the same run on future tasks, **not** discovered through another chain of follow-up tasks.
+
+**Prospective-only:** existing issued 285 scope and its final architect `BLOCKED_EVIDENCE` review remain historically truthful; this method does not retroactively pass or reopen it. Cursor governance, AGENTS, product code, Frontend/Backend contracts and roadmap remain untouched.
 
 ## 6. Outcome, review and promotion
 
@@ -144,6 +161,6 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 
 ## 9. Stable recovery rule for future architect sessions
 
-On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.2.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
+On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.3.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
 
 **This file is the canonical OpenCode architect procedure. The Cursor procedure remains separate.**
