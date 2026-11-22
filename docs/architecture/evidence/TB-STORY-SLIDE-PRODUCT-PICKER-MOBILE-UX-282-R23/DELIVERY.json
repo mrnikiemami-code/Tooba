@@ -1,0 +1,256 @@
+{
+    "protocol":  "TOOBA-DELIVERY-001",
+    "taskId":  "TB-STORY-SLIDE-PRODUCT-PICKER-MOBILE-UX-282-R23",
+    "baseSha":  "ec9fb9d6574167622948f2f9dfd0245849f8fdf0",
+    "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+    "architecturePlan":  "ARCHITECTURE-PLAN.md",
+    "architecturePlanSha256":  "a7fbf3d90c861f95147d2a951d734bfe34a5b65d50b0b975f32e4395449f96da",
+    "planCommit":  "1d20601cb7646dacb0be49912d9b33cc98c76451",
+    "waves":  [
+                  {
+                      "id":  "W1",
+                      "dependsOn":  [
+
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-01",
+                                             "REQ-02",
+                                             "REQ-03"
+                                         ],
+                      "status":  "VERIFIED"
+                  },
+                  {
+                      "id":  "W2",
+                      "dependsOn":  [
+                                        "W1"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-04",
+                                             "REQ-05"
+                                         ],
+                      "status":  "VERIFIED"
+                  },
+                  {
+                      "id":  "W3",
+                      "dependsOn":  [
+                                        "W2"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-01",
+                                             "REQ-02",
+                                             "REQ-03",
+                                             "REQ-04",
+                                             "REQ-05"
+                                         ],
+                      "status":  "VERIFIED"
+                  }
+              ],
+    "requirements":  [
+                         {
+                             "id":  "REQ-01",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-01",
+                                                   "kind":  "browser-transport-selection-save",
+                                                   "steps":  "Admin opens slide with A, selects B, saves; exactly one owning PUT with B/version/occurrence and retained media.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-02",
+                                                   "kind":  "browser-independent-reread",
+                                                   "steps":  "After S-01 reload the page and GET the story; B is the selected product.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-03",
+                                                   "kind":  "browser-transport-capture",
+                                                   "steps":  "Capture PUT method/path/body and ensure upload/add/delete counts are zero.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-02",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-04",
+                                                   "kind":  "browser-cancel-zero-mutation",
+                                                   "steps":  "Select B, cancel/discard; no mutation request is sent.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-05",
+                                                   "kind":  "browser-reopen-and-escape",
+                                                   "steps":  "Reopen the slide and see A; Escape on a dirty form enters the existing discard path.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-03",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-06",
+                                                   "kind":  "browser-lookup-503-retry",
+                                                   "steps":  "First product lookup returns 503; error+retry show, empty is absent, A remains, retry returns results without selecting or saving.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-04",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-07",
+                                                   "kind":  "browser-mobile-long-name",
+                                                   "steps":  "At 360x640 and 360x800, long A outside the first page remains selected after search/paging and document overflowX is zero.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-08",
+                                                   "kind":  "browser-mobile-geometry",
+                                                   "steps":  "boundingBox and elementFromPoint prove Save and selected card are reachable and not covered; normal click works.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-05",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-09",
+                                                   "kind":  "browser-seller-role-smoke",
+                                                   "steps":  "Seller opens the same picker with its fixed shop; selection and cancel work and no other shopId enters requests.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-10",
+                                                   "kind":  "browser-desktop-smoke",
+                                                   "steps":  "At 1440x900 the picker and Save are readable and usable.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-11",
+                                                   "kind":  "browser-locale-direction-copy",
+                                                   "steps":  "fa uses RTL and en uses LTR with the picker labels from the catalogs.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "9e675862301a532a9f1453553c6c9c5ecbe7c7e7",
+                                                                        "sha256":  "b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         }
+                     ]
+}

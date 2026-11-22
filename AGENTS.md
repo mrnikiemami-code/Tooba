@@ -4,7 +4,30 @@ Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE
 
 ---
 
-# CURRENT — TB-STORY-R22 PUBLIC PLAYER IDENTITY, REVALIDATION AND CONNECTED EVIDENCE — 2026-11-21
+# CURRENT — TB-STORY-R23 SLIDE PRODUCT PICKER MOBILE UX — 2026-11-22
+
+Read `docs/ai/tasks/TB-STORY-SLIDE-PRODUCT-PICKER-MOBILE-UX-282-R23/{TASK.md,ARCHITECTURE-PLAN.md,DELIVERY.json,RESULT.md,RECEIPTS.md,browser}` and
+`docs/architecture/evidence/TB-STORY-SLIDE-PRODUCT-PICKER-MOBILE-UX-282-R23/`.
+Code SHA `9e6758623`; plan commit `1d20601cb`; base `ec9fb9d65`. The existing shared slide editor now shows
+a prominent selected-product card above search, marks selected options with `aria-pressed`/check/badge,
+keeps the current selection through search, paging, loading and 503 retry, separates error/empty states,
+wraps long Persian names, localizes fa/en copy and direction, and routes Escape through the controlled
+Dialog close so the dirty-slide discard guard runs. Existing lookup, update-item, media, version/occurrence,
+seller scope and VendorShell are unchanged.
+
+Verification: Playwright/Chromium controlled-HTTP **5/5** at 1280×720, 360×640, 360×800, 1440×900 and
+seller route; `npm run test:stories` 91/91; `tsc` 0; production build `BUILD_ID UAHu-Q2GiefOjIEroMkVb`;
+OpenSpec `2.1.1` validates; review gates pass. Browser assertions/transport are in
+`browser/assertions.json`; one PUT is captured with B, expectedVersion 7, occurrence, preserved media and
+zero upload/add/delete. Browser evidence is controlled HTTP, not live backend/persistence.
+
+Honest limits: one product correction was needed for native Escape bypassing controlled close; no screenshot;
+shared Dialog change is limited to Escape routing; Story screen remains oversized. No migration/schema/
+seed/grant or live Story/Media write. **NOT Architect ACCEPT or owner acceptance.** `STOP_FOR_ARCHITECT`.
+
+---
+
+# HISTORICAL — TB-STORY-R22 PUBLIC PLAYER IDENTITY, REVALIDATION AND CONNECTED EVIDENCE — 2026-11-21
 
 Read `docs/architecture/evidence/TB-STORY-PUBLIC-PLAYER-IDENTITY-AND-EVIDENCE-282-R22/{PLAN.md,RESULT.md,RECEIPT.md,browser-proof.mjs,browser-proof.json}`.
 Code SHA `8ec894cb8`; previous reviewed code `c19e36ee5`. The remaining behavior gaps are closed:

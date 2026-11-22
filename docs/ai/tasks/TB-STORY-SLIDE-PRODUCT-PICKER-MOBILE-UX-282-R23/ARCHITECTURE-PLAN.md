@@ -68,6 +68,6 @@ Presentation-only addition: selected card and option markers. No new endpoint, m
 ## Checkpoint log
 
 - W0: repo/base verified; OpenSpec change, proposal, spec, design and tasks written; plan and manifest created before production edit.
-- W1 pending: reproduce missing selected marker/bottom caption via mount/browser, then change only the picker presentation/state emphasis.
-- W2 pending: mobile and locale proof.
-- W3 pending: one Playwright acceptance run, one correction round maximum, then evidence/review gate.
+- W1 complete: selected card, option marker, preserved selection, distinct error/empty/loading and focused copy were implemented; picker mount test 4/4; tsc 0.
+- W2 complete: 360x640/360x800 geometry, seller fixed shop, 1440x900 and fa/en direction/copy exercised in Playwright.
+- W3 complete: one product repair was required (native Escape bypassed the controlled Dialog close); Playwright final run 5/5, story tests 91/91, tsc 0, production build and review gate green.

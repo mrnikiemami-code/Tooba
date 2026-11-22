@@ -1,0 +1,40 @@
+{
+  "REQ_01": {
+    "putMethod": "PUT",
+    "putPath": "/v1/admin/stories/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa23a1/items/dddddddd-dddd-dddd-dddd-dddddddd23d1",
+    "ctaTarget": "66666666-6666-6666-6666-666666666661",
+    "expectedVersion": 7,
+    "occurrence": true,
+    "mediaAssetId": "44444444-4444-4444-4444-444444444444",
+    "mediaUrl": "https://cdn.example.test/item.jpg",
+    "reloadSelected": "محصول ب"
+  },
+  "REQ_02": {
+    "mutations": 0,
+    "reopened": "محصول فوق‌العاده طولانی با نام چندکلمه‌ای برای آزمایش موبایل و خوانایی"
+  },
+  "REQ_03": {
+    "errorVisible": true,
+    "emptyAbsent": true,
+    "retryResults": true,
+    "selection": "محصول فوق‌العاده طولانی با نام چندکلمه‌ای برای آزمایش موبایل و خوانایی",
+    "mutations": 0
+  },
+  "REQ_04": {
+    "viewport": "360x640",
+    "overflow": 0,
+    "saveHit": true,
+    "cardHit": true,
+    "nameWrapped": true,
+    "saveClick": true,
+    "ctaTarget": "55555555-5555-5555-5555-555555555551",
+    "mobile800Overflow": 0
+  },
+  "REQ_05": {
+    "sellerShop": "77777777-7777-7777-7777-777777777771",
+    "sellerHeaderOnlyFixedShop": true,
+    "englishDir": "ltr",
+    "englishLabel": "Selected product\n\nمحصول فوق‌العاده طولانی با نام چندکلمه‌ای برای آزمایش موبایل و خوانایی\n\nChoose another product from the list to change it.\n\nSelected",
+    "desktopOverflow": 0
+  }
+}
