@@ -2,7 +2,7 @@
 
 Status: **PASS within the four requested closures**, not Architect ACCEPT and not owner acceptance.
 
-Code SHA: `1f93e3baa` (`fix(story): reject stale locale responses and harden date proof`).
+Code SHA: `8ec894cb8` (`fix(story): bind locale, slide deletion and seller multi-sort`).
 
 ## Closed
 
@@ -13,15 +13,23 @@ Code SHA: `1f93e3baa` (`fix(story): reject stale locale responses and harden dat
 
 2. **Expiry independent of a slow response**
    - `useHomeStoriesFeed` removes locally expired stories before starting the network refresh and allows only one refresh per locale in flight.
-   - Every response carries a request sequence; a stale locale response is ignored even if it resolves after the new-locale request.
-   - Mounted tests: slow pending refresh removes the expired row and keeps `calls` at 2; a pending fa response cannot overwrite the en feed.
+   - Every response carries a request sequence and the current locale; the new-locale request starts even while the old one is pending, and the old response is ignored even if it resolves first.
+   - Mounted tests: slow pending refresh removes the expired row and keeps `calls` at 2; fa resolves while en is pending, is ignored, then en supplies the feed.
 
-3. **Explicit Media-owned cover kind**
+3. **Omitted items cannot prove slide deletion**
+   - `AdminStorySnapshot.itemsPresent` records whether the server actually sent `items`.
+   - `remove_item`, `reorder_items`, `add_item` and `update_item` refuse `{storyId, versionToken}` with no `items` as `unverified_shape` instead of treating `[]` as evidence.
+
+4. **Explicit Media-owned cover kind**
    - `PublicStoryCard` carries `CoverMediaAssetId` and nullable `CoverIsVideo`; `StoryDirectory` resolves the cover through `IStoryMediaAssetPort.AuthorizeForStoryAsync`.
    - Frontend uses the explicit value first and keeps its fallback only when the owner returns `null`.
-   - PostgreSQL test proves the directory asks the Media owner and publishes `CoverIsVideo = true`; frontend mapping test covers explicit and missing values.
+   - PostgreSQL test proves Story consumes the Media port response and publishes `CoverIsVideo = true`; the Media implementation in that test is a fake, so this is not a full Media-owner integration certificate. Frontend mapping test covers explicit and missing values.
 
-4. **PostgreSQL and browser evidence**
+5. **Seller multi-column sort**
+   - `SellerQueryAsync` now applies every requested sort column in order, with stable title/display fallbacks, instead of only `Sort.FirstOrDefault()`.
+   - PostgreSQL test uses title asc + displayOrder desc and asserts `2,1,0`.
+
+6. **PostgreSQL and browser evidence**
    - Seller grid test covers search, status/review filters, nonblank date columns, start/end `between` and `before` boundaries, `startAt blank`, explicit title/updatedAt sort order, page/count and foreign-shop exclusion; rollback leaves zero tagged rows.
    - Browser proof script is committed at `browser-proof.mjs`; its output `browser-proof.json` records the real save/reload/restore.
    - Host `5088` was republished and restarted; `/health/ready` 200 and `/v1/storefront/stories` 200.
@@ -33,10 +41,10 @@ Code SHA: `1f93e3baa` (`fix(story): reject stale locale responses and harden dat
 | `npm run test:stories` | 24 unit + 66 mount = **90 passed** |
 | `npm run test:home` | **7/7** |
 | `npx tsc --noEmit` | 0 |
-| PostgreSQL Story tests | **2/2** (seller grid, cover kind) |
+| PostgreSQL Story tests | **3/3** (seller grid, multi-sort, cover kind) |
 | `dotnet build Tooba.slnx -c Release` | 0 errors |
-| `npm run build` | success; `BUILD_ID 44a5DfAjiw3oXj00iX5q-` |
-| Host | PID `32068`; DLL SHA256 `FC7853809CD260BCCC7741408188E77C0949B927228979ED90EE1B251ACD80D8` |
+| `npm run build` | success; `BUILD_ID xNgWpswKQKxXAseQhRyW1` |
+| Host | PID `35436`; DLL SHA256 `53B49649BA896F63DDB0B668197660A55DF6E655858FD40C25CF10701030C03A` |
 | Browser | changed title read after reload; original restored and reread |
 
 ## Browser mutation disclosure

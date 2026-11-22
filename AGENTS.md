@@ -7,21 +7,23 @@ Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE
 # CURRENT — TB-STORY-R22 PUBLIC PLAYER IDENTITY, REVALIDATION AND CONNECTED EVIDENCE — 2026-11-21
 
 Read `docs/architecture/evidence/TB-STORY-PUBLIC-PLAYER-IDENTITY-AND-EVIDENCE-282-R22/{PLAN.md,RESULT.md,RECEIPT.md,browser-proof.mjs,browser-proof.json}`.
-Code SHA `1f93e3baa`; previous reviewed code `c19e36ee5`. The two remaining behavior gaps are closed:
-the modal seeds only on open/external target with a suppressed seed callback (no A/B reopen loop), and
-Home removes locally expired stories before a per-locale in-flight refresh, rejects a stale locale response
-by request sequence, and cannot preserve an expired row or start overlapping same-locale requests. Explicit Media-owned cover kind, PostgreSQL seller-grid
-search/status/start/end/updated filters, date ranges/boundaries/blank and explicit title/updatedAt order, and committed browser save/reload/restore
-evidence are included.
+Code SHA `8ec894cb8`; previous reviewed code `c19e36ee5`. The remaining behavior gaps are closed:
+the modal seeds only on open/external target with a suppressed seed callback (no A/B reopen loop);
+Home removes locally expired stories before a per-locale in-flight refresh and rejects a stale locale
+response by request sequence; omitted `items` can never prove slide deletion; and seller multi-column
+sort applies every requested column. Explicit Media-owned cover kind, PostgreSQL seller-grid
+search/status/start/end/updated filters, date ranges/boundaries/blank and explicit title/updatedAt order,
+and committed browser save/reload/restore evidence are included.
 
-Verification: `test:stories` 90/90; `test:home` 7/7; `tsc` 0; PostgreSQL Story tests 2/2;
-solution build 0 errors; Next `BUILD_ID 44a5DfAjiw3oXj00iX5q-`; `/fa` 200. Host `5088` PID `32068`,
-DLL `FC7853809CD260BCCC7741408188E77C0949B927228979ED90EE1B251ACD80D8`, `/health/ready` 200,
+Verification: `test:stories` 90/90; `test:home` 7/7; `tsc` 0; PostgreSQL Story tests 3/3;
+solution build 0 errors; Next `BUILD_ID xNgWpswKQKxXAseQhRyW1`; `/fa` 200. Host `5088` PID `35436`,
+DLL `53B49649BA896F63DDB0B668197660A55DF6E655858FD40C25CF10701030C03A`, `/health/ready` 200,
 `/v1/storefront/stories` 200. Browser story `01a1f9d8-31af-7000-8e47-5da09230ff0d` changed
 `CTA-internal-164417` → `CTA-internal-164417-R22`, reread after reload, restored and reread.
 
 Honest limits: no current canonical story has an asset-backed cover, so `coverIsVideo` is absent from the
-live payload until such a cover exists; its Media-owner path is proven by the PostgreSQL test. Home tests
+live payload until such a cover exists; the PostgreSQL test proves Story consumes the Media port, while
+the Media implementation in that test is fabricated (not a full Media-owner integration certificate). Home tests
 mount the real modal with a host that owns selection/removal, not the Swiper CSS component.
 `StoryManagementScreen` remains oversized; the pre-existing `test:critical-storefront` `bg-white` failure
 is unchanged. No migration/schema/seed/grant. This is a reported controlled Story title write/restore,
