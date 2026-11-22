@@ -114,7 +114,7 @@ export default function VendorCreateOfferPage() {
     });
     if (!created.ok) {
       setSaving(false);
-      setSaveError(created.denied ? t("دسترسی مجاز نیست", "Access denied") : created.errorCode);
+      setSaveError(created.denied ? t("دسترسی مجاز نیست", "Access denied") : created.errorCode === "offer.create.intent_conflict" ? t("این درخواست قبلاً با اطلاعات دیگری ثبت شده است.", "This request id was already used with different details.") : created.errorCode);
       return;
     }
     setCreatedOfferId(created.detail.offerId);
@@ -261,6 +261,7 @@ export default function VendorCreateOfferPage() {
     </main>
   );
 }
+
 
 
 

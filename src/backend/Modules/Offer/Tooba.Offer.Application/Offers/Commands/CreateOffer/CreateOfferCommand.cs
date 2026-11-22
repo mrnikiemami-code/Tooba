@@ -48,6 +48,7 @@ internal sealed class CreateOfferHandler(
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.SellerMissing));
         if (!string.Equals(seller.Kind, "Organization", StringComparison.Ordinal))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.SellerNotOrganization));
+        var channel = (DomainChannel)(int)request.Channel;
         Guid? requestedId = string.IsNullOrWhiteSpace(request.RequestId)
             ? null
             : DeterministicOfferId(request.SellerPartyId, request.CatalogVariantId, request.RequestId.Trim());
@@ -56,18 +57,16 @@ internal sealed class CreateOfferHandler(
             var existing = await store.GetByIdAsync(stableId, cancellationToken);
             if (existing is not null)
             {
-                if (existing.SellerPartyId != request.SellerPartyId
-                    || existing.CatalogVariantId != request.CatalogVariantId)
+                if (!MatchesCreationIntent(existing, request, channel))
                 {
-                    return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateActiveListing));
+                    return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
                 }
                 return Result.Success(await readModels.DetailAsync(existing, cancellationToken));
             }
         }
-        var channel = (DomainChannel)(int)request.Channel;
         if (await store.ExistsActiveListingAsync(request.SellerPartyId, request.CatalogVariantId, channel, cancellationToken))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateActiveListing));
-        var sku = request.SellerSku?.Trim();
+        var sku = string.IsNullOrWhiteSpace(request.SellerSku) ? null : request.SellerSku.Trim();
         if (!string.IsNullOrWhiteSpace(sku)
             && await store.ExistsSellerSkuAsync(request.SellerPartyId, sku, null, cancellationToken))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateSellerSku));
@@ -99,9 +98,34 @@ internal sealed class CreateOfferHandler(
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.StatusUnsupported));
         }
 
-        await store.AddAsync(offer, cancellationToken);
-        await store.SaveChangesAsync(cancellationToken);
+        var persisted = await store.PersistNewAsync(offer, cancellationToken);
+        if (persisted is not null)
+        {
+            if (!MatchesCreationIntent(persisted, request, channel))
+            {
+                return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
+            }
+            return Result.Success(await readModels.DetailAsync(persisted, cancellationToken));
+        }
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+    }
+
+    private static bool MatchesCreationIntent(SellerOffer existing, CreateOfferCommand request, DomainChannel channel)
+    {
+        var expectedSku = string.IsNullOrWhiteSpace(request.SellerSku) ? null : request.SellerSku.Trim();
+        var expectedStatus = string.IsNullOrWhiteSpace(request.Status)
+            ? nameof(OfferStatus.Draft)
+            : request.Status.Trim();
+        var expectedPolicy = request.ReturnPolicyChoice ?? "Default";
+        return existing.SellerPartyId == request.SellerPartyId
+            && existing.CatalogVariantId == request.CatalogVariantId
+            && existing.Channel == channel
+            && string.Equals(existing.SellerSku, expectedSku, StringComparison.Ordinal)
+            && string.Equals(existing.Status.ToString(), expectedStatus, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(existing.ReturnPolicyChoice, expectedPolicy, StringComparison.OrdinalIgnoreCase)
+            && existing.CustomReturnWindowDays == request.CustomReturnWindowDays
+            && existing.MinimumOrderQuantity == request.MinimumOrderQuantity
+            && existing.MaximumOrderQuantity == request.MaximumOrderQuantity;
     }
 
     private static Guid DeterministicOfferId(Guid sellerPartyId, Guid catalogVariantId, string requestId)
@@ -110,6 +134,7 @@ internal sealed class CreateOfferHandler(
         return new Guid(bytes.AsSpan(0, 16));
     }
 }
+
 
 
 

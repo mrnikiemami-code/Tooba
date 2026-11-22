@@ -39,6 +39,9 @@
   <data name="offer.seller_sku.duplicate" xml:space="preserve">
     <value>Seller SKU is already used by this seller.</value>
   </data>
+  <data name="offer.create.intent_conflict" xml:space="preserve">
+    <value>The create request id was reused with a different seller, variant, SKU, status or commercial intent.</value>
+  </data>
   <data name="offer.return_policy.override_denied" xml:space="preserve">
     <value>Seller cannot override return policy.</value>
   </data>
@@ -76,3 +79,5 @@
     <value>Fulfillment assignment body is malformed.</value>
   </data>
 </root>
+
+

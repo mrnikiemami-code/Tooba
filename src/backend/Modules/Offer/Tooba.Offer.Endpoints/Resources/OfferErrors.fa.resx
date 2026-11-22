@@ -39,6 +39,9 @@
   <data name="offer.seller_sku.duplicate" xml:space="preserve">
     <value>SKU فروشنده داخل همین فروشنده تکراری است.</value>
   </data>
+  <data name="offer.create.intent_conflict" xml:space="preserve">
+    <value>این شناسهٔ درخواست قبلاً با اطلاعات دیگری ثبت شده است؛ همان اطلاعات اولیه را دوباره ارسال کنید.</value>
+  </data>
   <data name="offer.return_policy.override_denied" xml:space="preserve">
     <value>تغییر سیاست مرجوعی برای فروشنده مجاز نیست.</value>
   </data>
@@ -76,3 +79,5 @@
     <value>بدنهٔ انتساب انجام ارسال نامعتبر است.</value>
   </data>
 </root>
+
+

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Tooba.Offer.Application.Offers.Mappings;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
@@ -28,6 +29,29 @@ public sealed partial class OfferStore(OfferDbContext db)
     {
         db.Offers.Add(offer);
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task<SellerOffer?> PersistNewAsync(SellerOffer offer, CancellationToken token)
+    {
+        db.Offers.Add(offer);
+        try
+        {
+            await db.SaveChangesAsync(token);
+            return null;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            { SqlState: "23505", ConstraintName: "pk_offers" })
+        {
+            db.Entry(offer).State = EntityState.Detached;
+            var existing = await db.Offers.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.OfferId == offer.OfferId, token);
+            if (existing is not null)
+            {
+                return existing;
+            }
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -268,5 +292,6 @@ public sealed partial class OfferStore(OfferDbContext db)
         offer.SellerSku,
         offer.UpdatedAt);
 }
+
 
 

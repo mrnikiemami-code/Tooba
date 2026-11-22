@@ -1,4 +1,4 @@
-using Tooba.Offer.Contracts.ReturnPolicy;
+﻿using Tooba.Offer.Contracts.ReturnPolicy;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
@@ -227,10 +227,17 @@ public sealed class OfferTraceTopologyTests
         public Task<bool> ExistsSellerSkuAsync(Guid sellerPartyId, string sellerSku, Guid? excludingOfferId, CancellationToken cancellationToken)
             => Task.FromResult(false);
 
+        public Task<SellerOffer?> PersistNewAsync(SellerOffer offer, CancellationToken cancellationToken)
+        {
+            _offers.Add(offer);
+            return Task.FromResult<SellerOffer?>(null);
+        }
+
         public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task<IReadOnlyList<SellerOffer>> ListBySellerAsync(Guid sellerPartyId, CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<SellerOffer>>(_offers.Where(x => x.SellerPartyId == sellerPartyId).ToList());
     }
 }
+
 

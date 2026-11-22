@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Offer.Contracts.Errors;
 
@@ -28,6 +28,8 @@ public sealed class OfferErrorCatalogContributor : IErrorCatalogContributor
             "An active offer already exists for this seller, variant, and channel."),
         D(OfferErrorCodes.DuplicateSellerSku, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "Seller SKU is already used by this seller."),
+        D(OfferErrorCodes.CreateIntentConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "The create request id was reused with a different seller, variant, SKU, status or commercial intent."),
         D(OfferErrorCodes.ReturnPolicyOverrideDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
             "Seller cannot override return policy."),
         D(OfferErrorCodes.NonReturnableDenied, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
@@ -67,3 +69,4 @@ public sealed class OfferErrorCatalogContributor : IErrorCatalogContributor
             Severity: ErrorSeverity.Warning,
             SafeTitleFallback: fallback);
 }
+

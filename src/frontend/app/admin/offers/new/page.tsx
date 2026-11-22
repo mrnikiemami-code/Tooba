@@ -89,7 +89,7 @@ export default function AdminCreateOfferPage() {
     const created = await createAdminOffer({ sellerPartyId, catalogVariantId, sellerSku: sellerSku.trim() || null, requestId });
     setBusy(false);
     if (!created.ok) {
-      setError(created.denied ? t("دسترسی مجاز نیست", "Access denied") : created.errorCode);
+      setError(created.denied ? t("دسترسی مجاز نیست", "Access denied") : created.errorCode === "offer.create.intent_conflict" ? t("این درخواست قبلاً با اطلاعات دیگری ثبت شده است.", "This request id was already used with different details.") : created.errorCode);
       return;
     }
     clearAdminOfferIntent(scope);
@@ -153,6 +153,7 @@ export default function AdminCreateOfferPage() {
     </main>
   );
 }
+
 
 
 

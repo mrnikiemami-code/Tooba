@@ -19,6 +19,8 @@ public interface IOfferStore
     Task<IReadOnlyList<SellerOffer>> ListBySellerAsync(Guid sellerPartyId, CancellationToken cancellationToken);
     /// <summary>Adds a new aggregate.</summary>
     Task AddAsync(SellerOffer offer, CancellationToken cancellationToken);
+    /// <summary>Persists one new Offer; a primary-key race returns the already persisted Offer.</summary>
+    Task<SellerOffer?> PersistNewAsync(SellerOffer offer, CancellationToken cancellationToken);
     /// <summary>Persists pending aggregate changes.</summary>
     Task SaveChangesAsync(CancellationToken cancellationToken);
     /// <summary>Checks for a non-archived listing.</summary>
@@ -26,3 +28,4 @@ public interface IOfferStore
     /// <summary>Checks seller SKU uniqueness.</summary>
     Task<bool> ExistsSellerSkuAsync(Guid sellerPartyId, string sellerSku, Guid? excludingOfferId, CancellationToken cancellationToken);
 }
+

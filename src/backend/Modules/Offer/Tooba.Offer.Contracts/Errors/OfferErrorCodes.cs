@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Contracts.Errors;
+﻿namespace Tooba.Offer.Contracts.Errors;
 
 /// <summary>Stable semantic error codes owned by Offer.</summary>
 public static class OfferErrorCodes
@@ -29,6 +29,9 @@ public static class OfferErrorCodes
 
     /// <summary>The seller SKU already exists.</summary>
     public const string DuplicateSellerSku = "offer.seller_sku.duplicate";
+
+    /// <summary>The same creation request id was reused with a different durable intent.</summary>
+    public const string CreateIntentConflict = "offer.create.intent_conflict";
 
     /// <summary>The return policy cannot be overridden.</summary>
     public const string ReturnPolicyOverrideDenied = "offer.return_policy.override_denied";
@@ -66,3 +69,5 @@ public static class OfferErrorCodes
     /// <summary>The fulfillment assignment body is empty, malformed or has an unsupported shape.</summary>
     public const string FulfillmentBodyMalformed = "offer.fulfillment.body_malformed";
 }
+
+

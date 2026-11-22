@@ -1,4 +1,4 @@
-using Tooba.Offer.Contracts.ReturnPolicy;
+﻿using Tooba.Offer.Contracts.ReturnPolicy;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
@@ -120,6 +120,7 @@ public sealed class OfferHandlerTests
         public Task<SellerOffer?> GetByIdAsync(Guid id, CancellationToken token) => Task.FromResult(Items.SingleOrDefault(x => x.OfferId == id));
         public Task<IReadOnlyList<SellerOffer>> ListBySellerAsync(Guid id, CancellationToken token) => Task.FromResult<IReadOnlyList<SellerOffer>>(Items.Where(x => x.SellerPartyId == id).ToList());
         public Task AddAsync(SellerOffer offer, CancellationToken token) { Items.Add(offer); return Task.CompletedTask; }
+        public Task<SellerOffer?> PersistNewAsync(SellerOffer offer, CancellationToken token) { Items.Add(offer); return Task.FromResult<SellerOffer?>(null); }
         public Task SaveChangesAsync(CancellationToken token) => Task.CompletedTask;
         public Task<bool> ExistsActiveListingAsync(Guid sellerId, Guid variantId, Tooba.Offer.Domain.ValueObjects.SalesChannel channel, CancellationToken token) => Task.FromResult(false);
         public Task<bool> ExistsSellerSkuAsync(Guid sellerId, string sku, Guid? excludingId, CancellationToken token) => Task.FromResult(false);
@@ -196,4 +197,5 @@ public sealed class OfferHandlerTests
         Assert.Equal(0m, cleared.Value.OnHand);
     }
 }
+
 
