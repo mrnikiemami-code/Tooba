@@ -1,0 +1,88 @@
+{
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.0.0",
+  "taskId": "TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285",
+  "parentTaskId": "TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283",
+  "stage": 2,
+  "expectedBaseSha": "26f9a7a4d24d009f25b66b4ea589df884c2a1aa1",
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "title": "Admin-created offer is visible to chosen seller",
+      "given": "Authorized admin selects seller A and a published Catalog variant from the existing admin navigation",
+      "when": "Admin creates one draft Offer and independently reopens it",
+      "then": "Offer.SellerPartyId=A, single stable OfferId, seller A list/detail shows the same OfferId; seller B does not; no Catalog mutation",
+      "proof": "Connected Chromium Admin→Host→PostgreSQL→independent seller Chromium/GET+SQL",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-02",
+      "title": "Role and owner authorization on every command",
+      "given": "Admin edit rights, admin view-only rights, sellers A and B have distinct authorized identities",
+      "when": "Each reads/creates/edits offer and directly invokes owning APIs including price/inventory",
+      "then": "Only authorized roles and owner scope succeed; B cannot read/change A; view-only cannot write price/inventory/create; denied requests make zero persisted changes",
+      "proof": "Real Host authenticated/authorized negative API + SQL and browser",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-03",
+      "title": "Create can resume without duplicate Offer",
+      "given": "A multi-step Create has written Offer but Pricing or Inventory failed, or response was lost",
+      "when": "Same operator reconnects, retries or resumes the saved intent",
+      "then": "Reconciliation with authoritative GET/owned listing returns original OfferId, follows remaining incomplete steps; never blindly posts second Create or duplicates price/inventory effects; Draft is not falsely ready",
+      "proof": "Connected browser→Host→isolated PostgreSQL; injected controlled error branch only with real first write",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-04",
+      "title": "Published Catalog picker supports server search and paging beyond 100",
+      "given": "At least 150 published products plus multiple variants and at least one older item beyond newest 100",
+      "when": "Admin or seller searches exact old product/variant and pages through the picker",
+      "then": "Correct result appears from server, not from loaded first 100; stable pages, total/count/hasMore grounded; selection maintained across paging/search/errors; non-published excluded",
+      "proof": "Real Catalog query/provider PostgreSQL + Chromium, request paging assertions",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-05",
+      "title": "Offer list uses real server paging and search for both roles",
+      "given": "At least 200 seller offers with distinct search keys and multiple sellers",
+      "when": "Seller and authorized admin search, sort and paginate",
+      "then": "Server applies owner-scoped filtering/query, stable deterministic order and bounded pages; totals accurate, no full-array fetch or client-only filtering; empty/error/loading distinct",
+      "proof": "Real Host PostgreSQL indexed pagination / request trace + browser",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-06",
+      "title": "Safe cancel, malformed result, failed continuation and status",
+      "given": "Draft create or existing resumable workflow has unsaved edits or partial progress",
+      "when": "Cancel, disconnect, malformed/wrong seller response, permission refusal and retry occur",
+      "then": "Cancel before first write yields zero business writes; no false success; partial progress is explicitly disclosed and recoverable via same OfferId; status stays Draft until appropriate owning prerequisites; no accidental duplication",
+      "proof": "Connected success and controlled error branches with independent GET+SQL",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-07",
+      "title": "Usable Persian FA/EN role experiences, real Impeccable critique",
+      "given": "Admin and seller forms are loaded at 360x640 and desktop in fa and en",
+      "when": "Operator selects seller, searches picker, fills Draft, saves/resumes, navigates to list/detail",
+      "then": "Existing shells/design system, proper RTL/LTR, registry languages not hard-coded authority, clear words for non-engineers, accessible 44px primary controls, no horizontal overflow, mobile keyboard/reopen and error feedback; documented Impeccable before/after critique",
+      "proof": "Impeccable critique log + served Chromium geometry/interactions",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "REQ-08",
+      "title": "No domain ownership or roadmap drift and deterministic delivery",
+      "given": "Catalog, Offer, Pricing, Inventory, Party and AccessControl remain owning domains",
+      "when": "Implementation and acceptance complete",
+      "then": "No unsafe cross-domain write or schema migration without approved contract; no Stage3 shipping or discounts; strict OpenSpec and task-specific OpenCode verifier with negative self-tests; code/build hashes, cleanup, all REQs independently reviewed",
+      "proof": "Diff/contract audit, strict spec, reproducible verifier, connected evidence and rollback",
+      "status": "NOT_RUN"
+    }
+  ],
+  "acceptance": {
+    "allRequirementsMustPass": true,
+    "verification": "real-owning-backend-isolated-postgresql",
+    "stop": "STOP_FOR_ARCHITECT",
+    "maxPostMatrixRepairs": 1
+  },
+  "cursorArtifacts": "IMMUTABLE"
+}
