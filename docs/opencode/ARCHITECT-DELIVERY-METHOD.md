@@ -1,11 +1,11 @@
 # TOOBA — OpenCode Architect Delivery Method
 
 Protocol: **TOOBA-OPENCODE-DELIVERY-V1**
-Version: **1.1.0**
+Version: **1.2.0**
 Adopted: **2026-11-22**
 Owner: **Tooba architect**
 Status: **ACTIVE for new OpenCode tasks only**
-Supersedes: **1.0.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md))
+Supersedes: **1.1.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md)); prior [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
 Revision authority: **owner explicit approval on 2026-11-22**
 Pilot evidence: 283 → connected 284 → TB-OCC-284 independent acceptance. The owner explicitly authorized recording this method **only on success**, and subsequently confirmed adoption.
 Reviewed code: `611f97a85ec7c2e464e4f649820992202ca3754c`.
@@ -75,6 +75,23 @@ If unsafe or infeasible, stop **before product edits** as `BLOCKED_PREFLIGHT` wi
 
 **Playwright:** real installed Chromium against served app; use owning Host + isolated persistence for claims about Save/reload. Controlled HTTP is permitted for deterministic malformed/lost/wrong-response **error branches only**, labeled explicitly; it cannot replace connected success proof. Record exact request methods/bodies/counts and browser outcomes. Use test tools proportionately; no ritual use of unrelated tools.
 
+## 3A. Token-efficient OpenCode conversation and tool-output policy — v1.2.0
+
+**Scope:** Applies to architect-issued future OpenCode tasks and to continuing OpenCode tasks when the owner explicitly forwards the policy. This governs **visible chat messages, model-visible command outputs and retrieval volume**, not the correctness or scope of engineering, and not any hidden reasoning settings controlled by the OpenCode application. It cannot guarantee a numeric token saving.
+
+**Communication contract (MUST):**
+1. Use **quiet execution by default**. Do not narrate every hypothesis, alternative, small tool call, copied command, intermediate diff or repeated interpretation in the conversation. Never paste long tool stdout, source files, stack traces or full evidence JSON into chat unless the architect specifically requests them.
+2. Send one concise **start/plan** message (task ID, fixed scope, hard gate); then send a message **only for a true blocker, an architectural decision requiring authorization, or the terminal handoff**. The terminal handoff is capped at **8 short lines** unless the owner/architect explicitly asks for detail: Task-ID; status/readiness; REQ and test counts; OpenSpec/Impeccable status as applicable; verification and negative controls; source/evidence commit SHA; result/evidence path; stop state. The canonical Bridge envelope must retain required keys and truth.
+3. Keep all complete test logs, original command outputs, before/after metrics, proof, REQ assertions, negative controls and SHA256 in **repo-relative evidence files**. Short chat output is **never** permission to abbreviate or skip proof, hide failures, weaken checks or emit unsupported PASS. Architect must still be able to audit them.
+4. **Command output hygiene:** prefer exit status + concise matching lines/counts. Redirect verbose stdout/stderr to named log files, then show only selected diagnostics if failure occurs (e.g., error context, test summary and exit code). Use bounded `git diff --stat`, `git diff --name-only`, targeted line ranges / `rg -n`, not recursive full-file dumps or repetitive `git show` on the same blob. Avoid piping untrusted logs to shell evaluators. Do not conceal error text that is necessary for diagnosis.
+5. **Context discipline:** read authoritative exact files once, then retrieve only relevant sections, code changes and new output; keep a compact internal status of verified facts, decisions, file/commit identities and remaining tests. Do not keep refeeding large transcripts, entire logs or whole repository trees to the model.
+6. **Avoid loop inflation:** choose a precise hypothesis and minimal discriminating check before running full suites; run focused tests during implementation and one complete connected acceptance matrix at the prescribed gate. The one-post-matrix-repair limit and final complete rerun remain mandatory. Do not create tasks, duplicate browser runs or repeat tool calls merely to generate verbose progress.
+7. **Safety and operational transparency override brevity:** announce and stop on any unsafe writes, missing permissions, gate failure or evidence conflict. Always report `BLOCKED` truthfully. Avoid excessive silence during unusually long work by providing an occasional one-line factual checkpoint only when needed; no verbose reasoning dump.
+
+**Example based on the owner-provided OpenCode screen (285):** An extended discussion about whether a cancel-write array contains later unrelated operations should be kept as a concise engineering finding in `RESULT.md` or a task-local diagnostic note, not as multi-paragraph chat speculation. Verify by capturing a snapshot **at cancel time** (e.g., `cancelWritesAtCheck`), retain full later writes separately and record the actual browser/Host event chronology. Do **not** manipulate historical evidence to produce a zero-writes claim. A short chat line is sufficient: “REQ-06 evidence timing mismatch; snapshot at cancel boundary, rerun focused proof; no product assertion yet.”
+
+**Applicability to currently running 285:** preserve its immutable issued `TOOBA-OPENCODE-DELIVERY-V1@1.0.0` protocol and existing repair instructions; this communication policy may be forwarded as an **output-only rider**, not used to change its acceptance requirements or waive any final connected test.
+
 ## 4. Controlled implementation, bounded repairs, fixed roadmap
 
 Implement ordered small waves **inside the one authorized task**, each `reproduce → implement → focused check → connected check → diff review`. Do not launch self-created follow-up tasks, broaden the scope, or silently redefine REQs. New unrelated findings are backlog, not automatic blockers; a true P0 safety/integrity risk is a blocker.
@@ -127,6 +144,6 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 
 ## 9. Stable recovery rule for future architect sessions
 
-On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.1.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
+On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.2.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
 
 **This file is the canonical OpenCode architect procedure. The Cursor procedure remains separate.**
