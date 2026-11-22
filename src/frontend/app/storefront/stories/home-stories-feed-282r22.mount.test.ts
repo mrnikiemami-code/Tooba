@@ -53,3 +53,27 @@ test("R22 F05: a slow refresh cannot keep an expired story or start overlapping 
   await flush();
   await tree.unmount();
 });
+
+test("R22 F05: a stale locale response cannot replace the current locale feed", async () => {
+  const pending = new Map<string, (value: PublicStoriesResult) => void>();
+  const calls: string[] = [];
+  const fetcher = (locale: string): Promise<PublicStoriesResult> => {
+    calls.push(locale);
+    return new Promise((resolve) => pending.set(locale, resolve));
+  };
+  let feed: ReturnType<typeof useHomeStoriesFeed> | null = null;
+  function Probe({ locale }: { locale: string }) {
+    feed = useHomeStoriesFeed(locale, fetcher);
+    return null;
+  }
+  const tree = await mount(createElement(Probe, { locale: "fa" }));
+  await waitFor(() => calls.length === 1, { timeoutMs: 1000 });
+  await tree.rerender(createElement(Probe, { locale: "en" }));
+  await waitFor(() => calls.length === 2, { timeoutMs: 1000 });
+  pending.get("en")!({ state: "ok", stories: [story("en-live", null)] });
+  await flush();
+  pending.get("fa")!({ state: "ok", stories: [story("fa-stale", null)] });
+  await flush();
+  assert.deepEqual(feed!.stories.map((row) => row.storyId), ["en-live"]);
+  await tree.unmount();
+});

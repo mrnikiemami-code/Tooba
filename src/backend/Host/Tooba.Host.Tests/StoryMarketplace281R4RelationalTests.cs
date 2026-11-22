@@ -285,13 +285,13 @@ public sealed class StoryMarketplace281R4RelationalTests
         alpha.AddItem("image", 0, now, Guid.NewGuid(), "https://example.test/alpha.jpg", null, null, null, null);
         alpha.SubmitForReview(Guid.NewGuid(), now);
         alpha.Approve(Guid.NewGuid(), now);
-        alpha.SetSchedule(now.AddDays(-2), now.AddDays(2), now);
+        alpha.SetSchedule(now.AddDays(-2), now.AddDays(2), now.AddMinutes(-10));
         var beta = StoryEntity.CreateSellerDraft(
             tenant, shopA, Guid.NewGuid(), _runTag + "beta", 1, now.AddMinutes(-1), null, null, null, null, null, null);
         beta.AddItem("image", 0, now, Guid.NewGuid(), "https://example.test/beta.jpg", null, null, null, null);
         beta.SubmitForReview(Guid.NewGuid(), now);
         beta.Approve(Guid.NewGuid(), now);
-        beta.SetSchedule(now.AddDays(-1), now.AddDays(3), now);
+        beta.SetSchedule(now.AddDays(-1), now.AddDays(3), now.AddMinutes(-5));
         var foreign = StoryEntity.CreateSellerDraft(
             tenant, shopB, Guid.NewGuid(), _runTag + "alpha-foreign", 0, now, null, null, null, null, null, null);
 
@@ -334,6 +334,50 @@ public sealed class StoryMarketplace281R4RelationalTests
             Assert.Equal(2, bounded.TotalCount);
             Assert.DoesNotContain(bounded.Items, row => row.StoryId == foreign.StoryId);
         }
+
+        var startRange = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest(
+                "startAt", "between", now.AddDays(-1).ToString("yyyy-MM-dd"), now.ToString("yyyy-MM-dd"), null)]),
+            CancellationToken.None);
+        Assert.Equal(beta.StoryId, Assert.Single(startRange.Items).StoryId);
+
+        var startBefore = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest(
+                "startAt", "before", now.AddDays(-1).ToString("yyyy-MM-dd"), null, null)]),
+            CancellationToken.None);
+        Assert.Equal(alpha.StoryId, Assert.Single(startBefore.Items).StoryId);
+
+        var endRange = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest(
+                "endAt", "between", now.AddDays(2).ToString("yyyy-MM-dd"), now.AddDays(2).ToString("yyyy-MM-dd"), null)]),
+            CancellationToken.None);
+        Assert.Equal(alpha.StoryId, Assert.Single(endRange.Items).StoryId);
+
+        var blankStart = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("startAt", "blank", null, null, null)]),
+            CancellationToken.None);
+        Assert.Equal(0, blankStart.TotalCount);
+
+        var updatedDesc = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 1, null, [new GridSortRequest("updatedAt", "desc")], []),
+            CancellationToken.None);
+        Assert.Equal(beta.StoryId, Assert.Single(updatedDesc.Items).StoryId);
+        var updatedAsc = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 1, null, [new GridSortRequest("updatedAt", "asc")], []),
+            CancellationToken.None);
+        Assert.Equal(alpha.StoryId, Assert.Single(updatedAsc.Items).StoryId);
 
         var descending = await directory.SellerQueryAsync(
             tenant,
