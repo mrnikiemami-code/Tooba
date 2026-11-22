@@ -26,12 +26,27 @@ public sealed partial class InventoryDirectory
         var offer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
-        var position = await _db.Positions.AsNoTracking()
+        var positions = await _db.Positions.AsNoTracking()
             .Where(x => x.OfferId == request.OfferId)
             .OrderBy(x => x.StockItemId)
-            .FirstOrDefaultAsync(cancellationToken);
-        var stockItemId = position?.StockItemId;
-        if (stockItemId is null)
+            .ToListAsync(cancellationToken);
+        Guid stockItemId;
+        if (request.StockItemId is Guid target)
+        {
+            var targetPosition = positions.SingleOrDefault(x => x.StockItemId == target);
+            if (targetPosition is null)
+                return Result.Failure(new SemanticError(InventoryErrorCodes.PositionIdUnknown));
+            stockItemId = targetPosition.StockItemId;
+        }
+        else if (positions.Count > 1)
+        {
+            return Result.Failure(new SemanticError(InventoryErrorCodes.PositionIdRequired));
+        }
+        else if (positions.Count == 1)
+        {
+            stockItemId = positions[0].StockItemId;
+        }
+        else
         {
             var locationId = await _db.Locations.AsNoTracking()
                 .Where(x => x.Status == InventoryLocationStatus.Active)
@@ -42,8 +57,12 @@ public sealed partial class InventoryDirectory
             stockItemId = await OpenPositionAsync(request.OfferId, locationId.Value, cancellationToken);
         }
 
+        var selected = positions.SingleOrDefault(x => x.StockItemId == stockItemId);
+        if (selected is not null && request.OnHand < selected.Reserved)
+            return Result.Failure(new SemanticError(InventoryErrorCodes.AdjustmentQuantityExceeds));
+
         await AdjustAsync(
-            stockItemId.Value, StockAdjustmentKind.Set, request.OnHand,
+            stockItemId, StockAdjustmentKind.Set, request.OnHand,
             string.IsNullOrWhiteSpace(request.Reason) ? "seller-panel-adjust" : request.Reason.Trim(),
             null, cancellationToken);
         return Result.Success();

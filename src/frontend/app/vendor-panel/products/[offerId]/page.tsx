@@ -35,7 +35,8 @@ export default function VendorProductDetailPage() {
   const [sellerSku, setSellerSku] = useState("");
   const [status, setStatus] = useState("Active");
   const [amount, setAmount] = useState("");
-  const [onHand, setOnHand] = useState("");
+  const [inventoryDrafts, setInventoryDrafts] = useState<Record<string, string>>({});
+  const [saveNotice, setSaveNotice] = useState<string | undefined>(undefined);
   const [returnPolicyChoice, setReturnPolicyChoice] = useState("Default");
   const [customReturnWindowDays, setCustomReturnWindowDays] = useState("");
   const [minimumOrderQuantity, setMinimumOrderQuantity] = useState("");
@@ -57,7 +58,7 @@ export default function VendorProductDetailPage() {
     setSellerSku(next.sellerSku ?? "");
     setStatus(next.status);
     setAmount(next.amount != null ? String(next.amount) : "");
-    setOnHand(String(next.onHand));
+    setInventoryDrafts(Object.fromEntries(next.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)])));
     setReturnPolicyChoice(next.returnPolicyChoice || "Default");
     setCustomReturnWindowDays(
       next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
@@ -95,22 +96,63 @@ export default function VendorProductDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per offerId
   }, [offerId]);
 
-  async function onSave() {
+  function parseNumber(value: string): number | null {
+    const text = value.trim();
+    return text ? Number(text.replace(",", ".")) : null;
+  }
+
+  function hasChanges(): boolean {
+    if (!detail) return false;
+    const currentMin = parseNumber(minimumOrderQuantity);
+    const currentMax = parseNumber(maximumOrderQuantity);
+    const locationChanged = detail.inventoryLocations.some(
+      (row) => (inventoryDrafts[row.stockItemId] ?? "") !== String(row.onHand),
+    );
+    return (
+      (sellerSku ?? "") !== (detail.sellerSku ?? "") ||
+      status !== detail.status ||
+      returnPolicyChoice !== detail.returnPolicyChoice ||
+      (returnPolicyChoice === "Custom" ? parseNumber(customReturnWindowDays) : null) !== detail.customReturnWindowDays ||
+      currentMin !== detail.minimumOrderQuantity ||
+      currentMax !== detail.maximumOrderQuantity ||
+      parseNumber(amount) !== detail.amount ||
+      locationChanged
+    );
+  }
+
+  async function reconcileVersion(expected: (next: SellerOfferDetail) => boolean) {
     const sellerPartyId = readSellerPartyId(window.location.search);
     if (!sellerPartyId) {
-      setSaveError("seller.identity.missing");
+      setSaveError("هویت فروشنده مشخص نیست.");
       return;
     }
-    const parsedAmount = Number(amount);
-    const parsedOnHand = Number(onHand.replace(",", "."));
-    const parsedMin = minimumOrderQuantity.trim() ? Number(minimumOrderQuantity.replace(",", ".")) : null;
-    const parsedMax = maximumOrderQuantity.trim() ? Number(maximumOrderQuantity.replace(",", ".")) : null;
-    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+    const result = await loadSellerOfferDetail(sellerPartyId, offerId);
+    if (result.detail && expected(result.detail)) {
+      setDetail(result.detail);
+      setSaveNotice("نتیجهٔ اولیه نامشخص بود؛ بازخوانی مستقل تغییر را تأیید کرد.");
+      setSaveError(undefined);
+      return;
+    }
+    setSaveError("نتیجهٔ ذخیره نامشخص است. صفحه را بازخوانی کنید و مقدار را بررسی کنید.");
+  }
+
+  async function onSave() {
+    if (!detail) return;
+    const sellerPartyId = readSellerPartyId(window.location.search);
+    if (!sellerPartyId) {
+      setSaveError("هویت فروشنده مشخص نیست.");
+      return;
+    }
+    if (!hasChanges()) {
+      setSaveNotice("تغییری برای ذخیره وجود ندارد.");
+      setSaveError(undefined);
+      return;
+    }
+    const parsedAmount = parseNumber(amount);
+    const parsedMin = parseNumber(minimumOrderQuantity);
+    const parsedMax = parseNumber(maximumOrderQuantity);
+    if (parsedAmount == null || !Number.isFinite(parsedAmount) || parsedAmount < 0) {
       setSaveError("مبلغ نامعتبر است");
-      return;
-    }
-    if (!Number.isFinite(parsedOnHand) || parsedOnHand < 0) {
-      setSaveError("موجودی نامعتبر است");
       return;
     }
     if (parsedMin != null && !(Number.isFinite(parsedMin) && parsedMin > 0)) {
@@ -125,49 +167,99 @@ export default function VendorProductDetailPage() {
       setSaveError("حداقل مقدار خرید نباید از حداکثر بیشتر باشد");
       return;
     }
-
-    setSaving(true);
-    setSaveError(undefined);
     const parsedCustomDays =
       returnPolicyChoice === "Custom" && customReturnWindowDays.trim()
         ? Number(customReturnWindowDays)
         : null;
     if (returnPolicyChoice === "Custom" && (!Number.isInteger(parsedCustomDays) || (parsedCustomDays ?? 0) <= 0)) {
-      setSaving(false);
       setSaveError("مهلت اختصاصی مرجوعی نامعتبر است");
       return;
     }
-    const patchResult = await patchSellerOffer(sellerPartyId, offerId, {
-      sellerSku,
-      status,
-      returnPolicyChoice,
-      customReturnWindowDays: parsedCustomDays,
-      minimumOrderQuantity: parsedMin,
-      maximumOrderQuantity: parsedMax,
-    });
-    if (!patchResult.ok) {
-      setSaving(false);
-      setSaveError(patchResult.denied ? "دسترسی مجاز نیست" : patchResult.errorCode);
+    const inventoryChanges = detail.inventoryLocations
+      .map((row) => ({ row, value: parseNumber(inventoryDrafts[row.stockItemId] ?? "") }))
+      .filter(({ row, value }) => value !== row.onHand);
+    if (inventoryChanges.some(({ value }) => value == null || !Number.isFinite(value) || value < 0)) {
+      setSaveError("موجودی یک یا چند محل نامعتبر است");
       return;
     }
-    const priceResult = await writeSellerOfferPrice(sellerPartyId, offerId, { amount: parsedAmount });
-    if (!priceResult.ok) {
-      setSaving(false);
-      setSaveError(priceResult.denied ? "دسترسی مجاز نیست" : priceResult.errorCode);
+    if (inventoryChanges.some(({ row, value }) => (value ?? 0) < row.reserved)) {
+      setSaveError("موجودی هر محل نباید کمتر از مقدار رزرو همان محل باشد");
       return;
     }
-    const inventoryResult = await writeSellerOfferInventory(sellerPartyId, offerId, {
-      onHand: parsedOnHand,
-      reason: "vendor-panel-edit",
-    });
-    setSaving(false);
-    if (!inventoryResult.ok) {
-      setSaveError(inventoryResult.denied ? "دسترسی مجاز نیست" : inventoryResult.errorCode);
-      return;
-    }
-    applyDetail(inventoryResult.detail);
-  }
 
+    setSaving(true);
+    setSaveError(undefined);
+    setSaveNotice(undefined);
+    let latest = detail;
+    const commercialChanged =
+      (sellerSku ?? "") !== (detail.sellerSku ?? "") ||
+      status !== detail.status ||
+      returnPolicyChoice !== detail.returnPolicyChoice ||
+      (returnPolicyChoice === "Custom" ? parsedCustomDays : null) !== detail.customReturnWindowDays ||
+      parsedMin !== detail.minimumOrderQuantity ||
+      parsedMax !== detail.maximumOrderQuantity;
+    if (commercialChanged) {
+      const patchResult = await patchSellerOffer(sellerPartyId, offerId, {
+        sellerSku,
+        status: status === detail.status ? undefined : status,
+        returnPolicyChoice,
+        customReturnWindowDays: parsedCustomDays,
+        minimumOrderQuantity: parsedMin,
+        maximumOrderQuantity: parsedMax,
+        clearOrderQuantityLimits:
+          parsedMin == null &&
+          parsedMax == null &&
+          (detail.minimumOrderQuantity != null || detail.maximumOrderQuantity != null),
+      });
+      if (!patchResult.ok) {
+        setSaving(false);
+        setSaveError(patchResult.denied ? "دسترسی مجاز نیست" : patchResult.errorCode);
+        if (patchResult.errorCode === "host-unreachable" || patchResult.errorCode.endsWith("mismatch")) {
+          await reconcileVersion((next) =>
+            (next.sellerSku ?? "") === (sellerSku ?? "") &&
+            next.status === (status === detail.status ? next.status : status),
+          );
+        }
+        return;
+      }
+      latest = patchResult.detail;
+      setDetail(latest);
+    }
+    if (parsedAmount !== detail.amount) {
+      const priceResult = await writeSellerOfferPrice(sellerPartyId, offerId, { amount: parsedAmount });
+      if (!priceResult.ok) {
+        setSaving(false);
+        setSaveError(priceResult.denied ? "دسترسی مجاز نیست" : priceResult.errorCode);
+        if (priceResult.errorCode === "host-unreachable" || priceResult.errorCode.endsWith("mismatch")) {
+          await reconcileVersion((next) => next.amount === parsedAmount);
+        }
+        return;
+      }
+      latest = priceResult.detail;
+      setDetail(latest);
+    }
+    for (const { row, value } of inventoryChanges) {
+      const inventoryResult = await writeSellerOfferInventory(sellerPartyId, offerId, {
+        onHand: value!,
+        reason: "vendor-panel-edit",
+        stockItemId: row.stockItemId,
+      });
+      if (!inventoryResult.ok) {
+        setSaving(false);
+        setSaveError(inventoryResult.denied ? "دسترسی مجاز نیست" : inventoryResult.errorCode);
+        if (inventoryResult.errorCode === "host-unreachable" || inventoryResult.errorCode.endsWith("mismatch")) {
+          await reconcileVersion((next) =>
+            next.inventoryLocations.some((location) => location.stockItemId === row.stockItemId && location.onHand === value),
+          );
+        }
+        return;
+      }
+      latest = inventoryResult.detail;
+      setDetail(latest);
+    }
+    setSaving(false);
+    setSaveNotice("تغییرات ذخیره شد.");
+  }
   if (denied) {
     return (
       <main data-testid="seller-auth-denied">
@@ -257,16 +349,56 @@ export default function VendorProductDetailPage() {
                   dir="ltr"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm">
-                موجودی روی‌دست
-                <input
-                  className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
-                  value={onHand}
-                  onChange={(event) => setOnHand(event.target.value)}
-                  inputMode="decimal"
-                  dir="ltr"
-                />
-              </label>
+              <div className="rounded-xl border border-border bg-surface p-4 sm:col-span-2" data-testid="offer-inventory-positions">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-bold">موجودی هر محل</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">
+                      جمع موجودی فقط خواندنی است؛ برای تغییر، مقدار همان محل را ویرایش کنید.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-border px-3 py-1 text-xs font-bold tabular-nums">
+                    جمع: {formatUnits(detail.onHand)}
+                  </span>
+                </div>
+                {detail.inventoryLocations.length === 0 ? (
+                  <p className="mt-3 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted">
+                    هنوز موقعیت انباری برای این آفر ثبت نشده است.
+                  </p>
+                ) : (
+                  <div className="mt-3 grid gap-3">
+                    {detail.inventoryLocations.map((location) => (
+                      <label
+                        key={location.stockItemId}
+                        className="grid gap-2 rounded-lg border border-border/70 bg-surface-elevated p-3 sm:grid-cols-[minmax(0,1fr)_150px] sm:items-center"
+                        data-testid="offer-inventory-position"
+                        data-stock-item-id={location.stockItemId}
+                      >
+                        <span className="min-w-0">
+                          <span className="block break-words text-sm font-bold">محل {location.locationCode}</span>
+                          <span className="mt-1 block text-xs leading-5 text-muted">
+                            رزرو: {formatUnits(location.reserved)} · قابل فروش: {formatUnits(location.available)}
+                          </span>
+                        </span>
+                        <input
+                          className="min-h-11 w-full rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                          value={inventoryDrafts[location.stockItemId] ?? ""}
+                          onChange={(event) =>
+                            setInventoryDrafts((current) => ({
+                              ...current,
+                              [location.stockItemId]: event.target.value,
+                            }))
+                          }
+                          inputMode="decimal"
+                          dir="ltr"
+                          aria-label={`موجودی محل ${location.locationCode}`}
+                          data-testid="offer-inventory-input"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
               <label className="flex flex-col gap-1 text-sm">
                 حداقل مقدار خرید
                 <input
@@ -352,10 +484,15 @@ export default function VendorProductDetailPage() {
                 <dd className="mt-1 font-medium">{formatOfferStatus(detail.status)}</dd>
               </div>
             </dl>
-            {saveError ? <p className="mt-3 text-sm text-danger">{saveError}</p> : null}
+            {hasChanges() ? (
+              <p className="mt-3 text-sm font-medium" data-testid="offer-dirty">تغییرات ذخیره‌نشده دارید.</p>
+            ) : null}
+            {saveError ? <p className="mt-3 text-sm text-danger" data-testid="offer-save-error">{saveError}</p> : null}
+            {saveNotice ? <p className="mt-3 text-sm text-emerald-700" data-testid="offer-save-notice">{saveNotice}</p> : null}
             <button
               type="button"
               disabled={saving}
+              data-testid="offer-save"
               onClick={() => void onSave()}
               className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#E53935] px-5 text-sm font-bold text-white shadow-lg shadow-[#E53935]/30 hover:bg-[#c62828] disabled:opacity-50"
             >
@@ -364,6 +501,7 @@ export default function VendorProductDetailPage() {
             <button
               type="button"
               className="mt-3 mr-3 text-sm text-muted underline-offset-4 hover:underline"
+              data-testid="offer-cancel"
               onClick={() => router.push("/vendor-panel/products")}
             >
               انصراف

@@ -1,4 +1,4 @@
-﻿using Tooba.Offer.Application.Validation;
+using Tooba.Offer.Application.Validation;
 using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Inventory.Contracts.Seller;
@@ -13,7 +13,8 @@ public sealed record SetOfferInventoryCommand(
     Guid OfferId,
     Guid SellerPartyId,
     decimal OnHand,
-    string? Reason) : IRequest<Result<SellerOfferDetailPage>>;
+    string? Reason,
+    Guid? StockItemId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class SetOfferInventoryCommandHandler(
     IOfferStore store,
@@ -29,7 +30,8 @@ internal sealed class SetOfferInventoryCommandHandler(
             request.OfferId,
             request.SellerPartyId,
             request.OnHand,
-            request.Reason), cancellationToken);
+            request.Reason,
+            request.StockItemId), cancellationToken);
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 

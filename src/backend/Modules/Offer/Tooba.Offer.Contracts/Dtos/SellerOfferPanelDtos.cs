@@ -46,7 +46,17 @@ public sealed record SellerOfferDetailPage(
     decimal? MaximumOrderQuantity = null,
     string? ProductUnitCode = null,
     string? ProductUnitName = null,
-    string? ProductUnitShortName = null);
+    string? ProductUnitShortName = null,
+    IReadOnlyList<SellerOfferInventoryLocation>? InventoryLocations = null);
+
+/// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
+public sealed record SellerOfferInventoryLocation(
+    Guid StockItemId,
+    Guid LocationId,
+    string LocationCode,
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.
@@ -57,7 +67,8 @@ public sealed record SellerOfferPatchRequest(
     string? ReturnPolicyChoice = null,
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null);
+    decimal? MaximumOrderQuantity = null,
+    bool ClearOrderQuantityLimits = false);
 
 /// <summary>
 /// فرمان ایجاد Offer روی گونهٔ Catalog؛ Party فروشنده فقط از زمینهٔ احراز می‌آید نه از بدنه.
@@ -82,4 +93,5 @@ public sealed record SellerOfferPriceWriteRequest(
 /// </summary>
 public sealed record SellerOfferInventoryWriteRequest(
     decimal OnHand,
-    string? Reason);
+    string? Reason,
+    Guid? StockItemId = null);

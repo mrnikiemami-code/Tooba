@@ -47,7 +47,18 @@ public sealed partial class InventoryDirectory
         var values = await GetAvailabilityBatchAsync(offerIds, cancellationToken);
         return values.ToDictionary(
             x => x.Key,
-            x => new OfferInventorySummary(x.Key, x.Value.OnHand, x.Value.Reserved, Math.Max(0, x.Value.Available)));
+            x => new OfferInventorySummary(
+                x.Key,
+                x.Value.OnHand,
+                x.Value.Reserved,
+                Math.Max(0, x.Value.Available),
+                x.Value.Locations.Select(location => new SellerInventoryPosition(
+                    location.StockItemId,
+                    location.LocationId,
+                    location.LocationCode,
+                    location.OnHand,
+                    location.Reserved,
+                    location.Available)).ToList()));
     }
 
     private async Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchCoreAsync(

@@ -75,7 +75,14 @@ public sealed class OfferReadModelComposer(
             options.DefaultReturnWindowDays, options.SellerCanOverrideReturnPolicy,
             options.MinReturnWindowDays, options.MaxReturnWindowDays, options.AllowNonReturnableOffers,
             offer.MinimumOrderQuantity, offer.MaximumOrderQuantity,
-            product?.UnitCode, product?.UnitName, product?.UnitShortName);
+            product?.UnitCode, product?.UnitName, product?.UnitShortName,
+            stock?.Locations?.Select(location => new SellerOfferInventoryLocation(
+                location.StockItemId,
+                location.LocationId,
+                location.LocationCode,
+                location.OnHand,
+                location.Reserved,
+                location.Available)).ToList());
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

@@ -169,5 +169,31 @@ public sealed class OfferHandlerTests
     }
     private sealed class FixedIds(Guid id) : IIdGenerator
     { public Guid NewId() => id; }
+
+    [Fact]
+    public async Task Draft_sku_patch_stays_draft_and_clears_both_limits()
+    {
+        var sender = BuildSender(
+            new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())),
+            new FakeParty(new PartyLookupResult(SellerId, "Organization")),
+            out var store);
+        var created = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU-1"));
+        Assert.True(created.IsSuccess);
+
+        var limits = await sender.Send(new UpdateOfferCommand(
+            OfferId, SellerId, null, null, MinimumOrderQuantity: 2, MaximumOrderQuantity: 5));
+        Assert.True(limits.IsSuccess);
+        Assert.Equal(2, limits.Value.MinimumOrderQuantity);
+        Assert.Equal(5, limits.Value.MaximumOrderQuantity);
+
+        var cleared = await sender.Send(new UpdateOfferCommand(
+            OfferId, SellerId, "SKU-2", null, ClearOrderQuantityLimits: true));
+        Assert.True(cleared.IsSuccess);
+        Assert.Equal("SKU-2", cleared.Value.SellerSku);
+        Assert.Equal(nameof(ContractStatus.Draft), cleared.Value.Status);
+        Assert.Null(cleared.Value.MinimumOrderQuantity);
+        Assert.Null(cleared.Value.MaximumOrderQuantity);
+        Assert.Equal(0m, cleared.Value.OnHand);
+    }
 }
 

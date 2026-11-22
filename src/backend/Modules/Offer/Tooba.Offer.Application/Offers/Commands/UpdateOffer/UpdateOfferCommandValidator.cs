@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
 using Tooba.Offer.Application.Validation;
 using Tooba.Offer.Contracts.Dtos;
@@ -16,6 +16,7 @@ public sealed class UpdateOfferCommandValidator : AbstractValidator<UpdateOfferC
         nameof(OfferStatus.Active),
         nameof(OfferStatus.Suspended),
         nameof(OfferStatus.Archived),
+        nameof(OfferStatus.Draft),
     ];
 
     /// <summary>Registers primitive-shape rules for the patch command.</summary>

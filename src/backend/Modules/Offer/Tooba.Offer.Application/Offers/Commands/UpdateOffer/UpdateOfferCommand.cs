@@ -1,4 +1,4 @@
-﻿using Tooba.Offer.Application.Validation;
+using Tooba.Offer.Application.Validation;
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
@@ -19,7 +19,8 @@ public sealed record UpdateOfferCommand(
     string? ReturnPolicyChoice = null,
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null) : IRequest<Result<SellerOfferDetailPage>>;
+    decimal? MaximumOrderQuantity = null,
+    bool ClearOrderQuantityLimits = false) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class UpdateOfferHandler(
     IOfferStore store,
@@ -55,6 +56,11 @@ internal sealed class UpdateOfferHandler(
             {
                 offer.Archive(clock.UtcNow);
             }
+            else if (request.Status.Equals(nameof(OfferStatus.Draft), StringComparison.OrdinalIgnoreCase)
+                && offer.Status.ToString().Equals(nameof(OfferStatus.Draft), StringComparison.OrdinalIgnoreCase))
+            {
+                // Draft is already the current lifecycle state; a SKU-only edit must not require a transition.
+            }
             else
             {
                 return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.StatusUnsupported));
@@ -68,7 +74,7 @@ internal sealed class UpdateOfferHandler(
                 return Result.Failure<SellerOfferDetailPage>(policy.Errors);
             offer.SetReturnPolicy(choice, request.CustomReturnWindowDays, clock.UtcNow);
         }
-        if (request.MinimumOrderQuantity is not null || request.MaximumOrderQuantity is not null)
+        if (request.ClearOrderQuantityLimits || request.MinimumOrderQuantity is not null || request.MaximumOrderQuantity is not null)
         {
             var qty = offer.SetOrderQuantityLimits(request.MinimumOrderQuantity, request.MaximumOrderQuantity, clock.UtcNow);
             if (qty.IsFailure)

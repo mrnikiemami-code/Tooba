@@ -71,6 +71,16 @@ export interface SellerOfferDetail {
   productUnitCode: string | null;
   productUnitName: string | null;
   productUnitShortName: string | null;
+  inventoryLocations: SellerInventoryLocation[];
+}
+
+export interface SellerInventoryLocation {
+  stockItemId: string;
+  locationId: string;
+  locationCode: string;
+  onHand: number;
+  reserved: number;
+  available: number;
 }
 
 export interface SellerOrderListRow {
@@ -420,6 +430,22 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     productUnitCode: asNullableString(readProp(item, "productUnitCode", "ProductUnitCode")),
     productUnitName: asNullableString(readProp(item, "productUnitName", "ProductUnitName")),
     productUnitShortName: asNullableString(readProp(item, "productUnitShortName", "ProductUnitShortName")),
+    inventoryLocations: (() => {
+      const raw = readProp(item, "inventoryLocations", "InventoryLocations");
+      return Array.isArray(raw)
+        ? raw
+            .filter((row): row is Record<string, unknown> => !!row && typeof row === "object")
+            .map((row) => ({
+              stockItemId: asString(readProp(row, "stockItemId", "StockItemId")),
+              locationId: asString(readProp(row, "locationId", "LocationId")),
+              locationCode: asString(readProp(row, "locationCode", "LocationCode")),
+              onHand: asNumber(readProp(row, "onHand", "OnHand")),
+              reserved: asNumber(readProp(row, "reserved", "Reserved")),
+              available: asNumber(readProp(row, "available", "Available")),
+            }))
+            .filter((row) => row.stockItemId.length > 0)
+        : [];
+    })(),
   };
 }
 
@@ -608,6 +634,7 @@ export async function patchSellerOffer(
     customReturnWindowDays?: number | null;
     minimumOrderQuantity?: number | null;
     maximumOrderQuantity?: number | null;
+    clearOrderQuantityLimits?: boolean;
   },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
@@ -621,6 +648,7 @@ export async function patchSellerOffer(
         customReturnWindowDays: patch.customReturnWindowDays,
         minimumOrderQuantity: patch.minimumOrderQuantity,
         maximumOrderQuantity: patch.maximumOrderQuantity,
+        clearOrderQuantityLimits: patch.clearOrderQuantityLimits,
       }),
     });
     if (isDeniedStatus(response.status)) {
@@ -631,8 +659,17 @@ export async function patchSellerOffer(
       return { ok: false, errorCode: body?.errorCode ?? "seller.offer.patch-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail) {
-      return { ok: false, errorCode: "seller.offer.patch-failed" };
+    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId) {
+      return { ok: false, errorCode: "seller.offer.response_mismatch" };
+    }
+    if (patch.sellerSku !== undefined && (detail.sellerSku ?? "") !== patch.sellerSku) {
+      return { ok: false, errorCode: "seller.offer.response_mismatch" };
+    }
+    if (patch.status !== undefined && detail.status !== patch.status) {
+      return { ok: false, errorCode: "seller.offer.response_mismatch" };
+    }
+    if (patch.clearOrderQuantityLimits && (detail.minimumOrderQuantity != null || detail.maximumOrderQuantity != null)) {
+      return { ok: false, errorCode: "seller.offer.response_mismatch" };
     }
     return { ok: true, detail };
   } catch {
@@ -736,7 +773,10 @@ export async function writeSellerOfferPrice(
       return { ok: false, errorCode: body?.errorCode ?? "seller.price.write-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.price.write-failed" };
+    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || detail.amount !== input.amount) {
+      return { ok: false, errorCode: "seller.price.response_mismatch" };
+    }
+    return { ok: true, detail };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
@@ -746,7 +786,7 @@ export async function writeSellerOfferPrice(
 export async function writeSellerOfferInventory(
   sellerPartyId: string,
   offerId: string,
-  input: { onHand: number; reason?: string | null },
+  input: { onHand: number; reason?: string | null; stockItemId?: string | null },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}/inventory`, {
@@ -755,6 +795,7 @@ export async function writeSellerOfferInventory(
       body: JSON.stringify({
         onHand: input.onHand,
         reason: input.reason ?? undefined,
+        stockItemId: input.stockItemId ?? undefined,
       }),
     });
     if (isDeniedStatus(response.status) || response.status === 404) {
@@ -765,7 +806,14 @@ export async function writeSellerOfferInventory(
       return { ok: false, errorCode: body?.errorCode ?? "seller.inventory.write-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.inventory.write-failed" };
+    const target = input.stockItemId
+      ? detail?.inventoryLocations.find((row) => row.stockItemId === input.stockItemId)
+      : undefined;
+    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId
+        || (input.stockItemId ? !target || target.onHand !== input.onHand : detail.onHand !== input.onHand)) {
+      return { ok: false, errorCode: "seller.inventory.response_mismatch" };
+    }
+    return { ok: true, detail };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }

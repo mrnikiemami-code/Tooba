@@ -3,10 +3,29 @@ using Tooba.BuildingBlocks.Results;
 namespace Tooba.Inventory.Contracts.Seller;
 
 /// <summary>Inventory-owned availability summary for offer presentation.</summary>
-public sealed record OfferInventorySummary(Guid OfferId, decimal OnHand, decimal Reserved, decimal Available);
+public sealed record OfferInventorySummary(
+    Guid OfferId,
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available,
+    IReadOnlyList<SellerInventoryPosition>? Locations = null);
+
+/// <summary>A named stock position belonging to the offer.</summary>
+public sealed record SellerInventoryPosition(
+    Guid StockItemId,
+    Guid LocationId,
+    string LocationCode,
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available);
 
 /// <summary>Inventory-owned seller stock write request.</summary>
-public sealed record SetSellerOfferInventory(Guid OfferId, Guid SellerPartyId, decimal OnHand, string? Reason);
+public sealed record SetSellerOfferInventory(
+    Guid OfferId,
+    Guid SellerPartyId,
+    decimal OnHand,
+    string? Reason,
+    Guid? StockItemId = null);
 
 /// <summary>Inventory-owned boundary for offer reads and seller stock writes.</summary>
 public interface ISellerOfferInventoryGateway

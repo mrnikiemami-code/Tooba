@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -84,7 +84,8 @@ public static class OfferSellerEndpoints
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
-            body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity), token);
+            body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
+            body.ClearOrderQuantityLimits), token);
         return api.From(result);
     }
 
@@ -114,7 +115,7 @@ public static class OfferSellerEndpoints
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
         var result = await sender.Send(new SetOfferInventoryCommand(
-            offerId, sellerId, body.OnHand, body.Reason), token);
+            offerId, sellerId, body.OnHand, body.Reason, body.StockItemId), token);
         return api.From(result);
     }
 }
