@@ -4,7 +4,7 @@
  */
 
 import type { GridServerPage, GridServerQuery } from "../../design-system/data-grid";
-import { toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper";
+import { toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
 
 export type HostReadSource = "host" | "error";
 
@@ -1305,6 +1305,7 @@ export async function saveSellerSettings(
     return { ok: false, errorCode: "host-unreachable" };
   }
 }
+
 
 
 
