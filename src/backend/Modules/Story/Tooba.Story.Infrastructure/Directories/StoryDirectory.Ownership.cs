@@ -333,11 +333,37 @@ public sealed partial class StoryDirectory
     }
 
     private async Task<IReadOnlyList<PublicStoryCard>> EnrichPublicAsync(
+        Guid tenantId,
         IReadOnlyList<PublicStoryCard> rows,
         CancellationToken cancellationToken)
     {
         if (rows.Count == 0)
             return rows;
+
+        var coverKinds = new Dictionary<Guid, bool>();
+        if (_media is not null)
+        {
+            foreach (var row in rows)
+            {
+                if (row.CoverMediaAssetId is not Guid coverId || coverId == Guid.Empty
+                    || coverKinds.ContainsKey(coverId))
+                    continue;
+                try
+                {
+                    var authorized = await _media.AuthorizeForStoryAsync(
+                        coverId,
+                        tenantId,
+                        row.SellerPartyId,
+                        allowUnscopedAdminAssets: row.SellerPartyId is null,
+                        cancellationToken);
+                    coverKinds[coverId] = authorized.IsVideo;
+                }
+                catch (SemanticException)
+                {
+                    // The cover URL remains playable; an unavailable asset only means "unknown", never a guess.
+                }
+            }
+        }
 
         var shops = rows
             .Where(row => row.SellerPartyId is Guid id && id != Guid.Empty)
@@ -402,6 +428,9 @@ public sealed partial class StoryDirectory
             {
                 Items = items,
                 CtaHref = ResolveCtaHref(row.CtaType, row.CtaTarget, row.CtaHref, paths),
+                CoverIsVideo = row.CoverMediaAssetId is Guid coverId && coverKinds.TryGetValue(coverId, out var isVideo)
+                    ? isVideo
+                    : null,
             };
             if (row.SellerPartyId is not Guid shop)
                 return enriched;

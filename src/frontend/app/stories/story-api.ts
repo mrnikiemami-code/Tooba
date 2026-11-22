@@ -57,6 +57,8 @@ export interface PublicStoryCard {
   ctaHref?: string | null;
   /** Publication window end from the owning Story; null when the window has no end. */
   endAt?: string | null;
+  /** Explicit cover kind from the owning Media asset; null when the owner did not answer. */
+  coverIsVideo?: boolean | null;
   /** Store-preview fill only — never persisted / never published. */
   previewFake?: boolean;
   /** In-memory PreviewFake source marker — never persisted / never shown as jargon in UI. */
@@ -205,6 +207,7 @@ export function mapPublicStory(value: unknown): PublicStoryCard | null {
   const items = Array.isArray(itemsRaw)
     ? itemsRaw.map(mapPublicStoryItem).filter((row): row is PublicStoryItem => row !== null)
     : [];
+  const coverIsVideo = prop(item, "coverIsVideo", "CoverIsVideo");
   return {
     storyId,
     title: text(prop(item, "title", "Title")),
@@ -219,6 +222,7 @@ export function mapPublicStory(value: unknown): PublicStoryCard | null {
     shopPublicId: nullableText(prop(item, "shopPublicId", "ShopPublicId")),
     ctaHref: nullableText(prop(item, "ctaHref", "CtaHref")),
     endAt: nullableText(prop(item, "endAt", "EndAt")),
+    coverIsVideo: typeof coverIsVideo === "boolean" ? coverIsVideo : null,
   };
 }
 

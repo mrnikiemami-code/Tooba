@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, Play } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { useLocale } from "../../../lib/i18n/locale-context.tsx";
 import { fetchPublicStories, type PublicStoryCard } from "../../stories/story-api.ts";
 import { StoryModal } from "./story-modal.tsx";
+import { filterLiveStories, useStoryRevalidation } from "./home-stories-revalidation.ts";
 import { createFakeStory } from "../../../lib/storefront-composition/preview-fake-data.ts";
 import { applyPreviewFill } from "../../../lib/storefront-composition/preview-fill-policy.ts";
 import { PreviewSampleBadge } from "../preview-sample-badge.tsx";
@@ -43,7 +44,6 @@ const STORIES_RAIL_COPY: Record<"fa" | "en", { heading: string; shortcuts: strin
 
 const VIDEO_EXT_RE = /\.(mp4|m4v|webm|mov|ogv|ogg)(?:[?#]|$)/i;
 /** One bounded revalidation window; a live story rail never polls faster than this. */
-const STORY_REVALIDATE_MAX_MS = 5 * 60 * 1000;
 const IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif|gif|bmp|svg)(?:[?#]|$)/i;
 
 /**
@@ -87,14 +87,15 @@ export function HomeStoriesSection({
       if (result.state === "error") {
         setLoadError(result.message);
         setStories((previous) =>
-          previous.filter((story) => !story.endAt || Date.parse(story.endAt) > Date.now()),
+          filterLiveStories(previous, Date.now()),
         );
         setLoaded(true);
         return;
       }
       setLoadError(null);
-      const eligible = result.stories.filter((story) =>
-        story.items.length > 0 && (!story.endAt || Date.parse(story.endAt) > Date.now()),
+      const eligible = filterLiveStories(
+        result.stories.filter((story) => story.items.length > 0),
+        Date.now(),
       );
       setStories(eligible);
       setLoaded(true);
@@ -112,30 +113,8 @@ export function HomeStoriesSection({
     };
   }, [locale, revalidateTick]);
 
-  const soonestEnd = useMemo(() => {
-    const ends = stories
-      .map((story) => (story.endAt ? Date.parse(story.endAt) : Number.NaN))
-      .filter((value) => Number.isFinite(value) && value > Date.now());
-    return ends.length > 0 ? Math.min(...ends) : Number.NaN;
-  }, [stories]);
-
-  // Bounded revalidation: one timer to the nearest publication-window end (never a poll loop),
-  // plus a single check when the tab comes back to the foreground.
-  useEffect(() => {
-    if (typeof window === "undefined" || stories.length === 0) return;
-    const delay = Number.isFinite(soonestEnd)
-      ? Math.min(Math.max(soonestEnd - Date.now() + 1000, 1000), STORY_REVALIDATE_MAX_MS)
-      : STORY_REVALIDATE_MAX_MS;
-    const timer = setTimeout(() => setRevalidateTick((v) => v + 1), delay);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") setRevalidateTick((v) => v + 1);
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [soonestEnd, stories.length, revalidateTick]);
+  const revalidateStories = useCallback(() => setRevalidateTick((value) => value + 1), []);
+  useStoryRevalidation(stories, revalidateStories);
 
   useEffect(() => {
     if (!modalOpen || !selectedStoryId) return;
@@ -241,6 +220,7 @@ export function HomeStoriesSection({
           onClose={() => setModalOpen(false)}
           stories={displayStories}
           initialStoryId={selectedStoryId}
+          onCurrentStoryChange={setSelectedStoryId}
         />
       </div>
     );
@@ -276,7 +256,7 @@ export function HomeStoriesSection({
                 const cover = story.coverMediaUrl ?? story.items[0]?.mediaUrl ?? "";
                 // Only an exact matching slide can identify the cover; never borrow the first slide.
                 const coverItem = story.items.find((item) => (item.mediaUrl ?? "") === cover);
-                const coverIsVideo = coverLooksLikeVideo(cover, coverItem?.mediaType);
+                const coverIsVideo = story.coverIsVideo ?? coverLooksLikeVideo(cover, coverItem?.mediaType);
                 const coverFailed = coverErrors[story.storyId] === true;
                 const coverInitial = story.title.trim().slice(0, 1) || copy.initialFallback;
                 return (
@@ -361,6 +341,7 @@ export function HomeStoriesSection({
         onClose={() => setModalOpen(false)}
         stories={displayStories}
         initialStoryId={selectedStoryId}
+        onCurrentStoryChange={setSelectedStoryId}
       />
     </div>
   );

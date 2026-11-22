@@ -85,7 +85,7 @@ public sealed partial class StoryDirectory : IStoryDirectory
                 && StoryRules.MatchesMarket(story.Market, market))
             .Select(MapPublic)
             .ToList();
-        return await EnrichPublicAsync(cards, cancellationToken);
+        return await EnrichPublicAsync(tenantId, cards, cancellationToken);
     }
 
     /// <inheritdoc />

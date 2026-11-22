@@ -125,11 +125,13 @@ export function StoryModal({
   onClose,
   stories,
   initialStoryId,
+  onCurrentStoryChange,
 }: {
   isOpen: boolean;
   onClose: () => void;
   stories: PublicStoryCard[];
   initialStoryId: string | null;
+  onCurrentStoryChange?: (storyId: string) => void;
 }) {
   const localizePath = useLocalizedPath();
   const locale = useLocale();
@@ -221,6 +223,9 @@ export function StoryModal({
     setCurrentItemId(story.items[0]?.storyItemId ?? null);
   }, [isOpen, initialStoryId]);
 
+  useEffect(() => {
+    if (isOpen && currentStoryId) onCurrentStoryChange?.(currentStoryId);
+  }, [isOpen, currentStoryId, onCurrentStoryChange]);
   useEffect(() => {
     if (!isOpen) return;
     if (stories.length === 0) {

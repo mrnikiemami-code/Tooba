@@ -99,7 +99,7 @@ test("R22 home stories own selected-story removal and chain revalidation", () =>
   assert.match(storiesSource, /!stories\.some\(\(story\) => story\.storyId === selectedStoryId\)/);
   assert.match(storiesSource, /setModalOpen\(false\)/);
   // A 5-minute cap must reschedule after each revalidation, and an error must still drop expired rows.
-  assert.match(storiesSource, /\[soonestEnd, stories\.length, revalidateTick\]/);
-  assert.match(storiesSource, /previous\.filter\(\(story\) => !story\.endAt/);
+  assert.match(storiesSource, /useStoryRevalidation\(stories, revalidateStories\)/);
+  assert.match(storiesSource, /filterLiveStories\(previous, Date\.now\(\)\)/);
   assert.doesNotMatch(storiesSource, /\/images\/stories\/1\.jpg/);
 });

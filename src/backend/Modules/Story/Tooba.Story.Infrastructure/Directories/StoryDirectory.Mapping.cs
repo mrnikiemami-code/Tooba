@@ -69,7 +69,8 @@ public sealed partial class StoryDirectory
             story.CtaTarget,
             items,
             story.SellerPartyId,
-            EndAt: story.EndAt);
+            EndAt: story.EndAt,
+            CoverMediaAssetId: story.CoverMediaAssetId);
     }
 
     private static PublicStoryItem MapPublicItem(StoryItem item) => new(

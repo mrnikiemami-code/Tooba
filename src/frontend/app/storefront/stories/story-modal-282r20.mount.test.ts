@@ -6,7 +6,7 @@
  */
 import "../../../features/order-carrier-execution/install-jsdom-globals.ts";
 import assert from "node:assert/strict";
-import { createElement } from "react";
+import { createElement, useEffect, useState } from "react";
 import test from "node:test";
 import { ensureDom, flush, mount, q, qq, waitFor } from "../../../features/order-carrier-execution/test-dom-harness.ts";
 import { StoryModal } from "./story-modal.tsx";
@@ -201,5 +201,64 @@ test("R22 F05: reordering slides inside the playing story keeps the current slid
   await tree.rerender(createElement(StoryModal, { isOpen: true, onClose: () => undefined, stories: [reordered], initialStoryId: body.storyId }));
   await flush();
   assert.equal(captionOf(tree.container), "Slide two", "the selected slide id must survive slide reorder");
+  await tree.unmount();
+});
+
+test("R22 F05: navigating inside the player reports the real current story to its host", async () => {
+  const storyA = story([item({ storyItemId: "ca-1", caption: "A", mediaUrl: "https://cdn.example.test/ca.jpg" })], { storyId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a4", title: "A" });
+  const storyB = story([item({ storyItemId: "cb-1", caption: "B", mediaUrl: "https://cdn.example.test/cb.jpg" })], { storyId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b4", title: "B" });
+  let current = storyA.storyId;
+  const tree = await mount(createElement(StoryModal, {
+    isOpen: true,
+    onClose: () => undefined,
+    stories: [storyA, storyB],
+    initialStoryId: storyA.storyId,
+    onCurrentStoryChange: (id: string) => { current = id; },
+  }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  assert.equal(current, storyB.storyId);
+  await tree.unmount();
+});
+
+function RemovalHost({ first, second }: { first: string; second: string }) {
+  const [stories, setStories] = useState<PublicStoryCard[]>(() => [
+    story([item({ storyItemId: "host-a", caption: "A", mediaUrl: "https://cdn.example.test/host-a.jpg" })], { storyId: first, title: "A" }),
+    story([item({ storyItemId: "host-b", caption: "B", mediaUrl: "https://cdn.example.test/host-b.jpg" })], { storyId: second, title: "B" }),
+  ]);
+  const [selected, setSelected] = useState<string | null>(first);
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    if (!open || !selected) return;
+    if (!stories.some((row) => row.storyId === selected)) setOpen(false);
+  }, [open, selected, stories]);
+  return createElement("div", null,
+    createElement(StoryModal, {
+      isOpen: open,
+      onClose: () => setOpen(false),
+      stories,
+      initialStoryId: first,
+      onCurrentStoryChange: setSelected,
+    }),
+    createElement("button", {
+      "data-testid": "remove-a",
+      onClick: () => setStories((rows) => rows.filter((row) => row.storyId !== first)),
+    }, "remove A"),
+    createElement("span", { "data-testid": "open-state" }, open ? "open" : "closed"),
+  );
+}
+
+test("R22 F05: open A, go to B, then remove A keeps the healthy B player open", async () => {
+  const tree = await mount(createElement(RemovalHost, {
+    first: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a5",
+    second: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b5",
+  }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  (q(tree.container, '[data-testid="remove-a"]') as HTMLButtonElement).click();
+  await flush();
+  assert.equal(q(tree.container, '[data-testid="open-state"]').textContent, "open");
   await tree.unmount();
 });

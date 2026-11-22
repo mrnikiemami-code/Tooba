@@ -183,3 +183,21 @@ test("fetchPublicStories separates a service failure from an empty catalogue", a
     globalThis.fetch = original;
   }
 });
+test("mapPublicStory keeps the owner's explicit cover kind and never guesses when absent", () => {
+  const explicit = mapPublicStory({
+    StoryId: "33333333-3333-4333-8333-333333333333",
+    Title: "cover kind",
+    CoverMediaUrl: "https://cdn.test/cover.jpg",
+    CoverIsVideo: true,
+    Items: [],
+  });
+  assert.equal(explicit?.coverIsVideo, true);
+
+  const absent = mapPublicStory({
+    StoryId: "44444444-4444-4444-8444-444444444444",
+    Title: "unknown cover kind",
+    CoverMediaUrl: "https://cdn.test/cover.jpg",
+    Items: [],
+  });
+  assert.equal(absent?.coverIsVideo, null);
+});

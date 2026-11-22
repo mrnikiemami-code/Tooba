@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Media.Application.Ports;
 using Tooba.Media.Contracts.Errors;
 using Tooba.Media.Infrastructure.Assets;
@@ -232,6 +233,70 @@ public sealed class StoryMarketplace281R4RelationalTests
         Assert.Equal(1, store3.Deleted.Count);
         Assert.Equal(0, await cleanDb.Assets.CountAsync(x => x.OriginalFileName == "c.jpg"));
         _output.WriteLine("C3 ambient refused; interceptor fail cleaned attempt object; committedRows=0 for tagged keys");
+    }
+
+    [SkippableFact]
+    public async Task R22_seller_grid_search_status_sort_and_count_run_on_postgresql_and_stay_shop_scoped()
+    {
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        await using var db = CreateStoryDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
+        var now = DateTimeOffset.UtcNow;
+        var tenant = StoryTenantIds.StoreAlpha;
+        var shopA = Guid.NewGuid();
+        var shopB = Guid.NewGuid();
+
+        var alpha = StoryEntity.CreateSellerDraft(
+            tenant, shopA, Guid.NewGuid(), _runTag + "alpha", 0, now, null, null, null, null, null, null);
+        var beta = StoryEntity.CreateSellerDraft(
+            tenant, shopA, Guid.NewGuid(), _runTag + "beta", 1, now, null, null, null, null, null, null);
+        beta.AddItem("image", 0, now, Guid.NewGuid(), "https://example.test/beta.jpg", null, null, null, null);
+        beta.SubmitForReview(Guid.NewGuid(), now);
+        var foreign = StoryEntity.CreateSellerDraft(
+            tenant, shopB, Guid.NewGuid(), _runTag + "alpha-foreign", 0, now, null, null, null, null, null, null);
+
+        foreach (var story in new[] { alpha, beta, foreign })
+            db.Stories.Add(story);
+        await db.SaveChangesAsync();
+
+        var directory = new StoryDirectory(db);
+        var searched = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, _runTag + "alpha", [], []),
+            CancellationToken.None);
+        Assert.Equal(1, searched.TotalCount);
+        Assert.Equal(alpha.StoryId, Assert.Single(searched.Items).StoryId);
+
+        var drafts = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("status", "equals", "Draft", null, null)]),
+            CancellationToken.None);
+        Assert.Equal(2, drafts.TotalCount);
+        Assert.Contains(drafts.Items, row => row.StoryId == alpha.StoryId);
+
+        var submitted = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("reviewStatus", "equals", "Submitted", null, null)]),
+            CancellationToken.None);
+        Assert.Equal(1, submitted.TotalCount);
+        Assert.Equal(beta.StoryId, Assert.Single(submitted.Items).StoryId);
+
+        var page = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 1, null, [new GridSortRequest("title", "desc")], []),
+            CancellationToken.None);
+        Assert.Equal(2, page.TotalCount);
+        Assert.Single(page.Items);
+        Assert.DoesNotContain(page.Items, row => row.StoryId == foreign.StoryId);
+
+        await caller.RollbackAsync();
+        Assert.Equal(0L, await CountTaggedStoriesAsync());
+        _output.WriteLine($"R22 seller grid filter/sort/count committedRows=0 tag={_runTag}");
     }
 
     private async Task<long> CountTaggedStoriesAsync()
