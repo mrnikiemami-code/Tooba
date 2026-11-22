@@ -7,15 +7,15 @@ Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE
 # CURRENT — TB-STORY-R22 PUBLIC PLAYER IDENTITY, REVALIDATION AND CONNECTED EVIDENCE — 2026-11-21
 
 Read `docs/architecture/evidence/TB-STORY-PUBLIC-PLAYER-IDENTITY-AND-EVIDENCE-282-R22/{PLAN.md,RESULT.md,RECEIPT.md,browser-proof.mjs,browser-proof.json}`.
-Code SHA `62bc17673`; previous reviewed code `c19e36ee5`. The two remaining behavior gaps are closed:
+Code SHA `1f93e3baa`; previous reviewed code `c19e36ee5`. The two remaining behavior gaps are closed:
 the modal seeds only on open/external target with a suppressed seed callback (no A/B reopen loop), and
-Home removes locally expired stories before a single in-flight refresh (a slow response cannot preserve
-an expired row or start overlapping requests). Explicit Media-owned cover kind, PostgreSQL seller-grid
-search/status/start/end/updated filters and explicit title order, and committed browser save/reload/restore
+Home removes locally expired stories before a per-locale in-flight refresh, rejects a stale locale response
+by request sequence, and cannot preserve an expired row or start overlapping same-locale requests. Explicit Media-owned cover kind, PostgreSQL seller-grid
+search/status/start/end/updated filters, date ranges/boundaries/blank and explicit title/updatedAt order, and committed browser save/reload/restore
 evidence are included.
 
-Verification: `test:stories` 89/89; `test:home` 7/7; `tsc` 0; PostgreSQL Story tests 2/2;
-solution build 0 errors; Next `BUILD_ID 7j6_f3kKjiFhrRI8MlUo-`; `/fa` 200. Host `5088` PID `32068`,
+Verification: `test:stories` 90/90; `test:home` 7/7; `tsc` 0; PostgreSQL Story tests 2/2;
+solution build 0 errors; Next `BUILD_ID 44a5DfAjiw3oXj00iX5q-`; `/fa` 200. Host `5088` PID `32068`,
 DLL `FC7853809CD260BCCC7741408188E77C0949B927228979ED90EE1B251ACD80D8`, `/health/ready` 200,
 `/v1/storefront/stories` 200. Browser story `01a1f9d8-31af-7000-8e47-5da09230ff0d` changed
 `CTA-internal-164417` → `CTA-internal-164417-R22`, reread after reload, restored and reread.
