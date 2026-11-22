@@ -4,23 +4,25 @@
   "parentTaskId": "TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283",
   "stage": 2,
   "expectedBaseSha": "26f9a7a4d24d009f25b66b4ea589df884c2a1aa1",
-  "codeSha": "02abb9d4b69f2bb7ebb023c657d62f203ab95475",
+  "codeSha": "507d7933a54fe067c240beb6aeb62b63f4b110c0",
   "planCommit": "0109f550e22835570410db79fd67957fa465a9ae",
-  "sourceEvidenceCommit": "02abb9d4b69f2bb7ebb023c657d62f203ab95475",
+  "sourceEvidenceCommit": "507d7933a54fe067c240beb6aeb62b63f4b110c0",
   "requirements": [
     {
       "id": "REQ-01",
-      "title": "Admin creates Draft for chosen seller A and A reads the same id; B is denied; one admin create request and admin price edit.",
+      "title": "Admin creates Draft for seller A; A reads same id; B denied; admin edit allowed.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -29,16 +31,16 @@
             {
               "method": "POST",
               "url": "http://127.0.0.1:3101/v1/admin/offers",
-              "body": "{\"sellerPartyId\":\"01a2045c-9b4a-7000-ba31-538e7f3c3166\",\"catalogVariantId\":\"aa845334-fec6-4767-8133-fb5ce714ef5e\",\"sellerSku\":\"TB285-FINAL-ADMIN-174\",\"status\":\"Draft\",\"requestId\":\"076eccc7-31c8-4e42-8de0-f98c5abbe21d\"}"
+              "body": "{\"sellerPartyId\":\"01a204d0-edb3-7000-abf4-3ce5d8dfd9b3\",\"catalogVariantId\":\"41421696-7f6d-4292-8812-7de927defcea\",\"sellerSku\":\"TB285-FINAL-ADMIN-174\",\"status\":\"Draft\",\"requestId\":\"4f1919f9-bf7f-45ae-ac86-744d61be4c99\"}"
             }
           ]
         },
         {
           "name": "admin-create-row-seller",
           "observed": {
-            "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
-            "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
-            "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+            "offerId": "a4a743b1-1068-10ba-8355-4ceb9100f2e5",
+            "sellerPartyId": "01a204d0-edb3-7000-abf4-3ce5d8dfd9b3",
+            "catalogVariantId": "41421696-7f6d-4292-8812-7de927defcea",
             "status": "Draft"
           }
         },
@@ -47,11 +49,11 @@
           "observed": {
             "status": 200,
             "body": {
-              "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
-              "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+              "offerId": "a4a743b1-1068-10ba-8355-4ceb9100f2e5",
+              "sellerPartyId": "01a204d0-edb3-7000-abf4-3ce5d8dfd9b3",
               "sellerDisplayName": "فروشگاه آرمان",
-              "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
-              "productId": "38189c47-390e-4783-b0cc-8c77ffa9f44e",
+              "catalogVariantId": "41421696-7f6d-4292-8812-7de927defcea",
+              "productId": "d5af88c0-8287-4f85-bdc2-95f53e46bc54",
               "productTitle": "????? ??? ??? ????? 174",
               "sellerSku": "TB285-FINAL-ADMIN-174",
               "status": "Draft",
@@ -82,11 +84,11 @@
           "observed": {
             "status": 200,
             "body": {
-              "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
-              "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+              "offerId": "a4a743b1-1068-10ba-8355-4ceb9100f2e5",
+              "sellerPartyId": "01a204d0-edb3-7000-abf4-3ce5d8dfd9b3",
               "sellerDisplayName": "فروشگاه آرمان",
-              "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
-              "productId": "38189c47-390e-4783-b0cc-8c77ffa9f44e",
+              "catalogVariantId": "41421696-7f6d-4292-8812-7de927defcea",
+              "productId": "d5af88c0-8287-4f85-bdc2-95f53e46bc54",
               "productTitle": "????? ??? ??? ????? 174",
               "sellerSku": "TB285-FINAL-ADMIN-174",
               "status": "Draft",
@@ -115,21 +117,23 @@
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "Runtime success is recorded evidence from isolated Host 5091 and SQL; admin view-only denial uses Host 5092."
+      "limitations": "Connected admin create and seller A/B reads on Host 5091; admin edit price on the same Host; view-only denial uses Host 5092."
     },
     {
       "id": "REQ-02",
-      "title": "View-only admin cannot create/price; B cannot read/change A; admin edit can price.",
+      "title": "View-only and cross-seller authority denied with zero persisted changes.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -146,30 +150,32 @@
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "Admin view-only is a real platform role with only product.view; seller B uses its own real scope. No denied request persists a row."
+      "limitations": "View-only admin is a real platform role with only product.view; seller B has its own real scope. Denied create persisted zero rows."
     },
     {
       "id": "REQ-03",
-      "title": "Lost create response retries the same request id and returns one Offer, then remaining price/stock steps.",
+      "title": "Replay same request id, reject changed intent, and serialize simultaneous identical creates.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
           "name": "lost-create-same-id",
           "observed": {
             "row": {
-              "offerId": "d89dbc89-13c9-3550-e26a-403e5ffb93f2",
-              "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
-              "catalogVariantId": "d7aac940-5f5b-4938-98c9-da0f09d06f8d",
+              "offerId": "41c02a7e-f4db-4239-ccf5-bc0028c0d3ef",
+              "sellerPartyId": "01a204d0-edb3-7000-abf4-3ce5d8dfd9b3",
+              "catalogVariantId": "832aa72e-e717-4663-b6e9-cf08dd4b57bf",
               "status": "Draft"
             },
             "rowCount": 1,
@@ -177,12 +183,12 @@
               {
                 "method": "POST",
                 "url": "http://127.0.0.1:3101/v1/seller/offers",
-                "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+                "body": "{\"catalogVariantId\":\"832aa72e-e717-4663-b6e9-cf08dd4b57bf\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"fb337e5e-ed08-4dfe-8635-c63266ef95e6\"}"
               },
               {
                 "method": "POST",
                 "url": "http://127.0.0.1:3101/v1/seller/offers",
-                "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+                "body": "{\"catalogVariantId\":\"832aa72e-e717-4663-b6e9-cf08dd4b57bf\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"fb337e5e-ed08-4dfe-8635-c63266ef95e6\"}"
               }
             ]
           }
@@ -193,24 +199,61 @@
             "amount": 1300000,
             "onHand": 2
           }
+        },
+        {
+          "name": "same-request-same-id",
+          "observed": true
+        },
+        {
+          "name": "different-intent-conflict",
+          "observed": {
+            "status": 409,
+            "error": "offer.create.intent_conflict",
+            "secondRowCount": 0
+          }
+        },
+        {
+          "name": "admin-different-intent-conflict",
+          "observed": {
+            "status": 409,
+            "error": "offer.create.intent_conflict",
+            "secondRowCount": 0
+          }
+        },
+        {
+          "name": "concurrent-identical-one-offer",
+          "observed": {
+            "statuses": [
+              201,
+              201
+            ],
+            "sameId": true,
+            "rows": 1,
+            "errors": [
+              null,
+              null
+            ]
+          }
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "The first POST performed a real write and the browser response was aborted; the second POST used the same requestId."
+      "limitations": "Lost create is a controlled response loss after a real write. Different-intent tests use the same request id with changed SKU and real Host/PostgreSQL; concurrency uses two simultaneous real requests."
     },
     {
       "id": "REQ-04",
-      "title": "Old published variant beyond the newest 100 is returned by server search; selection survives paging.",
+      "title": "Published picker searches beyond newest 100 and retains selection across paging.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -229,21 +272,23 @@
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "Picker UI search and page state are served by the real Catalog endpoint; no live Catalog write."
+      "limitations": "The old item is fixture data at product UpdatedAt 2020; no Catalog write."
     },
     {
       "id": "REQ-05",
-      "title": "Seller and admin Offer lists use server page/search; totals and page 2 are server-derived.",
+      "title": "Seller and admin lists use server page/search/sort over 200+ offers.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -274,21 +319,23 @@
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "DataGrid search/paging request bodies show page 2 and the exact SKU search; no browser array filtering."
+      "limitations": "DataGrid request bodies demonstrate page 2 and exact SKU search; no browser array filtering."
     },
     {
       "id": "REQ-06",
-      "title": "Cancel sends zero business writes; wrong response is not success; partial Draft is disclosed and resumed.",
+      "title": "Cancel, wrong response and partial Draft are honest and recoverable.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -300,11 +347,11 @@
           "observed": {
             "partialText": "پیش‌نویس ساخته شد و برای تکمیل باقی مراحل حفظ شده است. ادامه در ویرایش",
             "partialGet": {
-              "offerId": "41099284-7965-c920-d319-a44abb25e0c4",
-              "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+              "offerId": "30030036-21f1-9cbe-8837-a766322f1b3c",
+              "sellerPartyId": "01a204d0-edb3-7000-abf4-3ce5d8dfd9b3",
               "sellerDisplayName": "فروشگاه آرمان",
-              "catalogVariantId": "aefcd14b-343a-40be-afe1-fe4be5c6f080",
-              "productId": "5b7a1cfd-e335-4c19-aca7-7cffe2722ade",
+              "catalogVariantId": "ca1b1931-9a67-40f7-8b72-c4dfe5981fc5",
+              "productId": "317e5fbd-8251-4909-80bf-48cc3e45bd61",
               "productTitle": "????? ??? ??? ????? 170",
               "sellerSku": "TB285-FINAL-PARTIAL-170",
               "status": "Draft",
@@ -326,8 +373,8 @@
               "productUnitShortName": "pcs",
               "inventoryLocations": [
                 {
-                  "stockItemId": "01a204a6-1aed-7000-bfe4-f20872b72e99",
-                  "locationId": "01a2045c-9ba9-7000-8dcd-d4281b747506",
+                  "stockItemId": "01a204d3-7df1-7000-94ef-8ebb795326f7",
+                  "locationId": "01a204d0-eede-7000-a0c8-7ebce20e1433",
                   "locationCode": "WH-ISF",
                   "onHand": 1,
                   "reserved": 0,
@@ -341,27 +388,29 @@
           "name": "wrong-response-no-success-no-write",
           "observed": {
             "wrongNotice": 0,
-            "beforeWrong": 220,
-            "afterWrong": 220
+            "beforeWrong": 212,
+            "afterWrong": 212
           }
         }
       ],
       "evidenceClass": "controlled-error",
-      "limitations": "Cancel count excludes the read-only /offers/query. Wrong and price-failure branches use controlled HTTP; the first write is real where required."
+      "limitations": "Cancel counts only business writes. Wrong and price-failure branches use controlled HTTP; the first create write is real where the task requires it."
     },
     {
       "id": "REQ-07",
-      "title": "fa/en desktop and 360x640 forms have no horizontal overflow and 44px primary actions; Impeccable critique exists.",
+      "title": "fa/en desktop and 360x640 forms are accessible and overflow-free.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
@@ -482,54 +531,56 @@
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "No screenshot is claimed; geometry is DOM bounding boxes. Shared 10px admin-nav debt is recorded in the critique."
+      "limitations": "DOM geometry only; shared 10px AdminShell nav debt is documented and not introduced by this form."
     },
     {
       "id": "REQ-08",
-      "title": "No ownership migration or Cursor change; OpenSpec strict, Impeccable, verifier negative tests and cleanup.",
+      "title": "No ownership/schema/Cursor drift; strict tools and cleanup.",
       "status": "PASS",
       "evidencePaths": [
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs",
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md",
         "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs",
-        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log"
+        "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log"
       ],
       "checks": [
         {
           "name": "source-code-ancestor",
-          "observed": "verified-by-task-verifier"
+          "observed": "507d7933a ancestor of HEAD"
         },
         {
           "name": "no-feature-diff-after-code",
-          "observed": "verified-by-task-verifier"
+          "observed": "empty"
         },
         {
           "name": "no-cursor-change",
-          "observed": "verified-by-task-verifier"
+          "observed": "empty"
         },
         {
           "name": "no-migration",
-          "observed": "verified-by-task-verifier"
+          "observed": "empty"
         },
         {
           "name": "openspec-strict",
-          "observed": "verified-by-task-verifier"
+          "observed": "valid"
         },
         {
           "name": "verifier-self-test",
-          "observed": "verified-by-task-verifier"
+          "observed": "PASS"
         },
         {
           "name": "cleanup",
-          "observed": "verified-by-task-verifier"
+          "observed": "DB dropped; ports closed; canonical 5088/3000 healthy"
         }
       ],
       "evidenceClass": "connected-real",
-      "limitations": "The verifier checks source/diff/OpenSpec/tool evidence and executes negative self-tests; cleanup is recorded after the run."
+      "limitations": "Verifier checks source/diff, no migration, OpenSpec, Impeccable evidence, tamper self-tests and recorded cleanup."
     }
   ],
   "toolEvidence": {
@@ -538,26 +589,26 @@
       "command": "openspec validate seller-offer-dual-role-creation-285 --strict",
       "result": "valid",
       "evidencePath": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log",
-      "sha256": "a8f0384ee1a23b8f0d6ab86dedab955af5c05f2650e8a038ecc7b57cc8342a48"
+      "sha256": "612ac244a3a042f6ed9cddba9bf8a836542c23158f99f347856f1577478baf5a"
     },
     "playwright": {
       "version": "1.65.1",
       "browser": "Chromium 1255",
       "evidencePath": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json",
-      "sha256": "45f0e305d4a96ebdbac2c7aaa7852869a68b17ef76e95e391f77c69f9a43b156"
+      "sha256": "bc85b26ba770c7c25e6b74ca748cb8c3df181dd5faab4ac06e969c9295baade8"
     },
     "host": {
       "endpoint": "http://127.0.0.1:5091",
       "viewEndpoint": "http://127.0.0.1:5092",
-      "dllSha256": "E2DEE16EE9AE582E9D983321FD6ACF98818997637354E56FAF202F5466444ABE"
+      "dllSha256": "143AF9C5DC7459A8E5833B9A35F1ABAECBEEF2689B704492C9F88461CB3CB007"
     },
     "next": {
       "endpoint": "http://127.0.0.1:3101",
-      "buildId": "UYWZYt9rgDXhubR29wG8o"
+      "buildId": "xkvDCJaFrJJymAOIruba0"
     },
     "postgresql": {
       "version": "17.10",
-      "database": "tooba_offer285_connected",
+      "database": "tooba_offer285_repair",
       "container": "postgres-db",
       "port": 5432
     },
@@ -565,21 +616,23 @@
       "version": "4.10.0",
       "afterLog": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log",
       "sourceLog": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log",
-      "sha256": "b6daeb1953bf5e985e8af73d3da4c98f6f12c5e1f3468711062b27ff73a354b1"
+      "sha256": "1d50f3d61c983293532e993cf0fd14aa97e126d590b42fb52714310cb481267f"
     },
     "cursorArtifacts": "UNCHANGED",
     "artifacts": {
       "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/TASK.md": "e7e999fdb126f2c107408ed2bdd6e57af742dc51580ed24d09e732ae7799f804",
       "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/REQUIREMENTS.json": "56ae03364bdec32ca2686923425727259d27c7e1fd7d8b5c10b0a6281a2c3eb6",
       "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/ARCHITECTURE-PLAN.md": "819413d4b1ee8848d958a9b0df6e8714a7c49c06c94502013a62f755d80eb266",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json": "bc85b26ba770c7c25e6b74ca748cb8c3df181dd5faab4ac06e969c9295baade8",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs": "f86e442d57ec0634b3ca8163009e741d2899217d730f5881524049345c762a52",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log": "c3642850c077ff07b386b107f2bd4d65880e471b5f3c9d072c820a43ec704f01",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.json": "13e1e12701c686ebc16c9e388bc95d085246bcbb9894c3fdcdbb886ac2480d3e",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.cjs": "0ee7deb5f74710beae9125448c1f1abd481f64bf7bc4342c468a6c31e6fa2f47",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/request-id-285.log": "805e2c2b9b96a3ca7341b72007bebf0056158ad04e0ec132cabc11841f1e992a",
       "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md": "6685f46286ec755f2aed55b729c36877f748642ccea08659bda753c9e84f0e50",
       "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-CRITIQUE.md": "5c7ded4e60c9262125ca9466fdb13c145e1df3292af0d4760a6f2e750f017bab",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log": "b6daeb1953bf5e985e8af73d3da4c98f6f12c5e1f3468711062b27ff73a354b1",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-SOURCE.log": "78fc999cb4d92c49b7ae00b5a300dc5d86fc6eff0d008b2b4dc64a01beccde3d",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log": "a8f0384ee1a23b8f0d6ab86dedab955af5c05f2650e8a038ecc7b57cc8342a48",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json": "45f0e305d4a96ebdbac2c7aaa7852869a68b17ef76e95e391f77c69f9a43b156",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.cjs": "3e56d7bac69b0956069199e0c8fbeeabf1533cfd36fd7071e8e577f52e1bf1b8",
-      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.log": "c3642850c077ff07b386b107f2bd4d65880e471b5f3c9d072c820a43ec704f01"
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/IMPECCABLE-AFTER.log": "1d50f3d61c983293532e993cf0fd14aa97e126d590b42fb52714310cb481267f",
+      "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/OPENSPEC-STRICT.log": "612ac244a3a042f6ed9cddba9bf8a836542c23158f99f347856f1577478baf5a"
     }
   },
   "cleanupEvidence": {
@@ -593,7 +646,7 @@
       "host5088": 200,
       "next3000": 200
     },
-    "database": "tooba_offer285_connected",
+    "database": "tooba_offer285_repair",
     "evidencePath": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/PREFLIGHT.md"
   },
   "result": {

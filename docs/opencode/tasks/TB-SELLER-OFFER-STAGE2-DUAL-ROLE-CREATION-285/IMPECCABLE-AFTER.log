@@ -1,7 +1,7 @@
 ﻿impeccable.cmd : 
-At line:1 char:1
-+ & 'C:\Users\User\OpenCode-UI-Lab-20261122-064208\node_modules\.bin\im ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At line:1 char:379
++ ... TRICT.log'; & 'C:\Users\User\OpenCode-UI-Lab-20261122-064208\node_mod ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
@@ -103,4 +103,5 @@ between text and background.
 between text and background.
 
 2 advisory notes. Suppress with --no-advisory.
+
 

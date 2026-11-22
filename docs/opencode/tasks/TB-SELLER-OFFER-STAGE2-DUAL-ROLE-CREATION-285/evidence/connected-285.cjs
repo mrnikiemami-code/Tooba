@@ -3,16 +3,16 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DB = 'tooba_offer285_connected';
+const DB = 'tooba_offer285_repair';
 const HOST = 'http://127.0.0.1:5091';
 const VIEW_HOST = 'http://127.0.0.1:5092';
 const FE = 'http://127.0.0.1:3101';
-const ADMIN = '01a2045c-9d31-7000-add1-1dfc712f11b2';
+const ADMIN = '01a204d0-f0f3-7000-b81d-48fb6f0a831d';
 const VIEW_ADMIN = '66666666-6666-4666-8666-666666666666';
-const SELLER_A = '01a2045c-9b4a-7000-ba31-538e7f3c3166';
-const SELLER_A_ACTOR = '01a2045c-9c6e-7000-94e8-2fd465b302fd';
-const SELLER_B = '01a2045c-9b4d-7000-8a84-562cac7c80e7';
-const SELLER_B_ACTOR = '01a2045c-9cd5-7000-9853-9213b2936510';
+const SELLER_A = '01a204d0-edb3-7000-abf4-3ce5d8dfd9b3';
+const SELLER_A_ACTOR = '01a204d0-f03d-7000-ac39-4923fca2d4a0';
+const SELLER_B = '01a204d0-edbb-7000-b5ee-a103626b8734';
+const SELLER_B_ACTOR = '01a204d0-f090-7000-821a-6786a0ea6349';
 const checks = [];
 const results = { startedAt: new Date().toISOString(), environment: { db: DB, host: HOST, viewHost: VIEW_HOST, fe: FE }, checks, scenarios: {} };
 function check(name, ok, observed) { checks.push({ name, ok: Boolean(ok), observed }); if (!ok) throw new Error(`${name}: ${JSON.stringify(observed)}`); }
@@ -45,7 +45,7 @@ function offerCount(q) { return Number(scalar(q)); }
       await page.getByTestId('admin-offer-variant').first().click();
       await page.getByTestId('admin-offer-sku').fill('TB285-FINAL-ADMIN-174');
       await page.getByTestId('admin-offer-submit').click();
-      await page.waitForURL(/\/fa\/admin\/offers\/[0-9a-f-]+/, { timeout: 30000 });
+      await page.waitForURL(/\/admin\/offers\/[0-9a-f-]+/, { timeout: 30000 });
       const id = page.url().split('/').filter(Boolean).pop();
       const row = offerRow('TB285-FINAL-ADMIN-174');
       const createdRequests = writes.filter(r => r.method === 'POST' && r.url.endsWith('/v1/admin/offers'));
@@ -89,7 +89,7 @@ function offerCount(q) { return Number(scalar(q)); }
       await page.getByTestId('seller-create-error').waitFor({ timeout: 15000 });
       await page.unroute('**/v1/seller/offers');
       await page.getByTestId('seller-create-submit').click();
-      await page.waitForURL(/\/fa\/vendor-panel\/products\/[0-9a-f-]+/, { timeout: 30000 });
+      await page.waitForURL(/\/vendor-panel\/products\/[0-9a-f-]+/, { timeout: 30000 });
       const id = page.url().split('/').filter(Boolean).pop();
       const posts = writes.filter(r => r.method === 'POST' && r.url.endsWith('/v1/seller/offers'));
       const rowCount = offerCount(`select count(*) from offer.offers where seller_sku='TB285-FINAL-LOST-172'`);
@@ -111,7 +111,8 @@ function offerCount(q) { return Number(scalar(q)); }
       await page.getByTestId('seller-create-sku').fill('CANCEL-285');
       await page.getByTestId('seller-create-cancel').click();
       await page.waitForTimeout(400);
-      check('cancel-zero-business-writes', businessWrites(cancelWrites).length === 0, businessWrites(cancelWrites));
+      const cancelAtCheck = businessWrites(cancelWrites);
+      check('cancel-zero-business-writes', cancelAtCheck.length === 0, cancelAtCheck);
       await page.goto(`${FE}/fa/vendor-panel/products/new`, { waitUntil: 'networkidle' });
       await page.getByTestId('seller-catalog-search').fill('TB285-VAR-170');
       await page.getByTestId('seller-catalog-search-submit').click();
@@ -126,7 +127,7 @@ function offerCount(q) { return Number(scalar(q)); }
       const partialText = await page.getByTestId('seller-create-partial').innerText();
       await page.unroute('**/v1/seller/offers/*/price');
       await page.getByTestId('seller-create-submit').click();
-      await page.waitForURL(/\/fa\/vendor-panel\/products\/[0-9a-f-]+/, { timeout: 30000 });
+      await page.waitForURL(/\/vendor-panel\/products\/[0-9a-f-]+/, { timeout: 30000 });
       const partialId = page.url().split('/').filter(Boolean).pop();
       const partialGet = await jsonFetch(`${HOST}/v1/seller/offers/${partialId}`, { headers: sellerHeaders() });
       check('partial-explicit-and-recovered', partialText.includes('پیش‌نویس') && partialGet.status === 200 && partialGet.body.amount === 1600000 && partialGet.body.onHand === 1, { partialText, partialGet: partialGet.body });
@@ -147,7 +148,7 @@ function offerCount(q) { return Number(scalar(q)); }
       const wrongNotice = await wrongPage.getByTestId('seller-create-notice').count();
       const afterWrong = offerCount(`select count(*) from offer.offers`);
       check('wrong-response-no-success-no-write', wrongNotice === 0 && afterWrong === beforeWrong, { wrongNotice, beforeWrong, afterWrong });
-      results.scenarios.REQ06 = { partialText, partialId, partialGet: partialGet.body, wrongNotice, beforeWrong, afterWrong, cancelWrites: businessWrites(cancelWrites) };
+      results.scenarios.REQ06 = { partialText, partialId, partialGet: partialGet.body, wrongNotice, beforeWrong, afterWrong, cancelBusinessWritesAtCheck: cancelAtCheck.length, cancelWrites: cancelAtCheck };
       await ctxWrong.close();
       await ctx.close();
     }
@@ -246,4 +247,9 @@ function offerCount(q) { return Number(scalar(q)); }
     await browser.close();
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
+
+
+
+
 

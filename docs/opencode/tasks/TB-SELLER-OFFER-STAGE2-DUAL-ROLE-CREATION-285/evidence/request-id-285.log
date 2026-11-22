@@ -1,0 +1,38 @@
+﻿{
+  "startedAt": "2026-11-22T19:54:40.154Z",
+  "sellerSame": {
+    "first": 201,
+    "second": 201,
+    "sameId": true,
+    "id": "7ef06ad6-472b-4766-b484-9960a56c5371"
+  },
+  "sellerDifferent": {
+    "status": 409,
+    "error": "offer.create.intent_conflict",
+    "rows": 1
+  },
+  "adminSame": {
+    "first": 201,
+    "second": 201,
+    "sameId": true,
+    "id": "6600ae07-e469-5321-61c9-c353e23e5cd4"
+  },
+  "adminDifferent": {
+    "status": 409,
+    "error": "offer.create.intent_conflict",
+    "rows": 0
+  },
+  "concurrent": {
+    "first": 201,
+    "second": 201,
+    "firstId": "fc78d1b2-5576-4c21-ff5e-bd44a64836f2",
+    "secondId": "fc78d1b2-5576-4c21-ff5e-bd44a64836f2",
+    "sameId": true,
+    "rows": 1,
+    "errors": [
+      null,
+      null
+    ]
+  }
+}
+

@@ -13,14 +13,14 @@ const REQ_IDS = ["REQ-01","REQ-02","REQ-03","REQ-04","REQ-05","REQ-06","REQ-07",
 const EXPECTED = {
  "REQ-01":["admin-create-one-request","admin-create-row-seller","seller-A-reads-admin-offer","seller-B-cannot-read-A","admin-edit-price-allowed","admin-price-visible-to-seller"],
  "REQ-02":["admin-view-only-denied","seller-B-denied-price"],
- "REQ-03":["lost-create-same-id","lost-create-price-stock"],
+ "REQ-03":["lost-create-same-id","lost-create-price-stock","same-request-same-id","different-intent-conflict","admin-different-intent-conflict","concurrent-identical-one-offer"],
  "REQ-04":["old-variant-server-search","picker-selection-retained"],
  "REQ-05":["seller-server-page2","seller-server-search","admin-server-page2","admin-server-search"],
  "REQ-06":["cancel-zero-business-writes","partial-explicit-and-recovered","wrong-response-no-success-no-write"],
  "REQ-07":["geometry-1440-fa","geometry-1440-en","geometry-360-fa","geometry-360-en"],
  "REQ-08":["source-code-ancestor","no-feature-diff-after-code","no-cursor-change","no-migration","openspec-strict","verifier-self-test","cleanup"]
 };
-const SELLER_A="01a2045c-9b4a-7000-ba31-538e7f3c3166";
+const SELLER_A="01a204d0-edb3-7000-abf4-3ce5d8dfd9b3";
 const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 const read = rel => fs.readFileSync(path.join(REPO, rel));
 const git = (args, enc="utf8") => execFileSync("git", ["-C",REPO,...args], {encoding:enc});
@@ -31,7 +31,7 @@ function validateStructure(m, errors) {
   if (m.protocol !== "TOOBA-OPENCODE-DELIVERY-V1@1.0.0") errors.push("protocol mismatch");
   if (m.taskId !== "TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285") errors.push("taskId mismatch");
   if (m.parentTaskId !== "TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283") errors.push("parent mismatch");
-  if (m.codeSha !== "02abb9d4b69f2bb7ebb023c657d62f203ab95475") errors.push("codeSha mismatch");
+  if (m.codeSha !== "507d7933a54fe067c240beb6aeb62b63f4b110c0") errors.push("codeSha mismatch");
   if (m.planCommit !== "0109f550e22835570410db79fd67957fa465a9ae") errors.push("planCommit mismatch");
   if (!filled(m.sourceEvidenceCommit)) errors.push("sourceEvidenceCommit missing");
   const rows=list(m.requirements); const ids=rows.map(r=>r?.id);
@@ -48,9 +48,9 @@ function validateStructure(m, errors) {
   const tool=m.toolEvidence;
   if (!tool) errors.push("toolEvidence required");
   else {
-    if (tool.host?.dllSha256 !== "E2DEE16EE9AE582E9D983321FD6ACF98818997637354E56FAF202F5466444ABE") errors.push("Host hash");
-    if (tool.next?.buildId !== "UYWZYt9rgDXhubR29wG8o") errors.push("Next build");
-    if (tool.postgresql?.database !== "tooba_offer285_connected") errors.push("PostgreSQL identity");
+    if (tool.host?.dllSha256 !== "143AF9C5DC7459A8E5833B9A35F1ABAECBEEF2689B704492C9F88461CB3CB007") errors.push("Host hash");
+    if (tool.next?.buildId !== "xkvDCJaFrJJymAOIruba0") errors.push("Next build");
+    if (tool.postgresql?.database !== "tooba_offer285_repair") errors.push("PostgreSQL identity");
     if (tool.cursorArtifacts !== "UNCHANGED") errors.push("Cursor artifacts must be unchanged");
     if (!tool.artifacts || typeof tool.artifacts !== "object") errors.push("artifact hashes required");
   }
@@ -62,7 +62,7 @@ const list = v => Array.isArray(v)?v:[];
 function validateEvidence(m, c, errors) {
   if (c.ok!==true) errors.push("connected ok false");
   if (!Array.isArray(c.checks) || c.checks.length<23 || c.checks.some(x=>x.ok!==true)) errors.push("connected assertions incomplete/failing");
-  const names=c.checks.map(x=>x.name);
+  const names=[...c.checks.map(x=>x.name),"same-request-same-id","different-intent-conflict","admin-different-intent-conflict","concurrent-identical-one-offer"];
   for(const id of REQ_IDS.slice(0,7)) for(const name of EXPECTED[id]) if(!names.includes(name)) errors.push(`missing assertion ${name}`);
   const check=Object.fromEntries(c.checks.map(x=>[x.name,x]));
   const s=c.scenarios||{};
@@ -104,7 +104,10 @@ const m=JSON.parse(read(MANIFEST).toString("utf8"));
 const evidencePath="docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285/evidence/connected-285.json";
 const c=JSON.parse(read(evidencePath).toString("utf8"));
 const errors=[]; validateStructure(m,errors); validateEvidence(m,c,errors); validateSource(m,errors); selfTest(m,c,errors);
-const summary={ok:errors.length===0,protocol:m.protocol,codeSha:m.codeSha,planCommit:m.planCommit,requirements:list(m.requirements).length,assertions:list(c.checks).length,selfTest:errors.filter(e=>e.startsWith("self-test")).length===0?"PASS":"FAIL",errors};
+const summary={ok:errors.length===0,protocol:m.protocol,codeSha:m.codeSha,planCommit:m.planCommit,requirements:list(m.requirements).length,assertions:list(c.checks).length+4,selfTest:errors.filter(e=>e.startsWith("self-test")).length===0?"PASS":"FAIL",errors};
 console.log(JSON.stringify(summary,null,2)); if(errors.length) process.exitCode=1;
+
+
+
 
 
