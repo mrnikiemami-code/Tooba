@@ -1,0 +1,762 @@
+{
+  "startedAt": "2026-11-22T19:05:18.994Z",
+  "environment": {
+    "db": "tooba_offer285_connected",
+    "host": "http://127.0.0.1:5091",
+    "viewHost": "http://127.0.0.1:5092",
+    "fe": "http://127.0.0.1:3101",
+    "buildId": "UYWZYt9rgDXhubR29wG8o",
+    "codeSha": "02abb9d4b69f2bb7ebb023c657d62f203ab95475"
+  },
+  "checks": [
+    {
+      "name": "admin-create-one-request",
+      "ok": true,
+      "observed": [
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/admin/offers",
+          "body": "{\"sellerPartyId\":\"01a2045c-9b4a-7000-ba31-538e7f3c3166\",\"catalogVariantId\":\"aa845334-fec6-4767-8133-fb5ce714ef5e\",\"sellerSku\":\"TB285-FINAL-ADMIN-174\",\"status\":\"Draft\",\"requestId\":\"076eccc7-31c8-4e42-8de0-f98c5abbe21d\"}"
+        }
+      ]
+    },
+    {
+      "name": "admin-create-row-seller",
+      "ok": true,
+      "observed": {
+        "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+        "status": "Draft"
+      }
+    },
+    {
+      "name": "seller-A-reads-admin-offer",
+      "ok": true,
+      "observed": {
+        "status": 200,
+        "body": {
+          "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+          "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+          "sellerDisplayName": "فروشگاه آرمان",
+          "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+          "productId": "38189c47-390e-4783-b0cc-8c77ffa9f44e",
+          "productTitle": "????? ??? ??? ????? 174",
+          "sellerSku": "TB285-FINAL-ADMIN-174",
+          "status": "Draft",
+          "channel": "Marketplace",
+          "currency": "IRR",
+          "onHand": 0,
+          "reserved": 0,
+          "availableUnits": 0,
+          "catalogReadOnly": true,
+          "returnPolicyChoice": "Default",
+          "defaultReturnWindowDays": 7,
+          "sellerCanOverrideReturnPolicy": true,
+          "minReturnWindowDays": 1,
+          "maxReturnWindowDays": 30,
+          "allowNonReturnableOffers": true,
+          "productUnitCode": "pcs",
+          "productUnitName": "pcs",
+          "productUnitShortName": "pcs"
+        }
+      }
+    },
+    {
+      "name": "seller-B-cannot-read-A",
+      "ok": true,
+      "observed": 404
+    },
+    {
+      "name": "admin-edit-price-allowed",
+      "ok": true,
+      "observed": {
+        "status": 200,
+        "body": {
+          "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+          "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+          "sellerDisplayName": "فروشگاه آرمان",
+          "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+          "productId": "38189c47-390e-4783-b0cc-8c77ffa9f44e",
+          "productTitle": "????? ??? ??? ????? 174",
+          "sellerSku": "TB285-FINAL-ADMIN-174",
+          "status": "Draft",
+          "channel": "Marketplace",
+          "amount": 1500000,
+          "currency": "IRR",
+          "onHand": 0,
+          "reserved": 0,
+          "availableUnits": 0,
+          "catalogReadOnly": true,
+          "returnPolicyChoice": "Default",
+          "defaultReturnWindowDays": 7,
+          "sellerCanOverrideReturnPolicy": true,
+          "minReturnWindowDays": 1,
+          "maxReturnWindowDays": 30,
+          "allowNonReturnableOffers": true,
+          "productUnitCode": "pcs",
+          "productUnitName": "pcs",
+          "productUnitShortName": "pcs"
+        }
+      }
+    },
+    {
+      "name": "admin-price-visible-to-seller",
+      "ok": true,
+      "observed": 1500000
+    },
+    {
+      "name": "admin-view-only-denied",
+      "ok": true,
+      "observed": {
+        "viewCreate": 403,
+        "viewPrice": 403,
+        "viewList": 200
+      }
+    },
+    {
+      "name": "seller-B-denied-price",
+      "ok": true,
+      "observed": 403
+    },
+    {
+      "name": "lost-create-same-id",
+      "ok": true,
+      "observed": {
+        "row": {
+          "offerId": "d89dbc89-13c9-3550-e26a-403e5ffb93f2",
+          "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+          "catalogVariantId": "d7aac940-5f5b-4938-98c9-da0f09d06f8d",
+          "status": "Draft"
+        },
+        "rowCount": 1,
+        "posts": [
+          {
+            "method": "POST",
+            "url": "http://127.0.0.1:3101/v1/seller/offers",
+            "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+          },
+          {
+            "method": "POST",
+            "url": "http://127.0.0.1:3101/v1/seller/offers",
+            "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lost-create-price-stock",
+      "ok": true,
+      "observed": {
+        "amount": 1300000,
+        "onHand": 2
+      }
+    },
+    {
+      "name": "cancel-zero-business-writes",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "partial-explicit-and-recovered",
+      "ok": true,
+      "observed": {
+        "partialText": "پیش‌نویس ساخته شد و برای تکمیل باقی مراحل حفظ شده است. ادامه در ویرایش",
+        "partialGet": {
+          "offerId": "41099284-7965-c920-d319-a44abb25e0c4",
+          "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+          "sellerDisplayName": "فروشگاه آرمان",
+          "catalogVariantId": "aefcd14b-343a-40be-afe1-fe4be5c6f080",
+          "productId": "5b7a1cfd-e335-4c19-aca7-7cffe2722ade",
+          "productTitle": "????? ??? ??? ????? 170",
+          "sellerSku": "TB285-FINAL-PARTIAL-170",
+          "status": "Draft",
+          "channel": "Marketplace",
+          "amount": 1600000,
+          "currency": "IRR",
+          "onHand": 1,
+          "reserved": 0,
+          "availableUnits": 1,
+          "catalogReadOnly": true,
+          "returnPolicyChoice": "Default",
+          "defaultReturnWindowDays": 7,
+          "sellerCanOverrideReturnPolicy": true,
+          "minReturnWindowDays": 1,
+          "maxReturnWindowDays": 30,
+          "allowNonReturnableOffers": true,
+          "productUnitCode": "pcs",
+          "productUnitName": "pcs",
+          "productUnitShortName": "pcs",
+          "inventoryLocations": [
+            {
+              "stockItemId": "01a204a6-1aed-7000-bfe4-f20872b72e99",
+              "locationId": "01a2045c-9ba9-7000-8dcd-d4281b747506",
+              "locationCode": "WH-ISF",
+              "onHand": 1,
+              "reserved": 0,
+              "available": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "wrong-response-no-success-no-write",
+      "ok": true,
+      "observed": {
+        "wrongNotice": 0,
+        "beforeWrong": 220,
+        "afterWrong": 220
+      }
+    },
+    {
+      "name": "old-variant-server-search",
+      "ok": true,
+      "observed": {
+        "oldText": "????? ????? ???\nTB285-OLD-VAR",
+        "oldProduct": "2020"
+      }
+    },
+    {
+      "name": "picker-selection-retained",
+      "ok": true,
+      "observed": {
+        "selectedBefore": "صفحهٔ 1 · 1 نتیجه · ????? ????? ???",
+        "selectedAfter": "صفحهٔ 1 · 205 نتیجه · ????? ????? ???"
+      }
+    },
+    {
+      "name": "seller-server-page2",
+      "ok": true,
+      "observed": {
+        "page": 2,
+        "pageSize": 10,
+        "sort": [],
+        "filters": []
+      }
+    },
+    {
+      "name": "seller-server-search",
+      "ok": true,
+      "observed": 1
+    },
+    {
+      "name": "admin-server-page2",
+      "ok": true,
+      "observed": {
+        "page": 2,
+        "pageSize": 10,
+        "sort": [],
+        "filters": []
+      }
+    },
+    {
+      "name": "admin-server-search",
+      "ok": true,
+      "observed": 1
+    },
+    {
+      "name": "geometry-1440-fa",
+      "ok": true,
+      "observed": {
+        "adminGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "sellerGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "adminBox": {
+          "x": 991.890625,
+          "y": 638,
+          "width": 143.109375,
+          "height": 44
+        },
+        "sellerBox": {
+          "x": 979.890625,
+          "y": 894,
+          "width": 151.109375,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "geometry-1440-en",
+      "ok": true,
+      "observed": {
+        "adminGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "sellerGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "adminBox": {
+          "x": 1030.796875,
+          "y": 638,
+          "width": 104.203125,
+          "height": 44
+        },
+        "sellerBox": {
+          "x": 1018.796875,
+          "y": 894,
+          "width": 112.203125,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "geometry-360-fa",
+      "ok": true,
+      "observed": {
+        "adminGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "sellerGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "adminBox": {
+          "x": 183.890625,
+          "y": 966,
+          "width": 143.109375,
+          "height": 44
+        },
+        "sellerBox": {
+          "x": 171.890625,
+          "y": 1337,
+          "width": 151.109375,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "geometry-360-en",
+      "ok": true,
+      "observed": {
+        "adminGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "sellerGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "adminBox": {
+          "x": 222.796875,
+          "y": 966,
+          "width": 104.203125,
+          "height": 44
+        },
+        "sellerBox": {
+          "x": 210.796875,
+          "y": 1305,
+          "width": 112.203125,
+          "height": 44
+        }
+      }
+    }
+  ],
+  "scenarios": {
+    "REQ01": {
+      "id": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+      "row": {
+        "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+        "status": "Draft"
+      },
+      "sellerGet": {
+        "offerId": "ba254d78-07aa-fda0-4ef0-745d41142c08",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "aa845334-fec6-4767-8133-fb5ce714ef5e",
+        "productId": "38189c47-390e-4783-b0cc-8c77ffa9f44e",
+        "productTitle": "????? ??? ??? ????? 174",
+        "sellerSku": "TB285-FINAL-ADMIN-174",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "pcs",
+        "productUnitShortName": "pcs"
+      },
+      "sellerBStatus": 404,
+      "adminPriceStatus": 200,
+      "viewCreate": 403,
+      "viewPrice": 403,
+      "viewList": 200,
+      "bPrice": 403,
+      "writes": [
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/admin/offers",
+          "body": "{\"sellerPartyId\":\"01a2045c-9b4a-7000-ba31-538e7f3c3166\",\"catalogVariantId\":\"aa845334-fec6-4767-8133-fb5ce714ef5e\",\"sellerSku\":\"TB285-FINAL-ADMIN-174\",\"status\":\"Draft\",\"requestId\":\"076eccc7-31c8-4e42-8de0-f98c5abbe21d\"}"
+        }
+      ]
+    },
+    "REQ03": {
+      "id": "d89dbc89-13c9-3550-e26a-403e5ffb93f2",
+      "row": {
+        "offerId": "d89dbc89-13c9-3550-e26a-403e5ffb93f2",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "catalogVariantId": "d7aac940-5f5b-4938-98c9-da0f09d06f8d",
+        "status": "Draft"
+      },
+      "rowCount": 1,
+      "requests": [
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/seller/offers",
+          "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+        },
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/seller/offers",
+          "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+        }
+      ],
+      "get": {
+        "offerId": "d89dbc89-13c9-3550-e26a-403e5ffb93f2",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "d7aac940-5f5b-4938-98c9-da0f09d06f8d",
+        "productId": "f9af0183-559a-46bc-b628-24700b2b2390",
+        "productTitle": "????? ??? ??? ????? 172",
+        "sellerSku": "TB285-FINAL-LOST-172",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 1300000,
+        "currency": "IRR",
+        "onHand": 2,
+        "reserved": 0,
+        "availableUnits": 2,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "pcs",
+        "productUnitShortName": "pcs",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a204a6-10b7-7000-9ca9-5584c1d1ce5b",
+            "locationId": "01a2045c-9ba9-7000-8dcd-d4281b747506",
+            "locationCode": "WH-ISF",
+            "onHand": 2,
+            "reserved": 0,
+            "available": 2
+          }
+        ]
+      },
+      "writes": [
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/seller/offers",
+          "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+        },
+        {
+          "method": "POST",
+          "url": "http://127.0.0.1:3101/v1/seller/offers",
+          "body": "{\"catalogVariantId\":\"d7aac940-5f5b-4938-98c9-da0f09d06f8d\",\"sellerSku\":\"TB285-FINAL-LOST-172\",\"status\":\"Draft\",\"requestId\":\"e0aa8988-882c-46e6-b737-114525b85215\"}"
+        },
+        {
+          "method": "PUT",
+          "url": "http://127.0.0.1:3101/v1/seller/offers/d89dbc89-13c9-3550-e26a-403e5ffb93f2/price",
+          "body": "{\"amount\":1300000}"
+        },
+        {
+          "method": "PUT",
+          "url": "http://127.0.0.1:3101/v1/seller/offers/d89dbc89-13c9-3550-e26a-403e5ffb93f2/inventory",
+          "body": "{\"onHand\":2,\"reason\":\"vendor-panel-create\"}"
+        }
+      ]
+    },
+    "REQ06": {
+      "partialText": "پیش‌نویس ساخته شد و برای تکمیل باقی مراحل حفظ شده است. ادامه در ویرایش",
+      "partialId": "41099284-7965-c920-d319-a44abb25e0c4",
+      "partialGet": {
+        "offerId": "41099284-7965-c920-d319-a44abb25e0c4",
+        "sellerPartyId": "01a2045c-9b4a-7000-ba31-538e7f3c3166",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "aefcd14b-343a-40be-afe1-fe4be5c6f080",
+        "productId": "5b7a1cfd-e335-4c19-aca7-7cffe2722ade",
+        "productTitle": "????? ??? ??? ????? 170",
+        "sellerSku": "TB285-FINAL-PARTIAL-170",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 1600000,
+        "currency": "IRR",
+        "onHand": 1,
+        "reserved": 0,
+        "availableUnits": 1,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "pcs",
+        "productUnitShortName": "pcs",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a204a6-1aed-7000-bfe4-f20872b72e99",
+            "locationId": "01a2045c-9ba9-7000-8dcd-d4281b747506",
+            "locationCode": "WH-ISF",
+            "onHand": 1,
+            "reserved": 0,
+            "available": 1
+          }
+        ]
+      },
+      "wrongNotice": 0,
+      "beforeWrong": 220,
+      "afterWrong": 220,
+      "cancelWrites": [],
+      "cancelBusinessWritesAtCheck": 0
+    },
+    "REQ04": {
+      "oldText": "????? ????? ???\nTB285-OLD-VAR",
+      "oldProduct": "2020",
+      "selectedBefore": "صفحهٔ 1 · 1 نتیجه · ????? ????? ???",
+      "selectedAfter": "صفحهٔ 1 · 205 نتیجه · ????? ????? ???",
+      "requests": [
+        "http://127.0.0.1:3101/v1/admin/catalog/variants?page=1&pageSize=20",
+        "http://127.0.0.1:3101/v1/admin/catalog/variants?page=1&pageSize=20&search=TB285-OLD-VAR",
+        "http://127.0.0.1:3101/v1/admin/catalog/variants?page=1&pageSize=20"
+      ]
+    },
+    "REQ05": {
+      "seller": {
+        "firstRows": 10,
+        "page2": {
+          "page": 2,
+          "pageSize": 10,
+          "sort": [],
+          "filters": []
+        },
+        "rowsAfterSearch": 1,
+        "totalText": "پنل فروشنده\nفروشنده ویژه\nزمینهٔ مجاز\nاپراتور آرمان → فروشگاه آرمان\nاپراتور دیجی‌استایل → دیجی‌استایل نمونه\nفروشگاه آرمان\nداشبورد\nمحصولات\nسفارشات\nآمار و نمودار\nتخفیف‌ها\nنظرات\nکیف پول\nتیکت‌ها\nاطلاعیه‌ها",
+        "requests": [
+          {
+            "page": 1,
+            "pageSize": 10,
+            "sort": [],
+            "filters": []
+          },
+          {
+            "page": 2,
+            "pageSize": 10,
+            "sort": [],
+            "filters": []
+          },
+          {
+            "page": 1,
+            "pageSize": 10,
+            "search": "TB285-SKU-137",
+            "sort": [],
+            "filters": []
+          }
+        ]
+      },
+      "admin": {
+        "firstRows": 10,
+        "page2": {
+          "page": 2,
+          "pageSize": 10,
+          "sort": [],
+          "filters": []
+        },
+        "rowsAfterSearch": 1,
+        "totalText": "مرکز عملیات توبا\n\nپنل مدیریت · عملیات\n\nدسترسی مدیر\n\nعملیات\n\nداشبورد\nسفارش‌ها و پرداخت\nارسال و تحویل\nسرویس ارسال\nمرجوعی‌ها و بازگشت وجه\nاستوری‌ها\nترکیب صفحهٔ خانه\nصفحات فروشگاه\nمنوها\n\nمحتوا\n\nمقالات\nدست",
+        "requests": [
+          {
+            "page": 1,
+            "pageSize": 10,
+            "sort": [],
+            "filters": []
+          },
+          {
+            "page": 2,
+            "pageSize": 10,
+            "sort": [],
+            "filters": []
+          },
+          {
+            "page": 1,
+            "pageSize": 10,
+            "search": "TB285-SKU-137",
+            "sort": [],
+            "filters": []
+          }
+        ]
+      }
+    },
+    "REQ07": [
+      {
+        "width": 1440,
+        "locale": "fa",
+        "adminGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "adminBox": {
+          "x": 991.890625,
+          "y": 638,
+          "width": 143.109375,
+          "height": 44
+        },
+        "sellerGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "sellerBox": {
+          "x": 979.890625,
+          "y": 894,
+          "width": 151.109375,
+          "height": 44
+        }
+      },
+      {
+        "width": 1440,
+        "locale": "en",
+        "adminGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "adminBox": {
+          "x": 1030.796875,
+          "y": 638,
+          "width": 104.203125,
+          "height": 44
+        },
+        "sellerGeom": {
+          "iw": 1440,
+          "sw": 1440,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "sellerBox": {
+          "x": 1018.796875,
+          "y": 894,
+          "width": 112.203125,
+          "height": 44
+        }
+      },
+      {
+        "width": 360,
+        "locale": "fa",
+        "adminGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "adminBox": {
+          "x": 183.890625,
+          "y": 966,
+          "width": 143.109375,
+          "height": 44
+        },
+        "sellerGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "rtl",
+          "lang": "fa"
+        },
+        "sellerBox": {
+          "x": 171.890625,
+          "y": 1337,
+          "width": 151.109375,
+          "height": 44
+        }
+      },
+      {
+        "width": 360,
+        "locale": "en",
+        "adminGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "adminBox": {
+          "x": 222.796875,
+          "y": 966,
+          "width": 104.203125,
+          "height": 44
+        },
+        "sellerGeom": {
+          "iw": 360,
+          "sw": 360,
+          "dir": "ltr",
+          "lang": "en"
+        },
+        "sellerBox": {
+          "x": 210.796875,
+          "y": 1305,
+          "width": 112.203125,
+          "height": 44
+        }
+      }
+    ],
+    "REQ08": {
+      "offerCount": 220,
+      "sellerAOffers": 116,
+      "sellerBOffers": 101,
+      "oldProductYear": "2020",
+      "oldOfferCount": 1
+    },
+    "REQ02": {
+      "adminViewCreate": 403,
+      "adminViewPrice": 403,
+      "adminViewList": 200,
+      "sellerBRead": 404,
+      "sellerBPrice": 403,
+      "adminEditPrice": 200,
+      "viewCreatePersisted": 0
+    }
+  },
+  "finishedAt": "2026-11-22T19:05:38.552Z",
+  "ok": true
+}

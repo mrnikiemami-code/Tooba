@@ -1,0 +1,106 @@
+﻿impeccable.cmd : 
+At line:1 char:1
++ & 'C:\Users\User\OpenCode-UI-Lab-20261122-064208\node_modules\.bin\im ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+http://127.0.0.1:3101/fa/admin/offers/new
+  [undersized-ui-text] 10px functional text "پنل مدیریت · عملیات" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [low-contrast] 2.5:1 (need 4.5:1) — text #9ca3af on #ffffff (and 7 more)
+    → Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast 
+between text and background.
+  [undersized-ui-text] 10px functional text "عملیات" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [undersized-ui-text] 10px functional text "محتوا" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [undersized-ui-text] 10px functional text "مالی" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [tiny-text] 10px body text
+    → Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px 
+is ideal.
+  [undersized-ui-text] 10px functional text "محصولات" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [undersized-ui-text] 10px functional text "بازار" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [undersized-ui-text] 10px functional text "نظارت" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [undersized-ui-text] 10px functional text "سامانه" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+
+http://127.0.0.1:3101/fa/vendor-panel/products/new
+  [undersized-ui-text] 10px functional text "زمینهٔ مجاز" (below 11px floor)
+    → Interactive and content-bearing UI text (links, buttons, nav items, labels, table cells, meta rows, timecodes) 
+below 11px is a legibility failure, not a style choice. WCAG sets no absolute pixel floor, but functional text under 
+11px is a defensible quality bar: it fails on high-DPI and small viewports and it degrades tap and read targets. The 
+11px floor holds even inside a footer; only non-interactive legal smallprint gets the softer 10px floor. Being ON the 
+DESIGN.md size ramp does not exempt a value here: adding 8px to the ramp launders the token but not the legibility 
+problem, and that is exactly the escape hatch this rule closes. Exempts sup/sub, visually-hidden (sr-only) text, and 
+code/terminal contexts. Decorative letterspaced micro-labels are still functional and stay in scope.
+  [nested-cards] Card inside card
+    → Cards inside cards create visual noise and excessive depth. Flatten the hierarchy — use spacing, typography, and 
+dividers instead of nesting containers.
+
+12 anti-patterns found.
+
+── Advisory (not counted as failures) ──
+
+http://127.0.0.1:3101/fa/admin/offers/new
+  [low-contrast] 4.49:1 (need 4.5:1) — text #2563eb on #e9effd
+    → Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast 
+between text and background.
+  [low-contrast] 4.4:1 (need 4.5:1) — text #6b7280 on #eff6ff
+    → Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast 
+between text and background.
+
+2 advisory notes. Suppress with --no-advisory.
+

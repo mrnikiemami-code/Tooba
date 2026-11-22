@@ -1,0 +1,15 @@
+﻿{
+  "ok": true,
+  "checks": 23,
+  "target": "D:\\Users\\User\\source\\repos\\SarvNewVer\\docs\\opencode\\tasks\\TB-SELLER-OFFER-STAGE2-DUAL-ROLE-CREATION-285\\evidence\\connected-285.json",
+  "scenarios": [
+    "REQ01",
+    "REQ03",
+    "REQ06",
+    "REQ04",
+    "REQ05",
+    "REQ07",
+    "REQ08"
+  ]
+}
+
