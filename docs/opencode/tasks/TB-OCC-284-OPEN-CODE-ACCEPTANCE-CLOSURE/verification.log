@@ -1,7 +1,7 @@
 ﻿{
   "ok": true,
-  "head": "844c23237d19aeabc453f5fb04561657c4dd967a",
-  "originMain": "844c23237d19aeabc453f5fb04561657c4dd967a",
+  "head": "cd95c278d9dbc6be6236ed5d39c00e5fd49f878c",
+  "originMain": "cd95c278d9dbc6be6236ed5d39c00e5fd49f878c",
   "protocol": "TOOBA-OPENCODE-ACCEPTANCE-V1",
   "selfTest": "PASS",
   "sourceCodeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
@@ -21,4 +21,5 @@
   "cursorGate": "KNOWN_FORMAT_INCOMPATIBILITY",
   "errors": []
 }
-EXIT=0
+CHECK_EXIT=0
+FINAL_HEAD=cd95c278d9dbc6be6236ed5d39c00e5fd49f878c
