@@ -4,7 +4,23 @@ Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE
 
 ---
 
-# CURRENT — TB-STORY-R23 SLIDE PRODUCT PICKER MOBILE UX — 2026-11-22
+# CURRENT — TB-283 SELLER OFFER SAFE EDIT / INVENTORY INTEGRITY — 2026-11-22
+
+Read `docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/TASK.md` and
+`docs/architecture/evidence/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/`.
+Stage 1 code is landed at `611f97a85`: named inventory positions are exposed; stock writes require an explicit
+StockItemId for multi-position offers; SKU/price/stock sections save independently; Draft SKU and both-limit clear
+work; wrong/stale responses are rejected and lost responses reconcile through an independent GET.
+Verification: Playwright controlled browser 7/7; PostgreSQL rollback-only 2/2; Offer focused 1/1; tsc 0;
+Next `BUILD_ID BBwBaSOakfco4OUr4yzrP`; Host 5088 PID `34164` DLL `E301B13E558899F59F19505EB7059D3BFC65518BD1DAD035D223F0DDAB321019`.
+**Status PARTIAL**: REQ-01 has no single connected browser→owning Host→GET/PostgreSQL proof; REQ-03 has no
+real Pricing/PostgreSQL concurrency proof. These are open items, not limits to erase. No migration/live write.
+NOT Architect ACCEPT or owner acceptance. `STOP_FOR_ARCHITECT`.
+
+---
+
+# HISTORICAL — TB-STORY-R23 SLIDE PRODUCT PICKER MOBILE UX — 2026-11-22
+
 
 Read `docs/ai/tasks/TB-STORY-SLIDE-PRODUCT-PICKER-MOBILE-UX-282-R23/{TASK.md,ARCHITECTURE-PLAN.md,DELIVERY.json,RESULT.md,RECEIPTS.md,browser}` and
 `docs/architecture/evidence/TB-STORY-SLIDE-PRODUCT-PICKER-MOBILE-UX-282-R23/`.

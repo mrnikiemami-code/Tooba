@@ -1,0 +1,325 @@
+{
+    "protocol":  "TOOBA-DELIVERY-001",
+    "taskId":  "TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283",
+    "baseSha":  "33c69baffdd8d0280de0c8a6edd1c625e0c4396e",
+    "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+    "architecturePlan":  "ARCHITECTURE-PLAN.md",
+    "architecturePlanSha256":  "175afa0d995cdc4850d0654fd74e134506c780a200060169d02758850c99c06d",
+    "planCommit":  "719167d983a70506739d720cc6249cdbb158a3f0",
+    "waves":  [
+                  {
+                      "id":  "W1",
+                      "dependsOn":  [
+
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-01",
+                                             "REQ-04"
+                                         ],
+                      "status":  "PARTIAL"
+                  },
+                  {
+                      "id":  "W2",
+                      "dependsOn":  [
+                                        "W1"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-02",
+                                             "REQ-03",
+                                             "REQ-07"
+                                         ],
+                      "status":  "VERIFIED"
+                  },
+                  {
+                      "id":  "W3",
+                      "dependsOn":  [
+                                        "W2"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-05",
+                                             "REQ-06"
+                                         ],
+                      "status":  "VERIFIED"
+                  },
+                  {
+                      "id":  "W4",
+                      "dependsOn":  [
+                                        "W3"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-01",
+                                             "REQ-03",
+                                             "REQ-04"
+                                         ],
+                      "status":  "VERIFIED"
+                  },
+                  {
+                      "id":  "W5",
+                      "dependsOn":  [
+                                        "W4"
+                                    ],
+                      "requirementIds":  [
+                                             "REQ-01",
+                                             "REQ-02",
+                                             "REQ-03",
+                                             "REQ-04",
+                                             "REQ-05",
+                                             "REQ-06",
+                                             "REQ-07"
+                                         ],
+                      "status":  "PARTIAL"
+                  }
+              ],
+    "requirements":  [
+                         {
+                             "id":  "REQ-01",
+                             "status":  "PARTIAL",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-01",
+                                                   "kind":  "browser-transport",
+                                                   "steps":  "Seller changes SKU only; one offer patch and zero price/inventory writes.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-02",
+                                                   "kind":  "postgres-rollback",
+                                                   "steps":  "SKU patch leaves positions 3 and 7 and zero adjustments.",
+                                                   "status":  "PARTIAL",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "postgresql.log",
+                                                                        "kind":  "postgres-rollback-only",
+                                                                        "provider":  "postgresql-tooba_alpha",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "c124e5d1f331b90e2a4c2388690c46b1ed7ea1f3f4118054443fcbb356b01670"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-02",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-03",
+                                                   "kind":  "backend-focused",
+                                                   "steps":  "Draft SKU edit stays Draft without status transition.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "postgresql.log",
+                                                                        "kind":  "postgres-rollback-only",
+                                                                        "provider":  "postgresql-tooba_alpha",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "c124e5d1f331b90e2a4c2388690c46b1ed7ea1f3f4118054443fcbb356b01670"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-04",
+                                                   "kind":  "postgres-rollback",
+                                                   "steps":  "Explicit clear sets both limits null after reread.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "postgresql.log",
+                                                                        "kind":  "postgres-rollback-only",
+                                                                        "provider":  "postgresql-tooba_alpha",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "c124e5d1f331b90e2a4c2388690c46b1ed7ea1f3f4118054443fcbb356b01670"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-03",
+                             "status":  "PARTIAL",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-05",
+                                                   "kind":  "postgres-two-context",
+                                                   "steps":  "New price plus SKU-only from stale form both survive.",
+                                                   "status":  "PARTIAL",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-04",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-06",
+                                                   "kind":  "postgres-rollback",
+                                                   "steps":  "Named second position 7→8 leaves 3+8 total 11.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "postgresql.log",
+                                                                        "kind":  "postgres-rollback-only",
+                                                                        "provider":  "postgresql-tooba_alpha",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "c124e5d1f331b90e2a4c2388690c46b1ed7ea1f3f4118054443fcbb356b01670"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-07",
+                                                   "kind":  "postgres-negative",
+                                                   "steps":  "Missing/foreign target and below-reserved refused with zero change.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "postgresql.log",
+                                                                        "kind":  "postgres-rollback-only",
+                                                                        "provider":  "postgresql-tooba_alpha",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "c124e5d1f331b90e2a4c2388690c46b1ed7ea1f3f4118054443fcbb356b01670"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-05",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-08",
+                                                   "kind":  "browser-wrong-response",
+                                                   "steps":  "200 other/stale response never shows success.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-09",
+                                                   "kind":  "browser-uncertain-response",
+                                                   "steps":  "Disconnect after write does not auto-retry; independent GET decides.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-06",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-10",
+                                                   "kind":  "browser-cancel",
+                                                   "steps":  "Dirty cancel sends zero writes and reopen keeps old values.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-11",
+                                                   "kind":  "browser-mobile-geometry",
+                                                   "steps":  "360x640 open dirty form: position/save/cancel reachable, overflowX zero.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         },
+                         {
+                             "id":  "REQ-07",
+                             "status":  "VERIFIED",
+                             "scenarios":  [
+                                               {
+                                                   "id":  "S-12",
+                                                   "kind":  "browser-independent-sections",
+                                                   "steps":  "Saving/failing one section does not clear or commit another.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               },
+                                               {
+                                                   "id":  "S-13",
+                                                   "kind":  "browser-no-change",
+                                                   "steps":  "Save with no changes sends zero writes.",
+                                                   "status":  "PASS",
+                                                   "evidence":  [
+                                                                    {
+                                                                        "file":  "browser/assertions.json",
+                                                                        "kind":  "browser-controlled-http",
+                                                                        "provider":  "chromium-playwright",
+                                                                        "phase":  "after",
+                                                                        "codeSha":  "611f97a85ec7c2e464e4f649820992202ca3754c",
+                                                                        "sha256":  "791f97a33cfab31867e43a082651aa9da173c4cc94a67c1c4de7b880623b611a"
+                                                                    }
+                                                                ]
+                                               }
+                                           ]
+                         }
+                     ]
+}
