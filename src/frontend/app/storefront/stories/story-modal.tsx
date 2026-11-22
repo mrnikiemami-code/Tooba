@@ -213,19 +213,39 @@ export function StoryModal({
     }
   }, [currentItemIndex, currentStoryIndex, stories]);
 
+  const lastInitialSync = useRef<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const suppressCallback = useRef(false);
+
   useEffect(() => {
-    if (!isOpen || !initialStoryId) return;
+    if (!isOpen) {
+      lastInitialSync.current = { open: false, id: initialStoryId };
+      return;
+    }
+    const previous = lastInitialSync.current;
+    const shouldSeed = !previous.open
+      || (initialStoryId !== previous.id && initialStoryId !== currentStoryId);
+    lastInitialSync.current = { open: true, id: initialStoryId };
+    if (!shouldSeed || !initialStoryId) return;
     const story = storiesRef.current.find((s) => s.storyId === initialStoryId);
     if (!story) return;
+    if (currentStoryId !== story.storyId) suppressCallback.current = true;
     setCurrentStoryId(story.storyId);
     setCurrentStoryIndex(storiesRef.current.findIndex((s) => s.storyId === story.storyId));
     setCurrentItemIndex(0);
     setCurrentItemId(story.items[0]?.storyItemId ?? null);
-  }, [isOpen, initialStoryId]);
+  }, [currentStoryId, isOpen, initialStoryId]);
+
+  const currentStoryChangeRef = useRef(onCurrentStoryChange);
+  currentStoryChangeRef.current = onCurrentStoryChange;
 
   useEffect(() => {
-    if (isOpen && currentStoryId) onCurrentStoryChange?.(currentStoryId);
-  }, [isOpen, currentStoryId, onCurrentStoryChange]);
+    if (!isOpen || !currentStoryId) return;
+    if (suppressCallback.current) {
+      suppressCallback.current = false;
+      return;
+    }
+    currentStoryChangeRef.current?.(currentStoryId);
+  }, [isOpen, currentStoryId]);
   useEffect(() => {
     if (!isOpen) return;
     if (stories.length === 0) {

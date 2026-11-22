@@ -238,7 +238,7 @@ function RemovalHost({ first, second }: { first: string; second: string }) {
       isOpen: open,
       onClose: () => setOpen(false),
       stories,
-      initialStoryId: first,
+      initialStoryId: selected,
       onCurrentStoryChange: setSelected,
     }),
     createElement("button", {
@@ -260,5 +260,51 @@ test("R22 F05: open A, go to B, then remove A keeps the healthy B player open", 
   (q(tree.container, '[data-testid="remove-a"]') as HTMLButtonElement).click();
   await flush();
   assert.equal(q(tree.container, '[data-testid="open-state"]').textContent, "open");
+  await tree.unmount();
+});
+
+function ReopenHost({ first, second }: { first: string; second: string }) {
+  const [stories] = useState<PublicStoryCard[]>(() => [
+    story([item({ storyItemId: "reopen-a", caption: "A", mediaUrl: "https://cdn.example.test/reopen-a.jpg" })], { storyId: first, title: "A" }),
+    story([item({ storyItemId: "reopen-b", caption: "B", mediaUrl: "https://cdn.example.test/reopen-b.jpg" })], { storyId: second, title: "B" }),
+  ]);
+  const [selected, setSelected] = useState<string | null>(first);
+  const [open, setOpen] = useState(true);
+  const [changes, setChanges] = useState(0);
+  return createElement("div", null,
+    createElement(StoryModal, {
+      isOpen: open,
+      onClose: () => setOpen(false),
+      stories,
+      initialStoryId: selected,
+      onCurrentStoryChange: (id: string) => {
+        setSelected(id);
+        setChanges((value) => value + 1);
+      },
+    }),
+    createElement("button", { "data-testid": "close-player", onClick: () => setOpen(false) }, "close"),
+    createElement("button", { "data-testid": "open-a-again", onClick: () => { setSelected(first); setOpen(true); } }, "open A"),
+    createElement("span", { "data-testid": "reopen-current" }, selected ?? ""),
+    createElement("span", { "data-testid": "reopen-open" }, open ? "open" : "closed"),
+    createElement("span", { "data-testid": "reopen-changes" }, String(changes)),
+  );
+}
+
+test("R22 F05: closing B and reopening A does not bounce between the old and new story", async () => {
+  const tree = await mount(createElement(ReopenHost, {
+    first: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a6",
+    second: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbb22b6",
+  }));
+  await flush();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+  await flush();
+  (q(tree.container, '[data-testid="close-player"]') as HTMLButtonElement).click();
+  await flush();
+  (q(tree.container, '[data-testid="open-a-again"]') as HTMLButtonElement).click();
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  await flush();
+  assert.equal(q(tree.container, '[data-testid="reopen-open"]').textContent, "open");
+  assert.equal(q(tree.container, '[data-testid="reopen-current"]').textContent, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa22a6");
+  assert.ok(Number(q(tree.container, '[data-testid="reopen-changes"]').textContent) <= 3);
   await tree.unmount();
 });

@@ -87,7 +87,7 @@ test("home guard keeps composition renderer switch cases", () => {
 
 test("home stories use live Host binding without fake STORY_IMAGES", () => {
   assert.doesNotMatch(homeSource, /STORY_IMAGES/);
-  assert.match(storiesSource, /fetchPublicStories/);
+  assert.match(storiesSource, /useHomeStoriesFeed/);
   assert.match(storiesSource, /data-testid="home-stories"/);
   assert.match(storiesSource, /bg-primary|from-primary|text-primary/);
   assert.doesNotMatch(storiesSource, /#E53935/);
@@ -98,8 +98,9 @@ test("R22 home stories own selected-story removal and chain revalidation", () =>
   assert.doesNotMatch(storiesSource, /setSelectedStoryId\(\(prev\)/);
   assert.match(storiesSource, /!stories\.some\(\(story\) => story\.storyId === selectedStoryId\)/);
   assert.match(storiesSource, /setModalOpen\(false\)/);
-  // A 5-minute cap must reschedule after each revalidation, and an error must still drop expired rows.
+  // The feed owns the 5-minute cap, local expiry and the single in-flight refresh.
+  assert.match(storiesSource, /useHomeStoriesFeed\(locale\)/);
   assert.match(storiesSource, /useStoryRevalidation\(stories, revalidateStories\)/);
-  assert.match(storiesSource, /filterLiveStories\(previous, Date\.now\(\)\)/);
+  assert.match(storiesSource, /onCurrentStoryChange=\{setSelectedStoryId\}/);
   assert.doesNotMatch(storiesSource, /\/images\/stories\/1\.jpg/);
 });

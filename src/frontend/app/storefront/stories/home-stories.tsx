@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Eye, Play } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import { useLocale } from "../../../lib/i18n/locale-context.tsx";
-import { fetchPublicStories, type PublicStoryCard } from "../../stories/story-api.ts";
+import { type PublicStoryCard } from "../../stories/story-api.ts";
 import { StoryModal } from "./story-modal.tsx";
-import { filterLiveStories, useStoryRevalidation } from "./home-stories-revalidation.ts";
+import { useStoryRevalidation } from "./home-stories-revalidation.ts";
+import { useHomeStoriesFeed } from "./home-stories-feed.ts";
 import { createFakeStory } from "../../../lib/storefront-composition/preview-fake-data.ts";
 import { applyPreviewFill } from "../../../lib/storefront-composition/preview-fill-policy.ts";
 import { PreviewSampleBadge } from "../preview-sample-badge.tsx";
@@ -71,51 +72,25 @@ export function HomeStoriesSection({
 } = {}) {
   const locale = useLocale();
   const copy = STORIES_RAIL_COPY[locale === "en" ? "en" : "fa"];
-  const [stories, setStories] = useState<PublicStoryCard[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [revalidateTick, setRevalidateTick] = useState(0);
+  const { stories, loaded, loadError, revalidate: revalidateStories } = useHomeStoriesFeed(locale);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
   const [coverErrors, setCoverErrors] = useState<Record<string, boolean>>({});
+  const deepLinkDone = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchPublicStories(locale).then((result) => {
-      if (cancelled) return;
-      if (result.state === "error") {
-        setLoadError(result.message);
-        setStories((previous) =>
-          filterLiveStories(previous, Date.now()),
-        );
-        setLoaded(true);
-        return;
-      }
-      setLoadError(null);
-      const eligible = filterLiveStories(
-        result.stories.filter((story) => story.items.length > 0),
-        Date.now(),
-      );
-      setStories(eligible);
-      setLoaded(true);
-      // The modal-close effect below owns removal; keep the selected id so it can see the loss.
-      if (revalidateTick > 0) return;
-      if (typeof window === "undefined") return;
-      const wanted = new URLSearchParams(window.location.search).get("story");
-      if (wanted && eligible.some((s) => s.storyId === wanted)) {
-        setSelectedStoryId(wanted);
-        setModalOpen(true);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, revalidateTick]);
-
-  const revalidateStories = useCallback(() => setRevalidateTick((value) => value + 1), []);
   useStoryRevalidation(stories, revalidateStories);
 
+  useEffect(() => {
+    if (!loaded || deepLinkDone.current) return;
+    deepLinkDone.current = true;
+    if (typeof window === "undefined") return;
+    const wanted = new URLSearchParams(window.location.search).get("story");
+    if (wanted && stories.some((story) => story.storyId === wanted)) {
+      setSelectedStoryId(wanted);
+      setModalOpen(true);
+    }
+  }, [loaded, stories]);
   useEffect(() => {
     if (!modalOpen || !selectedStoryId) return;
     if (!stories.some((story) => story.storyId === selectedStoryId)) {
@@ -136,7 +111,7 @@ export function HomeStoriesSection({
   const errorNotice = loadError ? (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" data-testid="home-stories-error">
       <span>{copy.error}</span>
-      <button type="button" className="min-h-11 rounded-lg border border-amber-300 bg-surface px-3 py-1 font-bold" onClick={() => setRevalidateTick((value) => value + 1)}>
+      <button type="button" className="min-h-11 rounded-lg border border-amber-300 bg-surface px-3 py-1 font-bold" onClick={revalidateStories}>
         {copy.retry}
       </button>
     </div>
@@ -154,7 +129,7 @@ export function HomeStoriesSection({
         </h3>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-5 text-center text-sm text-amber-900">
           <p>{copy.error}</p>
-          <button type="button" className="mt-3 min-h-11 rounded-xl border border-amber-300 bg-surface px-4 py-2 font-bold" onClick={() => setRevalidateTick((value) => value + 1)}>
+          <button type="button" className="mt-3 min-h-11 rounded-xl border border-amber-300 bg-surface px-4 py-2 font-bold" onClick={revalidateStories}>
             {copy.retry}
           </button>
         </div>

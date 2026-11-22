@@ -5,6 +5,7 @@ using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Media.Application.Ports;
+using Tooba.Media.Contracts.Assets;
 using Tooba.Media.Contracts.Errors;
 using Tooba.Media.Infrastructure.Assets;
 using Tooba.Media.Infrastructure.Persistence;
@@ -236,6 +237,38 @@ public sealed class StoryMarketplace281R4RelationalTests
     }
 
     [SkippableFact]
+    public async Task R22_public_cover_kind_comes_from_the_media_owner_rollback_only()
+    {
+        Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
+
+        await using var db = CreateStoryDb();
+        await using var caller = await db.Database.BeginTransactionAsync();
+        var now = DateTimeOffset.UtcNow;
+        var tenant = StoryTenantIds.StoreAlpha;
+        var shop = Guid.NewGuid();
+        var cover = Guid.NewGuid();
+        var itemAsset = Guid.NewGuid();
+
+        var story = StoryEntity.CreateSellerDraft(
+            tenant, shop, Guid.NewGuid(), _runTag + "cover", 0, now,
+            coverMediaAssetId: cover, coverMediaUrl: "/cover.jpg");
+        story.AddItem("image", 0, now, itemAsset, "/slide.jpg", null, null, null, null);
+        story.SubmitForReview(Guid.NewGuid(), now);
+        story.Approve(Guid.NewGuid(), now);
+        story.Activate(now);
+        db.Stories.Add(story);
+        foreach (var item in story.Items) db.StoryItems.Add(item);
+        await db.SaveChangesAsync();
+
+        var directory = new StoryDirectory(db, media: new VideoCoverMedia());
+        var cards = await directory.GetPublicStoriesAsync(tenant, null, null, now, CancellationToken.None);
+        var card = Assert.Single(cards, row => row.StoryId == story.StoryId);
+        Assert.True(card.CoverIsVideo);
+
+        await caller.RollbackAsync();
+        Assert.Equal(0L, await CountTaggedStoriesAsync());
+    }
+    [SkippableFact]
     public async Task R22_seller_grid_search_status_sort_and_count_run_on_postgresql_and_stay_shop_scoped()
     {
         Skip.IfNot(CanonicalTarget.Value.Ok, CanonicalTarget.Value.Reason);
@@ -248,11 +281,17 @@ public sealed class StoryMarketplace281R4RelationalTests
         var shopB = Guid.NewGuid();
 
         var alpha = StoryEntity.CreateSellerDraft(
-            tenant, shopA, Guid.NewGuid(), _runTag + "alpha", 0, now, null, null, null, null, null, null);
+            tenant, shopA, Guid.NewGuid(), _runTag + "alpha", 0, now.AddMinutes(-2), null, null, null, null, null, null);
+        alpha.AddItem("image", 0, now, Guid.NewGuid(), "https://example.test/alpha.jpg", null, null, null, null);
+        alpha.SubmitForReview(Guid.NewGuid(), now);
+        alpha.Approve(Guid.NewGuid(), now);
+        alpha.SetSchedule(now.AddDays(-2), now.AddDays(2), now);
         var beta = StoryEntity.CreateSellerDraft(
-            tenant, shopA, Guid.NewGuid(), _runTag + "beta", 1, now, null, null, null, null, null, null);
+            tenant, shopA, Guid.NewGuid(), _runTag + "beta", 1, now.AddMinutes(-1), null, null, null, null, null, null);
         beta.AddItem("image", 0, now, Guid.NewGuid(), "https://example.test/beta.jpg", null, null, null, null);
         beta.SubmitForReview(Guid.NewGuid(), now);
+        beta.Approve(Guid.NewGuid(), now);
+        beta.SetSchedule(now.AddDays(-1), now.AddDays(3), now);
         var foreign = StoryEntity.CreateSellerDraft(
             tenant, shopB, Guid.NewGuid(), _runTag + "alpha-foreign", 0, now, null, null, null, null, null, null);
 
@@ -272,7 +311,7 @@ public sealed class StoryMarketplace281R4RelationalTests
         var drafts = await directory.SellerQueryAsync(
             tenant,
             shopA,
-            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("status", "equals", "Draft", null, null)]),
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("status", "equals", "Active", null, null)]),
             CancellationToken.None);
         Assert.Equal(2, drafts.TotalCount);
         Assert.Contains(drafts.Items, row => row.StoryId == alpha.StoryId);
@@ -280,25 +319,65 @@ public sealed class StoryMarketplace281R4RelationalTests
         var submitted = await directory.SellerQueryAsync(
             tenant,
             shopA,
-            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("reviewStatus", "equals", "Submitted", null, null)]),
+            new GridQueryRequest(1, 10, null, [], [new GridFilterRequest("reviewStatus", "equals", "Approved", null, null)]),
             CancellationToken.None);
-        Assert.Equal(1, submitted.TotalCount);
-        Assert.Equal(beta.StoryId, Assert.Single(submitted.Items).StoryId);
+        Assert.Equal(2, submitted.TotalCount);
+        Assert.Contains(submitted.Items, row => row.StoryId == beta.StoryId);
 
-        var page = await directory.SellerQueryAsync(
+        foreach (var column in new[] { "startAt", "endAt", "updatedAt" })
+        {
+            var bounded = await directory.SellerQueryAsync(
+                tenant,
+                shopA,
+                new GridQueryRequest(1, 10, null, [], [new GridFilterRequest(column, "notBlank", null, null, null)]),
+                CancellationToken.None);
+            Assert.Equal(2, bounded.TotalCount);
+            Assert.DoesNotContain(bounded.Items, row => row.StoryId == foreign.StoryId);
+        }
+
+        var descending = await directory.SellerQueryAsync(
             tenant,
             shopA,
             new GridQueryRequest(1, 1, null, [new GridSortRequest("title", "desc")], []),
             CancellationToken.None);
-        Assert.Equal(2, page.TotalCount);
-        Assert.Single(page.Items);
-        Assert.DoesNotContain(page.Items, row => row.StoryId == foreign.StoryId);
+        Assert.Equal(2, descending.TotalCount);
+        Assert.Equal(beta.StoryId, Assert.Single(descending.Items).StoryId);
+        Assert.DoesNotContain(descending.Items, row => row.StoryId == foreign.StoryId);
+
+        var ascending = await directory.SellerQueryAsync(
+            tenant,
+            shopA,
+            new GridQueryRequest(1, 1, null, [new GridSortRequest("title", "asc")], []),
+            CancellationToken.None);
+        Assert.Equal(alpha.StoryId, Assert.Single(ascending.Items).StoryId);
 
         await caller.RollbackAsync();
         Assert.Equal(0L, await CountTaggedStoriesAsync());
         _output.WriteLine($"R22 seller grid filter/sort/count committedRows=0 tag={_runTag}");
     }
 
+    private sealed class VideoCoverMedia : IStoryMediaAssetPort
+    {
+        public Task<StoryMediaAssetAuthorization> AuthorizeForStoryAsync(
+            Guid mediaAssetId, Guid tenantId, Guid? sellerPartyId, bool allowUnscopedAdminAssets,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new StoryMediaAssetAuthorization(
+                mediaAssetId, "video/mp4", $"/v1/storefront/media/{mediaAssetId:D}", true, sellerPartyId));
+
+        public Task<StoryMediaAssetAuthorization> UploadForSellerAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid sellerPartyId,
+            Guid actorUserId, string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<StoryMediaAssetAuthorization> UploadForPlatformStoryAsync(
+            Stream stream, string fileName, string contentType, Guid tenantId, Guid actorUserId,
+            string? occurrenceKey, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<StoryMediaAssetAuthorization>> ListSellerAssetsAsync(
+            Guid tenantId, Guid sellerPartyId, int take, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<StoryMediaAssetAuthorization>>([]);
+    }
     private async Task<long> CountTaggedStoriesAsync()
     {
         await using var verify = CreateStoryDb();
