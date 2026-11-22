@@ -1,0 +1,313 @@
+{
+  "protocol": "TOOBA-OPENCODE-ACCEPTANCE-V1",
+  "parentTaskId": "TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284",
+  "sourceCodeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+  "sourceEvidenceCommit": "fc40d412aa6d085d3db3f1deac461eb93a10f48d",
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-01-two-positions",
+          "observed": "exactly two positions"
+        },
+        {
+          "name": "REQ-01-one-patch",
+          "observed": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C01\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+        },
+        {
+          "name": "REQ-01-zero-owner-writes",
+          "observed": "{\"priceWrites\":[],\"inventoryWrites\":[]}"
+        },
+        {
+          "name": "REQ-01-sku",
+          "observed": "ARM-LN-01-C01"
+        },
+        {
+          "name": "REQ-01-price",
+          "observed": "{\"before\":\"2500000.0000\",\"after\":\"2500000.0000\",\"get\":2500000}"
+        },
+        {
+          "name": "REQ-01-positions",
+          "observed": "{\"before\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"after\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]}"
+        },
+        {
+          "name": "REQ-01-reservations",
+          "observed": "{\"before\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"after\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}]}"
+        },
+        {
+          "name": "REQ-01-outbox",
+          "observed": "{\"before\":27,\"after\":27}"
+        },
+        {
+          "name": "REQ-01-independent-get",
+          "observed": "{\"status\":200,\"body\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C01\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2500000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "The source evidence records a successful connected run; this task did not rerun the expired isolated runtime."
+    },
+    {
+      "id": "REQ-02",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-02-draft-stays",
+          "observed": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":\"2.000000\",\"max\":\"9.000000\",\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+        },
+        {
+          "name": "REQ-02-limits-cleared",
+          "observed": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+        },
+        {
+          "name": "REQ-02-still-draft",
+          "observed": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "The source evidence records a successful connected run; the Cursor structural gate failure remains a separate format-incompatibility record."
+    },
+    {
+      "id": "REQ-03",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-03-B-old-price",
+          "observed": "2500000"
+        },
+        {
+          "name": "REQ-03-A-one-price-write",
+          "observed": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price\",\"body\":\"{\\\"amount\\\":2750000}\"}]"
+        },
+        {
+          "name": "REQ-03-A-no-commercial-write",
+          "observed": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price\",\"body\":\"{\\\"amount\\\":2750000}\"}]"
+        },
+        {
+          "name": "REQ-03-price-persisted",
+          "observed": "{\"sql\":\"2750000.0000\",\"get\":2750000}"
+        },
+        {
+          "name": "REQ-03-B-still-stale",
+          "observed": "2500000"
+        },
+        {
+          "name": "REQ-03-B-one-commercial-write",
+          "observed": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C03\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+        },
+        {
+          "name": "REQ-03-B-zero-price-write",
+          "observed": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C03\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+        },
+        {
+          "name": "REQ-03-both-persist",
+          "observed": "{\"sql\":{\"sku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"price\":\"2750000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2750000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+        },
+        {
+          "name": "REQ-03-stock-unchanged",
+          "observed": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"after\":{\"sku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"price\":\"2750000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}}"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "B loaded the old price before A wrote; the connected run is recorded evidence, not a fresh execution by this task."
+    },
+    {
+      "id": "REQ-04",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-04-targeted-position",
+          "observed": "[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]"
+        },
+        {
+          "name": "REQ-04-total",
+          "observed": "[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]"
+        },
+        {
+          "name": "REQ-04-other-state",
+          "observed": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"after\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+        },
+        {
+          "name": "REQ-04-one-inventory-write",
+          "observed": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\",\"body\":\"{\\\"onHand\\\":8,\\\"reason\\\":\\\"vendor-panel-edit\\\",\\\"stockItemId\\\":\\\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\\\"}\"}]"
+        },
+        {
+          "name": "REQ-04-negatives-refused",
+          "observed": "[{\"name\":\"ambiguous\",\"status\":400,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Stock position id is required.\\\",\\\"status\\\":400,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.position.id_required\\\",\\\"traceId\\\":\\\"df1c3a670eb8bb6c2e3637a19da97775\\\",\\\"correlationId\\\":\\\"c2a7740e68814cb68534fb30f36adc91\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQEO:00000001\\\"}\"},{\"name\":\"foreign\",\"status\":409,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Stock position is unknown.\\\",\\\"status\\\":409,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.position.id_unknown\\\",\\\"traceId\\\":\\\"292f802a80c61db941531e34ac840ad7\\\",\\\"correlationId\\\":\\\"bab549d79f434383a137a8eecd8e8d93\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQE2:00000005\\\"}\"},{\"name\":\"below-reserved\",\"status\":409,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Adjustment exceeds the available quantity.\\\",\\\"status\\\":409,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.adjustment.quantity_exceeds\\\",\\\"traceId\\\":\\\"fbe3f351e678275d68aa87088047d2f4\\\",\\\"correlationId\\\":\\\"75d94eb297eb45e988eb58d396273b9e\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQEO:00000002\\\"}\"}]"
+        },
+        {
+          "name": "REQ-04-negatives-zero-change",
+          "observed": "{\"negativeBefore\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"negativeAfter\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "Negative branches used real owning Host responses against the disposable database. The connected JSON records ambiguous 400, foreign 409 and below-reserved 409; the 284 RECEIPTS prose incorrectly says foreign 400. All three are typed refusals with zero state change; the JSON is authoritative."
+    },
+    {
+      "id": "REQ-05",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-05-wrong-no-success",
+          "observed": "{\"wrongNotice\":0}"
+        },
+        {
+          "name": "REQ-05-wrong-zero-change",
+          "observed": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"afterWrong\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+        },
+        {
+          "name": "REQ-05-lost-write-persisted",
+          "observed": "{\"afterLost\":{\"sku\":\"ARM-LN-01-C05-LOST\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C05-LOST\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2500000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+        },
+        {
+          "name": "REQ-05-no-automatic-second-write",
+          "observed": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C05-WRONG\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"},{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C05-LOST\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+        }
+      ],
+      "evidenceClass": "controlled-error",
+      "limitations": "Wrong-identity and response-loss branches use controlled response substitution; the loss branch first performs a real owning write."
+    },
+    {
+      "id": "REQ-06",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-06-no-horizontal-overflow",
+          "observed": "{\"innerWidth\":360,\"scrollWidth\":360,\"overflowX\":0}"
+        },
+        {
+          "name": "REQ-06-controls-visible",
+          "observed": "{\"save\":{\"x\":192.328125,\"y\":298,\"width\":130.671875,\"height\":44},\"cancel\":{\"x\":140.890625,\"y\":310,\"width\":39.4375,\"height\":20},\"position\":{\"x\":54,\"y\":-523,\"width\":252,\"height\":122}}"
+        },
+        {
+          "name": "REQ-06-cancel-zero-writes",
+          "observed": "[]"
+        },
+        {
+          "name": "REQ-06-old-value",
+          "observed": "ARM-LN-01"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "Cancel navigates to the seller product list; reopening was proved by a new real page in the same browser context."
+    },
+    {
+      "id": "REQ-07",
+      "status": "PASS",
+      "evidencePaths": [
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs",
+        "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log"
+      ],
+      "checks": [
+        {
+          "name": "REQ-07-no-change-zero-writes",
+          "observed": "[]"
+        },
+        {
+          "name": "REQ-07-second-draft-retained",
+          "observed": "2800000"
+        },
+        {
+          "name": "REQ-07-both-persist",
+          "observed": "{\"after\":{\"sku\":\"ARM-LN-01-C07\",\"status\":\"Active\",\"price\":\"2800000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C07\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2800000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+        }
+      ],
+      "evidenceClass": "connected-real",
+      "limitations": "The first-section failure was forced at the transport boundary; the subsequent success used the real owning Host and database."
+    }
+  ],
+  "toolEvidence": {
+    "openSpec": {
+      "version": "2.1.1",
+      "command": "openspec validate seller-offer-safe-edit-283 --strict",
+      "result": "valid",
+      "evidencePath": "docs/opencode/tasks/TB-OCC-284-OPEN-CODE-ACCEPTANCE-CLOSURE/OPENSPEC-STRICT.log",
+      "sha256": "84a220d56bbb1540b9f95c898932fe9b6f675b55480da9b1fbc36d6e1f62f77e"
+    },
+    "playwright": {
+      "version": "1.65.1",
+      "browser": "Chromium 1255",
+      "browserPath": "C:\\Users\\User\\AppData\\Local\\ms-playwright\\chromium-1255\\chrome-win64\\chrome.exe",
+      "evidencePath": "docs/opencode/tasks/TB-OCC-284-OPEN-CODE-ACCEPTANCE-CLOSURE/TOOL-PLAYWRIGHT.txt",
+      "sha256": "5915408c216027d1929d56137c629767c6b0db4a0266cb70102283810febadcf"
+    },
+    "host": {
+      "endpoint": "http://127.0.0.1:5090",
+      "pid": 40848,
+      "dllSha256": "E301B13E558899F59F19505EB7059D3BFC65518BD1DAD035D223F0DDAB321019"
+    },
+    "next": {
+      "endpoint": "http://127.0.0.1:3100",
+      "buildId": "oWTA29FFSAnndeeVyDFsx"
+    },
+    "postgresql": {
+      "version": "17.10",
+      "database": "tooba_offer283_connected",
+      "container": "postgres-db",
+      "port": 5432
+    },
+    "cursorGate": {
+      "state": "KNOWN_FORMAT_INCOMPATIBILITY",
+      "productVerdict": false,
+      "reason": "Issued TASK.md has no REQ table; the Cursor gate cannot parse OpenCode task scope. Original failing logs retained."
+    },
+    "artifacts": {
+      "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.json": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1",
+      "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.cjs": "ebf1f993594684a08bed26d8be9aab87420d2522465cf3f4434597f5a535dc36",
+      "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/connected-284.log": "29454955b7d09a3999d18a0bae42a4c4ba35b38c82eb66c887e32cfb595acf3a",
+      "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/plan-gate.log": "a54d062d9f53df4254e5399297eae27e6afbcc3ab5051ae0adb6a0815eda029d",
+      "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/evidence/review-gate.log": "c64c231f70e1a63a622a337a2dbaeb2047b47e86112e0ba06ff9f2d1961a4fc8",
+      "docs/opencode/tasks/TB-OCC-284-OPEN-CODE-ACCEPTANCE-CLOSURE/OPENSPEC-STRICT.log": "84a220d56bbb1540b9f95c898932fe9b6f675b55480da9b1fbc36d6e1f62f77e",
+      "docs/opencode/tasks/TB-OCC-284-OPEN-CODE-ACCEPTANCE-CLOSURE/TOOL-PLAYWRIGHT.txt": "5915408c216027d1929d56137c629767c6b0db4a0266cb70102283810febadcf"
+    }
+  },
+  "cleanupEvidence": {
+    "databaseRemoved": true,
+    "portsClosed": [
+      5090,
+      3100
+    ],
+    "canonicalHealth": {
+      "host5088": 200,
+      "next3000": 200
+    },
+    "database": "tooba_offer283_connected",
+    "evidencePath": "docs/ai/tasks/TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284/RESULT.md"
+  },
+  "result": {
+    "status": "PASS",
+    "blockingItems": []
+  }
+}

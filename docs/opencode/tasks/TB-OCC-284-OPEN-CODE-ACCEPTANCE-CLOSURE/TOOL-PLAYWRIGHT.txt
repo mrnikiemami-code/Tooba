@@ -1,0 +1,2 @@
+﻿{"playwright":"1.65.1","chromium":"C:\\Users\\User\\AppData\\Local\\ms-playwright\\chromium-1255\\chrome-win64\\chrome.exe"}
+
