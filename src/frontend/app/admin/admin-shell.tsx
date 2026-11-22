@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -114,6 +114,7 @@ const navGroupDefs: NavGroupDef[] = [
     items: [
       { id: "products", labelKey: "productList", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
       { id: "product-create", labelKey: "productCreate", href: "/admin/products/new", icon: Plus, live: true, viewPermission: "product.view" },
+      { id: "offers", labelKey: "offers", href: "/admin/offers", icon: Tag, live: true, viewPermission: "product.view" },
     ],
   },
   {
@@ -392,3 +393,4 @@ function NavLink({
     </Link>
   );
 }
+

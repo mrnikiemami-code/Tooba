@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Catalog.Application.Seller.Queries;
 using Tooba.Catalog.Application.Variants.Commands;
@@ -24,6 +24,9 @@ public static class CatalogSellerEndpoints
     }
 
     private static async Task<IResult> ListCatalogVariantsAsync(
+        string? search,
+        int? page,
+        int? pageSize,
         ISender sender,
         ApiResponseFactory api,
         ICatalogSellerAuthorizer auth,
@@ -31,7 +34,9 @@ public static class CatalogSellerEndpoints
         CancellationToken cancellationToken)
     {
         var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
-        return api.From(await sender.Send(new ListSellerCatalogVariantsQuery(sellerPartyId), cancellationToken));
+        return api.From(await sender.Send(
+            new SearchPublishedCatalogVariantsQuery(sellerPartyId, search, page ?? 1, pageSize ?? 20),
+            cancellationToken));
     }
 
     private static async Task<IResult> SetProductAttributeAsync(
@@ -86,3 +91,4 @@ public sealed record SetProductAttributeRequest(string RawValue, Guid? EnumOptio
 /// not a shared business contract.
 /// </summary>
 public sealed record SetProductVariantAxesRequest(List<Guid>? OrderedDefinitionIds);
+

@@ -78,7 +78,19 @@ public sealed record SellerOfferCreateRequest(
     string? SellerSku,
     string? Status,
     string? ReturnPolicyChoice = null,
-    int? CustomReturnWindowDays = null);
+    int? CustomReturnWindowDays = null,
+    string? RequestId = null);
+
+/// <summary>
+/// Admin creates a Draft Offer for an explicitly selected seller. The seller id is data input,
+/// never a substitute for the admin actor or a seller authorization header.
+/// </summary>
+public sealed record AdminOfferCreateRequest(
+    Guid SellerPartyId,
+    Guid CatalogVariantId,
+    string? SellerSku,
+    string? Status,
+    string? RequestId = null);
 
 /// <summary>
 /// فرمان نوشتن مبلغ بدون مالیات روی Offer متعلق به همان فروشنده از طریق Pricing.

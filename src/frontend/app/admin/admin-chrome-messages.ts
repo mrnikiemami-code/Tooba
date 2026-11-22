@@ -1,4 +1,4 @@
-/**
+﻿/**
  * برچسب‌های ناوبری و عملگرهای Admin — بدون انگلیسی خام در UI فارسی.
  */
 
@@ -16,6 +16,7 @@ export type AdminNavLabels = {
   dashboard: string;
   productList: string;
   productCreate: string;
+  offers: string;
   catalogCategories: string;
   catalogAttributes: string;
   catalogUnits: string;
@@ -64,6 +65,7 @@ const faNav: AdminNavLabels = {
   dashboard: "داشبورد",
   productList: "فهرست محصولات",
   productCreate: "افزودن محصول",
+  offers: "پیشنهادهای فروشندگان",
   catalogCategories: "مدیریت دسته‌بندی‌ها",
   catalogAttributes: "ویژگی‌ها و فیلترها",
   catalogUnits: "واحدهای اندازه‌گیری",
@@ -112,6 +114,7 @@ const enNav: AdminNavLabels = {
   dashboard: "Dashboard",
   productList: "Product list",
   productCreate: "Add product",
+  offers: "Seller offers",
   catalogCategories: "Manage categories",
   catalogAttributes: "Attributes & filters",
   catalogUnits: "Units of measure",
@@ -158,3 +161,4 @@ export function resolveAdminChromeLocale(): AdminChromeLocale {
 export function adminNavLabels(locale: AdminChromeLocale = "fa"): AdminNavLabels {
   return locale === "en" ? enNav : faNav;
 }
+

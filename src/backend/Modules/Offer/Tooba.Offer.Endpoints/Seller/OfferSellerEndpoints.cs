@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -9,6 +9,8 @@ using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
 using Tooba.Offer.Application.Offers.Queries.GetOffer;
 using Tooba.Offer.Application.Offers.Queries.ListSellerOffers;
+using Tooba.Offer.Application.Offers.Queries.QueryOffers;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Offer.Endpoints.Seller;
@@ -23,6 +25,7 @@ public static class OfferSellerEndpoints
     {
         ArgumentNullException.ThrowIfNull(group);
         group.MapGet("/offers", ListOffersAsync);
+        group.MapPost("/offers/query", QueryOffersAsync);
         group.MapPost("/offers", CreateOfferAsync);
         group.MapGet("/offers/{offerId:guid}", GetOfferAsync);
         group.MapPatch("/offers/{offerId:guid}", PatchOfferAsync);
@@ -42,6 +45,19 @@ public static class OfferSellerEndpoints
         return api.From(result);
     }
 
+    private static async Task<IResult> QueryOffersAsync(
+        GridQueryRequest body,
+        ISender sender,
+        IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        var result = await sender.Send(new QuerySellerOffersQuery(sellerId, body), token);
+        return api.From(result);
+    }
+
     private static async Task<IResult> CreateOfferAsync(
         SellerOfferCreateRequest body,
         ISender sender,
@@ -50,10 +66,10 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        var (_, sellerId) = await authorizer.RequireCreateAsync(context, token);
         var result = await sender.Send(new CreateOfferCommand(
             body.CatalogVariantId, sellerId, SalesChannel.Marketplace, body.SellerSku,
-            body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays), token);
+            body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays, RequestId: body.RequestId), token);
         if (result.IsFailure)
             return api.From(result);
         return api.Created($"/v1/seller/offers/{result.Value.OfferId}", result);
@@ -81,7 +97,7 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
             body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
@@ -98,7 +114,7 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferPriceCommand(
             offerId, sellerId, body.Amount, body.Currency, body.Market), token);
         return api.From(result);
@@ -113,9 +129,12 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferInventoryCommand(
             offerId, sellerId, body.OnHand, body.Reason, body.StockItemId), token);
         return api.From(result);
     }
 }
+
+
+

@@ -11,6 +11,8 @@ using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.Party.Contracts.Ports;
+using System.Security.Cryptography;
+using System.Text;
 using DomainChannel = Tooba.Offer.Domain.ValueObjects.SalesChannel;
 
 namespace Tooba.Offer.Application.Offers.Commands.CreateOffer;
@@ -25,7 +27,8 @@ public sealed record CreateOfferCommand(
     string? ReturnPolicyChoice = null,
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null) : IRequest<Result<SellerOfferDetailPage>>;
+    decimal? MaximumOrderQuantity = null,
+    string? RequestId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class CreateOfferHandler(
     IOfferStore store,
@@ -45,6 +48,22 @@ internal sealed class CreateOfferHandler(
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.SellerMissing));
         if (!string.Equals(seller.Kind, "Organization", StringComparison.Ordinal))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.SellerNotOrganization));
+        Guid? requestedId = string.IsNullOrWhiteSpace(request.RequestId)
+            ? null
+            : DeterministicOfferId(request.SellerPartyId, request.CatalogVariantId, request.RequestId.Trim());
+        if (requestedId is Guid stableId)
+        {
+            var existing = await store.GetByIdAsync(stableId, cancellationToken);
+            if (existing is not null)
+            {
+                if (existing.SellerPartyId != request.SellerPartyId
+                    || existing.CatalogVariantId != request.CatalogVariantId)
+                {
+                    return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateActiveListing));
+                }
+                return Result.Success(await readModels.DetailAsync(existing, cancellationToken));
+            }
+        }
         var channel = (DomainChannel)(int)request.Channel;
         if (await store.ExistsActiveListingAsync(request.SellerPartyId, request.CatalogVariantId, channel, cancellationToken))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateActiveListing));
@@ -53,7 +72,7 @@ internal sealed class CreateOfferHandler(
             && await store.ExistsSellerSkuAsync(request.SellerPartyId, sku, null, cancellationToken))
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateSellerSku));
 
-        var offer = SellerOffer.Create(ids.NewId(), request.CatalogVariantId, request.SellerPartyId, channel, sku, clock.UtcNow);
+        var offer = SellerOffer.Create(requestedId ?? ids.NewId(), request.CatalogVariantId, request.SellerPartyId, channel, sku, clock.UtcNow);
         if (request.ReturnPolicyChoice is not null || request.CustomReturnWindowDays is not null)
         {
             var choice = request.ReturnPolicyChoice ?? "Default";
@@ -84,4 +103,13 @@ internal sealed class CreateOfferHandler(
         await store.SaveChangesAsync(cancellationToken);
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
     }
+
+    private static Guid DeterministicOfferId(Guid sellerPartyId, Guid catalogVariantId, string requestId)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{sellerPartyId:N}|{catalogVariantId:N}|{requestId}"));
+        return new Guid(bytes.AsSpan(0, 16));
+    }
 }
+
+
+

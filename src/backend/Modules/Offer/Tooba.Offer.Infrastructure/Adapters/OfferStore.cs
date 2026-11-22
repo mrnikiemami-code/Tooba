@@ -11,8 +11,8 @@ using DomainOfferStatus = Tooba.Offer.Domain.ValueObjects.OfferStatus;
 namespace Tooba.Offer.Infrastructure.Adapters;
 
 /// <summary>EF-backed persistence adapter for Offer aggregates and Host read queries.</summary>
-public sealed class OfferStore(OfferDbContext db)
-    : IOfferStore, IOfferQueryGateway, Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup
+public sealed partial class OfferStore(OfferDbContext db)
+    : IOfferStore, IOfferQueryGateway, Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Application.Offers.Ports.IOfferListQueryPort
 {
     /// <inheritdoc />
     public Task<SellerOffer?> GetByIdAsync(Guid offerId, CancellationToken token) =>
@@ -268,4 +268,5 @@ public sealed class OfferStore(OfferDbContext db)
         offer.SellerSku,
         offer.UpdatedAt);
 }
+
 

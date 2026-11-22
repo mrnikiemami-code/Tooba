@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks.Localization;
@@ -28,6 +28,7 @@ public static class OfferEndpointModule
         // route is added, so a seller cannot declare Platform responsibility.
         var admin = app.MapGroup("/v1/admin");
         Admin.OfferFulfillmentAdminEndpoints.Map(admin);
+        Admin.OfferAdminEndpoints.Map(admin);
         return app;
     }
 
@@ -38,6 +39,8 @@ public static class OfferEndpointModule
         services.AddSingleton<IErrorCatalogContributor, OfferErrorCatalogContributor>();
         services.AddSingleton<IErrorResourceSet, OfferErrorResourceSet>();
         services.AddScoped<Admin.IOfferFulfillmentAdminAuthorizer, Admin.OfferFulfillmentAdminAuthorizer>();
+        services.AddScoped<Admin.IOfferAdminAuthorizer, Admin.OfferAdminAuthorizer>();
         return services;
     }
 }
+

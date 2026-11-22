@@ -56,6 +56,7 @@ public sealed class OfferModule : IToobaModule
         services.AddScoped<IOfferSellerProductIdLookup, OfferSellerProductIdLookup>();
         services.AddScoped<IOfferLookupGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferQueryGateway>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
+        services.AddScoped<IOfferListQueryPort>(sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         // TB-228: the same scoped adapter serves the batch fulfillment-assignment read for the storefront
         // projection; a distinct Offer row read, never a cross-module join.
         services.AddScoped<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup>(
@@ -77,4 +78,6 @@ public sealed class OfferModule : IToobaModule
         });
     }
 }
+
+
 

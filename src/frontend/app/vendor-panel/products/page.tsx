@@ -1,16 +1,15 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Package, Plus } from "lucide-react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
-import { executeGridQuery } from "../../../design-system/data-grid/query-engine";
-import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import type { GridColumnDef, GridServerPage, GridServerQuery } from "../../../design-system/data-grid";
 import {
   formatMoney,
   formatOfferStatus,
   formatUnits,
-  loadSellerOffers,
+  loadSellerOffersPage,
   readSellerPartyId,
   type HostReadSource,
   type SellerOfferListRow,
@@ -135,33 +134,31 @@ const columns: GridColumnDef<SellerOfferListRow>[] = [
  */
 export default function VendorProductsPage() {
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
-  const [rows, setRows] = useState<SellerOfferListRow[]>([]);
+  const [total, setTotal] = useState(0);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [denied, setDenied] = useState(false);
-
-  function refresh() {
-    const sellerPartyId = readSellerPartyId(window.location.search);
-    if (!sellerPartyId) {
-      setSource("error");
-      setMessage("seller.identity.missing");
-      return;
-    }
-    void loadSellerOffers(sellerPartyId).then((result) => {
-      setSource(result.source);
-      setRows(result.rows);
-      setMessage(result.message);
-      setDenied(Boolean(result.denied));
-    });
-  }
+  const [sellerPartyId, setSellerPartyId] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    refresh();
+    setSellerPartyId(readSellerPartyId(window.location.search) ?? "");
   }, []);
 
-  const queryAdapter = useMemo(
-    () => async (query: GridServerQuery) => executeGridQuery(rows, columns, query),
-    [rows],
-  );
+  const queryAdapter = useCallback(async (query: GridServerQuery): Promise<GridServerPage<SellerOfferListRow>> => {
+    if (!sellerPartyId) {
+      return { rows: [], total: 0 };
+    }
+    const result = await loadSellerOffersPage(sellerPartyId, query);
+    setSource(result.source);
+    setTotal(result.page.total);
+    setMessage(result.message);
+    setDenied(Boolean(result.denied));
+    return result.page;
+  }, [sellerPartyId, reloadKey]);
+
+  function refresh() {
+    setReloadKey((value) => value + 1);
+  }
 
   if (denied) {
     return (
@@ -176,8 +173,6 @@ export default function VendorProductsPage() {
     );
   }
 
-  const activeCount = rows.filter((r) => r.status === "Active").length;
-  const inactiveCount = rows.length - activeCount;
 
   return (
     <main className="space-y-4">
@@ -189,8 +184,7 @@ export default function VendorProductsPage() {
           <div>
             <h2 className="text-lg font-bold text-gray-900">مدیریت محصولات</h2>
             <p className="text-xs text-gray-500">
-              {rows.length.toLocaleString("fa-IR")} محصول · {activeCount.toLocaleString("fa-IR")} فعال ·{" "}
-              {inactiveCount.toLocaleString("fa-IR")} غیرفعال
+              {total.toLocaleString("fa-IR")} پیشنهاد · صفحه‌بندی و جست‌وجو در سرور
             </p>
           </div>
         </div>
@@ -210,7 +204,7 @@ export default function VendorProductsPage() {
             {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری" : "اتصال Host برقرار نیست"}
           </p>
           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs tabular-nums text-gray-700">
-            {rows.length.toLocaleString("fa-IR")} ردیف
+            {total.toLocaleString("fa-IR")} ردیف
           </span>
         </div>
         <div className="p-2 md:p-4">
@@ -226,3 +220,8 @@ export default function VendorProductsPage() {
     </main>
   );
 }
+
+
+
+
+

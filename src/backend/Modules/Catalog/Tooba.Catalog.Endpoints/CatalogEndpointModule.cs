@@ -1,4 +1,4 @@
-using Tooba.Catalog.Endpoints.Admin;
+﻿using Tooba.Catalog.Endpoints.Admin;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Definitions;
 using Tooba.Catalog.Endpoints.Admin.Attributes.ProductValues;
 using Tooba.Catalog.Endpoints.Admin.Attributes.Schema;
@@ -70,6 +70,7 @@ public static class CatalogEndpointModule
         app.MapCatalogStorefrontSettingsEndpoints();
         app.MapCatalogStorefrontBrowseEndpoints();
         app.MapCatalogDemoDevEndpoints();
+        app.MapCatalogOfferPickerAdminEndpoints();
         app.MapCatalogSellerEndpoints();
         return app;
     }
@@ -82,3 +83,5 @@ public static class CatalogEndpointModule
         return services;
     }
 }
+
+

@@ -1,14 +1,18 @@
-using Tooba.Catalog.Application.Seller.Models;
+﻿using Tooba.Catalog.Application.Seller.Models;
 
 namespace Tooba.Catalog.Application.Seller.Ports;
 
-/// <summary>Catalog-owned persistence seam for the seller published-variant selection list.</summary>
+/// <summary>Catalog-owned persistence seam for the seller/admin published-variant picker.</summary>
 public interface ISellerCatalogVariantDirectory
 {
-    /// <summary>
-    /// Published products only, newest 100 by UpdatedAt, Persian-first localized product name,
-    /// variants ordered by CatalogCodeSeam.
-    /// </summary>
-    Task<IReadOnlyList<SellerCatalogVariantOption>> ListPublishedVariantsAsync(
+    /// <summary>Legacy newest-100 compatibility list.</summary>
+    Task<IReadOnlyList<SellerCatalogVariantOption>> ListPublishedVariantsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Server search/page over published products and their variants.</summary>
+    Task<SellerCatalogVariantPage> SearchPublishedVariantsAsync(
+        string? search,
+        int page,
+        int pageSize,
         CancellationToken cancellationToken);
 }
+

@@ -1,7 +1,10 @@
-/**
+﻿/**
  * کلاینت Host برای پنل فروشنده.
  * Actor و SellerPartyId جدا هستند؛ مجوز فقط در Host/SpiceDB حل می‌شود.
  */
+
+import type { GridServerPage, GridServerQuery } from "../../design-system/data-grid";
+import { toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper";
 
 export type HostReadSource = "host" | "error";
 
@@ -576,6 +579,33 @@ export async function loadSellerOffers(
   }
 }
 
+/** Server-paged seller Offer list. */
+export async function loadSellerOffersPage(
+  sellerPartyId: string,
+  query: GridServerQuery,
+): Promise<{ source: HostReadSource; page: GridServerPage<SellerOfferListRow>; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/offers/query", {
+      method: "POST",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify(toHostGridQuery(query)),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", page: { rows: [], total: 0 }, message: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", page: { rows: [], total: 0 }, message: "seller-offers-http-" + String(response.status) };
+    }
+    const payload = (await readJson(response)) as { items?: unknown[]; totalCount?: number };
+    return {
+      source: "host",
+      page: { rows: mapSellerOfferList(payload.items ?? []), total: Number(payload.totalCount ?? 0) },
+    };
+  } catch {
+    return { source: "error", page: { rows: [], total: 0 }, message: "host-unreachable" };
+  }
+}
+
 /**
  * جزئیات Offer را فقط برای همان فروشنده می‌خواند.
  */
@@ -703,27 +733,40 @@ export function mapSellerCatalogVariants(payload: unknown): SellerCatalogVariant
 /** فهرست گونه‌های Catalog منتشرشده برای انتخاب Offer. */
 export async function loadSellerCatalogVariants(
   sellerPartyId: string,
-): Promise<{ source: HostReadSource; rows: SellerCatalogVariantOption[]; message?: string; denied?: boolean }> {
+  search = "",
+  page = 1,
+  pageSize = 20,
+): Promise<{ source: HostReadSource; rows: SellerCatalogVariantOption[]; totalCount: number; page: number; pageSize: number; hasMore: boolean; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch("/v1/seller/catalog-variants", {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search.trim()) params.set("search", search.trim());
+    const response = await fetch(`/v1/seller/catalog-variants?${params.toString()}`, {
       headers: sellerHeaders(sellerPartyId, currentActor()),
     });
     if (isDeniedStatus(response.status)) {
-      return { source: "error", rows: [], message: "seller.authorization.denied", denied: true };
+      return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "seller.authorization.denied", denied: true };
     }
     if (!response.ok) {
-      return { source: "error", rows: [], message: "seller-catalog-variants-http-" + String(response.status) };
+      return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "seller-catalog-variants-http-" + String(response.status) };
     }
-    return { source: "host", rows: mapSellerCatalogVariants(await readJson(response)) };
+    const payload = (await readJson(response)) as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number; hasMore?: boolean };
+    return {
+      source: "host",
+      rows: mapSellerCatalogVariants(payload.items ?? []),
+      totalCount: Number(payload.totalCount ?? 0),
+      page: Number(payload.page ?? page),
+      pageSize: Number(payload.pageSize ?? pageSize),
+      hasMore: Boolean(payload.hasMore),
+    };
   } catch {
-    return { source: "error", rows: [], message: "host-unreachable" };
+    return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "host-unreachable" };
   }
 }
 
 /** ایجاد Offer فقط برای Party فروشندهٔ احرازشده. */
 export async function createSellerOffer(
   sellerPartyId: string,
-  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null },
+  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; requestId?: string | null },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch("/v1/seller/offers", {
@@ -733,6 +776,7 @@ export async function createSellerOffer(
         catalogVariantId: input.catalogVariantId,
         sellerSku: input.sellerSku,
         status: input.status,
+        requestId: input.requestId,
       }),
     });
     if (isDeniedStatus(response.status)) {
@@ -743,7 +787,10 @@ export async function createSellerOffer(
       return { ok: false, errorCode: body?.errorCode ?? "seller.offer.create-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.offer.create-failed" };
+    if (!detail || detail.sellerPartyId !== sellerPartyId || detail.catalogVariantId !== input.catalogVariantId) {
+      return { ok: false, errorCode: "seller.offer.response_mismatch" };
+    }
+    return { ok: true, detail };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
@@ -1258,3 +1305,11 @@ export async function saveSellerSettings(
     return { ok: false, errorCode: "host-unreachable" };
   }
 }
+
+
+
+
+
+
+
+
