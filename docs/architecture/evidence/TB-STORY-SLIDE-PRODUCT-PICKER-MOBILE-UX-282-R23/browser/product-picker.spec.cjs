@@ -58,7 +58,7 @@ function makeState({ seller = false, productFailures = 0 } = {}) {
       shopDisplayName: seller ? "فروشگاه تست" : null,
       contentReady: true,
       effectivelyPublic: false,
-      actionCodes: ["update", "add_item"],
+      actionCodes: ["update", "add_item", "delete"],
       items: [{
         storyItemId: ITEM,
         displayOrder: 0,
@@ -160,8 +160,10 @@ function mutationRequests(state) {
 test("REQ-01 admin selects B, one PUT preserves media, reload shows B", async ({ page }) => {
   const state = makeState();
   await install(page, state);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await openEditor(page, state);
   await expect(page.getByTestId("story-product-selected-name")).toHaveText(LONG_A);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   const option = page.getByTestId("story-product-option").filter({ hasText: B_TITLE }).first();
   await option.click();
   await expect(option).toHaveAttribute("aria-pressed", "true");
@@ -182,25 +184,50 @@ test("REQ-01 admin selects B, one PUT preserves media, reload shows B", async ({
   await expect(page.getByTestId("story-detail-workspace")).toBeVisible({ timeout: 15000 });
   await page.getByTestId("story-slide-edit").click();
   await expect(page.getByTestId("story-product-selected-name")).toHaveText(B_TITLE);
-  observations.REQ_01 = { putMethod: put.method, putPath: put.path, ctaTarget: body.ctaTarget, expectedVersion: body.expectedVersion, occurrence: Boolean(body.occurrenceKey), mediaAssetId: body.mediaAssetId, mediaUrl: body.mediaUrl, reloadSelected: B_TITLE };
+  observations.REQ_01 = { viewport: "1440x900", putMethod: put.method, putPath: put.path, ctaTarget: body.ctaTarget, expectedVersion: body.expectedVersion, occurrence: Boolean(body.occurrenceKey), mediaAssetId: body.mediaAssetId, mediaUrl: body.mediaUrl, reloadSelected: B_TITLE };
 });
 
-test("REQ-02 cancel and Escape send no mutation and reopen A", async ({ page }) => {
+test("REQ-02 cancel button and Escape both keep A and send no mutation", async ({ page }) => {
   const state = makeState();
   await install(page, state);
   await openEditor(page, state);
   await page.getByTestId("story-product-option").filter({ hasText: B_TITLE }).first().click();
-  await page.keyboard.press("Escape");
+  const slideDialog = page.locator("dialog[open]").filter({ has: page.getByTestId("story-slide-editor") });
+  await slideDialog.getByRole("button", { name: "بستن" }).click();
   const discard = page.getByTestId("story-slide-unsaved-discard");
-  if (await discard.isVisible().catch(() => false)) await discard.click();
+  await expect(discard).toBeVisible({ timeout: 3000 });
+  await discard.click();
   await expect(page.getByTestId("story-slide-editor")).toBeHidden({ timeout: 5000 });
-  await expect(page.getByTestId("story-slide-unsaved-dialog")).toBeHidden({ timeout: 5000 });
   await expect.poll(() => mutationRequests(state).length).toBe(0);
   await page.getByTestId("story-slide-edit").click();
   await expect(page.getByTestId("story-product-selected-name")).toHaveText(LONG_A);
-  observations.REQ_02 = { mutations: mutationRequests(state).length, reopened: LONG_A };
+
+  await page.getByTestId("story-product-option").filter({ hasText: B_TITLE }).first().click();
+  await page.keyboard.press("Escape");
+  await expect(discard).toBeVisible({ timeout: 3000 });
+  await discard.click();
+  await expect(page.getByTestId("story-slide-editor")).toBeHidden({ timeout: 5000 });
+  await expect.poll(() => mutationRequests(state).length).toBe(0);
+  await page.getByTestId("story-slide-edit").click();
+  await expect(page.getByTestId("story-product-selected-name")).toHaveText(LONG_A);
+  observations.REQ_02 = { cancelPath: "close-button/discard", escapePath: "Escape/discard", mutations: mutationRequests(state).length, reopened: LONG_A };
 });
 
+test("shared Dialog Escape closes the adjacent delete confirmation without mutation", async ({ page }) => {
+  const state = makeState();
+  await install(page, state);
+  await openEditor(page, state);
+  const slideDialog = page.locator("dialog[open]").filter({ has: page.getByTestId("story-slide-editor") });
+  await slideDialog.getByRole("button", { name: "بستن" }).click();
+  const discard = page.getByTestId("story-slide-unsaved-discard");
+  if (await discard.isVisible().catch(() => false)) await discard.click();
+  await page.getByTestId("story-delete-open").click();
+  await expect(page.getByTestId("story-admin-op-confirm")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("story-admin-op-confirm")).toBeHidden({ timeout: 5000 });
+  await expect.poll(() => state.requests.filter((row) => row.method === "DELETE").length).toBe(0);
+  observations.DIALOG = { closeButton: true, deleteConfirmClosedOnEscape: true, deletions: 0 };
+});
 test("REQ-03 503 shows error and retry keeps A without mutation", async ({ page }) => {
   const state = makeState({ productFailures: 1 });
   await install(page, state);
@@ -249,10 +276,28 @@ test("REQ-04 mobile long A outside first page, no overflow and Save reachable", 
   await expect.poll(() => mutationRequests(state).length).toBe(1);
   expect(JSON.parse(mutationRequests(state)[0].body).ctaTarget).toBe(A);
   observations.REQ_04 = { viewport: "360x640", overflow: geometry.overflow, saveHit: geometry.saveHit, cardHit: geometry.cardHit, nameWrapped: geometry.nameWrapped, saveClick: true, ctaTarget: JSON.parse(mutationRequests(state)[0].body).ctaTarget };
+  await expect(page.getByTestId("story-slide-editor")).toBeHidden();
   await page.setViewportSize({ width: 360, height: 800 });
-  const mobile800Overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  expect(mobile800Overflow).toBeLessThanOrEqual(0);
-  observations.REQ_04.mobile800Overflow = mobile800Overflow;
+  await page.getByTestId("story-slide-edit").click();
+  await expect(page.getByTestId("story-product-picker")).toBeVisible();
+  await page.getByTestId("story-slide-save").scrollIntoViewIfNeeded();
+  const save800 = await page.getByTestId("story-slide-save").boundingBox();
+  const card800 = await page.getByTestId("story-product-selected").boundingBox();
+  expect(save800).not.toBeNull();
+  expect(card800).not.toBeNull();
+  const mobile800 = await page.evaluate(({ save800, card800 }) => ({
+    overflow: document.documentElement.scrollWidth - window.innerWidth,
+    saveHit: document.querySelector('[data-testid="story-slide-save"]').contains(
+      document.elementFromPoint(save800.x + save800.width / 2, save800.y + save800.height / 2)),
+    cardHit: document.querySelector('[data-testid="story-product-selected"]').contains(
+      document.elementFromPoint(card800.x + card800.width / 2, card800.y + card800.height / 2)),
+    picker: Boolean(document.querySelector('[data-testid="story-product-picker"]'))
+  }), { save800, card800 });
+  expect(mobile800.overflow).toBeLessThanOrEqual(0);
+  expect(mobile800.saveHit).toBe(true);
+  expect(mobile800.cardHit).toBe(true);
+  expect(mobile800.picker).toBe(true);
+  observations.REQ_04.mobile800 = mobile800;
 });
 
 test("REQ-05 seller uses its fixed shop and fa/en direction/labels", async ({ page }) => {

@@ -31,8 +31,8 @@ node docs\ai\delivery\check-readiness.mjs docs\ai\tasks\TB-STORY-SLIDE-PRODUCT-P
 
 | File | SHA256 |
 |---|---|
-| `browser/assertions.json` | `b92b6dc9ca5009efcc9b66210fc075fa86c8a99a200a85048755fd6939ff5b86` |
-| `browser/run-final.log` | `72bcb8851d49dd2a2f16242faf93c89695d66da9d703b4a5f7257d75aa8f7b2c` |
+| `browser/assertions.json` | `e06f1a70e859e8e3690a869188186571c0aa1fddd932f493658bc5c58272c92a` |
+| `browser/run-final.log` | `b31adc4a3310576bf0c08dfb6917d818759cdab1ca1b40a364b7a1164ec7b6d1` |
 | `browser/product-picker.spec.cjs` | source |
 | `browser/playwright.config.cjs` | source |
 

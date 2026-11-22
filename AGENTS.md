@@ -15,11 +15,13 @@ wraps long Persian names, localizes fa/en copy and direction, and routes Escape 
 Dialog close so the dirty-slide discard guard runs. Existing lookup, update-item, media, version/occurrence,
 seller scope and VendorShell are unchanged.
 
-Verification: Playwright/Chromium controlled-HTTP **5/5** at 1280×720, 360×640, 360×800, 1440×900 and
-seller route; `npm run test:stories` 91/91; `tsc` 0; production build `BUILD_ID UAHu-Q2GiefOjIEroMkVb`;
+Verification: Playwright/Chromium controlled-HTTP **6/6** at 1440×900, 360×640, reopened 360×800 and
+seller route, plus an adjacent shared-Dialog Escape consumer; `npm run test:stories` 91/91; `tsc` 0;
+production build `BUILD_ID UAHu-Q2GiefOjIEroMkVb`;
 OpenSpec `2.1.1` validates; review gates pass. Browser assertions/transport are in
 `browser/assertions.json`; one PUT is captured with B, expectedVersion 7, occurrence, preserved media and
-zero upload/add/delete. Browser evidence is controlled HTTP, not live backend/persistence.
+zero upload/add/delete. Cancel and Escape both require the discard confirmation; 360×800 is checked with the picker reopened.
+Browser evidence is controlled HTTP, not live backend/persistence.
 
 Honest limits: one product correction was needed for native Escape bypassing controlled close; no screenshot;
 shared Dialog change is limited to Escape routing; Story screen remains oversized. No migration/schema/

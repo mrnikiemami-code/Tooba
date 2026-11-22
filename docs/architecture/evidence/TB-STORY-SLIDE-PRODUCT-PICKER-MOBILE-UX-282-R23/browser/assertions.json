@@ -1,5 +1,6 @@
 {
   "REQ_01": {
+    "viewport": "1440x900",
     "putMethod": "PUT",
     "putPath": "/v1/admin/stories/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa23a1/items/dddddddd-dddd-dddd-dddd-dddddddd23d1",
     "ctaTarget": "66666666-6666-6666-6666-666666666661",
@@ -10,8 +11,15 @@
     "reloadSelected": "محصول ب"
   },
   "REQ_02": {
+    "cancelPath": "close-button/discard",
+    "escapePath": "Escape/discard",
     "mutations": 0,
     "reopened": "محصول فوق‌العاده طولانی با نام چندکلمه‌ای برای آزمایش موبایل و خوانایی"
+  },
+  "DIALOG": {
+    "closeButton": true,
+    "deleteConfirmClosedOnEscape": true,
+    "deletions": 0
   },
   "REQ_03": {
     "errorVisible": true,
@@ -28,7 +36,12 @@
     "nameWrapped": true,
     "saveClick": true,
     "ctaTarget": "55555555-5555-5555-5555-555555555551",
-    "mobile800Overflow": 0
+    "mobile800": {
+      "overflow": 0,
+      "saveHit": true,
+      "cardHit": true,
+      "picker": true
+    }
   },
   "REQ_05": {
     "sellerShop": "77777777-7777-7777-7777-777777777771",

@@ -17,10 +17,10 @@ Readiness: **READY_FOR_ARCHITECT_REVIEW**. This is worker self-review, not Archi
 
 | REQ | Test | Viewport | Result | Evidence |
 |---|---|---|---|---|
-| REQ-01 | `REQ-01 admin selects B, one PUT preserves media, reload shows B` | 1280×720 default | PASS | `browser/assertions.json` REQ_01 |
-| REQ-02 | `REQ-02 cancel and Escape send no mutation and reopen A` | 1280×720 default | PASS | `browser/assertions.json` REQ_02 |
+| REQ-01 | `REQ-01 admin selects B, one PUT preserves media, reload shows B` | 1440×900 | PASS | `browser/assertions.json` REQ_01 |
+| REQ-02 | `REQ-02 cancel button and Escape both keep A and send no mutation` | 1280×720 default | PASS | `browser/assertions.json` REQ_02 |
 | REQ-03 | `REQ-03 503 shows error and retry keeps A without mutation` | 1280×720 default | PASS | `browser/assertions.json` REQ_03 |
-| REQ-04 | `REQ-04 mobile long A outside first page, no overflow and Save reachable` | 360×640 and 360×800 | PASS | `browser/assertions.json` REQ_04 |
+| REQ-04 | `REQ-04 mobile long A outside first page, no overflow and Save reachable` | 360×640, reopened at 360×800 | PASS | `browser/assertions.json` REQ_04 |
 | REQ-05 | `REQ-05 seller uses its fixed shop and fa/en direction/labels` | seller default and 1440×900 | PASS | `browser/assertions.json` REQ_05 |
 
 ## Transport evidence
@@ -40,7 +40,7 @@ The controlled PUT updates the fixture state and the later GET/reload shows B.
 
 - OpenSpec `2.1.1`: change `story-slide-product-picker-mobile-282-r23` validates with `--strict`; proposal, spec, design and tasks exist.
 - Impeccable `4.10.0` guidance was read from the installed skill; the project already has no PRODUCT/DESIGN files, so the existing project tokens/components were reused without creating a parallel design system.
-- Playwright `1.65.1` with installed Chromium: 5/5 browser tests pass. Command is recorded in `RECEIPTS.md`.
+- Playwright `1.65.1` with installed Chromium: **6/6** browser tests pass, including a separate cancel-button path, mandatory Escape discard confirmation, reopened 360×800 picker geometry, and an adjacent shared-Dialog escape consumer. Command is recorded in `RECEIPTS.md`.
 - Browser transport is controlled by Playwright `page.route`; this is not live backend/PostgreSQL proof.
 
 ## Verification
@@ -54,7 +54,7 @@ The controlled PUT updates the fixture state and the later GET/reload shows B.
 ## Honest limits
 
 - Browser tests use controlled HTTP fixtures, not live Story/Media persistence.
-- The browser suite covers 1440×900 in the REQ-05 test, while REQ-01/02/03 use the Playwright default viewport (1280×720); the task's mandatory mobile checks are 360×640 and 360×800.
+- REQ-01 now runs at 1440×900; REQ-02/03 use the Playwright default 1280×720; REQ-04 covers 360×640 and a reopened 360×800 picker; REQ-05 uses the seller and English admin routes.
 - No screenshot was captured (not required).
 - The shared `Dialog` change is limited to routing Escape through the existing controlled close; no dialog redesign.
 - The Story screen remains oversized; this task does not restructure it.
