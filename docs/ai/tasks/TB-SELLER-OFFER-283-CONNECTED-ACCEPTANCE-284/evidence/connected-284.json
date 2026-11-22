@@ -1,0 +1,1054 @@
+{
+  "task": "TB-SELLER-OFFER-283-CONNECTED-ACCEPTANCE-284",
+  "startedAt": "2026-11-22T16:52:58.104Z",
+  "environment": {
+    "db": "tooba_offer283_connected",
+    "host": "http://127.0.0.1:5090",
+    "fe": "http://127.0.0.1:3100",
+    "offer": "01a2041e-bb6b-7000-9163-d736d71634d5",
+    "seller": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+    "actor": "01a2041e-bca5-7000-87e7-f621a913c987",
+    "positions": [
+      "01a2041e-bbe0-7000-9897-006e14fe11c0",
+      "01a2041e-bbd3-7000-9fe5-0e7d2157003e"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "REQ-01",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:52:58.163Z",
+      "finishedAt": "2026-11-22T16:52:59.432Z",
+      "result": {
+        "before": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "after": {
+          "sku": "ARM-LN-01-C01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "independent": {
+          "status": 200,
+          "body": {
+            "offerId": "01a2041e-bb6b-7000-9163-d736d71634d5",
+            "sellerPartyId": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "catalogVariantId": "01a2041e-bb5e-7000-9865-2f5a169ff594",
+            "productId": "01a2041e-bb05-7000-901a-4360e7162afb",
+            "productTitle": "پیراهن مردانه لینن",
+            "brandName": "Arman",
+            "sellerSku": "ARM-LN-01-C01",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2500000,
+            "currency": "IRR",
+            "onHand": 10,
+            "reserved": 3,
+            "availableUnits": 7,
+            "catalogReadOnly": true,
+            "returnPolicyChoice": "Default",
+            "defaultReturnWindowDays": 7,
+            "sellerCanOverrideReturnPolicy": true,
+            "minReturnWindowDays": 1,
+            "maxReturnWindowDays": 30,
+            "allowNonReturnableOffers": true,
+            "productUnitCode": "pcs",
+            "productUnitName": "pcs",
+            "productUnitShortName": "pcs",
+            "inventoryLocations": [
+              {
+                "stockItemId": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+                "locationId": "01a2041e-bbc4-7000-9c23-3ba3eb7d513b",
+                "locationCode": "WH-THR",
+                "onHand": 7,
+                "reserved": 2,
+                "available": 5
+              },
+              {
+                "stockItemId": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+                "locationId": "01a2041e-bbc7-7000-9045-d2f1d0ad53e6",
+                "locationCode": "WH-ISF",
+                "onHand": 3,
+                "reserved": 1,
+                "available": 2
+              }
+            ]
+          }
+        },
+        "writes": [
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C01\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "REQ-03",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:52:59.432Z",
+      "finishedAt": "2026-11-22T16:53:01.775Z",
+      "result": {
+        "before": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "afterPrice": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2750000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "after": {
+          "sku": "ARM-LN-01-C03",
+          "status": "Active",
+          "price": "2750000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "independent": {
+          "status": 200,
+          "body": {
+            "offerId": "01a2041e-bb6b-7000-9163-d736d71634d5",
+            "sellerPartyId": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "catalogVariantId": "01a2041e-bb5e-7000-9865-2f5a169ff594",
+            "productId": "01a2041e-bb05-7000-901a-4360e7162afb",
+            "productTitle": "پیراهن مردانه لینن",
+            "brandName": "Arman",
+            "sellerSku": "ARM-LN-01-C03",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2750000,
+            "currency": "IRR",
+            "onHand": 10,
+            "reserved": 3,
+            "availableUnits": 7,
+            "catalogReadOnly": true,
+            "returnPolicyChoice": "Default",
+            "defaultReturnWindowDays": 7,
+            "sellerCanOverrideReturnPolicy": true,
+            "minReturnWindowDays": 1,
+            "maxReturnWindowDays": 30,
+            "allowNonReturnableOffers": true,
+            "productUnitCode": "pcs",
+            "productUnitName": "pcs",
+            "productUnitShortName": "pcs",
+            "inventoryLocations": [
+              {
+                "stockItemId": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+                "locationId": "01a2041e-bbc4-7000-9c23-3ba3eb7d513b",
+                "locationCode": "WH-THR",
+                "onHand": 7,
+                "reserved": 2,
+                "available": 5
+              },
+              {
+                "stockItemId": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+                "locationId": "01a2041e-bbc7-7000-9045-d2f1d0ad53e6",
+                "locationCode": "WH-ISF",
+                "onHand": 3,
+                "reserved": 1,
+                "available": 2
+              }
+            ]
+          }
+        },
+        "writesA": [
+          {
+            "method": "PUT",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price",
+            "body": "{\"amount\":2750000}"
+          }
+        ],
+        "writesB": [
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C03\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "REQ-02",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:53:01.775Z",
+      "finishedAt": "2026-11-22T16:53:03.330Z",
+      "result": {
+        "before": {
+          "sku": "ARM-LN-01",
+          "status": "Draft",
+          "price": "2500000.0000",
+          "min": "2.000000",
+          "max": "9.000000",
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "afterDraft": {
+          "sku": "ARM-LN-01-C02",
+          "status": "Draft",
+          "price": "2500000.0000",
+          "min": "2.000000",
+          "max": "9.000000",
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "after": {
+          "sku": "ARM-LN-01-C02",
+          "status": "Draft",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "writes": [
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C02\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":2,\"maximumOrderQuantity\":9,\"clearOrderQuantityLimits\":false}"
+          },
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C02\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":true}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "REQ-04",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:53:03.330Z",
+      "finishedAt": "2026-11-22T16:53:05.002Z",
+      "result": {
+        "before": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 27
+        },
+        "after": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "8.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "independent": {
+          "status": 200,
+          "body": {
+            "offerId": "01a2041e-bb6b-7000-9163-d736d71634d5",
+            "sellerPartyId": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "catalogVariantId": "01a2041e-bb5e-7000-9865-2f5a169ff594",
+            "productId": "01a2041e-bb05-7000-901a-4360e7162afb",
+            "productTitle": "پیراهن مردانه لینن",
+            "brandName": "Arman",
+            "sellerSku": "ARM-LN-01",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2500000,
+            "currency": "IRR",
+            "onHand": 11,
+            "reserved": 3,
+            "availableUnits": 8,
+            "catalogReadOnly": true,
+            "returnPolicyChoice": "Default",
+            "defaultReturnWindowDays": 7,
+            "sellerCanOverrideReturnPolicy": true,
+            "minReturnWindowDays": 1,
+            "maxReturnWindowDays": 30,
+            "allowNonReturnableOffers": true,
+            "productUnitCode": "pcs",
+            "productUnitName": "pcs",
+            "productUnitShortName": "pcs",
+            "inventoryLocations": [
+              {
+                "stockItemId": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+                "locationId": "01a2041e-bbc4-7000-9c23-3ba3eb7d513b",
+                "locationCode": "WH-THR",
+                "onHand": 8,
+                "reserved": 2,
+                "available": 6
+              },
+              {
+                "stockItemId": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+                "locationId": "01a2041e-bbc7-7000-9045-d2f1d0ad53e6",
+                "locationCode": "WH-ISF",
+                "onHand": 3,
+                "reserved": 1,
+                "available": 2
+              }
+            ]
+          }
+        },
+        "writes": [
+          {
+            "method": "PUT",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory",
+            "body": "{\"onHand\":8,\"reason\":\"vendor-panel-edit\",\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\"}"
+          }
+        ],
+        "negative": [
+          {
+            "name": "ambiguous",
+            "status": 400,
+            "body": "{\"type\":\"about:blank\",\"title\":\"Stock position id is required.\",\"status\":400,\"instance\":\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\",\"errorCode\":\"inventory.position.id_required\",\"traceId\":\"df1c3a670eb8bb6c2e3637a19da97775\",\"correlationId\":\"c2a7740e68814cb68534fb30f36adc91\",\"requestId\":\"0HNQ8MRSLHQEO:00000001\"}"
+          },
+          {
+            "name": "foreign",
+            "status": 409,
+            "body": "{\"type\":\"about:blank\",\"title\":\"Stock position is unknown.\",\"status\":409,\"instance\":\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\",\"errorCode\":\"inventory.position.id_unknown\",\"traceId\":\"292f802a80c61db941531e34ac840ad7\",\"correlationId\":\"bab549d79f434383a137a8eecd8e8d93\",\"requestId\":\"0HNQ8MRSLHQE2:00000005\"}"
+          },
+          {
+            "name": "below-reserved",
+            "status": 409,
+            "body": "{\"type\":\"about:blank\",\"title\":\"Adjustment exceeds the available quantity.\",\"status\":409,\"instance\":\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\",\"errorCode\":\"inventory.adjustment.quantity_exceeds\",\"traceId\":\"fbe3f351e678275d68aa87088047d2f4\",\"correlationId\":\"75d94eb297eb45e988eb58d396273b9e\",\"requestId\":\"0HNQ8MRSLHQEO:00000002\"}"
+          }
+        ],
+        "negativeBefore": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "8.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "negativeAfter": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "8.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        }
+      }
+    },
+    {
+      "id": "REQ-06",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:53:05.002Z",
+      "finishedAt": "2026-11-22T16:53:07.080Z",
+      "result": {
+        "geometry": {
+          "innerWidth": 360,
+          "scrollWidth": 360,
+          "overflowX": 0
+        },
+        "boxes": {
+          "save": {
+            "x": 192.328125,
+            "y": 298,
+            "width": 130.671875,
+            "height": 44
+          },
+          "cancel": {
+            "x": 140.890625,
+            "y": 310,
+            "width": 39.4375,
+            "height": 20
+          },
+          "position": {
+            "x": 54,
+            "y": -523,
+            "width": 252,
+            "height": 122
+          }
+        },
+        "writes": [],
+        "skuAfterReopen": "ARM-LN-01"
+      }
+    },
+    {
+      "id": "REQ-07",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:53:07.080Z",
+      "finishedAt": "2026-11-22T16:53:08.861Z",
+      "result": {
+        "writes": [
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C07\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          },
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C07\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          },
+          {
+            "method": "PUT",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price",
+            "body": "{\"amount\":2800000}"
+          }
+        ],
+        "priceDraft": "2800000",
+        "after": {
+          "sku": "ARM-LN-01-C07",
+          "status": "Active",
+          "price": "2800000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "independent": {
+          "status": 200,
+          "body": {
+            "offerId": "01a2041e-bb6b-7000-9163-d736d71634d5",
+            "sellerPartyId": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "catalogVariantId": "01a2041e-bb5e-7000-9865-2f5a169ff594",
+            "productId": "01a2041e-bb05-7000-901a-4360e7162afb",
+            "productTitle": "پیراهن مردانه لینن",
+            "brandName": "Arman",
+            "sellerSku": "ARM-LN-01-C07",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2800000,
+            "currency": "IRR",
+            "onHand": 10,
+            "reserved": 3,
+            "availableUnits": 7,
+            "catalogReadOnly": true,
+            "returnPolicyChoice": "Default",
+            "defaultReturnWindowDays": 7,
+            "sellerCanOverrideReturnPolicy": true,
+            "minReturnWindowDays": 1,
+            "maxReturnWindowDays": 30,
+            "allowNonReturnableOffers": true,
+            "productUnitCode": "pcs",
+            "productUnitName": "pcs",
+            "productUnitShortName": "pcs",
+            "inventoryLocations": [
+              {
+                "stockItemId": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+                "locationId": "01a2041e-bbc4-7000-9c23-3ba3eb7d513b",
+                "locationCode": "WH-THR",
+                "onHand": 7,
+                "reserved": 2,
+                "available": 5
+              },
+              {
+                "stockItemId": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+                "locationId": "01a2041e-bbc7-7000-9045-d2f1d0ad53e6",
+                "locationCode": "WH-ISF",
+                "onHand": 3,
+                "reserved": 1,
+                "available": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "REQ-05",
+      "status": "PASS",
+      "startedAt": "2026-11-22T16:53:08.861Z",
+      "finishedAt": "2026-11-22T16:53:41.909Z",
+      "result": {
+        "before": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "afterWrong": {
+          "sku": "ARM-LN-01",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "afterLost": {
+          "sku": "ARM-LN-01-C05-LOST",
+          "status": "Active",
+          "price": "2500000.0000",
+          "min": null,
+          "max": null,
+          "positions": [
+            {
+              "id": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+              "onHand": "7.000000",
+              "reserved": "2.000000"
+            },
+            {
+              "id": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+              "onHand": "3.000000",
+              "reserved": "1.000000"
+            }
+          ],
+          "reservations": [
+            {
+              "id": "01a2041e-bc09-7000-bd3e-8b6f414873fe",
+              "qty": "3.000000",
+              "status": "Held"
+            }
+          ],
+          "outbox": 29
+        },
+        "independent": {
+          "status": 200,
+          "body": {
+            "offerId": "01a2041e-bb6b-7000-9163-d736d71634d5",
+            "sellerPartyId": "01a2041e-bb65-7000-9b34-1d049b3a788a",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "catalogVariantId": "01a2041e-bb5e-7000-9865-2f5a169ff594",
+            "productId": "01a2041e-bb05-7000-901a-4360e7162afb",
+            "productTitle": "پیراهن مردانه لینن",
+            "brandName": "Arman",
+            "sellerSku": "ARM-LN-01-C05-LOST",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2500000,
+            "currency": "IRR",
+            "onHand": 10,
+            "reserved": 3,
+            "availableUnits": 7,
+            "catalogReadOnly": true,
+            "returnPolicyChoice": "Default",
+            "defaultReturnWindowDays": 7,
+            "sellerCanOverrideReturnPolicy": true,
+            "minReturnWindowDays": 1,
+            "maxReturnWindowDays": 30,
+            "allowNonReturnableOffers": true,
+            "productUnitCode": "pcs",
+            "productUnitName": "pcs",
+            "productUnitShortName": "pcs",
+            "inventoryLocations": [
+              {
+                "stockItemId": "01a2041e-bbd3-7000-9fe5-0e7d2157003e",
+                "locationId": "01a2041e-bbc4-7000-9c23-3ba3eb7d513b",
+                "locationCode": "WH-THR",
+                "onHand": 7,
+                "reserved": 2,
+                "available": 5
+              },
+              {
+                "stockItemId": "01a2041e-bbe0-7000-9897-006e14fe11c0",
+                "locationId": "01a2041e-bbc7-7000-9045-d2f1d0ad53e6",
+                "locationCode": "WH-ISF",
+                "onHand": 3,
+                "reserved": 1,
+                "available": 2
+              }
+            ]
+          }
+        },
+        "writes": [
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C05-WRONG\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          },
+          {
+            "method": "PATCH",
+            "url": "http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5",
+            "body": "{\"sellerSku\":\"ARM-LN-01-C05-LOST\",\"returnPolicyChoice\":\"Default\",\"customReturnWindowDays\":null,\"minimumOrderQuantity\":null,\"maximumOrderQuantity\":null,\"clearOrderQuantityLimits\":false}"
+          }
+        ]
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "REQ-01-two-positions",
+      "ok": true,
+      "detail": "exactly two positions"
+    },
+    {
+      "id": "REQ-01-one-patch",
+      "ok": true,
+      "detail": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C01\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+    },
+    {
+      "id": "REQ-01-zero-owner-writes",
+      "ok": true,
+      "detail": "{\"priceWrites\":[],\"inventoryWrites\":[]}"
+    },
+    {
+      "id": "REQ-01-sku",
+      "ok": true,
+      "detail": "ARM-LN-01-C01"
+    },
+    {
+      "id": "REQ-01-price",
+      "ok": true,
+      "detail": "{\"before\":\"2500000.0000\",\"after\":\"2500000.0000\",\"get\":2500000}"
+    },
+    {
+      "id": "REQ-01-positions",
+      "ok": true,
+      "detail": "{\"before\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"after\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]}"
+    },
+    {
+      "id": "REQ-01-reservations",
+      "ok": true,
+      "detail": "{\"before\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"after\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}]}"
+    },
+    {
+      "id": "REQ-01-outbox",
+      "ok": true,
+      "detail": "{\"before\":27,\"after\":27}"
+    },
+    {
+      "id": "REQ-01-independent-get",
+      "ok": true,
+      "detail": "{\"status\":200,\"body\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C01\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2500000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+    },
+    {
+      "id": "REQ-03-B-old-price",
+      "ok": true,
+      "detail": "2500000"
+    },
+    {
+      "id": "REQ-03-A-one-price-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price\",\"body\":\"{\\\"amount\\\":2750000}\"}]"
+    },
+    {
+      "id": "REQ-03-A-no-commercial-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/price\",\"body\":\"{\\\"amount\\\":2750000}\"}]"
+    },
+    {
+      "id": "REQ-03-price-persisted",
+      "ok": true,
+      "detail": "{\"sql\":\"2750000.0000\",\"get\":2750000}"
+    },
+    {
+      "id": "REQ-03-B-still-stale",
+      "ok": true,
+      "detail": "2500000"
+    },
+    {
+      "id": "REQ-03-B-one-commercial-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C03\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+    },
+    {
+      "id": "REQ-03-B-zero-price-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C03\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+    },
+    {
+      "id": "REQ-03-both-persist",
+      "ok": true,
+      "detail": "{\"sql\":{\"sku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"price\":\"2750000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2750000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+    },
+    {
+      "id": "REQ-03-stock-unchanged",
+      "ok": true,
+      "detail": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"after\":{\"sku\":\"ARM-LN-01-C03\",\"status\":\"Active\",\"price\":\"2750000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}}"
+    },
+    {
+      "id": "REQ-02-draft-stays",
+      "ok": true,
+      "detail": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":\"2.000000\",\"max\":\"9.000000\",\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+    },
+    {
+      "id": "REQ-02-limits-cleared",
+      "ok": true,
+      "detail": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+    },
+    {
+      "id": "REQ-02-still-draft",
+      "ok": true,
+      "detail": "{\"sku\":\"ARM-LN-01-C02\",\"status\":\"Draft\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27}"
+    },
+    {
+      "id": "REQ-04-targeted-position",
+      "ok": true,
+      "detail": "[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]"
+    },
+    {
+      "id": "REQ-04-total",
+      "ok": true,
+      "detail": "[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}]"
+    },
+    {
+      "id": "REQ-04-other-state",
+      "ok": true,
+      "detail": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":27},\"after\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+    },
+    {
+      "id": "REQ-04-one-inventory-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PUT\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\",\"body\":\"{\\\"onHand\\\":8,\\\"reason\\\":\\\"vendor-panel-edit\\\",\\\"stockItemId\\\":\\\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\\\"}\"}]"
+    },
+    {
+      "id": "REQ-04-negatives-refused",
+      "ok": true,
+      "detail": "[{\"name\":\"ambiguous\",\"status\":400,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Stock position id is required.\\\",\\\"status\\\":400,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.position.id_required\\\",\\\"traceId\\\":\\\"df1c3a670eb8bb6c2e3637a19da97775\\\",\\\"correlationId\\\":\\\"c2a7740e68814cb68534fb30f36adc91\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQEO:00000001\\\"}\"},{\"name\":\"foreign\",\"status\":409,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Stock position is unknown.\\\",\\\"status\\\":409,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.position.id_unknown\\\",\\\"traceId\\\":\\\"292f802a80c61db941531e34ac840ad7\\\",\\\"correlationId\\\":\\\"bab549d79f434383a137a8eecd8e8d93\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQE2:00000005\\\"}\"},{\"name\":\"below-reserved\",\"status\":409,\"body\":\"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Adjustment exceeds the available quantity.\\\",\\\"status\\\":409,\\\"instance\\\":\\\"/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5/inventory\\\",\\\"errorCode\\\":\\\"inventory.adjustment.quantity_exceeds\\\",\\\"traceId\\\":\\\"fbe3f351e678275d68aa87088047d2f4\\\",\\\"correlationId\\\":\\\"75d94eb297eb45e988eb58d396273b9e\\\",\\\"requestId\\\":\\\"0HNQ8MRSLHQEO:00000002\\\"}\"}]"
+    },
+    {
+      "id": "REQ-04-negatives-zero-change",
+      "ok": true,
+      "detail": "{\"negativeBefore\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"negativeAfter\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"8.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+    },
+    {
+      "id": "REQ-06-no-horizontal-overflow",
+      "ok": true,
+      "detail": "{\"innerWidth\":360,\"scrollWidth\":360,\"overflowX\":0}"
+    },
+    {
+      "id": "REQ-06-controls-visible",
+      "ok": true,
+      "detail": "{\"save\":{\"x\":192.328125,\"y\":298,\"width\":130.671875,\"height\":44},\"cancel\":{\"x\":140.890625,\"y\":310,\"width\":39.4375,\"height\":20},\"position\":{\"x\":54,\"y\":-523,\"width\":252,\"height\":122}}"
+    },
+    {
+      "id": "REQ-06-cancel-zero-writes",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "REQ-06-old-value",
+      "ok": true,
+      "detail": "ARM-LN-01"
+    },
+    {
+      "id": "REQ-07-no-change-zero-writes",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "REQ-07-second-draft-retained",
+      "ok": true,
+      "detail": "2800000"
+    },
+    {
+      "id": "REQ-07-both-persist",
+      "ok": true,
+      "detail": "{\"after\":{\"sku\":\"ARM-LN-01-C07\",\"status\":\"Active\",\"price\":\"2800000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C07\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2800000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+    },
+    {
+      "id": "REQ-05-wrong-no-success",
+      "ok": true,
+      "detail": "{\"wrongNotice\":0}"
+    },
+    {
+      "id": "REQ-05-wrong-zero-change",
+      "ok": true,
+      "detail": "{\"before\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"afterWrong\":{\"sku\":\"ARM-LN-01\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29}}"
+    },
+    {
+      "id": "REQ-05-lost-write-persisted",
+      "ok": true,
+      "detail": "{\"afterLost\":{\"sku\":\"ARM-LN-01-C05-LOST\",\"status\":\"Active\",\"price\":\"2500000.0000\",\"min\":null,\"max\":null,\"positions\":[{\"id\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"onHand\":\"7.000000\",\"reserved\":\"2.000000\"},{\"id\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"onHand\":\"3.000000\",\"reserved\":\"1.000000\"}],\"reservations\":[{\"id\":\"01a2041e-bc09-7000-bd3e-8b6f414873fe\",\"qty\":\"3.000000\",\"status\":\"Held\"}],\"outbox\":29},\"get\":{\"offerId\":\"01a2041e-bb6b-7000-9163-d736d71634d5\",\"sellerPartyId\":\"01a2041e-bb65-7000-9b34-1d049b3a788a\",\"sellerDisplayName\":\"فروشگاه آرمان\",\"catalogVariantId\":\"01a2041e-bb5e-7000-9865-2f5a169ff594\",\"productId\":\"01a2041e-bb05-7000-901a-4360e7162afb\",\"productTitle\":\"پیراهن مردانه لینن\",\"brandName\":\"Arman\",\"sellerSku\":\"ARM-LN-01-C05-LOST\",\"status\":\"Active\",\"channel\":\"Marketplace\",\"amount\":2500000,\"currency\":\"IRR\",\"onHand\":10,\"reserved\":3,\"availableUnits\":7,\"catalogReadOnly\":true,\"returnPolicyChoice\":\"Default\",\"defaultReturnWindowDays\":7,\"sellerCanOverrideReturnPolicy\":true,\"minReturnWindowDays\":1,\"maxReturnWindowDays\":30,\"allowNonReturnableOffers\":true,\"productUnitCode\":\"pcs\",\"productUnitName\":\"pcs\",\"productUnitShortName\":\"pcs\",\"inventoryLocations\":[{\"stockItemId\":\"01a2041e-bbd3-7000-9fe5-0e7d2157003e\",\"locationId\":\"01a2041e-bbc4-7000-9c23-3ba3eb7d513b\",\"locationCode\":\"WH-THR\",\"onHand\":7,\"reserved\":2,\"available\":5},{\"stockItemId\":\"01a2041e-bbe0-7000-9897-006e14fe11c0\",\"locationId\":\"01a2041e-bbc7-7000-9045-d2f1d0ad53e6\",\"locationCode\":\"WH-ISF\",\"onHand\":3,\"reserved\":1,\"available\":2}]}}"
+    },
+    {
+      "id": "REQ-05-no-automatic-second-write",
+      "ok": true,
+      "detail": "[{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C05-WRONG\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"},{\"method\":\"PATCH\",\"url\":\"http://127.0.0.1:3100/v1/seller/offers/01a2041e-bb6b-7000-9163-d736d71634d5\",\"body\":\"{\\\"sellerSku\\\":\\\"ARM-LN-01-C05-LOST\\\",\\\"returnPolicyChoice\\\":\\\"Default\\\",\\\"customReturnWindowDays\\\":null,\\\"minimumOrderQuantity\\\":null,\\\"maximumOrderQuantity\\\":null,\\\"clearOrderQuantityLimits\\\":false}\"}]"
+    }
+  ],
+  "finishedAt": "2026-11-22T16:53:41.909Z",
+  "ok": true
+}

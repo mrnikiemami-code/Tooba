@@ -5,170 +5,316 @@
   "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
   "architecturePlan": "ARCHITECTURE-PLAN.md",
   "architecturePlanSha256": "de9cbd3358b70258f2923359732a700cbec8bfa4f0e9911e02196694e8b72654",
-  "planCommit": "",
+  "planCommit": "78868597554dc920bc6a11b1d9b6ef96ba07d069",
   "waves": [
     {
       "id": "W1",
       "dependsOn": [],
-      "requirementIds": ["REQ-01", "REQ-03"],
-      "status": "PLANNED"
+      "requirementIds": [
+        "REQ-01",
+        "REQ-03"
+      ],
+      "status": "VERIFIED"
     },
     {
       "id": "W2",
-      "dependsOn": ["W1"],
-      "requirementIds": ["REQ-01"],
-      "status": "PLANNED"
+      "dependsOn": [
+        "W1"
+      ],
+      "requirementIds": [
+        "REQ-01"
+      ],
+      "status": "VERIFIED"
     },
     {
       "id": "W3",
-      "dependsOn": ["W2"],
-      "requirementIds": ["REQ-03"],
-      "status": "PLANNED"
+      "dependsOn": [
+        "W2"
+      ],
+      "requirementIds": [
+        "REQ-03"
+      ],
+      "status": "VERIFIED"
     },
     {
       "id": "W4",
-      "dependsOn": ["W3"],
-      "requirementIds": ["REQ-02", "REQ-04", "REQ-05", "REQ-06", "REQ-07"],
-      "status": "PLANNED"
+      "dependsOn": [
+        "W3"
+      ],
+      "requirementIds": [
+        "REQ-02",
+        "REQ-04",
+        "REQ-05",
+        "REQ-06",
+        "REQ-07"
+      ],
+      "status": "VERIFIED"
     },
     {
       "id": "W5",
-      "dependsOn": ["W4"],
-      "requirementIds": ["REQ-01", "REQ-02", "REQ-03", "REQ-04", "REQ-05", "REQ-06", "REQ-07"],
-      "status": "PLANNED"
+      "dependsOn": [
+        "W4"
+      ],
+      "requirementIds": [
+        "REQ-01",
+        "REQ-02",
+        "REQ-03",
+        "REQ-04",
+        "REQ-05",
+        "REQ-06",
+        "REQ-07"
+      ],
+      "status": "VERIFIED"
     }
   ],
   "requirements": [
     {
       "id": "REQ-01",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-01",
           "kind": "connected-browser-host",
           "steps": "Real seller Chromium changes only SKU on the two-position fixture; one owning Offer PATCH and zero price or inventory writes.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-02",
           "kind": "connected-postgresql",
           "steps": "Direct SQL and independent GET show new SKU, unchanged price, positions 3 and 7, reservations and inventory outbox count.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-02",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-03",
           "kind": "connected-draft",
           "steps": "Draft SKU edit stays Draft and persists through the real Host and PostgreSQL.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-04",
           "kind": "connected-clear-limits",
           "steps": "Explicit both-limit clear persists null after reload; an unrelated patch preserves stored limits.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-03",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-05",
           "kind": "connected-two-sessions",
           "steps": "Two real seller contexts load old price; A saves new price; B saves SKU only from the stale form; new price and SKU survive and B writes no price.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-04",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-06",
           "kind": "connected-position",
           "steps": "Change only the second named position from 7 to 8; reread shows 3 and 8 and total 11 with other state unchanged.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-07",
           "kind": "connected-negative",
           "steps": "Ambiguous multi-position, foreign target and below-reserved attempts are refused with zero change.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-05",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-08",
           "kind": "browser-wrong-response",
           "steps": "Wrong other/stale response never shows success; independent GET remains authoritative.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-09",
           "kind": "browser-uncertain-response",
           "steps": "Disconnect after an owning write shows uncertainty, reconciles by GET and does not auto-retry.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-06",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-10",
           "kind": "browser-cancel",
           "steps": "Dirty cancel sends zero writes and reopening restores stored values.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-11",
           "kind": "browser-mobile-geometry",
           "steps": "360x640 dirty form exposes position input, Save and Cancel with zero document horizontal overflow.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     },
     {
       "id": "REQ-07",
-      "status": "OPEN",
+      "status": "VERIFIED",
       "scenarios": [
         {
           "id": "S-12",
           "kind": "browser-no-change",
           "steps": "Save with no changes sends zero writes.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         },
         {
           "id": "S-13",
           "kind": "browser-independent-sections",
           "steps": "A failed first section does not clear or commit the second draft; after its own save both values persist.",
-          "status": "NOT_RUN",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            {
+              "file": "evidence/connected-284.json",
+              "kind": "connected-real-browser-host-postgresql",
+              "provider": "chromium-playwright + Tooba Host 5090 + PostgreSQL 17.10 isolated",
+              "phase": "after",
+              "codeSha": "611f97a85ec7c2e464e4f649820992202ca3754c",
+              "sha256": "0a155bcc2fa5396b8d981e3246036523f70800a3bdf2e02db5c08fb89528afc1"
+            }
+          ]
         }
       ]
     }
