@@ -1,0 +1,101 @@
+{
+  "taskId": "TB-DEV-SEED-STALE-CATALOG-VARIANT-288",
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+  "producer": {
+    "script": "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/evidence/producer-288.cjs",
+    "scriptSha256": "6135089919d7d8e9750a19532bb0c747672af469d1723263fdb64896291a45be",
+    "writesObservedJsonDirectly": true
+  },
+  "generatedAt": "2026-11-23T04:01:40.861Z",
+  "build": {
+    "ok": true,
+    "log": "evidence/host-build.log"
+  },
+  "focusedTests": {
+    "ok": true,
+    "log": "evidence/focused-test.log"
+  },
+  "openspec": {
+    "ok": true,
+    "log": "evidence/openspec-validate.txt"
+  },
+  "diff": {
+    "changedPaths": [
+      "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferDevelopmentSeedGateway.cs",
+      "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferQueryGatewayTests.cs",
+      "docs/opencode/smoke/runs/",
+      "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/",
+      "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.err.log",
+      "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.out.log",
+      "iso-runs/",
+      "measure-one.ps1",
+      "openspec/changes/dev-seed-stale-catalog-variant-288/",
+      "prompts-local/",
+      "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDevelopmentSeedGatewayStaleVariantTests.cs"
+    ],
+    "forbiddenPaths": [],
+    "offer287Touched": []
+  },
+  "ports": {
+    "host5088": 200,
+    "frontend3000": 200
+  },
+  "databases": [
+    "MyDatabase",
+    "ShopDb",
+    "TravelCore",
+    "postgres",
+    "sarvdb",
+    "template0",
+    "template1",
+    "tooba_alpha",
+    "tooba_codex_dev",
+    "tooba_disabled",
+    "tooba_easy_test",
+    "tooba_first_test",
+    "tooba_marketplace",
+    "tooba_marketplace_tb239",
+    "tooba_messaging",
+    "travelcore"
+  ],
+  "taskDbCreated": false,
+  "tests": {
+    "S01": {
+      "status": "PASS_SOURCE_VERIFIED",
+      "grade": "SOURCE_VERIFIED",
+      "proof": "evidence/source-trace.txt + 287 evidence/fixture-crash-normal-boot.err.log (real reproduced crash inventory.catalog_variant.missing)"
+    },
+    "S02": {
+      "status": "NOT_RUN",
+      "grade": "CONNECTED",
+      "reason": "No authorized isolated fixture exists; the destructive Catalog reset must not run on shared dev DB / canonical Host (5088 runs non-candidate code on tenant-alpha); re-provision forbidden by task budget."
+    },
+    "S03": {
+      "status": "NOT_RUN",
+      "grade": "CONNECTED",
+      "reason": "Depends on S02 fixture bootstrap."
+    },
+    "S04": {
+      "status": "PASS_SOURCE_VERIFIED",
+      "grade": "SOURCE_VERIFIED",
+      "proof": "InventoryDirectory.cs:91 unchanged fail-closed CatalogVariantMissing; guard fired in 287 crash evidence"
+    },
+    "S05": {
+      "status": "NOT_RUN",
+      "grade": "CONNECTED",
+      "reason": "Requires fixture bootstrap (S02)."
+    },
+    "S06": {
+      "status": "PASS",
+      "grade": "OBSERVED",
+      "proof": "ports + DB list; no task DB created, no shared DB mutation by this task"
+    },
+    "S07": {
+      "status": "PASS",
+      "grade": "OBSERVED",
+      "proof": "host-build 0 errors; focused tests pass; openspec strict valid; diff scoped"
+    }
+  },
+  "overall": "BLOCKED",
+  "blocker": "No authorized isolated fixture for the destructive reset; canonical/shared dev DB must not be reset and re-provision is forbidden. S02/S03/S05 connected proofs are NOT_RUN."
+}

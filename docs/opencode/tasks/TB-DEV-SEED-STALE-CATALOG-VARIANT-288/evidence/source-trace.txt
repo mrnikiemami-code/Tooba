@@ -1,0 +1,15 @@
+CatalogDemoResetService.cs variant deletion:
+196: _catalog.Variants.RemoveRange(variants);
+OfferDevelopmentSeedGateway.cs old reuse-by-SKU branch (pre-fix) is in git history; current variant check:
+68: public async Task<Guid?> EnsureActiveCloneFromAnyActiveAsync(
+80: && await catalogVariants.FindVariantAsync(existing.CatalogVariantId, cancellationToken) is not null)
+96: db.Offers.Remove(existing);
+115: var published = await catalogVariants.GetPublishedVariantIdsAsync(cancellationToken);
+129: if (await catalogVariants.FindVariantAsync(variantId, cancellationToken) is not null)
+InventoryDirectory.cs fail-closed guard:
+91: throw new ContractOperationException(InventoryErrorCodes.CatalogVariantMissing);
+MerchandisingCampaignDevelopmentSeed.cs OOS drain call:
+457: var offerId = await offerSeeds.EnsureActiveCloneFromAnyActiveAsync(
+466: await EnsureZeroStockAsync(offerId.Value, inventoryQuery, inventory, cancellationToken);
+470: private static async Task EnsureZeroStockAsync(
+491: var drained = await inventory.DrainDevelopmentStockAsync(

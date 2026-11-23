@@ -110,7 +110,8 @@ public sealed class OfferQueryGatewayTests
         var seed = new OfferDevelopmentSeedGateway(
             db,
             new FixedIds(Guid.Parse("99999999-9999-4999-8999-999999999999")),
-            new FixedClock(now));
+            new FixedClock(now),
+            new SeedLookup());
         var seller = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9");
         var created = await seed.EnsureActiveCloneFromAnyActiveAsync("OOS-SKU", seller, CancellationToken.None);
         Assert.NotNull(created);
@@ -131,5 +132,21 @@ public sealed class OfferQueryGatewayTests
     private sealed class FixedIds(Guid id) : IIdGenerator
     {
         public Guid NewId() => id;
+    }
+
+    private sealed class SeedLookup : Tooba.Catalog.Contracts.Ports.ICatalogVariantLookup
+    {
+        public Task<Tooba.Catalog.Contracts.Ports.CatalogVariantLookupResult?> FindVariantAsync(Guid variantId, CancellationToken cancellationToken) =>
+            Task.FromResult<Tooba.Catalog.Contracts.Ports.CatalogVariantLookupResult?>(
+                new Tooba.Catalog.Contracts.Ports.CatalogVariantLookupResult(variantId, variantId));
+
+        public Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, Guid?>>(new Dictionary<Guid, Guid?>());
+
+        public Task<IReadOnlyDictionary<Guid, string>> GetVariantTitlesAsync(IReadOnlyList<Guid> variantIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+
+        public Task<IReadOnlyList<Guid>> GetPublishedVariantIdsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guid>>(Array.Empty<Guid>());
     }
 }
