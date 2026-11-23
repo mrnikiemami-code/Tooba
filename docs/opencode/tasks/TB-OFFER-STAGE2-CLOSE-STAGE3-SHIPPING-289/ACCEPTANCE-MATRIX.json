@@ -8,11 +8,11 @@
       "invariantId": "C01",
       "reqId": "STAGE2",
       "caseType": "connected",
-      "given": "288 S02 normal bootstrap after reset against code-matched dev DB",
+      "given": "After intentional all-Draft Catalog reset, OOS seed Offer has missing variant and non-seed Promotion memberships may remain",
       "action": "Perform finite source-grounded verification; record exact observed values and independent oracle",
-      "expected": "Offer linked to valid Catalog variant, no inventory.catalog_variant.missing",
+      "expected": "Normal boot; OOS archived/withdrawn if no valid eligible target; zero active dangling offers, no missing-variant Inventory call, no OOS projected on storefront and no campaign price/discount granted on cart for archived or invalid-variant Offer; historical membership row count may be nonzero",
       "forbiddenEffects": "No fabricated PASS, no unrelated Host or DB change, no bypass of architect acceptance gate",
-      "oracle": "Executed provider evidence, independent GET/SQL, source diff and logs",
+      "oracle": "Candidate real Offer/Variant SQL + public storefront GET + campaign cart price/checkout read-side, as well as Host logs. NEVER require deletion of historical Promotion membership.",
       "proofGrade": "CONNECTED_OR_EXPLICIT_HISTORICAL",
       "reasonIfNotApplicable": null
     },
@@ -49,7 +49,7 @@
       "caseType": "connected",
       "given": "287 T01-T14 replay, concurrency, idempotent late edit, prior seller/admin",
       "action": "Perform finite source-grounded verification; record exact observed values and independent oracle",
-      "expected": "Immutable intent behavior correct; independent SQL/GET verified",
+      "expected": "287 T01-T14 on same candidate code with persisted fingerprint, seller/admin permissions, concurrency, independent SQL verification",
       "forbiddenEffects": "No fabricated PASS, no unrelated Host or DB change, no bypass of architect acceptance gate",
       "oracle": "Executed provider evidence, independent GET/SQL, source diff and logs",
       "proofGrade": "CONNECTED_OR_EXPLICIT_HISTORICAL",
@@ -62,7 +62,7 @@
       "caseType": "negative",
       "given": "287 T15 mutation verifier",
       "action": "Perform finite source-grounded verification; record exact observed values and independent oracle",
-      "expected": "All three tamper cases rejected; real evidence checker true",
+      "expected": "287 VERIFY realOk=true and each of 3 mutation controls rejected; script hash matches producer",
       "forbiddenEffects": "No fabricated PASS, no unrelated Host or DB change, no bypass of architect acceptance gate",
       "oracle": "Executed provider evidence, independent GET/SQL, source diff and logs",
       "proofGrade": "CONNECTED_OR_EXPLICIT_HISTORICAL",
@@ -88,7 +88,7 @@
       "caseType": "connected",
       "given": "285 original UI/permissions/search test coverage (matching code build)",
       "action": "Perform finite source-grounded verification; record exact observed values and independent oracle",
-      "expected": "Historical evidence still applicable or targeted connected rerun for changed paths",
+      "expected": "Current candidate Stage2 admin+seller Playwright functional and desktop/mobile evidence; historical tests only if code-matched",
       "forbiddenEffects": "No fabricated PASS, no unrelated Host or DB change, no bypass of architect acceptance gate",
       "oracle": "Executed provider evidence, independent GET/SQL, source diff and logs",
       "proofGrade": "CONNECTED_OR_EXPLICIT_HISTORICAL",
@@ -153,11 +153,12 @@
       "caseType": "negative",
       "given": "Architect acceptance gate and time/cost + provenance",
       "action": "Perform finite source-grounded verification; record exact observed values and independent oracle",
-      "expected": "No Stage3 source change absent explicit architect Stage2 accept; report truthful statuses",
+      "expected": "After source-coherent C01-C08 PASS submit Stage2 READY to architect; next implementation task Stage3, no further Stage2 task",
       "forbiddenEffects": "No fabricated PASS, no unrelated Host or DB change, no bypass of architect acceptance gate",
       "oracle": "Executed provider evidence, independent GET/SQL, source diff and logs",
       "proofGrade": "CONNECTED_OR_EXPLICIT_HISTORICAL",
       "reasonIfNotApplicable": null
     }
-  ]
+  ],
+  "revision": "2026-11-24 authoritative C01 consumer fail-closed oracle, next task Stage3"
 }
