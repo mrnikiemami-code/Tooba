@@ -1,0 +1,21 @@
+{
+  "taskId": "TB-OFFER-STAGE2-CLOSE-STAGE3-SHIPPING-289",
+  "matrix": "STAGE3",
+  "status": "PROPOSED_FOR_ARCHITECT (design only; no product code before Stage2 ACCEPT)",
+  "note": "Business-policy-dependent tests carry status BLOCKED_ON_DECISION and reason referencing STAGE3-DECISION-GATES.md; decisions are NOT invented here.",
+  "tests": [
+    { "testId": "D01", "invariant": "assigned published service is offered at checkout", "given": "admin assigns a published Shipping method live now for the offer's seller/store/destination", "expected": "Checkout eligibility read for a cart with that offer returns exactly that method", "oracle": "connected HTTP + DB read", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D02", "invariant": "unassigned offer is unavailable (fail-closed)", "given": "offer has no shipping service assigned", "expected": "checkout excludes it; typed ineligible reason; no default method", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D03", "invariant": "unpublished/expired service excluded", "given": "offer assigned a method that is not currently published/valid", "expected": "method not offered; group may become ineligible", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D04", "invariant": "foreign seller/service excluded", "given": "offer assigned a method owned by a different seller (Marketplace)", "expected": "excluded; no cross-seller leakage", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D05", "invariant": "two same-type methods both eligible", "given": "seller has two distinct methods of the same type both valid", "expected": "both appear (no dedupe by type alone)", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D06", "invariant": "two sellers, isolated groups", "given": "two sellers each with one valid method in one cart", "expected": "each group shows only its own seller's method", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D07", "invariant": "multi-offer group with no common method", "given": "group has offers whose assigned methods have no common method", "expected": "group ineligible (fail-closed) — OR per decided DG-01 policy", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "BLOCKED_ON_DECISION", "reasonIfNotApplicable": "DG-01 (ineligible vs split) not approved" },
+    { "testId": "D08", "invariant": "destination-specific eligibility", "given": "method valid for destination A, not B", "expected": "offered for A, excluded for B", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D09", "invariant": "time-window eligibility", "given": "method valid only within a window/cutoff", "expected": "offered inside window, excluded outside", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "BLOCKED_ON_DECISION", "reasonIfNotApplicable": "DG-05 (window/cutoff/preparation semantics) not approved" },
+    { "testId": "D10", "invariant": "SingleStore parity", "given": "SingleStore store with one seller", "expected": "eligibility semantics identical; no phantom", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D11", "invariant": "Marketplace parity (multi-seller)", "given": "Marketplace with multiple sellers", "expected": "eligibility semantics identical; per-seller isolation", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D12", "invariant": "no phantom + no unauthorized writes", "given": "any excluded/unassigned scenario", "expected": "no invented method; no unauthorized Pricing/Inventory/Shipping writes", "oracle": "connected HTTP + DB + mutation", "proofGrade": "CONNECTED", "status": "PLANNED" },
+    { "testId": "D13", "invariant": "fee/threshold policy", "given": "free-shipping threshold / payer", "expected": "only per approved shipping policy", "oracle": "connected HTTP + DB", "proofGrade": "CONNECTED", "status": "BLOCKED_ON_DECISION", "reasonIfNotApplicable": "DG-03 (threshold/payer) not approved" }
+  ]
+}

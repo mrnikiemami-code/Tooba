@@ -1,0 +1,8 @@
+captured=2026-11-23T13:57:28.9408956+03:30
+5088_health=
+200
+3000_fa=
+200
+backup=C:\Users\User\AppData\Local\Temp\opencode\dev-db-backups\tooba_alpha_288backup_20261123_133446.dump
+backup_bytes=3091575
+backup_sha256=4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C
