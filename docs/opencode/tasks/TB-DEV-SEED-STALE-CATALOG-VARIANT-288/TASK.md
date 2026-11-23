@@ -28,7 +28,7 @@ After root cause is proved, implement the smallest module-owned, Development-onl
 Use strict OpenSpec for behavior change with REQ traceability BEFORE code. Impeccable: `NOT_APPLICABLE: NO_UI_CHANGE`. AMSC is NOT required or allowed for routine seed repair.
 
 ## Test design: finite, nonlooping
-Create `ACCEPTANCE-MATRIX.json` BEFORE changes and test it exactly with concrete real-provider oracles:
+Use the architect-issued immutable `ACCEPTANCE-MATRIX.json` before changes and test it exactly with concrete real-provider oracles:
 - S01 negative control: reproduce invalid Offer–Variant relation from the real sequence; trace exact root.
 - S02 recovery: repeat normal Development bootstrap after the reset safely, no crash, relevant Offer/Variant linkage valid.
 - S03 idempotence: second bootstrap/seed run does not create duplicate seller/Offer/variant/Promotion membership and has stable correct links.
