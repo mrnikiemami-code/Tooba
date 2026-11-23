@@ -30,3 +30,9 @@ Updated: 2026-11-23. Source: accessible GitHub main at `1085116c34892f692d14b160
 - Prefer one bounded non-destructive, code-matched verification plan; never reset shared tenant-alpha or iterate full provisioning. Preserve existing branch implementation/evidence; don't manufacture a consolidated PASS.
 
 - **OWNER OVERRIDE 2026-11-23 for Task 288:** owner explicitly approved using the EXISTING development Host/DB after verified full backup, including necessary dev-only catalog reset; no more dedicated DB/Host provisioning. Read `docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/OWNER-DEV-BACKUP-EXECUTION.md`. Backup/restore identity and candidate code match are hard gates; no production or unrelated tenant changes. OpenCode bridge not reachable from this chat, so directive was published on GitHub; not yet executed.
+
+## 2026-11-23 architect checkpoint — TASK 289
+- Worker GitHub SHA `b81b359deb65c71e4ebe585f2116124841ae9027`, branch `opencode/iso-agents-002`. Verified `docs/opencode/tasks/TB-OFFER-STAGE2-CLOSE-STAGE3-SHIPPING-289/RESULT.md`, `stage2-proof/STAGE2-CLOSEOUT.md` and `stage3-design/STAGE3-DECISION-GATES.md`.
+- Stage 2 NOT_ACCEPTED: C01,C02,C03,C04,C07 NOT_RUN; C05 PARTIAL/realOk=false; C06,C08 PASS. No single certified current-build connected proof. Backup still reportedly preserved; never claim code has been deployed on 5088.
+- Stage 3 PLAN_READY only. Source-grounded architecture, strict OpenSpec and D01–D13 design tests prepared, no implementation. Seven business decisions DG-01..DG-07 unresolved; resolve from approved shipping policy, otherwise architect/owner decision. Do not invent policy.
+- Priority: no further planning loops. Next action requires a bounded controlled code-matched test run after verified backup, preserving rollback of DB and original 5088 binary; then independent architect review for Stage 2. Do not waive missing proof or auto-start Stage 3. Stage 3 code only after explicit architect acceptance.
