@@ -25,3 +25,13 @@ DB/Host; no provisioning loop; no 287 migration deployed to dev DB. Canonical 50
 
 ## Cost / time
 NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
+
+## Stage-2 connected run (2026-11-23, authorized on tooba_alpha)
+- Candidate 287+288 Host dll SHA-256 F96A79B78B2C7EAB4046EB093F9359CB0979FCC4DC99BBD5A665CC48717CFCB7 deployed on 5088 vs tooba_alpha.
+- 287 migration applied to dev: offer.offers.creation_intent_fingerprint varchar(64) nullable (pre col=0 -> post col=1); reverted by restore (col=0).
+- Controlled catalog reset-and-seed: variants 1361->884, products 567->308; OOS offer 01a0ba10-5a31-7000-b733-4cd74ef3763a became VARIANT_MISSING (S01 reproduced).
+- boot#1 healthy, no inventory.catalog_variant.missing; published_products=0 -> OOS not relinked (C01 PARTIAL).
+- boot#2 healthy; OOS rows=1 distinct=1; role assignments unchanged (C02/C03 PASS).
+- Restore: docker cp dump + pg_restore --clean --if-exists exit 0 -> offers=3223, variants=1361, products=567, parties=10.
+- Original 5088 restarted via scripts/dev/host-stack.ps1; /health=200 (tenant-alpha); 3000 /fa=200.
+- Backup retained: .../dev-db-backups/tooba_alpha_288backup_20261123_133446.dump SHA256 4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C (not in git).

@@ -1,43 +1,42 @@
 # RESULT — TB-OFFER-STAGE2-CLOSE-STAGE3-SHIPPING-289
 
-Outcome: **BLOCKED** (Stage 2 connected proof not completed) **+ STAGE3_PLAN_READY** (design/OpenSpec/matrix prepared;
-no Stage-3 product code). Worker never claims ARCHITECT_ACCEPT.
+Outcome: **BLOCKED** — Stage 2 connected run executed on `tooba_alpha`; crash fixed and idempotence/roles proven, but
+**C01 "Offer linked to valid Catalog variant" is not met**, and C04/C07 remain NOT_RUN. Stage 3 design plan preserved;
+no Stage-3 product code. Worker never claims ARCHITECT_ACCEPT.
 
-## Stage 2 (C01–C08) — truthful status (detail in stage2-proof/STAGE2-CLOSEOUT.md)
-- C01 288 S02 bootstrap-after-reset — **NOT_RUN** (destructive reset on shared dev DB not executed; candidate build
-  still carries BLOCKED 287 migration; 5088 runs non-candidate build SHA 41EF43E2…).
-- C02 288 S03 idempotence — **NOT_RUN** (depends C01; logic source-verified by 288 focused test).
-- C03 288 S05 seller/admin across boots — **NOT_RUN** (requires C01 boots).
-- C04 287 T01–T14 — **NOT_RUN** on current code+DB as one clean run; historical r4 recorded T01–T12,T14 PASS with
-  T13,T16 FAIL (harness defects) and is not presented as a green run.
-- C05 287 T15 mutation verifier — **PARTIAL/NOT_PASS**: all three tamper mutations rejected, but `realOk=false`
-  (r4 evidence had T13/T16 fail + stale hash).
-- C06 287 T16 cleanup + identity — **PASS (OBSERVED)**: 5088/3000 healthy; verified backup preserved.
-- C07 285 UI/permissions/search — **NOT_RUN** (needs candidate deployment + Playwright; gated).
-- C08 integration scope — **PASS (SOURCE)**: 287 = Offer + one additive nullable migration; 288 = Offer seed gateway +
-  test; no root AGENTS/.cursor/Host overwrite.
+## Stage 2 connected run (detail: stage2-proof/STAGE2-CONNECTED-RUN.md)
+Candidate 287+288 `Tooba.Host.dll` SHA `F96A79B7…` deployed on existing 5088 Host vs `tooba_alpha`; verified backup
+revalidated (SHA256 4839D664…07FB9C). Executed: 287 additive migration (one nullable column) → controlled Catalog
+reset → boot#1 → boot#2 → restore → original Host restart.
 
-Verified development backup (hard prerequisite, preserved):
-`...\dev-db-backups\tooba_alpha_288backup_20261123_133446.dump` (3,091,575 B, SHA256 4839D664…FB9C, pg_dump exit 0,
-pg_restore --list exit 0).
+| Test | Status | Evidence |
+|---|---|---|
+| C01 288 S02 bootstrap-after-reset | **PARTIAL** | Host healthy after reset+boot, **no** `inventory.catalog_variant.missing`; but post-reset `published_products=0` and no live template → gateway fail-closes and does **not** relink the stale OOS Offer. "linked to valid variant" NOT met. |
+| C02 288 S03 repeat bootstrap | **PASS** | boot#2 healthy; OOS rows=1 distinct=1; no duplicates. |
+| C03 288 S05 auth across boots | **PASS** | role assignments identical (platform-admin=1, seller-owner=1, mobile-order-op=1); no escalation. |
+| C04 287 T01–T14 | **NOT_RUN** | 287 harness not executed on this dev DB this session. |
+| C05 287 T15 verifier | **PARTIAL** | 3/3 mutations rejected; `realOk=false`. |
+| C06 T16 cleanup/identity | **PASS** | backup preserved; dev DB restored to baseline; 5088/3000 healthy. |
+| C07 285 UI/Playwright | **NOT_RUN** | not executed. |
+| C08 integration scope | **PASS** | only 287 additive nullable column applied then removed by verified restore; no root AGENTS/.cursor/Host/Inventory/API change. |
 
-## Stage 3 (C09–C11) — PLAN READY (design only)
-- `stage3-design/STAGE3-ARCHITECTURE.md` — source-grounded on real contracts: Offer
-  `PUT /v1/admin/offers/{id}/fulfillment` + `OfferFulfillmentResponsibility` (Seller|Platform) + `FulfillmentShippingTypeId`
-  + `IOfferFulfillmentAssignmentLookup`; Shipping authoring/publication; Order `StorefrontShippingService` /
-  `CartShippingGroupPlanner`. Invariants: no phantom, unassigned fail-closed, foreign/unpublished excluded, two
-  same-type methods, per-seller isolation, SingleStore vs Marketplace parity.
-- `stage3-design/STAGE3-DECISION-GATES.md` — DG-01..DG-07 unresolved business policy (no invented decisions).
-- `stage3-design/STAGE3-ACCEPTANCE-MATRIX.json` — finite D01–D13; policy-dependent (D07,D09,D13) `BLOCKED_ON_DECISION`.
-- OpenSpec `offer-stage3-shipping-assignment-289` — **strict VALID** (proposal/design/tasks/spec).
+S01 negative control reproduced (OOS `01a0ba10…` → VARIANT_MISSING after reset; variants 1361→884).
+
+## Exact blocker (C01)
+Post-reset catalog on `tooba_alpha` has `published_products=0` and no live template variant, so the 288 gateway's
+`ResolveLiveVariantIdAsync` finds no target and returns null (no crash, but the stale OOS row is not relinked/removed).
+Bounded repair for architect decision: (a) remove/archive the stale marked dev-seed row when no live target; and/or
+(b) permit any existing live Catalog variant as rebuild target; and investigate the 0-published-products reset state.
+
+## Environment
+Restored to healthy baseline: `tooba_alpha` offers=3223, variants=1361, products=567, parties=10, 287 col removed;
+original 5088 Host `/health`=200 (SingleStore/dev-singlestore/store-alpha/tenant-alpha); frontend 3000 `/fa`=200.
+
+## Stage 3 (C09–C11) — PLAN PRESERVED
+`stage3-design/STAGE3-ARCHITECTURE.md`, `STAGE3-DECISION-GATES.md` (DG-01..07), `STAGE3-ACCEPTANCE-MATRIX.json`
+(D01–D13; D07/D09/D13 BLOCKED_ON_DECISION); OpenSpec `offer-stage3-shipping-assignment-289` strict valid. No Stage-3
+product code written (gated on Stage 2 accept).
 
 ## Governance (C12)
-No Stage-3 product code was written; no Stage-2 acceptance claimed. Only design + evidence added; 287/288 code and
-evidence preserved; no root AGENTS/.cursor/Host/Inventory/API change.
-
-## Cost / time
-Whole-task elapsed and token/cost: **NOT_AVAILABLE**.
-
-## Next (architect)
-Issue explicit Stage-2 ARCHITECT_ACCEPT and resolve DG-01..DG-07; then Stage 3 may be implemented inside a follow-on
-authorized run using the prepared OpenSpec + D-matrix. `STOP_FOR_ARCHITECT`.
+No fabricated PASS; different runs not merged; no Stage-3 code; no root AGENTS/.cursor/Host/Inventory/API/287-fingerprint
+change. Verified backup retained. Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
