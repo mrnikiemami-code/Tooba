@@ -1,0 +1,9 @@
+ M AGENTS.md
+?? .opencode/
+?? docs/opencode/OPENCODE-ISO-LAUNCH.ps1
+?? docs/opencode/iso-bin/
+?? docs/opencode/iso-rules/
+?? docs/opencode/smoke/
+?? iso-runs/
+?? measure-one.ps1
+?? prompts-local/

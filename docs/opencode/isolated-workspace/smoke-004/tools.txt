@@ -1,0 +1,4 @@
+openspec=2.1.1
+
+impeccable=4.10.0
+

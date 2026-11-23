@@ -1,0 +1,9 @@
+OK main AGENTS hash=06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090
+OK iso path=D:\Users\User\source\repos\SarvNewVer-opencode-iso-002 branch=opencode/iso-agents-002 head=394cc0bdb
+OK short AGENTS bytes=1517
+OK iso-rules 01-08 present
+OK FE/BE skills present
+Mode=DocumentOnly — no Desktop launch (safe beside task 286).
+To open manually: File → Open Folder → D:\Users\User\source\repos\SarvNewVer-opencode-iso-002
+Or: Start-Process 'C:\Users\User\AppData\Local\Programs\@opencode-aidesktop\OpenCode.exe' (then open iso folder in a NEW window).
+Rollback: see docs/opencode/isolated-workspace/WORKSPACE-SELECT-AND-ROLLBACK.md on main.

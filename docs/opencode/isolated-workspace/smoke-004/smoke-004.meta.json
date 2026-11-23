@@ -1,0 +1,31 @@
+﻿{
+    "exitCode":  0,
+    "elapsedMs":  28335,
+    "sessionId":  "ses_dfa14bb52ffeUsZmZVIt6FMm2g",
+    "steps":  6,
+    "tools":  17,
+    "tokens":  {
+                   "input":  10774,
+                   "lastStepTotal":  23895,
+                   "cacheReadPeak":  21632,
+                   "output":  2348
+               },
+    "mainAgentsBefore":  "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+    "mainAgentsAfter":  "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+    "mainAgentsUnchanged":  true,
+    "productDiffFiles":  [
+
+                         ],
+    "openspecVersion":  "2.1.1",
+    "impeccableVersion":  "4.10.0",
+    "textPreview":  "I\u0027ll start by reading the always-on rules files.Now reading the backend and frontend layer packs with their skills.All rule files read. Now analyzing the two source paths.Let me check the notification Contracts module signals and the frontend feature\u0027s API/transport neighbors.Let me inspect the feature\u0027s index and one API adapter for transport signals, plus confirm Host\u0027s role.## RulesLoaded\n- docs/opencode/iso-rules/01-architecture.md\n- docs/opencode/iso-rules/02-security-permissions.md\n- docs/opencode/iso-rules/03-openspec.md\n- docs/opencode/iso-rules/04-opencode-acceptance.md\n- docs/opencode/iso-rules/05-task-layer.md\n- docs/opencode/iso-rules/06-backend-layer.md\n- .cursor/skills/tooba-backend-feature/SKILL.md\n- docs/opencode/iso-rules/07-frontend-layer.md\n- .cursor/skills/tooba-frontend-feature/SKILL.md\n- docs/opencode/iso-rules/08-amsc-layer.md\n- Source: src/backend/Modules/Notification/Tooba.Notification.Contracts/Commands/CreateNotificationCommand.cs\n- Source: src/frontend/features/admin-shipping-authoring/ui/authoring-message-box.tsx\n- Neighbor (minimal): src/frontend/features/admin-shipping-authoring/index.ts, api/carrier-authoring-api.ts; dir listings for Notification module and src/backend\n\n## BackendOwner (module + contract path + Host risk: no)\n- Module: **Notification** (`Tooba.Notification`), specifically `Tooba.Notification.Contracts` — an idempotent cross-module contract (`CreateNotificationCommand`) consumed via CQRS/MediatR; siblings `Tooba.Notification.Application / Domain / Endpoints / Infrastructure / Tests` confirm the canonical capability folders.\n- Contract path: `src/backend/Modules/Notification/Tooba.Notification.Contracts/Commands/CreateNotificationCommand.cs` (± `Dtos/`).\n- Why Host is not the owner: per 06 (\"One canonical owning module; no business authority in Host\") and 01 (no ending up in Host), `Tooba.Host` is composition root/startup only; the business rule (create idempotent notification) must stay in the Notification module\u0027s Application/Endpoints.\n- Host risk: **no** — command is a pure Contracts record; fixing it does not relocate ownership or evacuate Host.\n\n## FrontendSurface (feature owner + design-system/API notes)\n- Feature owner: `admin-shipping-authoring` (its `index.ts` declares itself \"the ONLY module the app imports\"; `admin-*` admin surface).\n- Design System signal: `authoring-message-box.tsx:10` imports `{ MessageBox } from \"../../../design-system\"` — an intentional reuse wrapper (comment TB-263: single im…",
+    "headingChecks":  {
+                          "AmscVerdict":  true,
+                          "BackendOwner":  true,
+                          "Compliance":  true,
+                          "FrontendSurface":  true,
+                          "EditsNone":  true,
+                          "RulesLoaded":  true
+                      },
+    "jsonl":  "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\smoke\\runs\\smoke-004-20261123-043033.jsonl"
+}

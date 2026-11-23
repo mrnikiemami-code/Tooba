@@ -8,5 +8,6 @@ MUST:
 - Worker PASS ≠ Architect ACCEPT ≠ owner acceptance.
 - No automatic next task; STOP_FOR_ARCHITECT when required.
 - Do not invent new domain abstractions that replace existing Contracts/CQRS/Design System.
+- This isolated worktree is an OpenCode **agent cwd** only — product authority stays the main Tooba repository and its Git rules.
 
 When analyzing only (no edits): still name the module boundary and owning contract/path you observed.
