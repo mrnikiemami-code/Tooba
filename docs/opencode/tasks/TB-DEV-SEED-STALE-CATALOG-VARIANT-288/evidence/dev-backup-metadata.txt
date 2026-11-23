@@ -1,0 +1,13 @@
+backup_taken_local=2026-11-23T13:35:54.1153870+03:30
+database=tooba_alpha
+server=postgres-db (PostgreSQL 17.10)
+file=C:\Users\User\AppData\Local\Temp\opencode\dev-db-backups\tooba_alpha_288backup_20261123_133446.dump
+bytes=3091575
+sha256=4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C
+pg_dump_format=Fc (custom, gzip)
+pg_dump_exit=0
+pg_restore_list_exit=0
+toc_entries=1476
+restore_command=docker exec postgres-db pg_restore -U admin -d tooba_alpha --clean --if-exists /tmp/tooba_alpha_288backup_20261123_133446.dump  (after re-uploading the dump into the container)
+target_identity_before_backup=tooba_alpha|53327539 bytes|PG17.10|offers=3223|variants=1361|products=567|parties=10
+note=backup bytes are NOT committed to git; kept outside repo under the host temp backup path

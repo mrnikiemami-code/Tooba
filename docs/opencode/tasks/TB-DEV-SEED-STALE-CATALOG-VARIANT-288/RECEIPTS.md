@@ -24,6 +24,18 @@ No change to: Offer 287 fingerprint files, Inventory, Pricing, public API, Host,
 - Canonical Host 5088 `/health`=200; frontend 3000 `/fa`=200 (probed by producer).
 - No task DB created or dropped; `taskDbCreated=false`. No shared dev DB writes by this task.
 
+## Owner authorization + backup (2026-11-23)
+- Identity: 5088 Host exe `...\.tmp-dev-host-out-5088\Tooba.Host.exe` SHA-256 `41EF43E2…` (non-candidate); tenant
+  `store-alpha` / connectionReference `tenant-alpha` ⇒ DB `tooba_alpha` (PG 17.10, 53,327,539 bytes).
+- Verified backup: `pg_dump -U admin -Fc -d tooba_alpha` → `/tmp` in container → `docker cp` to
+  `C:\Users\User\AppData\Local\Temp\opencode\dev-db-backups\tooba_alpha_288backup_20261123_133446.dump`;
+  bytes 3,091,575; SHA-256 `4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C`; `pg_dump` exit 0;
+  `pg_restore --list` exit 0 (TOC 1476). Metadata: `evidence/dev-backup-metadata.txt`. **Not committed to git.**
+- Candidate scope check: the worker build still contains the BLOCKED 287 migration
+  `AddOfferCreationIntentFingerprint`, so it must NOT be deployed to `tooba_alpha`; a 288-only candidate from
+  latest `origin/main` is required before any destructive run. Destructive deploy/reset therefore NOT executed
+  (safety); S02/S03/S05 remain NOT_RUN. Restore remains available from the verified dump.
+
 ## Environment note (why S02/S03/S05 NOT_RUN)
 5088 runs the MAIN worktree build (not the candidate) against shared `tenant-alpha`; the Catalog reset is
 destructive; no explicitly authorized isolated fixture exists and reprovision is outside this task's budget, so the

@@ -6,7 +6,7 @@
     "scriptSha256": "6135089919d7d8e9750a19532bb0c747672af469d1723263fdb64896291a45be",
     "writesObservedJsonDirectly": true
   },
-  "generatedAt": "2026-11-23T04:01:40.861Z",
+  "generatedAt": "2026-11-23T10:06:38.103Z",
   "build": {
     "ok": true,
     "log": "evidence/host-build.log"
@@ -21,17 +21,15 @@
   },
   "diff": {
     "changedPaths": [
-      "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferDevelopmentSeedGateway.cs",
-      "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferQueryGatewayTests.cs",
+      "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/RECEIPTS.md",
+      "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/RESULT.md",
       "docs/opencode/smoke/runs/",
-      "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/",
+      "docs/opencode/tasks/TB-DEV-SEED-STALE-CATALOG-VARIANT-288/evidence/dev-backup-metadata.txt",
       "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.err.log",
       "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.out.log",
       "iso-runs/",
       "measure-one.ps1",
-      "openspec/changes/dev-seed-stale-catalog-variant-288/",
-      "prompts-local/",
-      "src/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDevelopmentSeedGatewayStaleVariantTests.cs"
+      "prompts-local/"
     ],
     "forbiddenPaths": [],
     "offer287Touched": []
