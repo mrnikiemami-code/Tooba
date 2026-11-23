@@ -1,0 +1,153 @@
+{
+  "task": "TB-SELLER-OFFER-STAGE2-FINAL-PROOF-286",
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+  "producer": {
+    "script": "docs/opencode/tasks/TB-SELLER-OFFER-STAGE2-FINAL-PROOF-286/evidence/focused-286.cjs",
+    "scriptSha256": "d6468b26589f87a9d22a01499a7cb028c404364ef9a79a992a4d217bf205e7d1",
+    "writesObservedJsonDirectly": true
+  },
+  "startedAt": "2026-11-23T00:22:58.073Z",
+  "endedAt": "2026-11-23T00:23:04.101Z",
+  "elapsedMs": 6028,
+  "environment": {
+    "codeSha": "507d7933a54fe067c240beb6aeb62b63f4b110c0",
+    "host": "http://127.0.0.1:5093",
+    "database": "tooba_offer286_proof",
+    "hostDllSha256": "143af9c5dc7459a8e5833b9a35f1abaecbeef2689b704492c9f88461cb3cb007",
+    "sellerA": "01a205c6-16b2-7000-8745-69972e21d16f",
+    "sellerB": "01a205c6-16b6-7000-8f41-5b89016d834f",
+    "admin": "01a205c6-1a04-7000-a453-a019dfddf874",
+    "sellerContexts": {
+      "actors": [
+        {
+          "actorUserId": "01a205c6-18b5-7000-bea8-bb68ac2c8c31",
+          "actorLabel": "اپراتور آرمان",
+          "sellerPartyId": "01a205c6-16b2-7000-8745-69972e21d16f",
+          "sellerLabel": "فروشگاه آرمان",
+          "contextKind": "seller-owner"
+        },
+        {
+          "actorUserId": "01a205c6-1960-7000-a3c9-7880718e4310",
+          "actorLabel": "اپراتور دیجی‌استایل",
+          "sellerPartyId": "01a205c6-16b6-7000-8f41-5b89016d834f",
+          "sellerLabel": "دیجی‌استایل نمونه",
+          "contextKind": "seller-owner-alt"
+        }
+      ]
+    },
+    "adminContext": {
+      "actorUserId": "01a205c6-1a04-7000-a453-a019dfddf874",
+      "actorLabel": "admin-actor@tooba.local",
+      "tenantId": "store-alpha"
+    }
+  },
+  "V2": {
+    "seller": {
+      "first": 201,
+      "second": 201,
+      "sameOfferId": true,
+      "offerId": "172194c0-0f1c-5af7-a511-eeeb29ea7879",
+      "original": "172194c0-0f1c-5af7-a511-eeeb29ea7879|TB286-SELLER-A|Draft",
+      "conflict": {
+        "sellerPartyId": "01a205c6-16b2-7000-8745-69972e21d16f",
+        "originalOfferId": "172194c0-0f1c-5af7-a511-eeeb29ea7879",
+        "originalRows": 1,
+        "secondRowCount": 0,
+        "responseStatus": 409,
+        "errorCode": "offer.create.intent_conflict",
+        "priceWrites": 0,
+        "stockPositionWrites": 0,
+        "reservationWrites": 0,
+        "before": {
+          "offers": 9,
+          "prices": 7,
+          "stockPositions": 7,
+          "reservations": 1
+        },
+        "after": {
+          "offers": 9,
+          "prices": 7,
+          "stockPositions": 7,
+          "reservations": 1
+        }
+      }
+    },
+    "admin": {
+      "first": 201,
+      "second": 201,
+      "sameOfferId": true,
+      "offerId": "11c9e867-0690-72f4-a564-848e90f0c017",
+      "original": "11c9e867-0690-72f4-a564-848e90f0c017|TB286-ADMIN-A|Draft",
+      "conflict": {
+        "sellerPartyId": "01a205c6-16b6-7000-8f41-5b89016d834f",
+        "originalOfferId": "11c9e867-0690-72f4-a564-848e90f0c017",
+        "originalRows": 1,
+        "secondRowCount": 0,
+        "responseStatus": 409,
+        "errorCode": "offer.create.intent_conflict",
+        "priceWrites": 0,
+        "stockPositionWrites": 0,
+        "reservationWrites": 0,
+        "before": {
+          "offers": 9,
+          "prices": 7,
+          "stockPositions": 7,
+          "reservations": 1
+        },
+        "after": {
+          "offers": 9,
+          "prices": 7,
+          "stockPositions": 7,
+          "reservations": 1
+        }
+      }
+    }
+  },
+  "V3": {
+    "first": 201,
+    "second": 201,
+    "firstId": "34d9aeef-b5b2-6622-8337-f3e5ac263edc",
+    "secondId": "34d9aeef-b5b2-6622-8337-f3e5ac263edc",
+    "sameOfferId": true,
+    "offerRows": 1,
+    "before": {
+      "offers": 9,
+      "prices": 7,
+      "stockPositions": 7,
+      "reservations": 1
+    },
+    "after": {
+      "offers": 9,
+      "prices": 7,
+      "stockPositions": 7,
+      "reservations": 1
+    },
+    "errors": [
+      null,
+      null
+    ]
+  },
+  "V4": {
+    "createStatus": 201,
+    "offerId": "a839eb1c-8909-2a4c-5867-b2824eecf4ef",
+    "initial": {
+      "sellerSku": "TB286-LATE-A",
+      "status": "Draft"
+    },
+    "patchStatus": 200,
+    "edited": {
+      "sellerSku": "TB286-LATE-B",
+      "status": "Draft"
+    },
+    "originalReplayStatus": 409,
+    "originalReplayError": "offer.create.intent_conflict",
+    "changedReplayStatus": 201,
+    "changedReplayId": "a839eb1c-8909-2a4c-5867-b2824eecf4ef",
+    "final": {
+      "sellerSku": "TB286-LATE-B",
+      "status": "Draft"
+    },
+    "mutableComparison": true,
+    "lateReplayContractIssue": true
+  }
+}
