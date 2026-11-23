@@ -1,11 +1,13 @@
-# RECEIPTS — TB-286
+﻿# RECEIPTS — TB-286
 
 ## Timing
 
 - startedAt: `2026-11-23T03:48:00.1208060+03:30`
-- endedAt: `2026-11-23T03:53:55.3494090+03:30`
-- elapsed: **5.92 minutes (5m55s)**
+- final-verification endedAt: `2026-11-23T03:55:02.5255276+03:30`
+- total elapsed: **7.04 minutes (7m02s)**
+- proof-only window endedAt: `2026-11-23T03:53:55.3494090+03:30` (**5.92 minutes / 5m55s**)
 - focused harness: `00:22:58.073Z` → `00:23:04.101Z`, 6.028 s
+- docs/evidence completion commit: `77e495d2d6e4b31fe7cdb9730df490515b50078d`
 - setup and review not separately instrumented; no predetermined duration claimed.
 
 ## Environment
@@ -43,3 +45,4 @@ See `RESULT.md`. Producer script SHA matches evidence producer field. Raw `focus
 ## Safety
 
 No product source, migration, Cursor, AGENTS, roadmap, OpenSpec spec or live data change. Disposable DB dropped; test Host stopped; canonical services healthy. 285 evidence untouched.
+

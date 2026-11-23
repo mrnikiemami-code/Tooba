@@ -1,4 +1,4 @@
-# RESULT — TB-SELLER-OFFER-STAGE2-FINAL-PROOF-286
+﻿# RESULT — TB-SELLER-OFFER-STAGE2-FINAL-PROOF-286
 
 Status: **BLOCKED**
 Readiness: **NOT_READY_FOR_ARCHITECT_ACCEPT**
@@ -11,9 +11,11 @@ No product code, migration, Cursor, roadmap, OpenSpec spec or live data changed.
 ## Actual timing
 
 - startedAt: `2026-11-23T03:48:00.1208060+03:30`
-- endedAt: `2026-11-23T03:53:55.3494090+03:30`
-- elapsedMinutes: **5.92** (5 minutes 55 seconds)
+- proof/final-verification endedAt: `2026-11-23T03:55:02.5255276+03:30`
+- total elapsedMinutes: **7.04** (7 minutes 2 seconds)
+- proof-only window endedAt: `2026-11-23T03:53:55.3494090+03:30` (**5.92** minutes / 5m55s)
 - focused harness: 6.028 seconds (`2026-11-23T00:22:58.073Z` → `00:23:04.101Z`)
+- docs/evidence completion commit: `77e495d2d6e4b31fe7cdb9730df490515b50078d` at `2026-11-23T03:54:47+03:30`
 - setup/review were not separately instrumented; no predetermined/rounded time is claimed.
 
 ## V1 — provenance: PASS
@@ -61,3 +63,4 @@ A correct repair needs a durable immutable creation-intent fingerprint (or an ar
 - Original 285 task/evidence untouched. This task added only task-owned scripts/evidence.
 
 `STOP_FOR_ARCHITECT`; automaticNextImplementationTask: NONE. No Stage 3.
+
