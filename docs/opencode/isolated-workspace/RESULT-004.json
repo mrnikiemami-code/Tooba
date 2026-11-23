@@ -1,41 +1,59 @@
 ﻿{
-  "task": "TOOBA-OPENCODE-PRODUCTION-READY-004",
-  "gate": "STOP_FOR_ARCHITECT",
-  "status": "READY",
-  "activatedAsDefaultWorkspace": false,
-  "remote": "https://github.com/mrnikiemami-code/Tooba.git",
-  "evidenceCommits003": {
-    "local": ["32ce31de17fba618736c758796b421412642a3bb", "0a58b6d9d64451810f42602602692005fa6c93b6"],
-    "publishedToOrigin": false,
-    "mainAheadOfOrigin": 2
-  },
-  "worktree": {
-    "path": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002",
-    "branch": "opencode/iso-agents-002",
-    "configCommit": "afce2aaec",
-    "basePreserved": true
-  },
-  "mainAgentsSha256": "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
-  "rules": {
-    "alwaysOn": ["01", "02", "03", "04", "05"],
-    "taskType": ["06-backend", "07-frontend", "08-amsc-explicit-only"]
-  },
-  "skills": ["tooba-backend-feature", "tooba-frontend-feature"],
-  "openspec": "2.1.1",
-  "impeccable": "4.10.0",
-  "delivery": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
-  "amscDefault": "FORBIDDEN_WITHOUT_EXPLICIT_TASK",
-  "model": "metisdeepseek/deepseek-v4-flash",
-  "smoke": {
-    "exitCode": 0,
-    "headingsPass": true,
-    "amscVerdict": "NOT_NEEDED",
-    "productDiffEmpty": true,
-    "lastStepTotal": 23895,
-    "tools": 17,
-    "desktopPidsPreserved": "7/7"
-  },
-  "tokenUsageThisTask": "NOT_AVAILABLE",
-  "cost": "NOT_AVAILABLE",
-  "evidencePath": "docs/opencode/isolated-workspace/"
+    "task":  "TOOBA-OPENCODE-PRODUCTION-READY-004",
+    "gate":  "STOP_FOR_ARCHITECT",
+    "status":  "READY",
+    "activatedAsDefaultWorkspace":  false,
+    "remote":  "https://github.com/mrnikiemami-code/Tooba.git",
+    "evidenceCommits003":  {
+                               "local":  [
+                                             "32ce31de17fba618736c758796b421412642a3bb",
+                                             "0a58b6d9d64451810f42602602692005fa6c93b6"
+                                         ],
+                               "publishedToOrigin":  false,
+                               "mainAheadOfOrigin":  2
+                           },
+    "worktree":  {
+                     "path":  "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002",
+                     "branch":  "opencode/iso-agents-002",
+                     "configCommit":  "afce2aaec",
+                     "basePreserved":  true
+                 },
+    "mainAgentsSha256":  "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+    "rules":  {
+                  "alwaysOn":  [
+                                   "01",
+                                   "02",
+                                   "03",
+                                   "04",
+                                   "05"
+                               ],
+                  "taskType":  [
+                                   "06-backend",
+                                   "07-frontend",
+                                   "08-amsc-explicit-only"
+                               ]
+              },
+    "skills":  [
+                   "tooba-backend-feature",
+                   "tooba-frontend-feature"
+               ],
+    "openspec":  "2.1.1",
+    "impeccable":  "4.10.0",
+    "delivery":  "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+    "amscDefault":  "FORBIDDEN_WITHOUT_EXPLICIT_TASK",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "smoke":  {
+                  "exitCode":  0,
+                  "headingsPass":  true,
+                  "amscVerdict":  "NOT_NEEDED",
+                  "productDiffEmpty":  true,
+                  "lastStepTotal":  23895,
+                  "tools":  17,
+                  "desktopPidsPreserved":  "7/7"
+              },
+    "tokenUsageThisTask":  "NOT_AVAILABLE",
+    "cost":  "NOT_AVAILABLE",
+    "evidencePath":  "docs/opencode/isolated-workspace/",
+    "evidenceCommitMain":  "f1ebd7c9f3c784cf1dbfc359ce9ceefe6b006cf8",
+    "taskDurationMinutes":  5.57
 }
