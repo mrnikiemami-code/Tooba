@@ -1,42 +1,39 @@
-# RESULT — TB-OFFER-STAGE2-CLOSE-STAGE3-SHIPPING-289
+# RESULT — TB-OFFER-STAGE2-CLOSE-STAGE3-SHIPPING-289 (final correction)
 
-Outcome: **BLOCKED** — Stage 2 connected run executed on `tooba_alpha`; crash fixed and idempotence/roles proven, but
-**C01 "Offer linked to valid Catalog variant" is not met**, and C04/C07 remain NOT_RUN. Stage 3 design plan preserved;
-no Stage-3 product code. Worker never claims ARCHITECT_ACCEPT.
+Outcome: **BLOCKED** — Stage 2 not fully PASS. Architect-confirmed Catalog `Published=0` (intentional) accepted.
+Bounded Offer-owner correction implemented and connected-verified; one cross-ownership Promotion reference issue and
+unrun C04/C05/C07 remain. Stage 3 design preserved; no Stage-3 product code. No ARCHITECT_ACCEPT claimed.
 
-## Stage 2 connected run (detail: stage2-proof/STAGE2-CONNECTED-RUN.md)
-Candidate 287+288 `Tooba.Host.dll` SHA `F96A79B7…` deployed on existing 5088 Host vs `tooba_alpha`; verified backup
-revalidated (SHA256 4839D664…07FB9C). Executed: 287 additive migration (one nullable column) → controlled Catalog
-reset → boot#1 → boot#2 → restore → original Host restart.
+## Stage-2 status (current candidate `AD8FF896…`, run on tooba_alpha)
+- **C01 (alternate fail-closed) — PARTIAL/BLOCKED.** After Catalog reset the stale `DEV-SEED-OOS` Offer is now safely
+  **Archived** via the owning Offer gateway (no fabricated variant, no active dangling OOS, no Inventory command on the
+  missing variant, no crash, Host healthy). **But** `promotion.merchandising_campaign_offers` still has **5 rows**
+  referencing that OOS Offer in **non-seed shared dev campaigns**; pruning them would silently rewrite shared Promotion
+  data outside seed ownership → BLOCKED per the correction's boundary (needs a Promotion-owned reconciliation decision).
+- **C02 (S03) — PARTIAL.** Idempotence source-verified (focused unit test: second run no-op, one row); connected
+  second-boot NOT_RUN this cycle.
+- **C03 (S05) — PASS.** Role assignments unchanged across boot (platform-admin=1, seller-owner=1, mobile-order-op=1).
+- **C04 (287 T01–T14) — NOT_RUN.** 287 connected matrix not executed on this candidate.
+- **C05 (287 real VERIFY, realOk=true) — NOT_RUN/NOT_PASS.** Real verifier still false (needs a clean 287 run).
+- **C06 (T16 cleanup/identity) — PASS.** Verified backup preserved; `tooba_alpha` restored to baseline
+  (offers=3223, variants=1361, products=567); original 5088 `/health`=200, 3000 `/fa`=200.
+- **C07 (285 UI/Playwright desktop+360) — NOT_RUN.**
+- **C08 (scope) — PASS.** Change limited to Offer dev-seed gateway + focused test + OpenSpec (REQ-SEED-05, strict valid);
+  287 fingerprint and 288 code preserved; Catalog/Inventory/general-seller unchanged; no root AGENTS/.cursor/Host edit.
 
-| Test | Status | Evidence |
-|---|---|---|
-| C01 288 S02 bootstrap-after-reset | **PARTIAL** | Host healthy after reset+boot, **no** `inventory.catalog_variant.missing`; but post-reset `published_products=0` and no live template → gateway fail-closes and does **not** relink the stale OOS Offer. "linked to valid variant" NOT met. |
-| C02 288 S03 repeat bootstrap | **PASS** | boot#2 healthy; OOS rows=1 distinct=1; no duplicates. |
-| C03 288 S05 auth across boots | **PASS** | role assignments identical (platform-admin=1, seller-owner=1, mobile-order-op=1); no escalation. |
-| C04 287 T01–T14 | **NOT_RUN** | 287 harness not executed on this dev DB this session. |
-| C05 287 T15 verifier | **PARTIAL** | 3/3 mutations rejected; `realOk=false`. |
-| C06 T16 cleanup/identity | **PASS** | backup preserved; dev DB restored to baseline; 5088/3000 healthy. |
-| C07 285 UI/Playwright | **NOT_RUN** | not executed. |
-| C08 integration scope | **PASS** | only 287 additive nullable column applied then removed by verified restore; no root AGENTS/.cursor/Host/Inventory/API change. |
+S01 negative control reproduced: post-reset OOS `01a0ba10…` → VARIANT_MISSING (variants 1361→884); boot#1 archived it.
 
-S01 negative control reproduced (OOS `01a0ba10…` → VARIANT_MISSING after reset; variants 1361→884).
-
-## Exact blocker (C01)
-Post-reset catalog on `tooba_alpha` has `published_products=0` and no live template variant, so the 288 gateway's
-`ResolveLiveVariantIdAsync` finds no target and returns null (no crash, but the stale OOS row is not relinked/removed).
-Bounded repair for architect decision: (a) remove/archive the stale marked dev-seed row when no live target; and/or
-(b) permit any existing live Catalog variant as rebuild target; and investigate the 0-published-products reset state.
+## Exact blockers (for architect)
+1. **Cross-ownership Promotion references:** 5 shared non-seed campaigns reference the withdrawn OOS Offer; removing
+   them is a Promotion-owned/shared-data mutation beyond the dev-seed's safe scope. Proposed smallest remedy: a
+   Promotion-owned reconciliation that prunes membership rows pointing at archived/invalid Offers (to be authorized),
+   or an owner decision that archived-Offer membership is acceptable (storefront filters inactive).
+2. **C04/C05/C07 not executed** on the current candidate (287 connected matrix, real VERIFY=realOk, Playwright UI).
 
 ## Environment
-Restored to healthy baseline: `tooba_alpha` offers=3223, variants=1361, products=567, parties=10, 287 col removed;
-original 5088 Host `/health`=200 (SingleStore/dev-singlestore/store-alpha/tenant-alpha); frontend 3000 `/fa`=200.
+Delivered healthy: original dev Host 5088 (SingleStore/dev-singlestore/store-alpha/tenant-alpha) 200; frontend 3000 200;
+`tooba_alpha` baseline (OOS Active+OK); verified backup retained (SHA256 4839D664…07FB9C).
 
-## Stage 3 (C09–C11) — PLAN PRESERVED
-`stage3-design/STAGE3-ARCHITECTURE.md`, `STAGE3-DECISION-GATES.md` (DG-01..07), `STAGE3-ACCEPTANCE-MATRIX.json`
-(D01–D13; D07/D09/D13 BLOCKED_ON_DECISION); OpenSpec `offer-stage3-shipping-assignment-289` strict valid. No Stage-3
-product code written (gated on Stage 2 accept).
-
-## Governance (C12)
-No fabricated PASS; different runs not merged; no Stage-3 code; no root AGENTS/.cursor/Host/Inventory/API/287-fingerprint
-change. Verified backup retained. Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
+## Stage 3
+Design preserved (`stage3-design/*`, OpenSpec `offer-stage3-shipping-assignment-289` strict valid); not implemented.
+Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.

@@ -72,6 +72,32 @@ public sealed class OfferDevelopmentSeedGatewayStaleVariantTests
         Assert.Single(await db.Offers.Where(x => x.SellerSku == OosSku).ToListAsync());
     }
 
+    [Fact]
+    public async Task No_live_target_withdraws_the_stale_oos_offer_and_stays_idempotent()
+    {
+        await using var db = CreateDb();
+        var stale = SellerOffer.Create(Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccf"), StaleVariant, SellerA, SalesChannel.Marketplace, OosSku, Now);
+        Assert.True(stale.Activate(Now).IsSuccess);
+        db.Offers.Add(stale);
+        await db.SaveChangesAsync();
+        var staleId = stale.OfferId;
+
+        // No live variants and no published variants: the observed post-Catalog-Demo-reset case.
+        var gateway = new OfferDevelopmentSeedGateway(db, new SeqIds(), new FixedClock(Now), new FakeLookup());
+
+        var first = await gateway.EnsureActiveCloneFromAnyActiveAsync(OosSku, SellerA, CancellationToken.None);
+        Assert.Null(first);
+        var row = await db.Offers.SingleAsync();
+        Assert.Equal(staleId, row.OfferId);
+        Assert.Equal(DomainStatus.Archived, row.Status);
+
+        // Idempotent on a second bootstrap: still one row, still Archived, no new row, no exception.
+        var second = await gateway.EnsureActiveCloneFromAnyActiveAsync(OosSku, SellerA, CancellationToken.None);
+        Assert.Null(second);
+        Assert.Single(await db.Offers.ToListAsync());
+        Assert.Equal(DomainStatus.Archived, (await db.Offers.SingleAsync()).Status);
+    }
+
     private static OfferDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<OfferDbContext>()

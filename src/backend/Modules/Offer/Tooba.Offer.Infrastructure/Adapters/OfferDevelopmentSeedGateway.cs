@@ -86,6 +86,16 @@ public sealed class OfferDevelopmentSeedGateway(
         var targetVariantId = await ResolveLiveVariantIdAsync(existing, cancellationToken);
         if (targetVariantId is null)
         {
+            // TB-289: no eligible live Catalog target exists (the Catalog Demo intentionally seeds all-Draft, so
+            // there is no published variant and no live template). Do NOT invent a variant and do NOT leave an
+            // ACTIVE dangling dev-seed Offer. Safely withdraw (archive) the marked dev-seed row through the owning
+            // aggregate; archiving releases the seller/variant/channel key and is idempotent on the next bootstrap.
+            if (existing is not null && existing.Status != DomainOfferStatus.Archived)
+            {
+                existing.Archive(clock.UtcNow);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
             return null;
         }
 

@@ -61,3 +61,17 @@ untouched, and record source→observed evidence with a validating producer; unp
 - **WHEN** verification runs
 - **THEN** the Host graph builds with 0 errors, the diff is limited to the Offer seed files, and the producer
   records observed facts with a hash
+
+### Requirement: REQ-SEED-05 — No eligible target means withdraw, never a fake variant
+When a marked Development OOS seed Offer references a deleted Catalog variant and there is no eligible live
+Catalog target (the Catalog Demo intentionally seeds all-Draft, so no published variant and no live template), the
+system SHALL NOT attach the Offer to a fabricated variant and SHALL NOT leave it active/publicly exposed; the
+owning Offer gateway SHALL withdraw (archive) the marked dev-seed row via the aggregate, leaving no active dangling
+OOS Offer, no Inventory command on a missing variant, and no Promotion member referencing a dangling Offer. The
+behavior SHALL be idempotent on a subsequent bootstrap.
+
+#### Scenario: S08 no eligible target withdraws the stale OOS
+- **GIVEN** a stale marked OOS Offer and an all-Draft Catalog with no live published/template variant
+- **WHEN** the normal Development bootstrap runs
+- **THEN** the OOS Offer SHALL become Archived (not Active), no new Offer or fake variant SHALL be created, no
+  Inventory stock command SHALL target the missing variant, and a second bootstrap SHALL be a no-op

@@ -35,3 +35,12 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Restore: docker cp dump + pg_restore --clean --if-exists exit 0 -> offers=3223, variants=1361, products=567, parties=10.
 - Original 5088 restarted via scripts/dev/host-stack.ps1; /health=200 (tenant-alpha); 3000 /fa=200.
 - Backup retained: .../dev-db-backups/tooba_alpha_288backup_20261123_133446.dump SHA256 4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C (not in git).
+
+## Stage-2 final correction run (2026-11-24)
+- Candidate 287+288+correction dll SHA-256 AD8FF896E98F51D2FBCC063CDD71A4AB3BCD6FF78D1F6580082A607683F12EE8; Host build 0 errors.
+- Offer fix: EnsureActiveCloneFromAnyActiveAsync archives the stale marked OOS when no eligible live target; focused tests 5/5 pass.
+- OpenSpec dev-seed-stale-catalog-variant-288 updated (REQ-SEED-05) strict valid.
+- Connected: reset -> OOS 01a0ba10 Active+VARIANT_MISSING (S01); boot1 -> OOS Archived, activeDangling=0, no crash, no inventory cmd; roles unchanged.
+- Finding: 5 promotion.merchandising_campaign_offers rows (shared non-seed campaigns) still reference OOS -> cross-ownership BLOCKED.
+- Restore: pg_restore --clean exit 0 -> offers=3223, variants=1361, products=567; original 5088 restarted 200; 3000 200.
+- Backup retained .../tooba_alpha_288backup_20261123_133446.dump SHA256 4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C (not in git).
