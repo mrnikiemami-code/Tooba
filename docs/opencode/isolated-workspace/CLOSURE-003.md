@@ -52,3 +52,7 @@ See `WORKSPACE-SELECT-AND-ROLLBACK.md`.
 
 Closure of the token-reduction evidence project. No chained tasks.  
 **STOP_FOR_ARCHITECT**
+
+## Commit
+Evidence commit: `32ce31de17fba618736c758796b421412642a3bb`.
+
