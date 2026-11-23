@@ -48,3 +48,7 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 ## Promotion guard (2026-11-24)
 - CampaignCartPriceAuthority.cs: injected IOfferLookupGateway; fail-closed on offer==null||Status!=Active before price (lines ~79-83).
 - Candidate Host dll SHA-256 8E6196268F25DBC1EE040D07494CBD1FAC5472D88C653F057415D0D17D8831D4; build 0 errors (promotion-guard-host-build-summary.txt).
+
+## Cart-price integration (2026-11-24)
+- dotnet test Host.Tests --filter CampaignCartPriceIntegrityTests -> Passed 2/2 (Testcontainers PG16). See stage2-proof/cartprice-integration-result.txt.
+- Fixed test call-sites for new ctor params: CampaignCartPriceAuthority(+IOfferLookupGateway via OfferStore), OfferDevelopmentSeedGateway(+ICatalogVariantLookup via CatalogDirectory). No behavior change.

@@ -44,3 +44,9 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - C01 runtime guard: IMPLEMENTED + BUILD-VERIFIED; connected cart-price/storefront proof NOT_RUN this session.
 - Still NOT_RUN: C02 connected boot idempotence (unit-verified), C04 (287 matrix), C05 (real VERIFY realOk), C07 (Playwright).
 - Overall remains BLOCKED for STAGE2_READY until the final connected run proves C01/C02/C04/C05/C07 with current candidate. Next implementation task per architect: Stage 3.
+
+## Promotion guard — real integration evidence (2026-11-24)
+- Ran Host.Tests CampaignCartPriceIntegrityTests (Testcontainers PostgreSQL 16) on candidate: Passed 2/2.
+- Proves with real Cart/Promotion/Pricing: Active Offer + valid campaign -> campaign price 70000; wrong campaign -> base 100000; expired window -> reprice to base. New guard does not break authorized discount and keeps fail-closed cases.
+- Still not executed: Archived-Offer negative cart case (C01 archived branch), C04 (287 matrix), C05 (real VERIFY realOk), C07 (Playwright) -> remains BLOCKED for STAGE2_READY.
+- Dev env untouched this step: 5088/3000 healthy, tooba_alpha baseline, backup retained.

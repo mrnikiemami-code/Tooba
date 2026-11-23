@@ -173,7 +173,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         var ids = new UuidV7IdGenerator();
         var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory, clock, ids);
         var offerStore = new OfferStore(offerDb);
-        var offerSeeds = new OfferDevelopmentSeedGateway(offerDb, ids, clock);
+        var offerSeeds = new OfferDevelopmentSeedGateway(offerDb, ids, clock, catalogDirectory);
         var partySeeds = new PartyDevelopmentSeedGateway(partyDb, partyDirectory, clock);
         var priceSeeds = new PricingDevelopmentSeedGateway(
             pricingDb, new OpenPricingUseCaseGuard(), offerStore, clock, ids);

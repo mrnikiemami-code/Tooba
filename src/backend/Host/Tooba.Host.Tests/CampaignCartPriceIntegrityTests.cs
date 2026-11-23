@@ -142,7 +142,7 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         var priceDir = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDir);
         var inventoryDir = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDir, catalogDir, new SystemUtcClock(), new UuidV7IdGenerator(), new ModuleCallTracer());
         var merchDir = new MerchandisingCampaignDirectory(promoDb, new SystemUtcClock(), new UuidV7IdGenerator());
-        var campaignPrices = new CampaignCartPriceAuthority(promoDb, priceDir, commerce);
+        var campaignPrices = new CampaignCartPriceAuthority(promoDb, priceDir, commerce, new OfferStore(offerDb));
         var cartDir = new CartDirectory(
             cartDb,
             new OpenCartUseCaseGuard(),
