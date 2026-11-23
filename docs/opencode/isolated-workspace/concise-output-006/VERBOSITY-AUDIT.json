@@ -1,0 +1,4 @@
+{
+  "task": "TOOBA-OPENCODE-CONCISE-OUTPUT-006",
+  "note": "Official OpenCode 1.19.6 config schema has instructions[] but no verbosity / quiet / silent chat key. Concise output is enforced via portable .opencode/instructions/concise-chat-output.md. agent.steps was not reduced. Model unchanged."
+}

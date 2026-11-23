@@ -1,0 +1,7 @@
+﻿TASK ID for this check: TOOBA-OPENCODE-CONCISE-OUTPUT-006-SMOKE
+No product code edits. Do not write files under src/.
+
+1) Read .opencode/instructions/concise-chat-output.md
+2) Read only the first 40 lines of src/backend/Modules/Notification/Tooba.Notification.Contracts/Commands/CreateNotificationCommand.cs
+3) Your FINAL chat message must obey the concise template exactly (TASK/STATUS/RESULT/BLOCKER/CODE/EVIDENCE/DURATION/STOP_FOR_ARCHITECT).
+4) RESULT one sentence naming the owning module. Put nothing else in chat.

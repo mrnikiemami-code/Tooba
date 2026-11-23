@@ -1,0 +1,16 @@
+﻿{
+    "exitCode":  0,
+    "elapsedMs":  10131,
+    "tools":  3,
+    "finalTextChars":  306,
+    "hasTemplate":  true,
+    "narrationPatternHits":  0,
+    "finalText":  "```text\nTASK: TOOBA-OPENCODE-CONCISE-OUTPUT-006-SMOKE\nSTATUS: PASS\nRESULT: CreateNotificationCommand.cs is owned by the Notification module (Tooba.Notification.Contracts).\nBLOCKER: none\nCODE: afce2aaec\nEVIDENCE: .opencode/instructions/concise-chat-output.md @ 9a825397\nDURATION: ~40s\nSTOP_FOR_ARCHITECT\n```",
+    "productDiff":  [
+
+                    ],
+    "mainAgentsSha":  "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+    "desktopPidsPreserved":  "7/7",
+    "verbosityKeyInSchema":  false,
+    "officialMechanism":  "instructions[] -\u003e .opencode/instructions/concise-chat-output.md"
+}
