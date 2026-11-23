@@ -1,0 +1,98 @@
+{
+  "taskId": "TB-DEV-SEED-STALE-CATALOG-VARIANT-288",
+  "issuedBy": "architect",
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+  "tests": [
+    {
+      "reqId": "REQ-SEED-01",
+      "invariantId": "S01",
+      "testId": "S01",
+      "caseType": "negative",
+      "given": "After Catalog demo reset, inspect existing OOS seed Offer and its CatalogVariantId",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Demonstrate actual stale mapping and exact source branch or disprove hypothesis",
+      "forbiddenEffects": "No speculative source change; no shared DB reset",
+      "oracle": "Isolated SQL before/after + source trace",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-02",
+      "invariantId": "S02",
+      "testId": "S02",
+      "caseType": "positive",
+      "given": "Run normal Development bootstrap after proven fixture repair",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Host healthy; OOS Offer variant exists and Promo seed completes",
+      "forbiddenEffects": "No crash inventory.catalog_variant.missing",
+      "oracle": "Host log + independent SQL",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-02",
+      "invariantId": "S03",
+      "testId": "S03",
+      "caseType": "boundary",
+      "given": "Repeat same development bootstrap a second time",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Stable IDs and membership; zero duplicates",
+      "forbiddenEffects": "No duplicate seller/Offer/Promotion",
+      "oracle": "SQL snapshots before/after",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-03",
+      "invariantId": "S04",
+      "testId": "S04",
+      "caseType": "negative",
+      "given": "Present invalid variant to ordinary Inventory boundary",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Inventory still fails closed with typed error",
+      "forbiddenEffects": "No bypass or silent stock writes",
+      "oracle": "Owning test + SQL",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-03",
+      "invariantId": "S05",
+      "testId": "S05",
+      "caseType": "boundary",
+      "given": "Read seller/admin role state across fixture setup",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Authorized actors intact, no unsafe escalation",
+      "forbiddenEffects": "No unauthorized principal/role changes",
+      "oracle": "Auth endpoint+SQL",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-04",
+      "invariantId": "S06",
+      "testId": "S06",
+      "caseType": "negative",
+      "given": "Inspect fixture teardown and running ports",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Only task-owned fixture cleaned; canonical Host/frontend unaffected",
+      "forbiddenEffects": "No shared/dev DB deletion, global process termination, repeated provisioning",
+      "oracle": "SQL+process+health",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    },
+    {
+      "reqId": "REQ-SEED-04",
+      "invariantId": "S07",
+      "testId": "S07",
+      "caseType": "positive",
+      "given": "Verify sources build, tests and evidence producer",
+      "action": "Execute with recorded actual source and safe environment",
+      "expected": "Scope precise, provenance checker validates observed facts",
+      "forbiddenEffects": "No changes in 287 Offer implementation/Inventory domain/API/Host/Cursor/AGENTS",
+      "oracle": "Build+git diff+script and hash",
+      "proofGrade": "CONNECTED_OR_SOURCE_VERIFIED",
+      "reasonIfNotApplicable": null
+    }
+  ]
+}
