@@ -44,3 +44,7 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Finding: 5 promotion.merchandising_campaign_offers rows (shared non-seed campaigns) still reference OOS -> cross-ownership BLOCKED.
 - Restore: pg_restore --clean exit 0 -> offers=3223, variants=1361, products=567; original 5088 restarted 200; 3000 200.
 - Backup retained .../tooba_alpha_288backup_20261123_133446.dump SHA256 4839D6649C4E4066A404FA73EA95BFF60AE67343EEA4A74BF81F2C582B07FB9C (not in git).
+
+## Promotion guard (2026-11-24)
+- CampaignCartPriceAuthority.cs: injected IOfferLookupGateway; fail-closed on offer==null||Status!=Active before price (lines ~79-83).
+- Candidate Host dll SHA-256 8E6196268F25DBC1EE040D07494CBD1FAC5472D88C653F057415D0D17D8831D4; build 0 errors (promotion-guard-host-build-summary.txt).

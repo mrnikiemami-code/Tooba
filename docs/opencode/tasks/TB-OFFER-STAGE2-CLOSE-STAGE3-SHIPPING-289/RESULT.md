@@ -37,3 +37,10 @@ Delivered healthy: original dev Host 5088 (SingleStore/dev-singlestore/store-alp
 ## Stage 3
 Design preserved (`stage3-design/*`, OpenSpec `offer-stage3-shipping-assignment-289` strict valid); not implemented.
 Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
+
+## Promotion runtime guard (architect decision, 2026-11-24)
+- Implemented in CampaignCartPriceAuthority: offer must be Active (via IOfferLookupGateway) before any campaign quote; Archived/not-found -> null (fail closed). Historical memberships retained (not deleted).
+- Build: Host 0 errors, candidate dll SHA 8E6196268F25DBC1EE040D07494CBD1FAC5472D88C653F057415D0D17D8831D4.
+- C01 runtime guard: IMPLEMENTED + BUILD-VERIFIED; connected cart-price/storefront proof NOT_RUN this session.
+- Still NOT_RUN: C02 connected boot idempotence (unit-verified), C04 (287 matrix), C05 (real VERIFY realOk), C07 (Playwright).
+- Overall remains BLOCKED for STAGE2_READY until the final connected run proves C01/C02/C04/C05/C07 with current candidate. Next implementation task per architect: Stage 3.

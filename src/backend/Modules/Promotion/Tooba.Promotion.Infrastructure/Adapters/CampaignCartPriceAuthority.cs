@@ -20,6 +20,7 @@ public sealed class CampaignCartPriceAuthority : ICampaignCartPriceAuthority
     private readonly PromotionDbContext _db;
     private readonly IPriceLookupGateway _prices;
     private readonly ICurrentCommerceContext _commerce;
+    private readonly Tooba.Offer.Contracts.Ports.IOfferLookupGateway _offers;
 
     /// <summary>
     /// مرجع را به schema promotion و قیمت canonical وصل می‌کند.
@@ -27,11 +28,13 @@ public sealed class CampaignCartPriceAuthority : ICampaignCartPriceAuthority
     public CampaignCartPriceAuthority(
         PromotionDbContext db,
         IPriceLookupGateway prices,
-        ICurrentCommerceContext commerce)
+        ICurrentCommerceContext commerce,
+        Tooba.Offer.Contracts.Ports.IOfferLookupGateway offers)
     {
         _db = db;
         _prices = prices;
         _commerce = commerce;
+        _offers = offers;
     }
 
     /// <inheritdoc />
@@ -69,6 +72,15 @@ public sealed class CampaignCartPriceAuthority : ICampaignCartPriceAuthority
                 x => x.CampaignId == merchandisingCampaignId && x.SellerOfferId == offerId,
                 cancellationToken);
         if (!isMember)
+        {
+            return null;
+        }
+
+        // TB-289: membership is historical and may reference a withdrawn/archived Offer. The Offer module is the
+        // lifecycle authority. An Archived/not-found Offer must NEVER receive a campaign quote from membership alone
+        // (a cached/stale read fails closed; there is no fallback that grants the campaign discount).
+        var offer = await _offers.FindOfferAsync(offerId, cancellationToken);
+        if (offer is null || offer.Status != OfferStatus.Active)
         {
             return null;
         }
