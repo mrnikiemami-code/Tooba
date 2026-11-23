@@ -87,6 +87,16 @@ public sealed class SellerOffer : IHasDomainEvents
     /// </remarks>
     public Guid? FulfillmentShippingTypeId { get; private set; }
 
+    /// <summary>
+    /// Durable fingerprint of the immutable original creation intent, or <c>null</c> for legacy rows
+    /// created before intent identity was recorded.
+    /// </summary>
+    /// <remarks>
+    /// Written once at creation time from the normalized create request. Never recomputed from mutable
+    /// listing fields, so legitimate later edits cannot change the idempotency identity of the original create.
+    /// </remarks>
+    public string? CreationIntentFingerprint { get; private set; }
+
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -123,6 +133,15 @@ public sealed class SellerOffer : IHasDomainEvents
         };
         offer._domainEvents.Add(new OfferCreatedDomainEvent(offer));
         return offer;
+    }
+
+    /// <summary>
+    /// Records the immutable original creation-intent fingerprint exactly once, at creation time.
+    /// </summary>
+    /// <param name="fingerprint">Deterministic fingerprint of the normalized original create request.</param>
+    public void SetCreationIntentFingerprint(string fingerprint)
+    {
+        CreationIntentFingerprint = fingerprint;
     }
 
     /// <summary>

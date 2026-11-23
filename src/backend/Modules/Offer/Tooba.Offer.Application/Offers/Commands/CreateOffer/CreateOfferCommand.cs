@@ -52,12 +52,18 @@ internal sealed class CreateOfferHandler(
         Guid? requestedId = string.IsNullOrWhiteSpace(request.RequestId)
             ? null
             : DeterministicOfferId(request.SellerPartyId, request.CatalogVariantId, request.RequestId.Trim());
+        string? intentFingerprint = null;
         if (requestedId is Guid stableId)
         {
+            // TB-287: the requestId identifies the immutable original creation intent, not the current
+            // mutable listing state. Compare the durable fingerprint recorded at create time.
+            intentFingerprint = CreationIntentFingerprint.Compute(request, channel, request.RequestId!);
             var existing = await store.GetByIdAsync(stableId, cancellationToken);
             if (existing is not null)
             {
-                if (!MatchesCreationIntent(existing, request, channel))
+                // A historical row with no recorded intent is never inferred from mutable state; fail closed.
+                if (existing.CreationIntentFingerprint is null
+                    || !string.Equals(existing.CreationIntentFingerprint, intentFingerprint, StringComparison.Ordinal))
                 {
                     return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
                 }
@@ -72,6 +78,11 @@ internal sealed class CreateOfferHandler(
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.DuplicateSellerSku));
 
         var offer = SellerOffer.Create(requestedId ?? ids.NewId(), request.CatalogVariantId, request.SellerPartyId, channel, sku, clock.UtcNow);
+        if (intentFingerprint is not null)
+        {
+            // Persisted atomically with the Offer insert so the original intent survives later edits.
+            offer.SetCreationIntentFingerprint(intentFingerprint);
+        }
         if (request.ReturnPolicyChoice is not null || request.CustomReturnWindowDays is not null)
         {
             var choice = request.ReturnPolicyChoice ?? "Default";
@@ -101,31 +112,15 @@ internal sealed class CreateOfferHandler(
         var persisted = await store.PersistNewAsync(offer, cancellationToken);
         if (persisted is not null)
         {
-            if (!MatchesCreationIntent(persisted, request, channel))
+            // Race branch: another request won the insert for this identity. Verify its durable intent.
+            if (persisted.CreationIntentFingerprint is null
+                || !string.Equals(persisted.CreationIntentFingerprint, intentFingerprint, StringComparison.Ordinal))
             {
                 return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
             }
             return Result.Success(await readModels.DetailAsync(persisted, cancellationToken));
         }
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
-    }
-
-    private static bool MatchesCreationIntent(SellerOffer existing, CreateOfferCommand request, DomainChannel channel)
-    {
-        var expectedSku = string.IsNullOrWhiteSpace(request.SellerSku) ? null : request.SellerSku.Trim();
-        var expectedStatus = string.IsNullOrWhiteSpace(request.Status)
-            ? nameof(OfferStatus.Draft)
-            : request.Status.Trim();
-        var expectedPolicy = request.ReturnPolicyChoice ?? "Default";
-        return existing.SellerPartyId == request.SellerPartyId
-            && existing.CatalogVariantId == request.CatalogVariantId
-            && existing.Channel == channel
-            && string.Equals(existing.SellerSku, expectedSku, StringComparison.Ordinal)
-            && string.Equals(existing.Status.ToString(), expectedStatus, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(existing.ReturnPolicyChoice, expectedPolicy, StringComparison.OrdinalIgnoreCase)
-            && existing.CustomReturnWindowDays == request.CustomReturnWindowDays
-            && existing.MinimumOrderQuantity == request.MinimumOrderQuantity
-            && existing.MaximumOrderQuantity == request.MaximumOrderQuantity;
     }
 
     private static Guid DeterministicOfferId(Guid sellerPartyId, Guid catalogVariantId, string requestId)

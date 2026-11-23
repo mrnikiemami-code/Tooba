@@ -1,0 +1,246 @@
+{
+  "task": "TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287",
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+  "producer": {
+    "script": "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.cjs",
+    "scriptSha256": "0cce3854194910fd94bebda530cf261ffe154d586c61452ee239435f65bccb09",
+    "writesObservedJsonDirectly": true
+  },
+  "startedAt": "2026-11-23T03:07:49.487Z",
+  "endedAt": "2026-11-23T03:10:08.516Z",
+  "elapsedMs": 139029,
+  "environment": {
+    "codeSha": "40b7fb2d5519201cb7c25afd43ba5dc4104b5c90",
+    "originMain": "d3c2e5ef1016fd2dbde6db0e1ab33d95ff41a121",
+    "productDiffVsOriginMain": "(empty)",
+    "host": "http://127.0.0.1:5094",
+    "database": "tooba_offer287_idem",
+    "hostDllSha256": "6cb9c80e38b012816faaa89d1f27118648cd01c2aa04d09657223a09f487ca9b",
+    "sellerA": {
+      "party": "01a20657-2788-7000-91bf-91aeb4b4180e",
+      "actor": "01a20655-1b74-7000-b460-7a759f3ece3c"
+    },
+    "sellerB": {
+      "party": "01a20657-27a3-7000-92bd-f970e44fc44d",
+      "actor": "01a20655-1b9e-7000-bfb9-df46d4d5d0a8"
+    },
+    "admin": "01a20655-1b07-7000-8da5-7bc1c4d48aaf",
+    "run": "r4-final"
+  },
+  "tests": {
+    "T01": {
+      "id": "T01",
+      "pass": true,
+      "observed": {
+        "createStatus": 201,
+        "patchStatus": 200,
+        "replayStatus": 201,
+        "sameOfferId": true,
+        "currentSku": "TB287-r4-final-T01B",
+        "offerId": "3e48efaa-4352-b2e4-e9f7-ed3bf2c707c8",
+        "offerRows": 1
+      }
+    },
+    "T02": {
+      "id": "T02",
+      "pass": true,
+      "observed": {
+        "status": 409,
+        "errorCode": "offer.create.intent_conflict",
+        "offerRows": 1,
+        "priceWrites": 0,
+        "stockWrites": 0,
+        "reservationWrites": 0
+      }
+    },
+    "T03": {
+      "id": "T03",
+      "pass": true,
+      "observed": {
+        "createStatus": 201,
+        "patchStatus": 200,
+        "replayStatus": 201,
+        "sameOfferId": true,
+        "currentPolicy": "NonReturnable",
+        "offerId": "82153671-6ed1-0f1d-c641-647b06674ec6",
+        "offerRows": 1
+      }
+    },
+    "T04": {
+      "id": "T04",
+      "pass": true,
+      "observed": {
+        "status": 409,
+        "errorCode": "offer.create.intent_conflict",
+        "offerRows": 1
+      }
+    },
+    "T05": {
+      "id": "T05",
+      "pass": true,
+      "observed": {
+        "sellerStatus": 201,
+        "adminStatus": 201,
+        "sameOfferId": true,
+        "offerId": "a38122e6-9f3c-d554-afcc-cfe82726337b",
+        "offerRows": 1
+      }
+    },
+    "T06": {
+      "id": "T06",
+      "pass": true,
+      "observed": {
+        "first": 201,
+        "second": 201,
+        "sameOfferId": true,
+        "offerId": "3a8a4d2f-ab65-1f24-31c5-76a99c17a1bf",
+        "offerRows": 1
+      }
+    },
+    "T07": {
+      "id": "T07",
+      "pass": true,
+      "observed": {
+        "first": 409,
+        "second": 201,
+        "winnerStatus": 201,
+        "loserStatus": 409,
+        "loserErrorCode": "offer.create.intent_conflict",
+        "offerRows": 1,
+        "winnerOfferId": "c0b4ddd5-81c8-af1b-1c98-bd9751d05f38",
+        "storedFingerprintPresent": true
+      }
+    },
+    "T08": {
+      "id": "T08",
+      "pass": true,
+      "observed": {
+        "firstStatus": 201,
+        "secondStatus": 409,
+        "secondErrorCode": "offer.listing.duplicate_active",
+        "offerRows": 1
+      }
+    },
+    "T09": {
+      "id": "T09",
+      "pass": true,
+      "observed": {
+        "noAuthStatus": 401,
+        "noAuthCode": "seller.actor.missing",
+        "crossSellerStatus": 403,
+        "crossSellerCode": "seller.authorization.denied",
+        "sellerBReadsA": 404,
+        "offerDelta": 0
+      }
+    },
+    "T10": {
+      "id": "T10",
+      "pass": true,
+      "observed": {
+        "replayStatus": 201,
+        "conflictStatus": 409,
+        "priceWrites": 0,
+        "stockWrites": 0,
+        "reservationWrites": 0
+      }
+    },
+    "T11": {
+      "id": "T11",
+      "pass": true,
+      "observed": {
+        "createStatus": 201,
+        "fingerprintAfterNull": "<NULL>",
+        "replayStatus": 409,
+        "replayErrorCode": "offer.create.intent_conflict",
+        "fingerprintStillNull": "<NULL>",
+        "offerRows": 1
+      }
+    },
+    "T12": {
+      "id": "T12",
+      "pass": true,
+      "observed": {
+        "createStatus": 201,
+        "equivalentReplayStatus": 201,
+        "sameOfferId": true,
+        "changedStatus": 409,
+        "changedErrorCode": "offer.create.intent_conflict",
+        "nullVsDefaultCreateStatus": 201,
+        "nullVsDefaultReplayStatus": 201,
+        "nullVsDefaultSameId": true,
+        "decimalNote": "create contract has no decimal fields; decimal canonicalization covered by design"
+      }
+    },
+    "T13": {
+      "id": "T13",
+      "pass": false,
+      "observed": {
+        "createStatus": 201,
+        "restartOk": false,
+        "pidBefore": 43908,
+        "pidAfter": null,
+        "replayStatus": 0,
+        "sameOfferId": false,
+        "changedStatus": 0,
+        "fingerprintStable": true
+      }
+    },
+    "T14": {
+      "id": "T14",
+      "pass": true,
+      "observed": {
+        "writesObservedJsonDirectly": true,
+        "scriptSha256": "0cce3854194910fd94bebda530cf261ffe154d586c61452ee239435f65bccb09",
+        "evidencePath": "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.json",
+        "note": "VERIFY.mjs recomputes script hash and rejects tamper"
+      }
+    },
+    "T15": {
+      "id": "T15",
+      "pass": null,
+      "delegatedTo": "VERIFY.mjs",
+      "observed": {
+        "note": "mutation self-test runs in VERIFY.mjs"
+      }
+    },
+    "T16": {
+      "id": "T16",
+      "pass": false,
+      "observed": {
+        "changedPaths": [
+          "src/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreateOfferCommand.cs",
+          "src/backend/Modules/Offer/Tooba.Offer.Domain/Aggregates/SellerOffer.cs",
+          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Configurations/SellerOfferConfiguration.cs",
+          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/OfferDbContextModelSnapshot.cs",
+          "docs/opencode/smoke/runs/",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/",
+          "iso-runs/",
+          "measure-one.ps1",
+          "prompts-local/",
+          "src/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreationIntentFingerprint.cs",
+          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20261123120000_AddOfferCreationIntentFingerprint.cs"
+        ],
+        "forbiddenPaths": [],
+        "preexistingScratch": [
+          "docs/opencode/smoke/runs/",
+          "iso-runs/",
+          "measure-one.ps1",
+          "prompts-local/"
+        ],
+        "canonicalBefore": {
+          "host5088": 0,
+          "frontend3000": 200
+        },
+        "canonicalAfter": {
+          "host5088": 0,
+          "frontend3000": 200
+        },
+        "teardown": {
+          "performed": true,
+          "dbExists": false,
+          "port5094Listening": false
+        }
+      }
+    }
+  }
+}

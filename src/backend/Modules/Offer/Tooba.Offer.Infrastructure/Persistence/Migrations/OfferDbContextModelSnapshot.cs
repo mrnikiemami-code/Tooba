@@ -64,6 +64,11 @@ namespace Tooba.Offer.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("fulfillment_shipping_type_id");
 
+                    b.Property<string>("CreationIntentFingerprint")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("creation_intent_fingerprint");
+
                     b.Property<string>("ReturnPolicyChoice")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

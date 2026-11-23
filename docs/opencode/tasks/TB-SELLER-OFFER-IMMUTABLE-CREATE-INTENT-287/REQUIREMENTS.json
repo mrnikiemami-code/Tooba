@@ -1,0 +1,32 @@
+{
+  "taskId": "TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287",
+  "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
+  "implementation": "COMPLETE (build 0 errors)",
+  "finalConsolidatedRun": "BLOCKED (environment fixture defect; see RESULT.md)",
+  "provenance": "Per-test observations are real and recorded by connected-287.json / verify-287.json; they span distinct real runs (r2, r4) and are NOT presented as one run.",
+  "requirements": [
+    { "reqId": "REQ-01", "invariant": "Immutable fingerprint + correct replay after mutable Offer edit", "tests": ["T01","T02","T03","T04","T05"] },
+    { "reqId": "REQ-02", "invariant": "Race / ownership / side-effect safety", "tests": ["T06","T07","T08","T09","T10"] },
+    { "reqId": "REQ-03", "invariant": "Legacy/null-fingerprint and canonicalization policy", "tests": ["T11","T12","T13"] },
+    { "reqId": "REQ-04", "invariant": "Evidence, negative checker, scope/cleanup", "tests": ["T14","T15","T16"] }
+  ],
+  "tests": {
+    "T01": { "status": "PASS", "source": "r2,r4", "note": "original SKU replay after edit returns same id, current SKU kept, one row" },
+    "T02": { "status": "PASS", "source": "r2,r4", "note": "changed SKU same identity -> 409 offer.create.intent_conflict; one row; 0 pricing/inventory writes" },
+    "T03": { "status": "PASS", "source": "r2,r4", "note": "original policy replay after policy edit returns same id, current policy kept" },
+    "T04": { "status": "PASS", "source": "r2,r4", "note": "changed policy same identity -> 409; no writes" },
+    "T05": { "status": "PASS", "source": "r2", "note": "seller then admin identical immediate repeat -> 201/201 same id one row" },
+    "T06": { "status": "PASS", "source": "r2,r4", "note": "two concurrent identical -> same id, one row, no 500" },
+    "T07": { "status": "PASS", "source": "r2,r4", "note": "concurrent same identity different intent -> one winner, one 409, fingerprint present" },
+    "T08": { "status": "PASS", "source": "r2,r4", "note": "different requestId same active listing -> offer.listing.duplicate_active, one row" },
+    "T09": { "status": "PASS", "source": "r2,r4", "note": "no-auth and cross-seller -> 401/403; B cannot read A (404); no writes" },
+    "T10": { "status": "PASS", "source": "r2,r4", "note": "replay+conflict -> zero pricing/stock/reservation writes" },
+    "T11": { "status": "PASS", "source": "r2,r4", "note": "NULL fingerprint legacy replay -> 409, no backfill" },
+    "T12": { "status": "PASS", "source": "r2,r4", "note": "trim + status-casing + null/Default equivalence same id; meaningful change 409" },
+    "T13": { "status": "PASS_WITH_NOTE", "source": "r2", "note": "real Host restart in r2 proved durability; the redesigned fresh-context+SQL variant was NOT re-run after the env fixture defect (NOT_RUN in final form)" },
+    "T14": { "status": "PASS", "source": "harness+VERIFY", "note": "observed JSON written by committed script; script hash recorded" },
+    "T15": { "status": "PASS", "source": "VERIFY.mjs", "note": "mutation self-test rejected delete-T05, flip-T02, tamper-hash" },
+    "T16": { "status": "PASS", "source": "cleanup+git", "note": "diff scoped to Offer module only; disposable DB dropped (count 0); 5094 stopped; canonical 5088/3000 200" }
+  },
+  "overall": "BLOCKED_FOR_ARCHITECT (all 16 have real PASS observations across real runs, but a single consolidated teardown run could not be produced in the existing environment due to a non-idempotent Development merchandising seed)"
+}
