@@ -1,0 +1,26 @@
+TOOBA-OPENCODE-PRODUCTION-READY-004 smoke (NO product code edits).
+
+Working directory MUST be the isolated worktree. Do not edit any file under src/frontend, src/backend, Host, main AGENTS, or .cursor.
+
+Steps (use the read tool; do not skip):
+1) Read docs/opencode/iso-rules/01-architecture.md through 05-task-layer.md (all five).
+2) Read docs/opencode/iso-rules/06-backend-layer.md and .cursor/skills/tooba-backend-feature/SKILL.md.
+3) Read docs/opencode/iso-rules/07-frontend-layer.md and .cursor/skills/tooba-frontend-feature/SKILL.md.
+4) Read docs/opencode/iso-rules/08-amsc-layer.md (assessment only — do not run AMSC).
+5) Analyze Backend path:
+   src/backend/Modules/Notification/Tooba.Notification.Contracts/Commands/CreateNotificationCommand.cs
+   Name the owning module and why Host is not the owner.
+6) Analyze Frontend path:
+   src/frontend/features/admin-shipping-authoring/ui/authoring-message-box.tsx
+   Name Design System / UI ownership signals and how API/transport would be reached from this feature area (from imports/neighbors if needed; keep reads minimal).
+7) Decide AMSC: needed or not for ordinary fixes on these two paths — cite 08.
+
+Output EXACTLY these headings:
+## RulesLoaded (list each file you actually read)
+## BackendOwner (module + contract path + Host risk: yes/no)
+## FrontendSurface (feature owner + design-system/API notes)
+## AmscVerdict (NEEDED or NOT_NEEDED + one sentence)
+## Compliance (how this run obeyed delivery/security/OpenSpec always-on packs)
+## Edits (must be NONE)
+
+Do not claim ARCHITECT_ACCEPT. STOP after the analysis.

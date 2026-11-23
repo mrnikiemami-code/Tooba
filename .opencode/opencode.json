@@ -1,0 +1,18 @@
+﻿{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "metisdeepseek/deepseek-v4-flash",
+  "tool_output": {
+    "max_lines": 200,
+    "max_bytes": 20000
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "permission": {
+    "edit": "allow",
+    "webfetch": "deny"
+  }
+}
+
+
