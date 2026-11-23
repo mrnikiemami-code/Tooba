@@ -1,0 +1,15 @@
+﻿Non-interactive analysis. Do NOT edit any file. Do NOT ask questions.
+1) Read these rule packs with the read tool BEFORE the source file:
+- docs/opencode/iso-rules/01-architecture.md
+- docs/opencode/iso-rules/02-security-permissions.md
+- docs/opencode/iso-rules/03-openspec.md
+- docs/opencode/iso-rules/04-opencode-acceptance.md
+- docs/opencode/iso-rules/05-task-layer.md
+2) From those packs, extract at most 5 binding constraints for frontend component analysis.
+3) Read ONLY:
+src/frontend/features/admin-shipping-authoring/ui/authoring-message-box.tsx
+4) Reply with exactly:
+## RulesApplied (bullet list citing pack filenames)
+## Analysis (max 6 bullets: role, props, coupling, RTL/a11y notes)
+## Compliance (one line)
+Stop.

@@ -1,0 +1,9 @@
+﻿Non-interactive analysis. Do NOT edit any file. Do NOT ask questions.
+1) From always-on governance already in context (AGENTS.md), extract at most 5 binding constraints that apply to backend module-boundary analysis (architecture, permissions/security, acceptance honesty).
+2) Read ONLY:
+src/backend/Modules/Notification/Tooba.Notification.Contracts/Commands/CreateNotificationCommand.cs
+3) Reply with exactly these sections:
+## RulesApplied (bullet list of the constraints you extracted)
+## Analysis (max 6 bullets: purpose, fields, module boundary, write/authz risk)
+## Compliance (one line: whether this analysis stayed read-only and dropped no mandatory rule)
+Stop.

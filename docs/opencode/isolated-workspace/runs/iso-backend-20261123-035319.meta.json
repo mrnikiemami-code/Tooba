@@ -1,0 +1,22 @@
+﻿{
+    "label":  "iso-backend",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "promptFile":  ".\\prompts-local\\iso-backend.txt",
+    "started":  "20261123-035319",
+    "elapsedMs":  472634,
+    "exitCode":  -1,
+    "jsonl":  ".\\iso-runs\\iso-backend-20261123-035319.jsonl",
+    "sessionId":  null,
+    "error":  null,
+    "steps":  0,
+    "tools":  0,
+    "tokens":  {
+                   "output":  0,
+                   "total":  0,
+                   "reasoning":  0,
+                   "cacheRead":  0,
+                   "input":  0,
+                   "cacheWrite":  0
+               },
+    "textPreview":  ""
+}

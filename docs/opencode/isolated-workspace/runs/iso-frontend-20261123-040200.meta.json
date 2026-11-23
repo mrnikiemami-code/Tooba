@@ -1,0 +1,22 @@
+﻿{
+    "label":  "iso-frontend",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "promptFile":  ".\\prompts-local\\iso-frontend.txt",
+    "started":  "20261123-040200",
+    "elapsedMs":  28290,
+    "exitCode":  1,
+    "jsonl":  ".\\iso-runs\\iso-frontend-20261123-040200.jsonl",
+    "sessionId":  "ses_dfa2ede52ffe9C7ziWcbjB0EY2",
+    "error":  null,
+    "steps":  3,
+    "tools":  6,
+    "tokens":  {
+                   "output":  888,
+                   "incrementalInput":  2038,
+                   "reasoning":  7,
+                   "cacheReadPeak":  12160,
+                   "lastStepTotal":  13079,
+                   "cacheWrite":  0
+               },
+    "textPreview":  "I\u0027ll start by reading the mandatory rule packs.## RulesApplied\n- `01-architecture.md`: name module boundary and owning design-system contract (UI→transport→auth→CQRS→persistence) observed; no new domain abstractions replacing existing Design System.\n- `02-security-permissions.md`: call out authz boundary and write-path risk; secrets never printed/committed.\n- `03-openspec.md`: map observations to REQ IDs only if a change/spec is in scope, else state \"no OpenSpec change loaded\"; unrun test ≠ PASS…"
+}

@@ -1,0 +1,22 @@
+﻿{
+    "label":  "main-frontend",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "promptFile":  "docs\\opencode\\isolated-workspace\\prompts\\main-frontend.txt",
+    "started":  "20261123-035301",
+    "elapsedMs":  17143,
+    "exitCode":  0,
+    "jsonl":  "docs\\opencode\\isolated-workspace\\runs\\main-frontend-20261123-035301.jsonl",
+    "sessionId":  "ses_dfa371720ffeIrL2jqhFhscV7B",
+    "error":  null,
+    "steps":  2,
+    "tools":  1,
+    "tokens":  {
+                   "output":  601,
+                   "total":  1772,
+                   "reasoning":  465,
+                   "cacheRead":  518016,
+                   "input":  706,
+                   "cacheWrite":  0
+               },
+    "textPreview":  "## RulesApplied\n- Frontend feature architecture is mandatory: features may consume the shared `design-system`/`app` primitives, must preserve module ownership and dependency direction (`FE-BOUNDARY-001`, `ARCH-FE-FREEZE-001`), and must not …"
+}

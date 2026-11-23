@@ -1,0 +1,21 @@
+﻿{
+  "task": "TOOBA-OPENCODE-ISOLATION-CLOSURE-003",
+  "gate": "STOP_FOR_ARCHITECT",
+  "mode": "VERIFY_PUBLISH_CLOSE",
+  "benchmarkRerun": false,
+  "remoteActual": "https://github.com/mrnikiemami-code/Tooba.git",
+  "remoteTypoIn002Drafts": "mrnikami-code",
+  "sameRepository": true,
+  "mainAgentsSha256": "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+  "rulesCoverage": "PASS",
+  "impeccable": "PASS_BY_SOT_REFERENCE_ARCHITECT_DELIVERY_METHOD",
+  "tokenReductionFrom002": {
+    "backendContextPercent": -94.95,
+    "backendColdInputPercent": -95.93,
+    "frontendContextPercent": -94.98
+  },
+  "pricing": "NOT_AVAILABLE",
+  "mainWorkspaceReplaced": false,
+  "isoMergedToMain": false,
+  "evidencePath": "docs/opencode/isolated-workspace/"
+}

@@ -1,0 +1,22 @@
+﻿{
+    "label":  "main-backend",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "promptFile":  "docs\\opencode\\isolated-workspace\\prompts\\main-backend.txt",
+    "started":  "20261123-035239",
+    "elapsedMs":  21401,
+    "exitCode":  0,
+    "jsonl":  "docs\\opencode\\isolated-workspace\\runs\\main-backend-20261123-035239.jsonl",
+    "sessionId":  "ses_dfa376ccfffeJx59CHGB0Hm6xM",
+    "error":  null,
+    "steps":  2,
+    "tools":  1,
+    "tokens":  {
+                   "output":  768,
+                   "total":  258693,
+                   "reasoning":  296,
+                   "cacheRead":  260864,
+                   "input":  257629,
+                   "cacheWrite":  0
+               },
+    "textPreview":  "I\u0027ll extract the binding constraints and read the specified file.## RulesApplied\n- **Backend architecture skill is mandatory**: every authorized backend feature/fix must follow `.cursor/skills/tooba-backend-feature/SKILL.md` — module owners…"
+}

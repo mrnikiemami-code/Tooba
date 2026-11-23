@@ -1,0 +1,22 @@
+﻿{
+    "label":  "iso-backend",
+    "model":  "metisdeepseek/deepseek-v4-flash",
+    "promptFile":  ".\\prompts-local\\iso-backend.txt",
+    "started":  "20261123-040141",
+    "elapsedMs":  18215,
+    "exitCode":  1,
+    "jsonl":  ".\\iso-runs\\iso-backend-20261123-040141.jsonl",
+    "sessionId":  "ses_dfa2f273fffecc3VOyd6xyvntU",
+    "error":  null,
+    "steps":  3,
+    "tools":  6,
+    "tokens":  {
+                   "output":  868,
+                   "incrementalInput":  10490,
+                   "reasoning":  228,
+                   "cacheReadPeak":  12160,
+                   "lastStepTotal":  13139,
+                   "cacheWrite":  0
+               },
+    "textPreview":  "I\u0027ll start by reading the mandatory rule packs, then the source file.## RulesApplied\n- `01-architecture.md`: When analyzing only, still name the module boundary and owning contract/path observed; do not invent new abstractions that replace existing Contracts/CQRS.\n- `02-security-permissions.md`: Analyze must call out the authz boundary and any write-path risk even when not executing writes; forbidden-by-default for canonical writes.\n- `02-security-permissions.md`: Idempotency (same key same payl…"
+}

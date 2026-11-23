@@ -1,0 +1,36 @@
+﻿{
+  "task": "TOOBA-OPENCODE-ISOLATED-WORKSPACE-002",
+  "gate": "STOP_FOR_ARCHITECT",
+  "remote": "https://github.com/mrnikiemami-code/Tooba.git",
+  "remoteTypoNote": "002 drafts briefly wrote mrnikami-code (missing 'ema'); live origin is mrnikiemami-code. Same Tooba repo.",
+  "mainRoot": "D:\\Users\\User\\source\\repos\\SarvNewVer",
+  "mainHead": "394cc0bdb",
+  "mainAgents": {
+    "bytes": 896347,
+    "sha256": "06DC5A5FEAC45958667BB8F7DE0174BAE478B11F2A7F806C492E33BC6339F090",
+    "unchanged": true
+  },
+  "worktree": {
+    "path": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002",
+    "branch": "opencode/iso-agents-002",
+    "shortAgentsBytes": 1190,
+    "pushed": false
+  },
+  "model": "metisdeepseek/deepseek-v4-flash",
+  "pricing": "NOT_MEASURED",
+  "wallClockMinutes": 9.83,
+  "comparisons": {
+    "backendContextLastStepTotal": { "main": 260377, "iso": 13139, "delta": -247238, "percent": -94.95 },
+    "backendColdIncrementalInput": { "main": 257629, "iso": 10490, "delta": -247139, "percent": -95.93 },
+    "frontendContextLastStepTotal": { "main": 260516, "iso": 13079, "delta": -247437, "percent": -94.98 }
+  },
+  "ruleCompliance": {
+    "mainBackend": true,
+    "mainFrontend": true,
+    "isoBackend": true,
+    "isoFrontend": true,
+    "isoReadAllFiveRulePacks": true
+  },
+  "activation": "PROPOSED_ONLY",
+  "mainWorkspaceReplaced": false
+}

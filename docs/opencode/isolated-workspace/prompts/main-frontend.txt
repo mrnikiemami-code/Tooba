@@ -1,0 +1,9 @@
+﻿Non-interactive analysis. Do NOT edit any file. Do NOT ask questions.
+1) From always-on governance already in context (AGENTS.md), extract at most 5 binding constraints that apply to frontend component analysis (architecture boundaries, a11y/RTL if relevant, acceptance honesty).
+2) Read ONLY:
+src/frontend/features/admin-shipping-authoring/ui/authoring-message-box.tsx
+3) Reply with exactly these sections:
+## RulesApplied (bullet list)
+## Analysis (max 6 bullets: role, props, coupling, RTL/a11y notes)
+## Compliance (one line)
+Stop.
