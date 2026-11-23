@@ -4,6 +4,7 @@ Source of truth: `docs/opencode/ARCHITECT-DELIVERY-METHOD.md` (**TOOBA-OPENCODE-
 MUST:
 - OpenCode-only artifacts live under `docs/opencode/` — do not rewrite Cursor delivery gates or `docs/ai/delivery/**` to satisfy OpenCode.
 - Follow issued TASK.md + ACCEPTANCE-MATRIX.json exactly; do not reinterpret or drop REQs.
+- **Dev test environment (owner 2026-11-23):** default to already running DEV Host and existing DEV DB; add/clean only test-owned rows with independent before/after checks. Read `docs/opencode/DEV-HOST-TEST-POLICY.md` before planning test fixtures. Never recreate DB/Host for ordinary tests. Do not run schema migration/reset or test a new code version on a stale shared Host; use isolated proof only when actually essential and authorized.
 - Evidence must be independent/re-readable; HTTP200 / modal-open / helper-only is insufficient for persistence claims.
 - Impeccable: for real UI design/form/a11y/interaction changes, document critique → choices → implementation → post-check. No UI change ⇒ `NOT_APPLICABLE: NO_UI_CHANGE`.
 - Preserve Bridge envelope keys and `STOP_FOR_ARCHITECT`; `automaticNextImplementationTask: NONE` unless the issued task says otherwise.
