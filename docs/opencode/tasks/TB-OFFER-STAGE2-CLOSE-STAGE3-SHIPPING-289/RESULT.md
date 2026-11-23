@@ -50,3 +50,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Proves with real Cart/Promotion/Pricing: Active Offer + valid campaign -> campaign price 70000; wrong campaign -> base 100000; expired window -> reprice to base. New guard does not break authorized discount and keeps fail-closed cases.
 - Still not executed: Archived-Offer negative cart case (C01 archived branch), C04 (287 matrix), C05 (real VERIFY realOk), C07 (Playwright) -> remains BLOCKED for STAGE2_READY.
 - Dev env untouched this step: 5088/3000 healthy, tooba_alpha baseline, backup retained.
+
+## C01 read-edge finding (2026-11-24, real Testcontainers test)
+- Add-path guard verified 2/2 (active discount preserved; wrong campaign/expiry fail-closed).
+- Read/revalidation edge FAILED: archived Offer kept stored campaign price on GetCart reload (CampaignCartPriceAuthority add-path rejects non-Active, but CartDirectory reload does not clear already-applied campaign for a now-Archived Offer). See stage2-proof/C01-read-edge-finding.md.
+- C01 therefore NOT fully PASS; C02/C04/C05/C07 NOT_RUN. No fake PASS.
