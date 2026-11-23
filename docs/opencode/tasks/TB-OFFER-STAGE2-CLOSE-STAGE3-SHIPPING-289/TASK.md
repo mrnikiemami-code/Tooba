@@ -19,3 +19,6 @@ Architect decision (product acceptance oracle, NOT an invented test PASS):
 
 ## Exit
 A: STAGE2_READY_FOR_ARCHITECT_ACCEPT with all C01–C08 source-coherent actual PASS, then next implementation task is STAGE3_SHIPPING. B: one specific evidence-backed blocker remains and is escalated without spawning another Stage2 task. Architect alone decides Stage2 ARCHITECT_ACCEPT. Preserve 287/288 evidence and code, do not restart from scratch.
+
+## OWNER STANDING DEV ENV DIRECTIVE — 2026-11-24 (overrides contrary environment restrictions)
+Read `docs/opencode/DEV-HOST-TEST-POLICY.md` first. User authorizes using **existing development Host 5088 and existing disposable DEV database `tooba_alpha` directly**, INCLUDING additive 287 migration, destructive reset/seed, backup/restore, candidate binary deployment and controlled restart. **No new Host or database**, no fresh isolated fixture, no another permission request for these DEV operations, no environmental refusal solely because test is destructive. Confirm exact current identity and validate backup first, apply candidate changes to same existing DEV DB, run actual remaining C01–C08, restore known-good dev health. Do not touch staging/production or unrelated services. This is a standing owner rule for all future Tooba DEV tasks, not just 289. Do not bypass real architecture/test correctness or fabricate PASS.
