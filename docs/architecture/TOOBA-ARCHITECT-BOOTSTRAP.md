@@ -1,5 +1,9 @@
 # Mandatory delivery governance — TOOBA-DELIVERY-001 — 2026-11-21
 
+<!-- OPEN-CODE-ARCHITECT-CURRENT-RECOVERY -->
+**Current OpenCode Offer Stage-2 recovery (2026-11-23):** read [ARCHITECT-RECOVERY-CURRENT](../opencode/ARCHITECT-RECOVERY-CURRENT.md) and issued [TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287](../opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/TASK.md) with its ACCEPTANCE-MATRIX. Task 286 V4 failed; Stage 2 NOT ACCEPTED, Stage 3 NOT AUTHORIZED. This pointer is informational; preserve all existing TMAR/AMSC architecture locks and Cursor rules. Never auto-run AMSC for an ordinary Offer fix.
+
+
 Before issuing, implementing or reviewing a task, read [TOOBA-DELIVERY-ASSURANCE](TOOBA-DELIVERY-ASSURANCE.md) (root-relative path: `docs/architecture/TOOBA-DELIVERY-ASSURANCE.md`). Large tasks require a source-grounded architecture/scenario plan BEFORE production edits and ordered small connected waves INSIDE the same authorized task. Exact issued requirements cannot be dropped. Save must be proved through the real form/owning command and independent reread; modal-open/helper-only/HTTP200/chunk strings do not establish delivery. Run the plan and review structural gates in `docs/ai/delivery/check-readiness.mjs`; independently review the evidence because this checker cannot establish its truth. Missing mandatory proof is PARTIAL/BLOCKED. Worker PASS is never Architect ACCEPT or owner acceptance. Preserve the BRIDGE-WAKE-V1 envelope and task naming; no new queue/polling/agent or automatic task. This governance update does not accept or complete historical Story claims below.
 
 ---
