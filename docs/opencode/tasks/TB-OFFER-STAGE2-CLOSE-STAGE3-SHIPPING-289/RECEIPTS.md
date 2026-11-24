@@ -52,3 +52,7 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 ## Cart-price integration (2026-11-24)
 - dotnet test Host.Tests --filter CampaignCartPriceIntegrityTests -> Passed 2/2 (Testcontainers PG16). See stage2-proof/cartprice-integration-result.txt.
 - Fixed test call-sites for new ctor params: CampaignCartPriceAuthority(+IOfferLookupGateway via OfferStore), OfferDevelopmentSeedGateway(+ICatalogVariantLookup via CatalogDirectory). No behavior change.
+
+## C01 PASS (2026-11-24)
+- CartDirectory.cs RevalidateCampaignQuotesAsync: on SemanticException for campaign line -> clear campaign + base reprice (or fail-closed 0).
+- CampaignCartPriceIntegrityTests => Passed 2/2 (stage2-proof/cartprice-archived-PASS.txt; C01-archived-PASS.md).

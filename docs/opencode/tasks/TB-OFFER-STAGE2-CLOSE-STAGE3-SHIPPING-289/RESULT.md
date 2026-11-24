@@ -55,3 +55,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Add-path guard verified 2/2 (active discount preserved; wrong campaign/expiry fail-closed).
 - Read/revalidation edge FAILED: archived Offer kept stored campaign price on GetCart reload (CampaignCartPriceAuthority add-path rejects non-Active, but CartDirectory reload does not clear already-applied campaign for a now-Archived Offer). See stage2-proof/C01-read-edge-finding.md.
 - C01 therefore NOT fully PASS; C02/C04/C05/C07 NOT_RUN. No fake PASS.
+
+## C01 CLOSED — PASS (real Testcontainers, 2026-11-24)
+- Cart-owner fix in RevalidateCampaignQuotesAsync: on OfferUnavailable clear campaign and reprice base (no stale discount).
+- CampaignCartPriceIntegrityTests 2/2 PASS including: active=>70000, wrong/expiry=>base, ARCHIVED Offer reload=>base 100000 & campaign null.
+- Remaining NOT_RUN: C02 (connected boot idempotence), C04 (287 T01-T14), C05 (real VERIFY realOk), C07 (Playwright) - not executed in remaining budget.

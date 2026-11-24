@@ -327,6 +327,32 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         Assert.NotNull(reloaded);
         Assert.Null(reloaded!.Lines[0].MerchandisingCampaignId);
         Assert.Equal(100000m, reloaded.Lines[0].QuotedAmount);
+
+        // TB-289 C01: an ARCHIVED Offer must never keep a previously applied campaign price on reload/checkout read.
+        tracked.UpdateWindow(now.AddHours(-1), now.AddHours(2), priority: 50, now);
+        await promoDb.SaveChangesAsync();
+
+        await cartDir.RemoveLineAsync(reloaded.CartId, access, reloaded.Version, reloaded.Lines[0].LineId, CancellationToken.None);
+        var clearedForArchive = await cartDir.GetCartAsync(reloaded.CartId, access, CancellationToken.None);
+        var activeAgain = await cartDir.AddOrIncreaseLineAsync(
+            clearedForArchive!.CartId,
+            access,
+            clearedForArchive.Version,
+            offer.OfferId,
+            1,
+            CancellationToken.None,
+            campaign.Id);
+        Assert.Equal(campaign.Id, activeAgain.Lines[0].MerchandisingCampaignId);
+        Assert.Equal(70000m, activeAgain.Lines[0].QuotedAmount);
+
+        var trackedOffer = await offerDb.Offers.SingleAsync(x => x.OfferId == offer.OfferId, CancellationToken.None);
+        trackedOffer.Archive(now);
+        await offerDb.SaveChangesAsync();
+
+        var afterArchive = await cartDir.GetCartAsync(activeAgain.CartId, access, CancellationToken.None);
+        Assert.NotNull(afterArchive);
+        Assert.Null(afterArchive!.Lines[0].MerchandisingCampaignId);
+        Assert.Equal(100000m, afterArchive.Lines[0].QuotedAmount);
     }
 
     private static string FindRepoRoot()

@@ -44,6 +44,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
     private readonly ICartInventoryHoldPort _inventory;
     private readonly IInventoryAvailabilityGateway _availability;
     private readonly CartQuoteValidator _quote;
+    private readonly IPriceLookupGateway _prices;
     private readonly CartSnapshotProjector _snapshots;
     private readonly CartExpiryScanner _expiry;
     private readonly ICartPersistenceHoursSource? _persistenceHours;
@@ -78,8 +79,8 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         _commerceContext = commerceContext;
         _clock = clock;
         _ids = ids;
-        _quote = new CartQuoteValidator(offers, prices, normalizer, catalog, campaignPrices);
-        _snapshots = new CartSnapshotProjector(availability);
+        _prices = prices;
+        _quote = new CartQuoteValidator(offers, prices, normalizer, catalog, campaignPrices);        _snapshots = new CartSnapshotProjector(availability);
         _expiry = new CartExpiryScanner(db, inventory, guard);
         var hours = CartPersistenceHours.Clamp(lifetime?.Value.PersistenceHours ?? CartPersistenceHours.DefaultHours);
         _persistenceTtl = TimeSpan.FromHours(hours);
@@ -648,7 +649,36 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
             }
             catch (SemanticException)
             {
-                // leave line; availability snapshot will reflect issues
+                // TB-289: an Offer that became unavailable (e.g., Archived) must NOT keep the previously applied
+                // campaign price. Clear the campaign association and reprice at the canonical base price so the
+                // stale campaign discount is never shown in the cart or checkout.
+                if (line.MerchandisingCampaignId is not null)
+                {
+                    var lineCurrency = CartLineCurrency.RequireForExistingLine(line);
+                    var baseQuote = await _prices.ResolvePriceAsync(
+                        new PriceResolutionQuery(line.OfferId, cart.Market, cart.Channel, lineCurrency, now, null, null, line.Quantity),
+                        cancellationToken);
+                    if (baseQuote is not null)
+                    {
+                        line.ReplaceHold(
+                            line.Quantity,
+                            line.ReservationId,
+                            baseQuote.Amount,
+                            baseQuote.Currency,
+                            baseQuote.TaxExclusive,
+                            baseQuote.PriceId,
+                            now,
+                            null);
+                    }
+                    else
+                    {
+                        // No base price resolvable: keep the line fail-closed with no campaign discount.
+                        line.ReplaceHold(line.Quantity, line.ReservationId, 0m, lineCurrency, false, Guid.Empty, now, null);
+                    }
+
+                    cart.RecordLineChanged(line.LineId, line.OfferId, line.Quantity, now);
+                    changed = true;
+                }
             }
         }
 
