@@ -1,13 +1,12 @@
-﻿# RESULT — TB-294-R3 (integrity audit; no design)
-Status: AUDIT COMPLETE — authenticity verified; a delivery-packaging defect was found and proven.
+﻿# RESULT — TB-294-R4 (final artifact delivery)
+Status: PASS — final OpenDesign output delivered correctly.
 
-- True OpenDesign output: `C:\OpenDesign\.od\projects\routine-1a39bd38-…\toba-offer-workspace.html`
-  (618,637 B, SHA 3F61…, title «توبا — فضای کاری پیشنهادها», “292” hits = 0, artifact.json status=complete).
-- agentRun 4732b9f0… finished **succeeded**; it is DIFFERENT from every 292 file (hashes differ) and DIFFERENT from the
-  stale 219 KB D: copy (CB78…).
-- The images carrying “292” are leftover `D:\Tooba-Offer-OpenDesign\screens\r2-*.png` (renders of the rejected R2/292 at
-  17:01) plus a stale D:\index.html — a packaging error, not reuse by the engine.
-- Old design was NOT supplied to OpenDesign; only the text requirements prompt (SHA 8D26D9D7…) was. Full prompt in
-  INTEGRITY-AUDIT.md (§6).
-- No design changes / no repair performed (per task). Remediation steps documented in INTEGRITY-AUDIT.md (§7).
-STOP_FOR_ARCHITECT
+- Source (OpenDesign project) == Destination bytes: SHA-256 `3F61B3C5…A1757F7C`, 618,637 B (HASH_MATCH=true).
+- Delivered to `D:\Tooba-Offer-OpenDesign\FINAL\index.html` (self-contained; 7 data:image, 0 external assets); `artifact.json` included.
+- Real Chromium render: 200; tabs include «مدیر/ایجاد و ویرایش» and «فروشنده/فرم پیشنهاد»; form sections visible
+  (مشخصات/قیمت‌گذاری/تخفیف/موجودی/ارسال/مقدار و واحد/مرجوعی/وضعیت/تاریخچه); inputs=32, selects=11. tableOnly=false → PASS.
+- Old outputs moved to `D:\Tooba-Offer-OpenDesign\_legacy-pre-r4\` (no longer in the delivery path).
+- No design change; no engine re-run; no hand HTML; no old output; no Tooba source change.
+Evidence: DELIVERY-PROOF.md, evidence/delivery-hash-proof.json, evidence/delivery-verify.json,
+evidence/final-overview.png, evidence/final-form-view.png.
+STOP_FOR_DESIGN_APPROVAL

@@ -1,0 +1,14 @@
+﻿{
+    "externalAssets":  0,
+    "selfContained":  true,
+    "tableOnly":  false,
+    "verdict":  "PASS",
+    "src":  "C:\\OpenDesign\\.od\\projects\\routine-1a39bd38-5ca2-4610-973b-f9a7737e71ac\\toba-offer-workspace.html",
+    "formPresent":  true,
+    "srcSha":  "3F61B3C5D24361008F6577C3965BF04ADB9386FC8734116EC28B7F0FA1757F7C",
+    "hashMatch":  true,
+    "bytes":  618637,
+    "dstSha":  "3F61B3C5D24361008F6577C3965BF04ADB9386FC8734116EC28B7F0FA1757F7C",
+    "dst":  "D:\\Tooba-Offer-OpenDesign\\FINAL\\index.html",
+    "dataImageRefs":  7
+}
