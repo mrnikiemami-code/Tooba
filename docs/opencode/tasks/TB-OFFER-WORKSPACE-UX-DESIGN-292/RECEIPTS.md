@@ -6,3 +6,7 @@
 - Standard table reference: src/frontend/app/admin/admin-screens.tsx AdminOrdersScreen -> ServerGridPage +
   createOrderColumns + createHostSavedViewStore.
 - No product code/schema changed.
+
+## R1
+- Prototype: mockups/offer-workspace-r1.html; PNGs r1-admin-table/r1-admin-form/r1-seller-table/r1-seller-form/r1-product-picker/r1-mobile-admin-table.
+- Docs: DESIGN-R1.md (requirement→design mapping), IMPECCABLE-REVIEW-R1.md.
