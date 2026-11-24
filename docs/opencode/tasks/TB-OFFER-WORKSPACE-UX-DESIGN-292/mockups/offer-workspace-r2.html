@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>طوبا — فضای کاری آفر (R2 · TB-292)</title>
+<style>
+ :root{--bg:#f5f6f8;--surface:#fff;--surface-2:#f7f9fb;--ink:#111827;--muted:#4b5563;--line:#e5e7eb;--line-2:#d1d5db;
+  --brand:#1f6feb;--brand-ink:#0f4fb3;--brand-soft:#e8f0fe;--ok:#0b7a53;--ok-soft:#e4f5ee;--warn:#9a5b00;--warn-soft:#fdf1dd;
+  --draft:#4b5563;--draft-soft:#eceff3;--danger:#b42318;--danger-soft:#fdecea;--r:12px;--font:"Vazirmatn","Segoe UI",Tahoma,system-ui,sans-serif;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 10px 24px rgba(16,24,40,.07)}
+ *{box-sizing:border-box}html,body{margin:0}
+ body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.7}
+ .wrap{max-width:1200px;margin:0 auto;padding:16px 24px 28px} /* bottom pad clears sticky bar */
+ header.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}
+ .brand{display:flex;gap:10px;align-items:center}.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#5b93ff);display:grid;place-items:center;color:#fff;font-weight:800}
+ .brand h1{font-size:17px;margin:0}.brand p{margin:0;color:var(--muted);font-size:12px}
+ nav.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:5px;box-shadow:var(--shadow);overflow:auto;position:sticky;top:8px;z-index:30}
+ nav.tabs button{border:0;background:transparent;color:var(--muted);padding:10px 15px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:14px;white-space:nowrap}
+ nav.tabs button.active{background:var(--brand-soft);color:var(--brand-ink);font-weight:800}
+ .view{display:none;margin-top:14px}.view.active{display:block}
+ .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+ /* order-grid table */
+ .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+ .toolbar .grow{flex:1}
+ .input,select.btn,.btn{font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px}
+ .input{min-width:200px}.btn{cursor:pointer;display:inline-flex;gap:7px;align-items:center;font-weight:600}
+ .btn:hover{border-color:var(--brand);color:var(--brand-ink)}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+ .btn.primary:hover{background:var(--brand-ink);color:#fff}.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+ .btn:disabled,input:disabled,select:disabled{opacity:.55;cursor:not-allowed;background:#f3f4f6;color:#6b7280}
+ .tablewrap{overflow:auto;max-height:600px}table{width:100%;border-collapse:collapse}
+ thead th{position:sticky;top:0;background:var(--surface-2);text-align:right;font-size:13px;color:#374151;font-weight:800;padding:12px;border-bottom:1px solid var(--line);white-space:nowrap}
+ tbody td{padding:12px;border-bottom:1px solid var(--line);font-size:14px}tbody tr:nth-child(even){background:#fafbfc}tbody tr:hover{background:#eef4ff}
+ .prod{display:flex;gap:10px;align-items:center}.thumb{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#e6eefc,#d6e2f7);flex:none}
+ .prod b{font-size:14px}.prod small{color:var(--muted);font-size:12px}.muted{color:var(--muted)}
+ .badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:999px}
+ .badge:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+ .b-active{color:var(--ok);background:var(--ok-soft)}.b-draft{color:var(--draft);background:var(--draft-soft)}.b-susp{color:var(--warn);background:var(--warn-soft)}
+ .b-arch{color:#6b7280;background:var(--draft-soft)}.b-oos{color:var(--danger);background:var(--danger-soft)}.b-info{color:var(--brand-ink);background:var(--brand-soft)}
+ .money{font-variant-numeric:tabular-nums;font-weight:800}
+ .icon-btn{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:13px;color:#374151}
+ .icon-btn:hover{border-color:var(--brand);color:var(--brand-ink)}
+ .pager{display:flex;justify-content:space-between;align-items:center;padding:12px;color:var(--muted);font-size:13px;flex-wrap:wrap;gap:8px}
+ .pager .pages{display:flex;gap:4px}.pager .pages button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit}
+ .pager .pages button.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink);font-weight:800}
+ /* form: compact, no side gutters, content-grid, single sticky save */
+ .formhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:64px;background:var(--surface);border-radius:12px 12px 0 0;z-index:20}
+ .formhead h2{margin:0;font-size:16px}.formhead .grow{flex:1}
+ .modebar{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:16px}
+ .grid .full{grid-column:1/-1}
+ .sec{padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+ .sec h3{margin:0 0 10px;font-size:14.5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+ .hint{color:var(--muted);font-size:13px;margin:-4px 0 10px}
+ .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.field>label{font-size:13px;color:#374151;font-weight:700}
+ .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+ .unit{display:inline-flex;align-items:center;gap:6px}.unit .u{background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:2px 9px;font-size:12.5px;color:#374151;font-weight:700}
+ .seg{display:flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;width:max-content}
+ .seg button{border:0;background:transparent;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:13.5px}
+ .seg button.on{background:var(--brand);color:#fff;font-weight:800}
+ .pick{display:flex;gap:10px;align-items:center;border:1px dashed var(--line-2);border-radius:10px;padding:10px;background:var(--surface-2)}
+ .pick .sel{flex:1}.pick .sel b{display:block;font-size:14px}.pick .sel small{color:var(--muted);font-size:12.5px}
+ .mini{width:100%;border-collapse:collapse}.mini th,.mini td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:13px;text-align:right}
+ .mini th{color:#374151;font-weight:800;background:var(--surface-2)}.mini tr:nth-child(even) td{background:#fafbfc}
+ .tag-needs{font-size:11.5px;background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:1px 8px;font-weight:800}
+ .preview{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+ .preview .r{display:flex;justify-content:space-between;margin:4px 0}.preview b{font-variant-numeric:tabular-nums}
+ details.adv{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+ details.adv>summary{cursor:pointer;padding:12px 16px;font-weight:800;font-size:14px;list-style:none}
+ details.adv>summary::-webkit-details-marker{display:none}
+ details.adv>summary:before{content:"▸";margin-inline-end:8px;color:var(--brand)}
+ details.adv[open]>summary:before{content:"▾"}
+ details.adv>.inner{padding:0 16px 14px}
+ .stickybar{position:fixed;inset-inline:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-top:1px solid var(--line);z-index:40}
+ .stickybar .in{max-width:1200px;margin:0 auto;display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:10px 24px}
+ .stickybar .unsaved{margin-inline-end:auto;color:var(--warn);font-weight:800;font-size:13px}
+ .disabled-overlay{position:relative}
+ .dep-locked{opacity:.55;pointer-events:none}
+ .locknote{color:var(--warn);font-size:12.5px;font-weight:700}
+ .modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;z-index:80;align-items:center;justify-content:center}
+ .modal.open{display:flex}.modal .box{background:var(--surface);border-radius:14px;width:min(900px,95vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+ .modal .hd{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+ .modal .body{display:grid;grid-template-columns:220px 1fr;min-height:0;flex:1}
+ .modal .filters{padding:12px;border-left:1px solid var(--line);overflow:auto}.modal .list{overflow:auto;padding:8px}
+ .pRow{display:flex;gap:10px;align-items:center;padding:10px;border-radius:9px;cursor:pointer;border:1px solid transparent;font-size:14px}
+ .pRow:hover{background:var(--surface-2);border-color:var(--line)}
+ .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.chip{cursor:pointer;border:1px solid var(--line-2);border-radius:999px;padding:4px 11px;font-size:12.5px}
+ .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}.swatch{width:14px;height:14px;border-radius:4px;display:inline-block;margin-inline-end:4px;vertical-align:-2px}
+ .toast{position:fixed;inset-inline-start:50%;bottom:76px;transform:translateX(50%);background:#111827;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;transition:.2s;z-index:90}
+ .toast.show{opacity:1}.drawer{position:fixed;inset:0;background:rgba(16,24,40,.35);display:none;z-index:70}.drawer.open{display:block}
+ .drawer .panel{position:absolute;inset-inline-start:0;top:0;bottom:0;width:380px;max-width:92vw;background:var(--surface);padding:18px;overflow:auto;box-shadow:var(--shadow)}
+ .errfield{border-color:var(--danger)!important;box-shadow:0 0 0 3px var(--danger-soft)}.errmsg{color:var(--danger);font-size:13px;font-weight:700}
+ @media(max-width:860px){.grid{grid-template-columns:1fr}.row2,.row3{grid-template-columns:1fr}.wrap{padding:12px 14px 96px}.modal .body{grid-template-columns:1fr}.modal .filters{border-left:0;border-bottom:1px solid var(--line)}.formhead{top:58px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header class="top">
+   <div class="brand"><div class="logo">ط</div><div><h1>فضای کاری آفر — طوبا</h1><p>بازطراحی R2 (TB-292) — طراحی تعاملی</p></div></div>
+ </header>
+ <nav class="tabs" id="tabs">
+   <button data-v="at" class="active">آفرها — مدیر</button>
+   <button data-v="af">فرم آفر — مدیر</button>
+   <button data-v="st">آفرها — فروشنده</button>
+   <button data-v="sf">فرم آفر — فروشنده</button>
+ </nav>
+
+ <!-- ADMIN TABLE -->
+ <section class="view active" id="at">
+  <div class="card">
+   <div class="toolbar">
+     <input class="input" id="q-admin" placeholder="جستجو در آفرها…"/>
+     <button class="btn" onclick="openDrawer('adv')">فیلتر پیشرفته</button>
+     <div class="menu" style="position:relative"><button class="btn" onclick="toggleMenu('cm')">مدیریت ستون‌ها</button>
+       <div id="cm" style="position:absolute;inset-inline-start:0;top:110%;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:8px;min-width:210px;display:none;z-index:20">
+         <label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>محصول</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>گونه</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>فروشنده</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>کد فروشنده</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>کانال فروش</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>قیمت/ارز</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>تخفیف</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>موجودی قابل فروش</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>مسئولیت ارسال</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>وضعیت</label><label style="display:flex;gap:8px;padding:6px"><input type="checkbox" checked/>آخرین تغییر</label>
+       </div></div>
+     <select class="btn" onchange="toast('نمای ذخیره‌شده اعمال شد')"><option>نمای ذخیره‌شده…</option><option>آفرهای ناموجود</option><option>پیش‌نویس‌ها</option></select>
+     <span class="grow"></span>
+     <button class="btn" onclick="toast('Excel')">Excel</button><button class="btn" onclick="toast('CSV')">CSV</button>
+     <button class="btn primary" onclick="switchTab('af');setMode('create')">+ آفر جدید</button>
+   </div>
+   <div class="tablewrap"><table>
+     <thead><tr><th>محصول</th><th>گونه</th><th>فروشنده</th><th>کد فروشنده</th><th>کانال فروش</th><th>قیمت / ارز</th><th>تخفیف</th><th>موجودی قابل فروش</th><th>مسئولیت ارسال</th><th>وضعیت</th><th>آخرین تغییر</th><th>عملیات</th></tr></thead>
+     <tbody id="tbody-admin">
+       <tr><td><div class="prod"><div class="thumb"></div><div><b>گوشی هوشمند مدل X</b><br><small>برند نمونه</small></div></div></td><td>مشکی · ۱۲۸</td><td>فروشگاه آرمان</td><td>PHN-X-128-BK</td><td>مارکت‌پلیس</td><td class="money">۲۸٬۵۰۰٬۰۰۰ ریال</td><td>۱۰٪</td><td>۹</td><td>فروشنده</td><td><span class="badge b-active">فعال</span></td><td>۱۴۰۵/۰۹/۰۳</td><td><button class="icon-btn" onclick="switchTab('af');setMode('edit')">ویرایش</button></td></tr>
+       <tr><td><div class="prod"><div class="thumb"></div><div><b>هدفون بی‌سیم Pro</b><br><small>آوا</small></div></div></td><td>مشکی</td><td>فروشگاه آرمان</td><td>HDP-PRO-BK</td><td>فروشگاه</td><td class="money">۴٬۲۰۰٬۰۰۰ ریال</td><td>۵٪</td><td>۰</td><td>تعیین‌نشده</td><td><span class="badge b-susp">معلق</span></td><td>۱۴۰۵/۰۸/۲۸</td><td><button class="icon-btn" onclick="switchTab('af');setMode('edit')">ویرایش</button></td></tr>
+     </tbody>
+   </table></div>
+   <div class="pager"><div>نمایش ۱ تا ۲ از ۳٬۲۲۳ · صفحه ۱ از ۱٬۶۱۲</div><div class="pages"><button>‹</button><button class="on">۱</button><button>۲</button><button>›</button></div></div>
+  </div>
+ </section>
+
+ <!-- ADMIN FORM -->
+ <section class="view" id="af">
+  <div class="card">
+   <div class="formhead">
+     <h2>آفر جدید</h2><span class="badge b-draft" id="stateBadge">پیش‌نویس</span>
+     <div class="modebar"><span>حالت:</span><div class="seg" id="modeSeg" style="transform:scale(.92)"><button class="on" onclick="setMode('create')">ایجاد</button><button onclick="setMode('edit')">ویرایش</button></div></div>
+     <span class="grow"></span>
+     <span class="unsaved" id="unsaved"></span>
+     <button class="btn ghost" onclick="toast('انصراف')">انصراف</button>
+     <button class="btn primary" id="saveBtn" onclick="saveAll()">ذخیره آفر</button>
+   </div>
+   <div class="grid">
+     <!-- picker -->
+     <div class="sec full">
+       <h3>فروشنده، محصول و گونه <span class="locknote" id="pickState">برای فعال‌شدن بخش‌های بعدی، فروشنده و محصول را انتخاب کنید</span></h3>
+       <div class="row2">
+         <div class="pick"><div class="thumb"></div><div class="sel" id="sel-seller"><b class="muted">فروشنده انتخاب نشده</b><small>جستجو، فیلتر و صفحه‌بندی</small></div><button class="btn" onclick="openPicker('seller')">انتخاب</button></div>
+         <div class="pick"><div class="thumb"></div><div class="sel" id="sel-product"><b class="muted">محصول انتخاب نشده</b><small>تصویر، برند و گونه</small></div><button class="btn" onclick="openPicker('product')">انتخاب</button></div>
+       </div>
+       <div class="field" style="margin-top:10px"><label>گونه</label><div id="variants" class="chips"><span class="muted">ابتدا محصول را انتخاب کنید</span></div></div>
+       <div class="field"><label>کد فروشنده (SKU)</label><input class="input" value=""/></div>
+     </div>
+
+     <!-- dependent sections: locked until seller+product chosen -->
+     <div class="sec col" id="sec-price" data-dep="1">
+       <h3>قیمت‌گذاری</h3>
+       <div class="field"><label>مبلغ</label><div class="unit"><input class="input" value="28,500,000" inputmode="numeric"/><span class="u">IRR</span></div></div>
+       <div class="row2"><div class="field"><label>بازار</label><select class="input"><option>IR</option></select></div><div class="field"><label>کانال</label><select class="input"><option>مارکت‌پلیس</option><option>فروشگاه</option></select></div></div>
+       <button class="btn" onclick="toast('قیمت‌های چندارزی در «تنظیمات پیشرفته»')">قیمت‌های چندارزی</button>
+     </div>
+
+     <div class="sec" id="sec-inv" data-dep="1">
+       <h3>موجودی (چندانباره)</h3>
+       <table class="mini"><thead><tr><th>انبار</th><th>فیزیکی</th><th>رزرو</th><th>قابل فروش</th></tr></thead><tbody><tr><td class="locked" id="whName">WH-DEV-01 🔒</td><td><input class="input" value="12" style="width:90px"/></td><td>۳</td><td>۹</td></tr></tbody></table>
+       <button class="btn" style="margin-top:8px" onclick="toast('موقعیت جدید — نیازمند تکمیل قرارداد')">+ موقعیت انبار <span class="tag-needs">نیازمند قرارداد</span></button>
+     </div>
+
+     <div class="sec" id="sec-qty" data-dep="1">
+       <h3>تعداد و واحد</h3>
+       <div class="row3">
+         <div class="field"><label>واحد (از محصول)</label><div class="unit"><input class="input locked" value="عدد" disabled/><span class="u">🔒</span></div></div>
+         <div class="field"><label>حداقل تعداد</label><div class="unit"><input class="input" value="1" style="width:100px"/><span class="u">عدد</span></div></div>
+         <div class="field"><label>حداکثر تعداد</label><div class="unit"><input class="input" value="5" style="width:100px"/><span class="u">عدد</span></div></div>
+       </div>
+       <div class="row2"><div class="field"><label>گام افزایش (از محصول)</label><div class="unit"><input class="input locked" value="0.5" disabled/><span class="u">🔒</span></div></div><label style="display:flex;gap:8px;align-items:center;margin-top:22px;font-size:14px"><input type="checkbox"/> برداشتن محدودیت خرید</label></div>
+     </div>
+
+     <div class="sec" id="sec-ship" data-dep="1">
+       <h3>ارسال</h3>
+       <div class="field"><label>مسئولیت ارسال</label><div class="seg" id="resp"><button onclick="setResp(this,'فروشنده')">فروشنده</button><button onclick="setResp(this,'پلتفرم')">پلتفرم</button><button class="on" onclick="setResp(this,'unset')">تعیین‌نشده</button></div></div>
+       <div class="field"><label>سرویس ارسال</label><select class="input" id="shipService" disabled><option>ابتدا مسئولیت را تعیین کنید</option><option>پست پیشتاز</option><option>پیک همان‌روز</option></select><span class="locknote" id="shipNote">تا تعیین مسئولیت، انتخاب سرویس غیرفعال است.</span></div>
+       <div class="preview"><div class="r"><span>محدوده/زمان‌بندی/شرایط سرویس</span><b>پس از انتخاب سرویس (فقط خواندنی)</b></div></div>
+     </div>
+
+     <div class="sec" id="sec-ret" data-dep="1">
+       <h3>مرجوعی</h3>
+       <div class="seg" id="retSeg"><button class="on" onclick="setRet('default')">پیش‌فرض</button><button onclick="setRet('custom')">سفارشی</button><button onclick="setRet('none')">غیرقابل مرجوع</button></div>
+       <div class="field" id="retWindow" style="margin-top:10px;display:none"><label>مهلت مرجوعی (روز) ۱ تا ۳۰</label><input class="input" value="7" style="width:120px"/></div>
+     </div>
+
+     <!-- advanced (collapsed) -->
+     <div class="sec full"><details class="adv"><summary>تنظیمات پیشرفته (چندارزی، تخفیف، تاریخچه)</summary><div class="inner">
+        <div class="field"><label>قیمت‌های چندارزی</label>
+          <table class="mini"><thead><tr><th>ارز</th><th>مبلغ</th><th>بازار</th><th>وضعیت</th></tr></thead><tbody>
+            <tr><td>IRR 🔒</td><td>۲۸٬۵۰۰٬۰۰۰</td><td>IR</td><td><span class="badge b-active">فعال</span></td></tr>
+            <tr><td>USD</td><td>420.00</td><td>IR</td><td><span class="badge b-draft">پیش‌نویس</span></td></tr>
+          </tbody></table>
+          <button class="btn" style="margin-top:8px" onclick="toast('افزودن قیمت')">+ افزودن قیمت</button>
+        </div>
+        <div class="field"><label>تخفیف‌ها (مالکیت Promotion)</label><div class="preview"><div class="r"><span>تخفیف فعال ۱۰٪ (SPR10)</span><b>قابل مشاهده</b></div></div><button class="btn" onclick="toast('افزودن تخفیف — نیازمند قرارداد Promotion')">+ افزودن تخفیف <span class="tag-needs">نیازمند قرارداد</span></button></div>
+        <div class="field" id="historyBlock"><label>تاریخچه تغییرات</label>
+          <ul style="list-style:none;margin:0;padding:0;font-size:13px">
+            <li style="display:grid;grid-template-columns:120px 1fr;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)"><span class="muted">۱۴۰۵/۰۹/۰۳</span><span>قیمت به‌روزرسانی شد</span></li>
+          </ul>
+          <p class="muted" id="historyEmpty" style="display:none;font-size:13px">پس از ذخیرهٔ آفر، تاریخچه اینجا نمایش داده می‌شود.</p>
+        </div>
+     </div></details></div>
+
+     <!-- lifecycle -->
+     <div class="sec full" id="sec-life" data-dep="1">
+       <h3>وضعیت</h3>
+       <div class="row2">
+         <div class="field"><label>وضعیت آفر</label><select class="input" id="statusSel" onchange="setStatus()"><option>پیش‌نویس</option><option>فعال</option><option>معلق</option><option>آرشیوشده</option></select></div>
+         <div class="field"><label>قابلیت خرید (مستقل از وضعیت)</label><input class="input" id="buyable" value="غیرقابل خرید (پیش‌نویس)" disabled/></div>
+       </div>
+       <div id="errBox" class="errmsg" style="display:none;margin-top:6px">ذخیرهٔ بخش ارسال ناموفق بود؛ دوباره تلاش کنید.</div>
+       <button class="btn" style="margin-top:8px" onclick="showErr()">شبیه‌سازی خطای یک بخش</button>
+     </div>
+   </div>
+  </div>
+  <div class="stickybar" style="display:none"></div>
+</section>
+
+ <!-- SELLER TABLE (no seller column) -->
+ <section class="view" id="st">
+  <div class="card">
+   <div class="toolbar"><input class="input" id="q-seller" placeholder="جستجو در آفرهای من…"/><button class="btn" onclick="openDrawer('adv2')">فیلتر پیشرفته</button><button class="btn" onclick="toast('مدیریت ستون‌ها')">مدیریت ستون‌ها</button><select class="btn" onchange="toast('نمای ذخیره‌شده')"><option>نمای ذخیره‌شده…</option></select><span class="grow"></span><button class="btn" onclick="toast('Excel')">Excel</button><button class="btn" onclick="toast('CSV')">CSV</button><button class="btn primary" onclick="switchTab('sf')">+ آفر جدید</button></div>
+   <div class="tablewrap"><table><thead><tr><th>محصول</th><th>گونه</th><th>کد فروشنده</th><th>کانال فروش</th><th>قیمت / ارز</th><th>تخفیف</th><th>موجودی قابل فروش</th><th>مسئولیت ارسال</th><th>وضعیت</th><th>آخرین تغییر</th><th>عملیات</th></tr></thead>
+     <tbody id="tbody-seller">
+       <tr><td><div class="prod"><div class="thumb"></div><div><b>گوشی هوشمند مدل X</b><br><small>برند نمونه</small></div></div></td><td>مشکی · ۱۲۸</td><td>PHN-X-128-BK</td><td>مارکت‌پلیس</td><td class="money">۲۸٬۵۰۰٬۰۰۰ ریال</td><td>۱۰٪</td><td>۹</td><td>فروشنده</td><td><span class="badge b-active">فعال</span></td><td>۱۴۰۵/۰۹/۰۳</td><td><button class="icon-btn" onclick="switchTab('sf')">ویرایش</button></td></tr>
+     </tbody></table></div>
+   <div class="pager"><div>نمایش ۱ تا ۱ از ۱۲۶</div><div class="pages"><button>‹</button><button class="on">۱</button><button>›</button></div></div>
+  </div>
+ </section>
+
+ <!-- SELLER FORM -->
+ <section class="view" id="sf">
+  <div class="card">
+   <div class="formhead"><h2>آفر من</h2><span class="badge b-draft">پیش‌نویس</span><span class="grow"></span><button class="btn primary" onclick="toast('ذخیره شد')">ذخیره آفر</button></div>
+   <div class="grid">
+     <div class="sec full"><h3>محصول و گونه (قفل‌شده)</h3><div class="pick"><div class="thumb"></div><div class="sel"><b>گوشی هوشمند مدل X</b><small>نمونه · مشکی · ۱۲۸ گیگ</small></div><span class="badge b-info">ثابت</span></div><div class="field" style="margin-top:8px"><label>کد فروشنده</label><input class="input" value="PHN-X-128-BK"/></div></div>
+     <div class="sec"><h3>قیمت</h3><div class="field"><label>مبلغ</label><div class="unit"><input class="input" value="28,500,000"/><span class="u">IRR</span></div></div><div class="field"><label>بازار / کانال</label><input class="input" value="IR · مارکت‌پلیس" disabled/></div></div>
+     <div class="sec"><h3>موجودی</h3><table class="mini"><thead><tr><th>انبار</th><th>قابل فروش</th></tr></thead><tbody><tr><td>WH-DEV-01 🔒</td><td>۹</td></tr></tbody></table></div>
+     <div class="sec"><h3>ارسال</h3><div class="seg"><button class="on">فروشنده</button><button>پلتفرم</button><button>تعیین‌نشده</button></div><div class="field" style="margin-top:8px"><label>سرویس</label><select class="input"><option>پست پیشتاز</option></select></div></div>
+     <div class="sec"><h3>مرجوعی</h3><div class="seg"><button class="on">پیش‌فرض</button><button>سفارشی</button><button>غیرقابل مرجوع</button></div></div>
+   </div>
+  </div>
+  <div class="stickybar" style="display:none"></div>
+</section>
+</div>
+
+<!-- picker -->
+<div class="modal" id="pickerModal"><div class="box">
+ <div class="hd"><b id="pickTitle">انتخاب</b><button class="btn" onclick="closePicker()">بستن</button></div>
+ <div class="body"><div class="filters"><div class="field"><label>جستجو</label><input class="input" id="pickQ"/></div><div class="field"><label>برند</label><select class="input"><option>همه</option><option>نمونه</option></select></div><div class="field"><label>دسته</label><select class="input"><option>همه</option><option>دیجیتال</option></select></div><p class="muted" style="font-size:12.5px">صفحه‌بندی سمت‌سرور</p></div><div class="list" id="pickList"></div></div>
+ <div class="pager" style="border-top:1px solid var(--line)"><div>صفحه ۱</div><div class="pages"><button class="on">۱</button><button>۲</button><button>›</button></div></div>
+</div></div>
+
+<div class="drawer" id="adv"><div class="panel"><h3>فیلتر پیشرفته</h3><div class="field"><label>وضعیت</label><select class="input"><option>همه</option></select></div><button class="btn primary" onclick="closeDrawer()">اعمال</button></div></div>
+<div class="drawer" id="adv2"><div class="panel"><h3>فیلتر پیشرفته</h3><button class="btn primary" onclick="closeDrawer()">اعمال</button></div></div>
+<div class="toast" id="toast"></div>
+<script>
+ const T=document.getElementById('toast');function toast(m){T.textContent=m;T.classList.add('show');clearTimeout(T._x);T._x=setTimeout(()=>T.classList.remove('show'),1600);}
+ function switchTab(v){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===v));window.scrollTo(0,0);}
+ document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.v)));
+ function openDrawer(id){document.getElementById(id).classList.add('open');}function closeDrawer(){document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));}
+ function toggleMenu(id){const e=document.getElementById(id);e.style.display=e.style.display==='block'?'none':'block';}
+ document.addEventListener('click',e=>{if(!e.target.closest('.menu')){const cm=document.getElementById('cm');if(cm)cm.style.display='none';}});
+ // picker
+ const sellers=[{n:'فروشگاه آرمان',s:'۲٬۸۴۰ آفر · تهران'},{n:'دیجی‌استایل',s:'۱٬۲۱۰ آفر · اصفهان'}];
+ const products=[{n:'گوشی هوشمند مدل X',b:'نمونه',v:'مشکی · ۱۲۸ گیگ'},{n:'هدفون بی‌سیم Pro',b:'آوا',v:'مشکی'}];
+ let kind='seller',sellerChosen=false,productChosen=false;
+ function openPicker(k){kind=k;document.getElementById('pickTitle').textContent=k==='seller'?'انتخاب فروشنده':'انتخاب محصول';const L=document.getElementById('pickList');L.innerHTML='';(k==='seller'?sellers:products).forEach(it=>{const d=document.createElement('div');d.className='pRow';d.innerHTML=k==='seller'?`<div class="thumb"></div><div><b>${it.n}</b><div class="muted" style="font-size:12.5px">${it.s}</div></div>`:`<div class="thumb"></div><div><b>${it.n}</b><div class="muted" style="font-size:12.5px">${it.b} · ${it.v}</div></div>`;d.onclick=()=>choose(k,it);L.appendChild(d);});document.getElementById('pickerModal').classList.add('open');}
+ function closePicker(){document.getElementById('pickerModal').classList.remove('open');}
+ function choose(k,it){if(k==='seller'){sellerChosen=true;document.getElementById('sel-seller').innerHTML=`<b>${it.n}</b><small>${it.s}</small>`;}else{productChosen=true;document.getElementById('sel-product').innerHTML=`<b>${it.n}</b><small>${it.b} · ${it.v}</small>`;const v=document.getElementById('variants');v.innerHTML='';['مشکی','سفید','آبی'].forEach((c,i)=>{const s=document.createElement('span');s.className='chip'+(i===0?' on':'');s.innerHTML=`<span class="swatch" style="background:${c==='مشکی'?'#111':c==='سفید'?'#ddd':'#2a6'}"></span>${c}`;s.onclick=()=>{v.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));s.classList.add('on');};v.appendChild(s);});}
+   closePicker();updateDeps();}
+ let respState='unset';
+ function updateDeps(){const ready=sellerChosen&&productChosen;document.querySelectorAll('[data-dep]').forEach(sec=>{sec.classList.toggle('dep-locked',!ready);sec.querySelectorAll('input,select,button').forEach(el=>{if(el.dataset.always)return;el.disabled=!ready;});});
+   const ps=document.getElementById('pickState');if(ps)ps.textContent=ready?'':'برای فعال‌شدن بخش‌های بعدی، فروشنده و محصول را انتخاب کنید';
+   const svc=document.getElementById('shipService');const note=document.getElementById('shipNote');const en=ready&&respState!=='unset';svc.disabled=!en;if(note)note.style.display=en?'none':'inline';}
+ function setResp(btn,val){document.querySelectorAll('#resp button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');respState=val;updateDeps();markDirty();}
+ // responsibility gates shipping service
+ function setResp(btn,val){document.querySelectorAll('#resp button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');respState=val;updateDeps();markDirty();}
+ // returns modes
+ function setRet(m){document.querySelectorAll('#retSeg button').forEach(b=>b.classList.remove('on'));event.target.classList.add('on');const w=document.getElementById('retWindow');w.style.display=(m==='custom')?'block':'none';markDirty();}
+ // status
+ function setStatus(){const v=document.getElementById('statusSel').value;const b=document.getElementById('buyable');const badge=document.getElementById('stateBadge');badge.textContent=v;badge.className='badge '+(v==='فعال'?'b-active':v==='معلق'?'b-susp':v==='آرشیوشده'?'b-arch':'b-draft');b.value=(v==='فعال')?'قابل خرید':'غیرقابل خرید ('+v+')';markDirty();}
+ // create/edit mode
+ function setMode(m){const create=m==='create';document.querySelectorAll('#modeSeg button').forEach((b,i)=>b.classList.toggle('on',(i===0)===create));
+   document.querySelector('#af h2').textContent=create?'آفر جدید':'ویرایش آفر';
+   sellerChosen=create?false:true;productChosen=create?false:true;
+   if(create){document.getElementById('sel-seller').innerHTML='<b class="muted">فروشنده انتخاب نشده</b><small>جستجو، فیلتر و صفحه‌بندی</small>';document.getElementById('sel-product').innerHTML='<b class="muted">محصول انتخاب نشده</b><small>تصویر، برند و گونه</small>';document.getElementById('variants').innerHTML='<span class="muted">ابتدا محصول را انتخاب کنید</span>';document.getElementById('statusSel').value='پیش‌نویس';setStatus();}
+   else{document.getElementById('sel-seller').innerHTML='<b>فروشگاه آرمان</b><small>تهران</small>';document.getElementById('sel-product').innerHTML='<b>گوشی هوشمند مدل X</b><small>نمونه · مشکی · ۱۲۸</small>';}
+   document.getElementById('historyBlock').style.display=create?'none':'block';
+   document.getElementById('historyEmpty').style.display=create?'block':'none';
+   updateDeps();}
+ function showErr(){document.getElementById('errBox').style.display='block';document.getElementById('sec-ship').classList.add('errfield');}
+ function saveAll(){document.getElementById('errBox').style.display='none';document.getElementById('sec-ship').classList.remove('errfield');markSaved();toast('آفر ذخیره شد');}
+ // unsaved guard
+ let dirty=false;function markDirty(){if(dirty)return;dirty=true;const u=document.getElementById('unsaved');if(u)u.textContent='● تغییرات ذخیره‌نشده';}
+ function markSaved(){dirty=false;const u=document.getElementById('unsaved');if(u)u.textContent='';}
+ document.querySelectorAll('input,select').forEach(el=>el.addEventListener('change',markDirty));
+ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+ function wire(i,tb){const inp=document.getElementById(i);if(!inp)return;inp.addEventListener('input',()=>{const q=inp.value.trim();document.querySelectorAll('#'+tb+' tr').forEach(tr=>tr.style.display=tr.textContent.includes(q)?'':'none');});}
+ wire('q-admin','tbody-admin');wire('q-seller','tbody-seller');
+ setMode('edit'); // default show edit state; create via + button
+</script>
+</body></html>

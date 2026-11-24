@@ -20,3 +20,8 @@ STOP_FOR_DESIGN_APPROVAL
 - Multi-currency price rows (add/edit-amount/retire; currency locked once saved; IRR no decimals) + discounts section w/ preview + multi-warehouse inventory + UoM + shipping (incl unset, published-only, editions) + 3 return modes + lifecycle/history/unsaved-guard.
 - Domain names hidden; add-warehouse & add-discount flagged as not-ready (contract pending).
 - Impeccable R1 review: APPROVED (no blocking). No product/backend/db change. STOP_FOR_DESIGN_APPROVAL.
+
+## R2 (architect reject → redesign)
+- Prototype mockups/offer-workspace-r2.html + r2-*.png (create/edit/error/picker/seller/mobile).
+- Fixed all 11 UX issues; dependency matrix enforced; overlap=0; minFont 13; contrast 16.4/6.99; single save; advanced collapsed.
+- Real rendered audit evidence: evidence/audit-r2.cjs + audit-r2-result.json (all checks true). Impeccable R2 APPROVED on rendered output. Design-only. STOP_FOR_DESIGN_APPROVAL.

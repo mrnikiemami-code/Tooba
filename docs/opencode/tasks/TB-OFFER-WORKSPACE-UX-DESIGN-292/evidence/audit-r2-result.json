@@ -1,0 +1,18 @@
+﻿{
+  "depsLockedWhenEmpty": true,
+  "unitReadonly": true,
+  "warehouseLocked": true,
+  "historyHiddenOnCreate": true,
+  "createNotBuyable": true,
+  "depsEnabledAfterSelect": true,
+  "serviceDisabledWhenUnset": true,
+  "serviceEnabledAfterResp": true,
+  "retWindowHiddenWhenNone": true,
+  "draftNotBuyable": true,
+  "activeBuyable": true,
+  "overlap": 0,
+  "minFont": 13,
+  "contrastBody": 16.405237949201467,
+  "contrastMuted": 6.988870592519603,
+  "errorShown": true
+}
