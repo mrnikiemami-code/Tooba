@@ -34,10 +34,10 @@ No other sections, tables, or prose after that block unless the user explicitly 
   OpenSpec/Impeccable/acceptance work, or evidence collection.
 - Do NOT end the turn after partial progress. Continue through as many internal stages as needed
   (inspect → implement → build/test → connected verify → restore → record) until the issued acceptance
-  matrix is ACTUALLY executed, or a real technical blocker is proven.
+  matrix is ACTUALLY executed, or all safe independent authorized work has been exhausted and a real technical blocker is proven. A missing contract in one tab never alone justifies a task-wide stop.
 - `STOP_FOR_ARCHITECT` is a FIELD of the final block, not permission to stop. Emit the final block ONLY when
   the issued work is genuinely finished (every required gate run to PASS/FAIL/NOT_RUN with evidence) or
-  blocked by a concrete, evidenced technical/environment/tooling blocker.
+  blocked by a concrete, evidenced technical/environment/tooling blocker **and no safe independent authorized work remains**, per delivery method §0A.
 - Phrases like "budget", "token thrift", "≤8 lines", "no repeated analysis", "don't stop", or
   "STOP_FOR_ARCHITECT" in the task text constrain COST/VERBOSITY only — never completion.
 - A blocked stop MUST cite the exact command/error/schema/tooling that is missing. Unmeasured "budget/credit"
