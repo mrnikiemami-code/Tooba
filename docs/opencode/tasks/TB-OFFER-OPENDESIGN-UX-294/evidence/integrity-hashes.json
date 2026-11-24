@@ -1,0 +1,24 @@
+{
+  "run": "4732b9f0-8c38-4843-bd25-ad3de5e5713a",
+  "agentRunStatus": "succeeded",
+  "agentId": "opencode",
+  "model": "metisdeepseek/deepseek-v4-flash (daemon; state.model null while running)",
+  "project": "routine-1a39bd38-5ca2-4610-973b-f9a7737e71ac",
+  "conversation": "routine-conv-f715b6fb-b235-455a-8afd-0451fef84003",
+  "automation": "routine-66b23571-9d07-41b8-a9b4-401c11176c70",
+  "origin": "C:\\OpenDesign\\.od\\projects\\routine-1a39bd38-5ca2-4610-973b-f9a7737e71ac\\toba-offer-workspace.html",
+  "originSize": 618637,
+  "originSha256": "3F61B3C5D24361008F6577C3965BF04ADB9386FC8734116EC28B7F0FA1757F7C",
+  "originTitle": "توبا — فضای کاری پیشنهادها",
+  "origin292Hits": 0,
+  "staleDcopySha256": "CB781C22BD0F9FC7BA11A7170F23ED8CA06AD0D0D02AA0F4CD144B20C678B766",
+  "staleDcopySize": 219353,
+  "r292": {
+    "R0": "9F39914273C6DC116D7CC9F9B20D0083BF530F685A7D9F8ECC63A8EB3ACFE192",
+    "R1": "4C7DDD4BE026EE92A42E7676DFA03617D2846BCB864BDFEDC60EE898B8A4500E",
+    "R2": "2436E07628C13A58F9FF1D5852707D34974C2225F7775BBFF1474D878CD38006"
+  },
+  "originEqualsAny292": false,
+  "originEqualsStaleDcopy": false,
+  "promptSha256": "8D26D9D728D8D68BB154CE9BD57C70B5B50783F87D4FB8006ADBBE007DAA1901"
+}

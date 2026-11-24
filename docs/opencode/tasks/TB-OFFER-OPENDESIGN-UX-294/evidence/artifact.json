@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "toba-offer-workspace.html",
+  "entry": "toba-offer-workspace.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-24T14:46:48.865Z",
+  "updatedAt": "2026-11-24T14:46:48.865Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
