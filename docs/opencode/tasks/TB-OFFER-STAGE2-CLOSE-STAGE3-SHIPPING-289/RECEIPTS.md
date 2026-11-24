@@ -56,3 +56,6 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 ## C01 PASS (2026-11-24)
 - CartDirectory.cs RevalidateCampaignQuotesAsync: on SemanticException for campaign line -> clear campaign + base reprice (or fail-closed 0).
 - CampaignCartPriceIntegrityTests => Passed 2/2 (stage2-proof/cartprice-archived-PASS.txt; C01-archived-PASS.md).
+
+## TB-289-R1 C01 strict PASS (2026-11-24)
+- HEAD 7febfd634; dotnet test Host.Tests --filter CampaignCartPriceIntegrityTests => Passed 2/2 (stage2-proof/C01-strict-PASS.txt).

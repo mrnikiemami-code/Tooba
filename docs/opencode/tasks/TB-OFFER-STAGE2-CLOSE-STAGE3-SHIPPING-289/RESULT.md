@@ -66,3 +66,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Regression assertion in `CampaignCartPriceIntegrityTests` now checks Archived Offer snapshot is unavailable/no quote, not price 100000 (which can remain as an internal saved historical line, but must not be payable).
 - These commits have NOT been compiled or run against Windows Host/DB in this conversation: architect code edits `68e82059`, `f3a09ee7`, `8afda7d7`. `C01` requires re-validation on new branch tip; no fabricated PASS.
 - Direct OpenCode bridge health/list_sessions calls returned internal failure; ChatGPT cannot execute the user's Windows Host/DB tests from this chat. To finish C02/C04/C05/C07 and regression, run on already-authorized existing 5088/tooba_alpha, verified backup, no fresh DB/Host. Preserve baseline. STOP_FOR_ARCHITECT after actual receipts.
+
+## TB-289-R1 (2026-11-24): C01 STRICT PASS
+- FF to architect HEAD 7febfd634 (CartSnapshotProjector fail-closed availability/quote + Cart revalidation + arch test).
+- CampaignCartPriceIntegrityTests (Testcontainers PG16) Passed 2/2: archived Offer => Availability Unavailable, QuotedAmount null, PriceId null (no payable quote/discount); active => 70000; wrong/expiry fail-closed.
+- Remaining NOT_RUN this session: C02 (connected boot idempotence), C04 (287 T01-T14), C05 (VERIFY realOk), C07 (Playwright). STAGE2_READY not claimed.
