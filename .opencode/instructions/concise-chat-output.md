@@ -28,3 +28,17 @@ No other sections, tables, or prose after that block unless the user explicitly 
 - Do not skip required tools, OpenSpec, Impeccable, acceptance matrix, or persistence proofs.
 - Do not change model, reduce agent steps, or weaken architecture/security rules.
 - Do not edit main-tree `AGENTS.md` as a side effect of this instruction.
+
+## Execution persistence (mandatory — TB-OPENCODE-EXECUTION-PERSISTENCE-290)
+- "Concise" governs chat TEXT only. It MUST NOT reduce tool calls, tests, build steps, internal stages,
+  OpenSpec/Impeccable/acceptance work, or evidence collection.
+- Do NOT end the turn after partial progress. Continue through as many internal stages as needed
+  (inspect → implement → build/test → connected verify → restore → record) until the issued acceptance
+  matrix is ACTUALLY executed, or a real technical blocker is proven.
+- `STOP_FOR_ARCHITECT` is a FIELD of the final block, not permission to stop. Emit the final block ONLY when
+  the issued work is genuinely finished (every required gate run to PASS/FAIL/NOT_RUN with evidence) or
+  blocked by a concrete, evidenced technical/environment/tooling blocker.
+- Phrases like "budget", "token thrift", "≤8 lines", "no repeated analysis", "don't stop", or
+  "STOP_FOR_ARCHITECT" in the task text constrain COST/VERBOSITY only — never completion.
+- A blocked stop MUST cite the exact command/error/schema/tooling that is missing. Unmeasured "budget/credit"
+  is NOT an acceptable blocker. A long task is allowed to span many internal stages within one turn.
