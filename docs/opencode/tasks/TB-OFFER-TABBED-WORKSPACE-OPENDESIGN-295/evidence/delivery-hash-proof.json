@@ -1,0 +1,15 @@
+﻿{
+    "dstSha":  "DA8AAFBF960B4494C2EE2F24E177F33ED55F9CBAC51648240B909B7DD36F01A2",
+    "artifactCount":  1,
+    "origin":  "C:\\OpenDesign\\.od\\projects\\routine-da1eab56-6b62-4dd7-8392-48932da26db4\\tooba-offer-form.html",
+    "hashMatch":  true,
+    "project":  "routine-da1eab56-6b62-4dd7-8392-48932da26db4",
+    "runStatus":  "succeeded",
+    "selfContained":  true,
+    "bytes":  391881,
+    "conversation":  "routine-conv-0d466675-d1e2-4810-b9fc-9c56bdaea44b",
+    "dst":  "D:\\Tooba-Offer-OpenDesign\\295\\FINAL\\index.html",
+    "originSha":  "DA8AAFBF960B4494C2EE2F24E177F33ED55F9CBAC51648240B909B7DD36F01A2",
+    "agentRun":  "fb0aae91-3e55-4328-ae6f-a7662f142efc",
+    "automation":  "routine-be8dff93-10ef-45ce-9f4b-e07b4b349708"
+}
