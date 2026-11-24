@@ -71,3 +71,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - FF to architect HEAD 7febfd634 (CartSnapshotProjector fail-closed availability/quote + Cart revalidation + arch test).
 - CampaignCartPriceIntegrityTests (Testcontainers PG16) Passed 2/2: archived Offer => Availability Unavailable, QuotedAmount null, PriceId null (no payable quote/discount); active => 70000; wrong/expiry fail-closed.
 - Remaining NOT_RUN this session: C02 (connected boot idempotence), C04 (287 T01-T14), C05 (VERIFY realOk), C07 (Playwright). STAGE2_READY not claimed.
+
+## TB-289-R2 (2026-11-24, HEAD c31efbe9): remaining gates NOT_RUN (documented blockers)
+- Preserved Cart fixes + C01 strict PASS. Did NOT re-run passing tests.
+- C07 BLOCKED: @playwright/test not installed (no node_modules); installing = provisioning (forbidden).
+- C02/C04/C05: need live candidate Host + destructive reset + custom 287 harness (no .NET equivalent); not executed; no fabricated PASS.
