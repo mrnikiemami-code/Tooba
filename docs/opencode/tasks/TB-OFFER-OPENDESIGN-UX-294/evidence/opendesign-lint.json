@@ -1,0 +1,22 @@
+﻿{
+    "findings_before":  [
+                            {
+                                "id":  "raw-hex",
+                                "sev":  "P1"
+                            },
+                            {
+                                "id":  "missing-section-anchor",
+                                "sev":  "P2"
+                            }
+                        ],
+    "before":  {
+                   "p1":  1,
+                   "p0":  0,
+                   "p2":  1
+               },
+    "after":  {
+                  "p1":  0,
+                  "p0":  0,
+                  "p2":  0
+              }
+}

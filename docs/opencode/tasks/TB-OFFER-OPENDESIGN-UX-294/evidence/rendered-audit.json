@@ -1,0 +1,19 @@
+﻿{
+    "warehouseLocked":  true,
+    "depsLockedWhenEmpty":  true,
+    "serviceDisabledWhenUnset":  true,
+    "unitReadonly":  true,
+    "createNotBuyable":  true,
+    "draftNotBuyable":  true,
+    "overlap":  0,
+    "contrastBody":  16.405,
+    "serviceEnabledAfterResp":  true,
+    "historyHiddenOnCreate":  true,
+    "errorShown":  true,
+    "minFont":  13,
+    "depsEnabledAfterSelect":  true,
+    "retWindowHiddenWhenNone":  true,
+    "openDesignLint":  "clean(0/0/0)",
+    "contrastMuted":  6.989,
+    "activeBuyable":  true
+}
