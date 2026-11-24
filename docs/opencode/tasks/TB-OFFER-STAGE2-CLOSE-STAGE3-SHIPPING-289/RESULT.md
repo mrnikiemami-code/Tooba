@@ -60,3 +60,9 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Cart-owner fix in RevalidateCampaignQuotesAsync: on OfferUnavailable clear campaign and reprice base (no stale discount).
 - CampaignCartPriceIntegrityTests 2/2 PASS including: active=>70000, wrong/expiry=>base, ARCHIVED Offer reload=>base 100000 & campaign null.
 - Remaining NOT_RUN: C02 (connected boot idempotence), C04 (287 T01-T14), C05 (real VERIFY realOk), C07 (Playwright) - not executed in remaining budget.
+
+## Independent architect code change — 2026-11-24 (UNTESTED IN RUNTIME)
+- Code-level gap beyond C01 archived-campaign clearing: `CartSnapshotProjector` previously derived availability solely from Inventory, so an Archived Offer with stock could be presented as Available with a base quote. Architect directly changed the working branch via GitHub: `CartSnapshotProjector` batch-fetches `IOfferLookupGateway.FindOffersBatchAsync`, requires `OfferStatus.Active` and matching `CatalogVariantId`, otherwise projects `Unavailable`, `QuotedAmount=null`, `PriceId=null` and no campaign context. Constructor updated in `CartDirectory`.
+- Regression assertion in `CampaignCartPriceIntegrityTests` now checks Archived Offer snapshot is unavailable/no quote, not price 100000 (which can remain as an internal saved historical line, but must not be payable).
+- These commits have NOT been compiled or run against Windows Host/DB in this conversation: architect code edits `68e82059`, `f3a09ee7`, `8afda7d7`. `C01` requires re-validation on new branch tip; no fabricated PASS.
+- Direct OpenCode bridge health/list_sessions calls returned internal failure; ChatGPT cannot execute the user's Windows Host/DB tests from this chat. To finish C02/C04/C05/C07 and regression, run on already-authorized existing 5088/tooba_alpha, verified backup, no fresh DB/Host. Preserve baseline. STOP_FOR_ARCHITECT after actual receipts.
