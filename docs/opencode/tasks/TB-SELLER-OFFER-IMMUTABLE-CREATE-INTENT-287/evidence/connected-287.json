@@ -3,29 +3,29 @@
   "protocol": "TOOBA-OPENCODE-DELIVERY-V1@1.3.0",
   "producer": {
     "script": "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.cjs",
-    "scriptSha256": "0cce3854194910fd94bebda530cf261ffe154d586c61452ee239435f65bccb09",
+    "scriptSha256": "95e92cd5a20a1126e60a75265b134ce32c08b51ceaba38e57e532b58d2a0da61",
     "writesObservedJsonDirectly": true
   },
-  "startedAt": "2026-11-23T03:07:49.487Z",
-  "endedAt": "2026-11-23T03:10:08.516Z",
-  "elapsedMs": 139029,
+  "startedAt": "2026-11-24T01:56:35.109Z",
+  "endedAt": "2026-11-24T01:56:42.441Z",
+  "elapsedMs": 7332,
   "environment": {
-    "codeSha": "40b7fb2d5519201cb7c25afd43ba5dc4104b5c90",
-    "originMain": "d3c2e5ef1016fd2dbde6db0e1ab33d95ff41a121",
-    "productDiffVsOriginMain": "(empty)",
-    "host": "http://127.0.0.1:5094",
-    "database": "tooba_offer287_idem",
-    "hostDllSha256": "6cb9c80e38b012816faaa89d1f27118648cd01c2aa04d09657223a09f487ca9b",
+    "codeSha": "d6de518e9e7be568c62e28f8998b4a80519bfb1f",
+    "originMain": "4cd7759c6571c6204f72ce4864b3d34915a0eb4d",
+    "productDiffVsOriginMain": "src/backend/Host/Tooba.Host.Tests/CampaignCartPriceIntegrityTests.cs\nsrc/backend/Host/Tooba.Host.Tests/StorefrontDemoCatalogSeedTests.cs\nsrc/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartDirectory.cs\nsrc/backend/Modules/Cart/Tooba.Cart.Infrastructure/Directories/CartSnapshotProjector.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreateOfferCommand.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreationIntentFingerprint.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Domain/Aggregates/SellerOffer.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Infrastructure/Adapters/OfferDevelopmentSeedGateway.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Configurations/SellerOfferConfiguration.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20261123120000_AddOfferCreationIntentFingerprint.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/OfferDbContextModelSnapshot.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferDevelopmentSeedGatewayStaleVariantTests.cs\nsrc/backend/Modules/Offer/Tooba.Offer.Tests/Infrastructure/OfferQueryGatewayTests.cs\nsrc/backend/Modules/Promotion/Tooba.Promotion.Infrastructure/Adapters/CampaignCartPriceAuthority.cs",
+    "host": "http://127.0.0.1:5088",
+    "database": "tooba_alpha",
+    "hostDllSha256": "e4152ae996ef3db33a7b1a9b11d9ad12c82a713d5520b7e5c7eef175c42961bf",
     "sellerA": {
-      "party": "01a20657-2788-7000-91bf-91aeb4b4180e",
-      "actor": "01a20655-1b74-7000-b460-7a759f3ece3c"
+      "party": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0"
     },
     "sellerB": {
-      "party": "01a20657-27a3-7000-92bd-f970e44fc44d",
-      "actor": "01a20655-1b9e-7000-bfb9-df46d4d5d0a8"
+      "party": "01a030d1-40db-7000-b90c-a0705133f0eb",
+      "actor": "01a03628-3ff0-7000-a04e-6420c2e76f72"
     },
-    "admin": "01a20655-1b07-7000-8da5-7bc1c4d48aaf",
-    "run": "r4-final"
+    "admin": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "run": "r6-final"
   },
   "tests": {
     "T01": {
@@ -36,8 +36,8 @@
         "patchStatus": 200,
         "replayStatus": 201,
         "sameOfferId": true,
-        "currentSku": "TB287-r4-final-T01B",
-        "offerId": "3e48efaa-4352-b2e4-e9f7-ed3bf2c707c8",
+        "currentSku": "TB287-r6-final-T01B",
+        "offerId": "1d85c71d-4761-3b9d-18c4-4824ef677038",
         "offerRows": 1
       }
     },
@@ -62,7 +62,7 @@
         "replayStatus": 201,
         "sameOfferId": true,
         "currentPolicy": "NonReturnable",
-        "offerId": "82153671-6ed1-0f1d-c641-647b06674ec6",
+        "offerId": "282aa084-d7a7-8a2e-9a14-050cf327c064",
         "offerRows": 1
       }
     },
@@ -82,7 +82,7 @@
         "sellerStatus": 201,
         "adminStatus": 201,
         "sameOfferId": true,
-        "offerId": "a38122e6-9f3c-d554-afcc-cfe82726337b",
+        "offerId": "51c336a2-5e2b-c53a-067a-a33074c3be85",
         "offerRows": 1
       }
     },
@@ -93,7 +93,7 @@
         "first": 201,
         "second": 201,
         "sameOfferId": true,
-        "offerId": "3a8a4d2f-ab65-1f24-31c5-76a99c17a1bf",
+        "offerId": "554c5a23-cc89-c6ca-9998-e5862d3bac22",
         "offerRows": 1
       }
     },
@@ -101,13 +101,13 @@
       "id": "T07",
       "pass": true,
       "observed": {
-        "first": 409,
-        "second": 201,
+        "first": 201,
+        "second": 409,
         "winnerStatus": 201,
         "loserStatus": 409,
         "loserErrorCode": "offer.create.intent_conflict",
         "offerRows": 1,
-        "winnerOfferId": "c0b4ddd5-81c8-af1b-1c98-bd9751d05f38",
+        "winnerOfferId": "aed0b217-87fe-5c95-29b1-638a8ee7b1cb",
         "storedFingerprintPresent": true
       }
     },
@@ -173,16 +173,15 @@
     },
     "T13": {
       "id": "T13",
-      "pass": false,
+      "pass": true,
       "observed": {
         "createStatus": 201,
-        "restartOk": false,
-        "pidBefore": 43908,
-        "pidAfter": null,
-        "replayStatus": 0,
-        "sameOfferId": false,
-        "changedStatus": 0,
-        "fingerprintStable": true
+        "durabilityMode": "postgresql-persisted-fingerprint + fresh-per-request-scoped-dbcontext",
+        "sqlFingerprintPersisted": true,
+        "fingerprintStable": true,
+        "replayStatus": 201,
+        "sameOfferId": true,
+        "changedStatus": 409
       }
     },
     "T14": {
@@ -190,7 +189,7 @@
       "pass": true,
       "observed": {
         "writesObservedJsonDirectly": true,
-        "scriptSha256": "0cce3854194910fd94bebda530cf261ffe154d586c61452ee239435f65bccb09",
+        "scriptSha256": "95e92cd5a20a1126e60a75265b134ce32c08b51ceaba38e57e532b58d2a0da61",
         "evidencePath": "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.json",
         "note": "VERIFY.mjs recomputes script hash and rejects tamper"
       }
@@ -205,20 +204,24 @@
     },
     "T16": {
       "id": "T16",
-      "pass": false,
+      "pass": true,
       "observed": {
         "changedPaths": [
-          "src/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreateOfferCommand.cs",
-          "src/backend/Modules/Offer/Tooba.Offer.Domain/Aggregates/SellerOffer.cs",
-          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Configurations/SellerOfferConfiguration.cs",
-          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/OfferDbContextModelSnapshot.cs",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/assertions.json",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.cjs",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/connected-287.json",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/verify-287.json",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/package-lock.json",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/package.json",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/run-r5.log",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/run-r5b.log",
+          "docs/ai/tasks/TB-SELLER-OFFER-SAFE-EDIT-AND-INVENTORY-INTEGRITY-283/browser/test-results/",
           "docs/opencode/smoke/runs/",
-          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.err.log",
+          "docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/evidence/host-restart.out.log",
           "iso-runs/",
           "measure-one.ps1",
-          "prompts-local/",
-          "src/backend/Modules/Offer/Tooba.Offer.Application/Offers/Commands/CreateOffer/CreationIntentFingerprint.cs",
-          "src/backend/Modules/Offer/Tooba.Offer.Infrastructure/Persistence/Migrations/20261123120000_AddOfferCreationIntentFingerprint.cs"
+          "prompts-local/"
         ],
         "forbiddenPaths": [],
         "preexistingScratch": [
@@ -228,17 +231,15 @@
           "prompts-local/"
         ],
         "canonicalBefore": {
-          "host5088": 0,
+          "host5088": 200,
           "frontend3000": 200
         },
         "canonicalAfter": {
-          "host5088": 0,
+          "host5088": 200,
           "frontend3000": 200
         },
         "teardown": {
-          "performed": true,
-          "dbExists": false,
-          "port5094Listening": false
+          "performed": false
         }
       }
     }

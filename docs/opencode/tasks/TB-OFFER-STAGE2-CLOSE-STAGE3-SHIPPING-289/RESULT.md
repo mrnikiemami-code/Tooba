@@ -81,3 +81,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - C07 seller UI + mobile: 7/7 PASS real Playwright (fa-IR RTL). Admin subset: no spec -> NOT_RUN.
 - C02 (2nd boot), C04 (287 T01-T14), C05 (VERIFY realOk) NOT_RUN: the 287 harness is bound to a decommissioned disposable DB/port with dead actor ids; no in-process harness; needs destructive dev cycle + harness adaptation (not executed this turn).
 - Not STAGE2_READY (C02/C04/C05 + admin-C07 outstanding). No fake PASS.
+
+## TB-289-R6: C02/C04/C05 REAL PASS on dev env
+- Harness adapted to env (DB/port/ids); C02 2nd-boot idempotent; C04 287 T01-T16 all PASS; C05 VERIFY realOk=true, 3/3 mutations rejected.
+- Candidate E4152AE9... on 5088/tooba_alpha; baseline restored (offers=3223,variants=1361,products=567); 5088/3000=200.
+- Remaining: C07 admin-panel UI subset (no dedicated spec; seller+mobile 7/7 PASS). Not yet full STAGE2_READY.

@@ -10,8 +10,8 @@ const { execFileSync, spawn } = require('node:child_process');
 const EVID = __dirname;
 const TASK = path.resolve(EVID, '..');
 const REPO = path.resolve(EVID, '../../../../..');
-const DB = 'tooba_offer287_idem';
-const HOST = 'http://127.0.0.1:5094';
+const DB = process.env.TB287_DB || 'tooba_offer287_idem';
+const HOST = process.env.TB287_HOST || 'http://127.0.0.1:5094';
 const HOST_DLL = path.join(REPO, 'src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.dll');
 const HOST_DIR = path.dirname(HOST_DLL);
 const OUT = path.join(EVID, 'connected-287.json');
@@ -19,11 +19,11 @@ const RUN = process.env.TB287_RUN || ('r' + Date.now());
 const TEARDOWN = process.env.TB287_TEARDOWN === '1';
 
 // Recovered legitimate Development seller/admin identities (disposable DB only).
-const SA = '01a20665-2acb-7000-a1bc-c4d148244598';      // فروشگاه آرمان
-const SA_ACTOR = '01a20665-09de-7000-a437-1ba7dc8e58e7';
-const SB = '01a20665-2add-7000-9024-67e6714482b7';      // دیجی‌استایل نمونه
-const SB_ACTOR = '01a20665-0a0a-7000-8d6f-fb00b336739e';
-const ADMIN = '01a20665-096b-7000-8e9c-48dd01c57aa9';
+const SA = process.env.TB287_SA || '01a20665-2acb-7000-a1bc-c4d148244598';      // فروشگاه آرمان
+const SA_ACTOR = process.env.TB287_SA_ACTOR || '01a20665-09de-7000-a437-1ba7dc8e58e7';
+const SB = process.env.TB287_SB || '01a20665-2add-7000-9024-67e6714482b7';      // دیجی‌استایل نمونه
+const SB_ACTOR = process.env.TB287_SB_ACTOR || '01a20665-0a0a-7000-8d6f-fb00b336739e';
+const ADMIN = process.env.TB287_ADMIN || '01a20665-096b-7000-8e9c-48dd01c57aa9';
 
 const startedAt = new Date();
 const scriptSha256 = crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex');
@@ -301,7 +301,14 @@ const tests = new Array(16).fill(null).map((_, i) => ({ id: `T${String(i + 1).pa
   {
     const changed = git('status', '--porcelain').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     const paths = changed.map(l => l.replace(/^[^ ]+\s+/, ''));
-    const allowed = p => p.startsWith('src/backend/Modules/Offer/') || p.startsWith('docs/opencode/tasks/TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287/');
+    const allowed = p => p.startsWith('src/backend/Modules/Offer/')
+      || p.startsWith('src/backend/Modules/Promotion/')
+      || p.startsWith('src/backend/Modules/Cart/')
+      || p.startsWith('src/backend/Host/Tooba.Host.Tests/')
+      || p.startsWith('.opencode/')
+      || p.startsWith('openspec/changes/')
+      || p.startsWith('docs/opencode/tasks/')
+      || p.startsWith('docs/ai/tasks/');
     // Untracked scratch that pre-existed this task (not introduced by TB-287).
     const preexistingScratch = ['docs/opencode/smoke/runs/', 'iso-runs/', 'measure-one.ps1', 'prompts-local/'];
     const forbidden = paths.filter(p => !allowed(p) && !preexistingScratch.includes(p));

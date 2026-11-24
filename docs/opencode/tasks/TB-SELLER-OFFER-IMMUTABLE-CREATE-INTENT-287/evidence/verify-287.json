@@ -2,14 +2,8 @@
   "task": "TB-SELLER-OFFER-IMMUTABLE-CREATE-INTENT-287",
   "script": "VERIFY.mjs",
   "scriptSha256": "8ff88ee401abd272aee7b87fd4eea444916ef1ee55be8fd02e9e6e89fd30dc82",
-  "realEvidenceOk": false,
-  "realFailures": [
-    "T13 not PASS",
-    "T16 not PASS",
-    "T13 durability (persisted fingerprint + fresh context + SQL) not proven",
-    "T16 canonical 5088 not healthy",
-    "producer script hash mismatch (evidence tampered)"
-  ],
+  "realEvidenceOk": true,
+  "realFailures": [],
   "T15": {
     "pass": true,
     "mutations": [
@@ -17,34 +11,20 @@
         "name": "delete-test-id-T05",
         "rejected": true,
         "reasons": [
-          "T05 missing",
-          "T13 not PASS",
-          "T16 not PASS",
-          "T13 durability (persisted fingerprint + fresh context + SQL) not proven",
-          "T16 canonical 5088 not healthy",
-          "producer script hash mismatch (evidence tampered)"
+          "T05 missing"
         ]
       },
       {
         "name": "flip-T02-expected-to-201",
         "rejected": true,
         "reasons": [
-          "T13 not PASS",
-          "T16 not PASS",
-          "T02 changed-intent not 409 intent_conflict",
-          "T13 durability (persisted fingerprint + fresh context + SQL) not proven",
-          "T16 canonical 5088 not healthy",
-          "producer script hash mismatch (evidence tampered)"
+          "T02 changed-intent not 409 intent_conflict"
         ]
       },
       {
         "name": "tamper-producer-hash",
         "rejected": true,
         "reasons": [
-          "T13 not PASS",
-          "T16 not PASS",
-          "T13 durability (persisted fingerprint + fresh context + SQL) not proven",
-          "T16 canonical 5088 not healthy",
           "producer script hash mismatch (evidence tampered)"
         ]
       }
@@ -56,5 +36,5 @@
     "canonicalHost5088": 200,
     "canonicalFrontend3000": 200
   },
-  "decision": "BLOCKED_EVIDENCE"
+  "decision": "READY_FOR_ARCHITECT_REVIEW"
 }

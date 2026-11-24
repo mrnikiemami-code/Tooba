@@ -59,3 +59,7 @@ NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 
 ## TB-289-R1 C01 strict PASS (2026-11-24)
 - HEAD 7febfd634; dotnet test Host.Tests --filter CampaignCartPriceIntegrityTests => Passed 2/2 (stage2-proof/C01-strict-PASS.txt).
+
+## TB-289-R6 connected run (2026-11-24)
+- connected-287.cjs made env-driven; run with TB287_HOST=http://127.0.0.1:5088 TB287_DB=tooba_alpha (real dev actor ids) => T01-T16 PASS; VERIFY realOk=true.
+- Restore verified; 5088/3000 healthy; evidence stage2-proof/C02-C04-C05-PASS.md.
