@@ -49,3 +49,9 @@ STOP_FOR_ARCHITECT
   lifecycle via status, fulfillment RESPONSIBILITY only (price write route must be verified before wiring).
 - Status remains PARTIAL; full 30 real tests not run. No product code changed in this step.
 - OpenSpec change `offer-workspace-production-296` added (strict).
+
+## R4 rules-merge + corrected contract investigation (2026-11-25)
+- Merged revised permanent rules (HEAD 39b1954: §0A execution continuity, scoped blockers).
+- Corrected gaps: offer price/inventory write endpoints EXIST (`/offers/{id}/price`, `/inventory`, SetOfferPrice/InventoryCommand) + fulfillment responsibility.
+- Remaining genuine gaps (isolated): per-offer discount definition (Promotion policy), per-offer shipping service assignment (Stage-3 undecided), multi-warehouse per-position adjust policy, offer history read API.
+- Status: PARTIAL — independent slices implementable (identity, price, inventory write, returns, qty limits, lifecycle, responsibility shipping); 30 real tests not run.

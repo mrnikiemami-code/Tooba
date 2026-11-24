@@ -1,27 +1,24 @@
-# CONTRACT GAPS — TB-296 (source-verified; no fabricated capability)
+# CONTRACT GAPS — TB-296 (corrected after §0A route investigation, 2026-11-25)
 
-Evidence gathered from live backend endpoint sources:
-- Offer: `POST /offers/query`, `POST /offers` (create), `GET/PATCH /offers/{id}`, `GET /offers` (list), `PUT /offers/{id}/fulfillment` (admin).
-- Promotion: campaign-centric only — `/` list/create/update, `/{id}/publish|archive`, `/{id}/members` add/remove/order, `/{id}/members/{sellerOfferId}/price`. NO per-offer discount-definition API (percent/fixed/coupon/priority/min-qty/min-amount/customer conditions).
-- Inventory: **no inventory endpoints module** found (`*Endpoints*.cs` returned none) → no multi-warehouse adjust+reason HTTP contract.
-- Shipping: service authoring/carrier endpoints exist; per-offer **specific service assignment** is not an endpoint (only Offer `PUT /offers/{id}/fulfillment` sets responsibility + shipping type id). Stage-3 service assignment rule is not decided.
-- Offer history: **no offer history endpoint/projection** found (only unrelated order/fulfillment history).
+Re-investigated actual routes/commands (not filename absence):
+- Offer price write: `POST|PUT /offers/{offerId}/price` → `SetOfferPriceCommand` (admin group + seller endpoints import it). EXISTS.
+- Offer inventory write: `POST|PUT /offers/{offerId}/inventory` → `SetOfferInventoryCommand`. EXISTS (verify whether it is per-location/multi-warehouse).
+- Offer fulfillment responsibility: `PUT /offers/{offerId}/fulfillment` (admin, `fulfillment.manage`). EXISTS (responsibility + shippingTypeId only).
+- Offer create/get/patch/list/query: EXIST.
+- Promotion: campaign-centric (`/campaigns`, `/{id}/members`, `/{id}/members/{sellerOfferId}/price`). No per-offer DISCOUNT-DEFINITION contract (percent/fixed/coupon/priority/min-qty/min-amount/customer conditions).
+- Offer history: no read API/projection found.
 
-## Impact per tab
-| Tab | Contract status | Can implement now without fabrication? |
+## Scoped status per tab (per §0A)
+| Tab | Status | Note |
 |---|---|---|
-| مشخصات آفر | create/get/patch + product/seller pickers exist | YES (identity locks, pickers, SKU, channel) |
-| قیمت‌گذاری | price write DTO exists (SellerOfferPriceWriteRequest) but no listed per-currency rows CRUD route found; verify before build | PARTIAL — must verify price-write route; multi-currency rows may be a gap |
-| تخفیفات | Promotion is campaign-based; no per-offer discount-definition API | NO — would require new Promotion contract (decision) |
-| موجودی (چندانباره + اصلاح + دلیل) | no Inventory endpoints module found | NO — backend contract missing |
-| ارسال (انتخاب سرویس مجاز) | responsibility via fulfillment assign; per-offer service assignment not present | PARTIAL — responsibility only; service assignment needs Stage-3 decision |
-| شرایط فروش (مقدار/واحد/مرجوعی/چرخه) | patch supports return policy + qty limits; unit/step from product; lifecycle via status | YES (return default/custom/non-returnable, min/max, status) |
-| تاریخچه | no offer history API | NO — backend contract missing |
+| مشخصات آفر | IMPLEMENTABLE | create/get/patch + pickers |
+| قیمت‌گذاری | IMPLEMENTABLE (price write exists) | multi-currency ROWS UI over existing price write; verify per-currency semantics |
+| تخفیفات | BLOCKED (policy/contract) | per-offer discount definition not a decided capability (Promotion is campaign-based) — architect decision; campaign membership can be shown read-only |
+| موجودی | PARTIAL | inventory write exists; MULTI-warehouse ADJUST+reason per-position may need contract/policy — verify SetOfferInventory semantics |
+| ارسال | PARTIAL | responsibility exists; per-offer service assignment is undecided (Stage-3) |
+| شرایط فروش | IMPLEMENTABLE | return policy + qty limits + lifecycle via patch |
+| تاریخچه | BLOCKED (contract) | no history read API — implementable only if an audit/event projection is authorized |
 
 ## Conclusion
-The shared 7-tab production workspace cannot be completed truthfully end-to-end because three required capabilities lack backend contracts
-(Promotion per-offer discounts, Inventory multi-warehouse adjust, Offer history) and shipping service assignment is an undecided Stage-3 rule.
-Implementing them now would require inventing backend behavior (forbidden) or new architecture decisions (architect-owned).
-
-Independent, implementable-now sections (identity/pickers/SKU/channel; returns; quantity limits; lifecycle; price if write-route verified; responsibility-only shipping)
-can proceed without the blocked domains.
+Not a task-wide blocker. Independent implementable slices (identity, price, single-location inventory write, returns, qty limits, lifecycle, responsibility shipping) can proceed.
+Genuinely undecided/authority-missing (isolated): per-offer discount definition, per-offer shipping service assignment (Stage-3), multi-warehouse adjust policy, offer-history projection.
