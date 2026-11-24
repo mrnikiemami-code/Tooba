@@ -1,6 +1,8 @@
 using CartContract = Tooba.Cart.Contracts;
 using Tooba.Cart.Domain.Aggregates;
 using Tooba.Inventory.Contracts.Availability;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 
 namespace Tooba.Cart.Infrastructure.Directories;
 
@@ -8,7 +10,7 @@ namespace Tooba.Cart.Infrastructure.Directories;
 /// Projects the Cart aggregate into the stable <see cref="CartContract.CartSnapshot"/> boundary contract.
 /// Owns the only Cart -> Contracts projection and the only availability batch read.
 /// </summary>
-internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availability)
+internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availability, IOfferLookupGateway offers)
 {
     /// <summary>Builds a Cart snapshot enriched with business line availability.</summary>
     public async Task<CartContract.CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken)
@@ -17,6 +19,11 @@ internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availa
         var stock = offerIds.Length == 0
             ? new Dictionary<Guid, InventoryAvailability>()
             : await availability.GetAvailabilityBatchAsync(offerIds, cancellationToken);
+        // The inventory quantity alone cannot make an Archived Offer purchasable.
+        // Resolve authoritative Offer statuses in one batch and fail closed in the read projection.
+        var offerReferences = offerIds.Length == 0
+            ? new Dictionary<Guid, OfferReference>()
+            : await offers.FindOffersBatchAsync(offerIds, cancellationToken);
         return new CartContract.CartSnapshot(
             cart.CartId,
             (CartContract.CartStatus)(int)cart.Status,
@@ -35,7 +42,10 @@ internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availa
             cart.Lines.OrderBy(line => line.LineId).Select(line =>
             {
                 stock.TryGetValue(line.OfferId, out var availabilityForLine);
-                var available = availabilityForLine?.Available ?? 0;
+                var offerActive = offerReferences.TryGetValue(line.OfferId, out var offer)
+                    && offer.Status == OfferStatus.Active
+                    && offer.CatalogVariantId == line.CatalogVariantId;
+                var available = offerActive ? availabilityForLine?.Available ?? 0 : 0;
                 var kind = available >= line.Quantity
                     ? CartContract.CartLineAvailabilityKind.Available
                     : available > 0
@@ -48,13 +58,13 @@ internal sealed class CartSnapshotProjector(IInventoryAvailabilityGateway availa
                     line.SellerPartyId,
                     line.Quantity,
                     line.ReservationId,
-                    line.QuotedAmount,
+                    offerActive ? line.QuotedAmount : null,
                     line.QuotedCurrency,
                     line.QuotedTaxExclusive,
-                    line.PriceId,
+                    offerActive ? line.PriceId : null,
                     line.QuotedAt,
                     kind,
-                    line.MerchandisingCampaignId);
+                    offerActive ? line.MerchandisingCampaignId : null);
             }).ToList());
     }
 }
