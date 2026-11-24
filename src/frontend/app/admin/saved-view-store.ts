@@ -117,3 +117,5 @@ export function createHostSavedViewStore(preferenceKey: string): SavedViewStore 
 function cloneView(view: SavedGridView): SavedGridView {
   return migrateSavedView(JSON.parse(JSON.stringify(view)) as SavedGridView);
 }
+export const ADMIN_OFFER_GRID_VIEW_KEY = "grid.admin.offers";
+export const SELLER_OFFER_GRID_VIEW_KEY = "grid.seller.offers";

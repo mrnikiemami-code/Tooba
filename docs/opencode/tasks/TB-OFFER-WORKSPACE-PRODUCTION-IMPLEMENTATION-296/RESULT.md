@@ -29,3 +29,11 @@ BUILD_ID: NOT_BUILT (no source change)
 RUNTIME_URLS: existing routes only (/admin/offers, /admin/offers/new, /vendor-panel/products, /vendor-panel/products/new; edit /admin/offers/[offerId], /vendor-panel/products/[offerId])
 BLOCKERS: ServerGridPage not shared (refactor needed); 7-tab workspace + domain wiring + 30 real tests are multi-stage
 STOP_FOR_ARCHITECT
+
+## R2 GRID CORRECTION (applied)
+- Canceled ServerGridPage extraction. Admin & seller offer tables now use the PUBLIC Design System `AppDataGrid`
+  (same component used by products/campaigns/customers/etc.) via `useLegacyAdminGridDirectProps` bridge + `createHostSavedViewStore`.
+- Orders (`ServerGridPage`), products, campaigns, and shared grid infra untouched.
+- Offer-specific ONLY: columns, data adapter, row actions. Added rows-saved-view keys: grid.admin.offers / grid.seller.offers.
+- Frontend `npm run build` → **Compiled successfully** (BUILD_EXIT=0).
+- Remaining (not done in this step): 7-tab workspace production form, real 5-domain wiring, 30 real tests (UX-03/09/12/15/29 incl.), DB/security/regression/perf, dev runtime run, Impeccable. Status: PARTIAL (grid corrected; rest pending).

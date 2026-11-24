@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Package, Plus } from "lucide-react";
-import { DataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
+import { AppDataGrid, ErrorState, faWorkspaceMessages, useLegacyAdminGridDirectProps } from "../../../design-system";
+import { SELLER_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
 import type { GridColumnDef, GridServerPage, GridServerQuery } from "../../../design-system/data-grid";
 import {
   formatMoney,
@@ -15,7 +16,9 @@ import {
   type SellerOfferListRow,
 } from "../seller-api";
 
-const columns: GridColumnDef<SellerOfferListRow>[] = [
+type SellerOfferGridRow = SellerOfferListRow & { id: string };
+
+const columns: GridColumnDef<SellerOfferGridRow>[] = [
   {
     id: "productTitle",
     header: "محصول",
@@ -138,13 +141,14 @@ export default function VendorProductsPage() {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [denied, setDenied] = useState(false);
   const [sellerPartyId, setSellerPartyId] = useState("");
+  const savedViewStore = useMemo(() => createHostSavedViewStore(SELLER_OFFER_GRID_VIEW_KEY), []);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     setSellerPartyId(readSellerPartyId(window.location.search) ?? "");
   }, []);
 
-  const queryAdapter = useCallback(async (query: GridServerQuery): Promise<GridServerPage<SellerOfferListRow>> => {
+  const queryAdapter = useCallback(async (query: GridServerQuery): Promise<GridServerPage<SellerOfferGridRow>> => {
     if (!sellerPartyId) {
       return { rows: [], total: 0 };
     }
@@ -153,8 +157,16 @@ export default function VendorProductsPage() {
     setTotal(result.page.total);
     setMessage(result.message);
     setDenied(Boolean(result.denied));
-    return result.page;
+    return { ...result.page, rows: result.page.rows.map((row) => ({ ...row, id: row.offerId })) };
   }, [sellerPartyId, reloadKey]);
+
+  const gridProps = useLegacyAdminGridDirectProps<SellerOfferGridRow>({
+    gridId: SELLER_OFFER_GRID_VIEW_KEY,
+    columns,
+    queryAdapter,
+    savedViewStore,
+    exportFilenameBase: "seller-offers",
+  });
 
   function refresh() {
     setReloadKey((value) => value + 1);
@@ -212,7 +224,7 @@ export default function VendorProductsPage() {
             <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
             <div className="overflow-x-auto">
-              <DataGrid columns={columns} queryAdapter={queryAdapter} />
+              <AppDataGrid<SellerOfferGridRow> {...gridProps} rowCountNoun={{ fa: "آفر", en: "offers" }} />
             </div>
           )}
         </div>
@@ -220,6 +232,7 @@ export default function VendorProductsPage() {
     </main>
   );
 }
+
 
 
 
