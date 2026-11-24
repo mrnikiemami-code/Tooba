@@ -37,3 +37,15 @@ STOP_FOR_ARCHITECT
 - Offer-specific ONLY: columns, data adapter, row actions. Added rows-saved-view keys: grid.admin.offers / grid.seller.offers.
 - Frontend `npm run build` → **Compiled successfully** (BUILD_EXIT=0).
 - Remaining (not done in this step): 7-tab workspace production form, real 5-domain wiring, 30 real tests (UX-03/09/12/15/29 incl.), DB/security/regression/perf, dev runtime run, Impeccable. Status: PARTIAL (grid corrected; rest pending).
+
+## R3 CONTRACT ANALYSIS (2026-11-24)
+- Grid correction accepted (528fd7b5). Frozen.
+- Source-verified backend contract gaps that block full 7-tab finish (see CONTRACT-GAPS.md):
+  * Promotion is campaign-centric; NO per-offer discount definition API → تخفیفات tab blocked (no fabricated discounts).
+  * NO Inventory endpoints module → چندانباره adjust+reason blocked.
+  * NO offer history API → تاریخچه tab blocked.
+  * Shipping per-offer service assignment is undecided (Stage-3); only responsibility via PUT /offers/{id}/fulfillment.
+- Implementable-now (no fake): identity/pickers/SKU/channel, return policy (default/custom/non-returnable), qty limits,
+  lifecycle via status, fulfillment RESPONSIBILITY only (price write route must be verified before wiring).
+- Status remains PARTIAL; full 30 real tests not run. No product code changed in this step.
+- OpenSpec change `offer-workspace-production-296` added (strict).
