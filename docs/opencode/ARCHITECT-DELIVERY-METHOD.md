@@ -23,6 +23,14 @@ Priority: owner's explicit decision → existing authorized architecture and fix
 
 Interpretation rule: **MUST** means mandatory whenever the stated applicability condition holds; **MUST NOT** means forbidden. A test that did not run is NOT_RUN, never PASS. Missing proof does not mean a product bug, but prevents acceptance until addressed. Worker PASS ≠ architect ACCEPT ≠ owner acceptance.
 
+
+## 0A. Owner-approved execution continuity — 2026-11-25 (binding clarification)
+- A blocker is scoped to the smallest affected requirement/dependency, not the entire task. Continue every safe independent authorized implementation, integration and test before terminal handoff. Report blocked requirements individually; never drop them or claim PASS.
+- Missing endpoint/API/DTO is a normal implementation gap, not inherently a blocker or fabricated capability. When the issued task authorizes full-stack delivery and the required behavior is already decided, implement the missing real contract in its owning module using existing architecture, OpenSpec, authorization, validation and tests. Do not invent business policy, bypass ownership, broaden scope, or apply migrations/live writes without required authorization. Where authority or policy is genuinely missing, isolate only that dependency and continue independent work. Investigate actual use cases, commands, adapters and routes, not filename absence alone.
+- Build/test failures are work to diagnose and fix within authorized scope. Initial implementation, debugging and fixture repair are not the post-matrix correction round. Large scope, missing code, token thrift, or completing one internal wave are not reasons to end a task. No arbitrary task splitting or repeated planning instead of implementation.
+- Preflight gates remain hard for the affected unsafe operation: never perform unauthorized writes, bypass permissions or fake proof. Safe independent work may proceed with its own applicable preflight. A task-wide stop is justified only if no further safe authorized work remains, or a demonstrated global safety issue makes all further work unsafe. Record exact evidence and exhausted independent slices.
+- STOP_FOR_ARCHITECT is a terminal review gate, not an instruction to stop after each wave. The existing one consolidated post-matrix correction and final rerun limit remains; do not loop or auto-issue tasks. Owner-approved task-specific constraints prevail. This clarification applies to current and future OpenCode tasks, including TB-296; Cursor/main rules are unchanged.
+
 ## 1. Architect PRE-ISSUE — mandatory before dispatch
 
 Architect reads the current real source and records all of these fields in `docs/opencode/tasks/<Task-ID>/TASK.md`:
@@ -65,7 +73,7 @@ After `git fetch origin`, read task and this protocol from `origin/main`; verify
 For a persistent UI operation, demonstrate **before product-code edits** a safe end-to-end test path:
 real Chromium via Playwright → served Next build → real owning Host endpoint → isolated PostgreSQL → independent GET and SQL → disposable teardown. Show test actor and seller scope, ports, Host DLL/build identity, database identity, fixture values, write boundary and ability to clean up. A health check or mocked request alone is not enough. For non-persistent/non-UI tasks define the equivalent owning-provider evidence chain explicitly.
 
-If unsafe or infeasible, stop **before product edits** as `BLOCKED_PREFLIGHT` with one exact cause and smallest unblock. Do not substitute fake data for required real-provider proof. No live user/business writes, migrations, resets, grants or provider effects without explicit authorization.
+If unsafe or infeasible, stop the affected operation **before its product edits** as `BLOCKED_PREFLIGHT` with one exact cause and smallest unblock; continue safe independent slices under §0A. Do not substitute fake data for required real-provider proof. No live user/business writes, migrations, resets, grants or provider effects without explicit authorization.
 
 ## 3. Tool use — required only when applicable, with evidence
 
@@ -86,7 +94,7 @@ If unsafe or infeasible, stop **before product edits** as `BLOCKED_PREFLIGHT` wi
 4. **Command output hygiene:** prefer exit status + concise matching lines/counts. Redirect verbose stdout/stderr to named log files, then show only selected diagnostics if failure occurs (e.g., error context, test summary and exit code). Use bounded `git diff --stat`, `git diff --name-only`, targeted line ranges / `rg -n`, not recursive full-file dumps or repetitive `git show` on the same blob. Avoid piping untrusted logs to shell evaluators. Do not conceal error text that is necessary for diagnosis.
 5. **Context discipline:** read authoritative exact files once, then retrieve only relevant sections, code changes and new output; keep a compact internal status of verified facts, decisions, file/commit identities and remaining tests. Do not keep refeeding large transcripts, entire logs or whole repository trees to the model.
 6. **Avoid loop inflation:** choose a precise hypothesis and minimal discriminating check before running full suites; run focused tests during implementation and one complete connected acceptance matrix at the prescribed gate. The one-post-matrix-repair limit and final complete rerun remain mandatory. Do not create tasks, duplicate browser runs or repeat tool calls merely to generate verbose progress.
-7. **Safety and operational transparency override brevity:** announce and stop on any unsafe writes, missing permissions, gate failure or evidence conflict. Always report `BLOCKED` truthfully. Avoid excessive silence during unusually long work by providing an occasional one-line factual checkpoint only when needed; no verbose reasoning dump.
+7. **Safety and operational transparency override brevity:** announce and stop the affected unsafe operation on unsafe writes, missing permissions, gate failure or evidence conflict; apply §0A before any task-wide stop. Always report `BLOCKED` truthfully. Avoid excessive silence during unusually long work by providing an occasional one-line factual checkpoint only when needed; no verbose reasoning dump.
 
 **Example based on the owner-provided OpenCode screen (285):** An extended discussion about whether a cancel-write array contains later unrelated operations should be kept as a concise engineering finding in `RESULT.md` or a task-local diagnostic note, not as multi-paragraph chat speculation. Verify by capturing a snapshot **at cancel time** (e.g., `cancelWritesAtCheck`), retain full later writes separately and record the actual browser/Host event chronology. Do **not** manipulate historical evidence to produce a zero-writes claim. A short chat line is sufficient: “REQ-06 evidence timing mismatch; snapshot at cancel boundary, rerun focused proof; no product assertion yet.”
 
@@ -129,7 +137,7 @@ The checker MUST independently parse the manifest, immutable issued acceptance m
 
 ## 6. Outcome, review and promotion
 
-Worker only reports `PASS / READY_FOR_ARCHITECT_REVIEW` after all applicable mandatory REQs PASS and OpenCode verifier + negative self-tests PASS. If not: `BLOCKED / NOT_READY` and exact reason, without automatically issuing another task. Always `STOP_FOR_ARCHITECT` with no future job.
+Worker only reports `PASS / READY_FOR_ARCHITECT_REVIEW` after all applicable mandatory REQs PASS and OpenCode verifier + negative self-tests PASS. If not, after exhausting safe independent authorized work under §0A: `BLOCKED / NOT_READY` and exact reason, without automatically issuing another task. Always `STOP_FOR_ARCHITECT` with no future job.
 
 Architect must independently examine: immutable scope, repository diff, underlying source code, evidence and assertion logic (not worker summary alone), provider identity and limits, negative cases, code/build/hash provenance, cleanup, and any contradictions. Architect records `ACCEPT`, `REPAIR` (only within permitted budget), or `BLOCK` with reasons. Distinguish product acceptance from technical architecture acceptance.
 
