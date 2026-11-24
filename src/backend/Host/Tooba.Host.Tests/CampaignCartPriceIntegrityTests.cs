@@ -352,7 +352,11 @@ public sealed class CampaignCartPriceIntegrityTests : IAsyncLifetime
         var afterArchive = await cartDir.GetCartAsync(activeAgain.CartId, access, CancellationToken.None);
         Assert.NotNull(afterArchive);
         Assert.Null(afterArchive!.Lines[0].MerchandisingCampaignId);
-        Assert.Equal(100000m, afterArchive.Lines[0].QuotedAmount);
+        // The stored base reprice is informational: an archived Offer is not payable.
+        // The read-side contract must never expose a spendable quote for an unavailable Offer.
+        Assert.Equal(CartLineAvailabilityKind.Unavailable, afterArchive.Lines[0].Availability);
+        Assert.Null(afterArchive.Lines[0].QuotedAmount);
+        Assert.Null(afterArchive.Lines[0].PriceId);
     }
 
     private static string FindRepoRoot()
