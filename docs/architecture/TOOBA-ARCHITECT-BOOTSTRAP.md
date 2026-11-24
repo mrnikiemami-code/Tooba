@@ -1,3 +1,6 @@
+<!-- ARCHITECT-AGENT-ROUTING-2026-11-24 -->
+**Mandatory architect recovery first step (owner decision 2026-11-24):** read [TOOBA-ARCHITECT-AGENT-ROUTING](TOOBA-ARCHITECT-AGENT-ROUTING.md) and select the actual worker branch before applying any instructions below. OpenCode isolated tasks use their own v1.3.0 governance, not the Cursor structural checker; the Cursor instructions below remain binding for Cursor. Shared product architecture is unchanged.
+
 # Mandatory delivery governance — TOOBA-DELIVERY-001 — 2026-11-21
 
 <!-- OPEN-CODE-ARCHITECT-CURRENT-RECOVERY -->
