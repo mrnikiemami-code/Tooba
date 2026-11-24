@@ -80,7 +80,7 @@ public sealed class CartDirectory : ICartDirectory, CartContract.ICartQueryGatew
         _clock = clock;
         _ids = ids;
         _prices = prices;
-        _quote = new CartQuoteValidator(offers, prices, normalizer, catalog, campaignPrices);        _snapshots = new CartSnapshotProjector(availability);
+        _quote = new CartQuoteValidator(offers, prices, normalizer, catalog, campaignPrices);        _snapshots = new CartSnapshotProjector(availability, offers);
         _expiry = new CartExpiryScanner(db, inventory, guard);
         var hours = CartPersistenceHours.Clamp(lifetime?.Value.PersistenceHours ?? CartPersistenceHours.DefaultHours);
         _persistenceTtl = TimeSpan.FromHours(hours);
