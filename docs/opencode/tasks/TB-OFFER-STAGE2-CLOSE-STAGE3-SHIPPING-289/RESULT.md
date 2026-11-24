@@ -76,3 +76,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Preserved Cart fixes + C01 strict PASS. Did NOT re-run passing tests.
 - C07 BLOCKED: @playwright/test not installed (no node_modules); installing = provisioning (forbidden).
 - C02/C04/C05: need live candidate Host + destructive reset + custom 287 harness (no .NET equivalent); not executed; no fabricated PASS.
+
+## TB-289-R5: C07 (seller+mobile) REAL PASS; others NOT_RUN
+- C07 seller UI + mobile: 7/7 PASS real Playwright (fa-IR RTL). Admin subset: no spec -> NOT_RUN.
+- C02 (2nd boot), C04 (287 T01-T14), C05 (VERIFY realOk) NOT_RUN: the 287 harness is bound to a decommissioned disposable DB/port with dead actor ids; no in-process harness; needs destructive dev cycle + harness adaptation (not executed this turn).
+- Not STAGE2_READY (C02/C04/C05 + admin-C07 outstanding). No fake PASS.

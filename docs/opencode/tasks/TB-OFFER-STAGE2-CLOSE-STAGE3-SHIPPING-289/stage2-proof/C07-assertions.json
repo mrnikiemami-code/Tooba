@@ -1,0 +1,66 @@
+{
+  "REQ_01": {
+    "writes": [
+      "PATCH /v1/seller/offers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaa28a1"
+    ],
+    "sku": "SKU-B",
+    "positions": [
+      3,
+      7
+    ],
+    "price": 100
+  },
+  "REQ_02": {
+    "status": "Draft",
+    "limits": [
+      null,
+      null
+    ],
+    "patchBody": {
+      "sellerSku": "SKU-DRAFT",
+      "returnPolicyChoice": "Default",
+      "customReturnWindowDays": null,
+      "minimumOrderQuantity": null,
+      "maximumOrderQuantity": null,
+      "clearOrderQuantityLimits": true
+    }
+  },
+  "REQ_03": {
+    "sku": "SKU-CONCURRENT",
+    "price": 150,
+    "priceWrites": 0
+  },
+  "REQ_04": {
+    "target": "eeeeeeee-eeee-eeee-eeee-eeeeeeee28e1",
+    "positions": [
+      [
+        "A",
+        3
+      ],
+      [
+        "B",
+        8
+      ]
+    ],
+    "total": 11
+  },
+  "REQ_05": {
+    "wrongResponseError": true,
+    "lostResponseNotice": "reconciled-by-GET",
+    "patchCount": 1
+  },
+  "REQ_06": {
+    "writes": 0,
+    "geometry": {
+      "overflow": 0,
+      "saveHit": true,
+      "cancelHit": true,
+      "titleVisible": true
+    }
+  },
+  "REQ_07": {
+    "noChangeWrites": 0,
+    "retainedOtherDraft": "8",
+    "inventoryWritesAfterPatchFailure": 0
+  }
+}
