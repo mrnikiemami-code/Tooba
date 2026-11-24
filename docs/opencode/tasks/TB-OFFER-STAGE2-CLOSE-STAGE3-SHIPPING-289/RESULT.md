@@ -86,3 +86,8 @@ Cost/time NOT_AVAILABLE. `STOP_FOR_ARCHITECT`.
 - Harness adapted to env (DB/port/ids); C02 2nd-boot idempotent; C04 287 T01-T16 all PASS; C05 VERIFY realOk=true, 3/3 mutations rejected.
 - Candidate E4152AE9... on 5088/tooba_alpha; baseline restored (offers=3223,variants=1361,products=567); 5088/3000=200.
 - Remaining: C07 admin-panel UI subset (no dedicated spec; seller+mobile 7/7 PASS). Not yet full STAGE2_READY.
+
+## TB-291: C07 ADMIN PASS + Stage2 8/8 on aligned runtime
+- ISO branch frontend built and served on :3000; ISO backend dll E4152AE9 on :5088; db tooba_alpha (287 col=1).
+- Real Playwright admin: /admin/offers + /admin/offers/new 3/3 PASS (h1 texts). seller+mobile 7/7 prior.
+- All C01-C08 now PASS with real evidence; verify-dev-alignment.ps1 pass=true.

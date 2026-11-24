@@ -34,3 +34,12 @@ This worktree is an **execution environment**, not a separate product architectu
 
 ## Out of always-on scope
 Do not auto-load historical story dumps or unrelated past tasks.
+## Delivery proof standard (permanent — TB-291)
+Accepting any task requires MEASURED proof, never "home page 200" alone:
+- source commit SHA + runtime FRONTEND build identity (.next/BUILD_ID) and reachability;
+- BACKEND build identity (dll SHA) + /health + provenance (/__platform-commerce);
+- DATABASE reachability + required migration column presence (front/back/db alignment);
+- REAL access to each CHANGED page (expected heading text actually present).
+Single source of truth: `docs/opencode/test-infra/DEV-TEST-ENV.json`.
+One command: `scripts/dev/verify-dev-alignment.ps1` (returns non-zero on mismatch = auto-enforced).
+Harnesses MUST read config/env + runtime discovery; NEVER hardcode old ports/dbs/actor ids.

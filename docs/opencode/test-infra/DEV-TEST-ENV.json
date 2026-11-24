@@ -1,0 +1,24 @@
+{
+  "description": "Single source of truth for TOOBA dev/test runtime (TB-291). Harnesses MUST read this instead of hardcoding ports/dbs/ids.",
+  "backend": { "base": "http://127.0.0.1:5088", "health": "/health", "provenance": "/__platform-commerce" },
+  "frontend": { "base": "http://127.0.0.1:3000", "readyPath": "/fa" },
+  "db": { "container": "postgres-db", "engine": "postgresql", "database": "tooba_alpha", "user": "admin", "port": 5432 },
+  "discovery": {
+    "sellerDevContexts": "/v1/seller/dev-contexts",
+    "adminDevContext": "/v1/admin/dev-context",
+    "note": "Resolve actor/seller ids at runtime from these endpoints; never hardcode old ids."
+  },
+  "offerPages": {
+    "adminList": "/admin/offers",
+    "adminNew": "/admin/offers/new",
+    "sellerList": "/vendor-panel/products",
+    "sellerNew": "/vendor-panel/products/new"
+  },
+  "expectedHeadings": {
+    "adminList": "پیشنهادهای فروشندگان",
+    "adminNew": "ایجاد پیش‌نویس برای فروشنده",
+    "sellerNew": "ایجاد پیش‌نویس پیشنهاد فروش"
+  },
+  "backup": { "hostPath": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\dev-db-backups", "format": "pg_dump -Fc", "restore": "pg_restore --clean --if-exists" },
+  "versions": { "frontendBuildId": ".next/BUILD_ID", "backendDll": "src/backend/Host/Tooba.Host/bin/Debug/net8.0/Tooba.Host.dll" }
+}
