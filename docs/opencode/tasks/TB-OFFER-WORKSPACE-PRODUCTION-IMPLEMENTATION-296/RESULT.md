@@ -55,3 +55,14 @@ STOP_FOR_ARCHITECT
 - Corrected gaps: offer price/inventory write endpoints EXIST (`/offers/{id}/price`, `/inventory`, SetOfferPrice/InventoryCommand) + fulfillment responsibility.
 - Remaining genuine gaps (isolated): per-offer discount definition (Promotion policy), per-offer shipping service assignment (Stage-3 undecided), multi-warehouse per-position adjust policy, offer history read API.
 - Status: PARTIAL — independent slices implementable (identity, price, inventory write, returns, qty limits, lifecycle, responsibility shipping); 30 real tests not run.
+
+## R5 execution grounding (2026-11-25)
+- Multi-position inventory contract CONFIRMED (task 283 REQ-04): `SetSellerOfferInventory(OfferId, SellerPartyId, OnHand, Reason, StockItemId?)`
+  via `SetOfferInventoryCommand`; per-StockItem adjust supported → inventory tab is implementable (no new contract needed).
+- Real clients confirmed for wiring:
+  - Admin create: `createAdminOffer`, `queryAdminSellersGrid`, `loadAdminCatalogVariants` (app/admin/admin-offer-api.ts, features/admin-sellers).
+  - Seller create: `createSellerOffer`, `loadSellerCatalogVariants`, `writeSellerOfferPrice`, `writeSellerOfferInventory` (app/vendor-panel/seller-api.ts).
+  - Price write: POST|PUT /offers/{id}/price; Inventory write: POST|PUT /offers/{id}/inventory; Fulfillment: PUT /offers/{id}/fulfillment.
+- Only remaining undecided policy: per-offer DISCOUNT DEFINITION (Promotion) + per-offer SHIPPING SERVICE assignment (Stage-3).
+- Implementable-now tabs: مشخصات، قیمت‌گذاری، موجودی (multi-position), شرایط فروش (returns/qty/lifecycle), تاریخچه if event projection exists.
+- Next code step: build shared 7-tab workspace reusing these clients; no fabricated tabs.
