@@ -17,3 +17,6 @@ MUST:
 - Applies to ongoing and future OpenCode tasks; do not bypass genuine safety gates or auto-start a new task.
 
 When analyzing: do not claim ARCHITECT_ACCEPT.
+
+## Mandatory senior architect quality gate (owner directive 2026-11-25)
+Apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and independent review. All eight applicable AQ checks require source and guard evidence. Functional PASS never waives architectural violations. Preserve immutable task inputs, authorization and §0A; no automatic next task.
