@@ -19,7 +19,10 @@ public sealed record SellerOfferListItem(
     string? VariantCode = null,
     Guid? PrimaryMediaAssetId = null,
     string? BrandName = null,
-    string? VariantLabel = null);
+    string? VariantLabel = null,
+    int UnitQuantityDecimalPlaces = 0,
+    decimal? UnitQuantityStep = null,
+    string? UnitRoundingMode = null);
 
 /// <summary>
 /// جزئیات Offer فروشنده با زمینهٔ فقط‌خواندنی Catalog.
@@ -59,13 +62,17 @@ public sealed record SellerOfferDetailPage(
     OfferFulfillmentResponsibility? FulfillmentResponsibility = null,
     Guid? FulfillmentShippingTypeId = null,
     DateTimeOffset? LastUpdatedAt = null,
-    string? VariantLabel = null);
+    string? VariantLabel = null,
+    int UnitQuantityDecimalPlaces = 0,
+    decimal? UnitQuantityStep = null,
+    string? UnitRoundingMode = null);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(
     Guid StockItemId,
     Guid LocationId,
     string LocationCode,
+    string LocationName,
     decimal OnHand,
     decimal Reserved,
     decimal Available);

@@ -27,3 +27,8 @@ Scope: `src/frontend/**`. This skill implements, but NEVER overrides, `docs/arch
 
 ## Mandatory approved design fidelity
 Read and follow `docs/architecture/NEXTJS-DESIGN-FIDELITY.md` for new or revised UI designs and visual integration. Require approved runnable Next.js/TSX, reuse its source, and independently verify fidelity; no HTML-only new design acceptance or visual reconstruction. Existing approved designs and already-issued repairs remain valid; do not retroactively restart TB-296-R8 or automatically launch the pilot. New design approval gates apply to the affected design scope only; safe authorized independent repair work continues under delivery method §0A.
+
+## Mandatory feedback surfaces (R9 rule)
+- Transient success/global feedback uses the existing shared `react-toastify` `ToastContainer` (configured once in `app/providers.tsx`; `autoClose=3000`). Do not add a persistent success banner that reflows the page or a parallel notification system.
+- Blocking operation errors, duplicate/conflict with an authorized existing-record link, uncertain outcome/reconciliation and dirty-exit confirmation use the existing shared `design-system` `MessageBox` modal. Field validation stays inline beside the field.
+- A save must not show both a persistent banner and a toast/MessageBox for the same outcome. Do not duplicate feedback surfaces.

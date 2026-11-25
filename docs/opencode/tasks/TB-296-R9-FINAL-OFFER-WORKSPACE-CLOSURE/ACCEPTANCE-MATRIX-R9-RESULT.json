@@ -1,0 +1,114 @@
+﻿{
+  "taskId": "TB-296-R9-FINAL-OFFER-WORKSPACE-CLOSURE",
+  "base": "6426349f7c4d0a6b4423e64a370156a067a88a28",
+  "status": "PASS_WITH_LIMITATIONS",
+  "runtime": {
+    "frontend": "http://127.0.0.1:3000",
+    "host": "http://127.0.0.1:5088",
+    "buildId": "QtUkz110oTvxQPkjamMqI",
+    "health": "ready; SingleStore; inmemory authorization; messaging Healthy",
+    "verifyJson": "evidence/r9-runtime/verify-r9.json",
+    "verifySha256": "F1B78DFA9C1A921C521616DA5A13185984962FD578AC9E2EA63FECE83E550F12",
+    "cleanupJson": "evidence/r9-runtime/cleanup.json",
+    "cleanupSha256": "932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D",
+    "runtimeChecks": 32,
+    "runtimeErrors": 0
+  },
+  "tests": {
+    "typecheck": "PASS",
+    "lint": "PASS (pre-existing unrelated warnings only)",
+    "build": "PASS",
+    "mountedOfferWorkspace": "26/26",
+    "adminSellerApi": "16/16",
+    "modelI18n": "15/15",
+    "offerBackend": "97/97",
+    "catalogLocalizationStage2Guards": "11/11",
+    "ordersRegression": "10 rows / total 11",
+    "productsRegression": "10 rows",
+    "campaignsRegression": "10 rows / total 11",
+    "openspec": "valid strict",
+    "impeccableSource": "[]",
+    "impeccableUrl": "12 findings; 1 workspace nested-cards warning; rest admin shell/sidebar"
+  },
+  "requirements": [
+    {
+      "id": "R9-01",
+      "status": "PASS",
+      "evidence": ["R8 seven-tab/4-route/2-grid layout preserved", "R9 runtime lists 360/768/1440 overflow 0", "build/typecheck", "no redesign or shared grid replacement"],
+      "limitations": []
+    },
+    {
+      "id": "R9-02",
+      "status": "PASS",
+      "evidence": ["shared react-toastify ToastContainer autoClose=3000 in providers.tsx", "success toast disappears after 4.8s and no offer-save-notice", "shared MessageBox duplicate/link, reload/uncertain, dirty-exit, partial-create link", "mount tests 26/26", "permanent rules in tooba-frontend-feature/SKILL.md and NEXTJS-DESIGN-FIDELITY.md"],
+      "limitations": ["nested-cards advisory remains in the R8-approved product summary"]
+    },
+    {
+      "id": "R9-03",
+      "status": "PASS",
+      "evidence": ["blank reason rejected inline", "reason correction 199->50 saved", "seed restored 199 and reread", "human locationName انبار نمایشی تهران", "no raw UUID warehouse"],
+      "limitations": []
+    },
+    {
+      "id": "R9-04",
+      "status": "PASS_WITH_DOCUMENTED_GAP",
+      "evidence": ["no fake channel select", "create/duplicate key audited seller+variant+channel", "system channel shown as policy with pending-policy note", "AUDIT-R9.md"],
+      "limitations": ["No owning-domain allowed-channel authority by edition/seller/permission/policy exists; channel choice and SingleStore channel behavior were not invented."]
+    },
+    {
+      "id": "R9-05",
+      "status": "PASS_WITH_LIMITATION",
+      "evidence": ["pricing/conditions/admin-shipping unlocked after identity before persistence", "one explicit save created one Draft and applied price/conditions", "seller panel same pre-create price and one Draft create/apply", "partial create keeps createdOfferId link in MessageBox"],
+      "limitations": ["Inventory remains gated pre-create because no eligible-location provisioning contract exists; no synthetic stock position was created. History/discounts/Stage-3/multi-currency remain gated."]
+    },
+    {
+      "id": "R9-06",
+      "status": "PASS",
+      "evidence": ["Catalog product picker returns unitCode/unitName/quantityDecimalPlaces/quantityStep/roundingMode", "Offer detail read carries unit precision/step/rounding", "conditions shows real precision/step/rounding (no از محصول)", "client step/precision tests", "Offer create/update quantity policy validation against Catalog"],
+      "limitations": []
+    },
+    {
+      "id": "R9-07",
+      "status": "PASS_WITH_FALLBACK_LIMITATION",
+      "evidence": ["GET /v1/admin/languages and additive GET /v1/languages", "actual ?locale=ru-RU route dir=ltr lang=ru-RU Russian tab", "admin list title Russian", "offer formatters use registry culture/calendar", "no live registry mutation"],
+      "limitations": ["Global admin shell routing remains project fa/en; offer-owned surfaces use registry override. Russian catalog is complete for offer surfaces with English fallback for any unlisted key; shared AppDataGrid chrome remains on the existing shared fa/en grid locale API."]
+    },
+    {
+      "id": "R9-08",
+      "status": "PASS",
+      "evidence": ["recovery key actor/tenant/owner scoped", "shipping survives remount mount test", "dirty cancel MessageBox and discard", "stale baseLastUpdatedAt recovery discard", "successful save/create clear draft"],
+      "limitations": []
+    },
+    {
+      "id": "R9-09",
+      "status": "PASS_WITH_LIMITATION",
+      "evidence": ["all changed domains reread", "partial inventory preserves remainder", "network unknown blocks retry and offers reload", "saving flags in finally", "pre-read stale snapshot guard", "AUDIT-R9.md"],
+      "limitations": ["Offer/Pricing/Inventory have no RowVersion/ConcurrencyToken; pre-read is not atomic compare-and-swap. No unauthorized migration was added."]
+    },
+    {
+      "id": "R9-10",
+      "status": "PASS",
+      "evidence": ["real two-position offer 01a0ba10-5a31...", "second write aborted; first=10 saved, second draft=20 and reason kept", "retry sent only remainder; final [10,20]", "both restored to [0,0] and cleanup reread"],
+      "limitations": []
+    },
+    {
+      "id": "R9-11",
+      "status": "PASS",
+      "evidence": ["explicit seeded/two-position IDs and baselines", "cleanup in finally", "R9 offers archived only", "temporary seller-B role/assignment/ceiling removed", "cleanup.json ok true"],
+      "limitations": []
+    },
+    {
+      "id": "R9-12",
+      "status": "PASS_WITH_LIMITATIONS",
+      "evidence": ["build/typecheck/lint pass", "26 mount, 16 API, 15 model/i18n, 97 Offer, 11 guards/Stage2", "orders/products/campaigns regression 10 rows", "runtime 32/0", "cross-owner 404/404/403", "360/768/1440 list overflow 0", "OpenSpec strict", "Impeccable source [] and URL audit"],
+      "limitations": ["Limitations listed in R9-04/R9-05/R9-07/R9-09; owner UAT remains external."]
+    }
+  ],
+  "fixtureCleanup": {
+    "r9Remaining": 0,
+    "roles": [],
+    "assignments": [],
+    "ceilingEnabled": 0,
+    "baselines": ["457e375f... onHand 199", "01a0ba10... both 0"]
+  }
+}

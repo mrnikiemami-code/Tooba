@@ -13,12 +13,11 @@ import {
   type HostReadSource,
   type SellerOfferListRow,
 } from "../seller-api";
-import { useLocale } from "../../../lib/i18n/locale-context";
+import { useOfferLocaleOverride } from "../../../lib/offer-workspace/offer-locale";
 import {
   channelLabel,
   createOfferFormatters,
   offerListMessagesFor,
-  offerLocaleFromAppLocale,
   offerStatusLabel,
   type OfferListMessages,
 } from "../../../lib/offer-workspace/i18n";
@@ -151,10 +150,10 @@ function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOffe
 }
 
 export default function VendorProductsPage() {
-  const appLocale = useLocale();
-  const offerLocale = offerLocaleFromAppLocale(appLocale);
+  const localeResolution = useOfferLocaleOverride("seller");
+  const offerLocale = localeResolution.locale;
   const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
-  const t = useMemo(() => offerListMessagesFor(offerLocale.language), [offerLocale.language]);
+  const t = useMemo(() => offerListMessagesFor(offerLocale.language, localeResolution.listMessages), [offerLocale.language, localeResolution.listMessages]);
   const columns = useMemo(() => buildColumns(t, format), [t, format]);
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [total, setTotal] = useState(0);
@@ -206,7 +205,7 @@ export default function VendorProductsPage() {
   }
 
   return (
-    <main className="space-y-4" data-testid="seller-products">
+    <main className="space-y-4" data-testid="seller-products" dir={offerLocale.direction}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm text-muted">{t.breadcrumb}</p>

@@ -1,0 +1,143 @@
+{
+  "startedAt": "2026-11-25T15:17:38.683Z",
+  "checks": {
+    "R9-02.sharedToastAutoClose3000": {
+      "ok": true,
+      "detail": "providers autoClose"
+    },
+    "R9-07.publicLanguageRegistry": {
+      "ok": true,
+      "detail": "{\"status\":200,\"ru\":{\"languageId\":\"01a0844c-829e-7000-ab25-64b381896053\",\"code\":\"ru-RU\",\"urlPrefix\":\"ru\",\"displayName\":\"Russian\",\"nativeName\":\"Русский\",\"direction\":\"ltr\",\"culture\":\"ru-RU\",\"calendarDisplay\":\"Gregorian\",\"active\":true,\"isDefault\":false,\"sortOrder\":20,\"createdAt\":\"2026-09-09T03:53:21.815373+00:00\",\"updatedAt\":\"2026-09-09T03:53:21.815373+00:00\",\"isReferenced\":false,\"canEditCode\":true,\"canEditUrlPrefix\":true}}"
+    },
+    "R9-06.unitMetadataRead": {
+      "ok": true,
+      "detail": "{\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"title\":\"سامسونگ هدفون سری 1\",\"brandName\":\"سامسونگ\",\"primaryMediaAssetId\":\"01a05387-fb86-7000-8f52-16dbea0b0ce6\",\"publishedVariantCount\":3,\"unitCode\":\"pcs\",\"unitName\":\"عدد\",\"quantityDecimalPlaces\":0,\"roundingMode\":\"Nearest\"}"
+    },
+    "R9-03.humanWarehouseName": {
+      "ok": true,
+      "detail": "{\"stockItemId\":\"29f8c34d-1429-4263-84da-8df48d2633a5\",\"locationId\":\"01a03826-97cb-7000-9b33-5dba87e73980\",\"locationCode\":\"WH-DEMO-THR\",\"locationName\":\"انبار نمایشی تهران\",\"onHand\":199,\"reserved\":0,\"available\":199}"
+    },
+    "R9-10.twoRealPositions": {
+      "ok": true,
+      "detail": "[{\"id\":\"01a0ba10-5aad-7000-b75d-ee86104c939b\",\"name\":\"انبار تهران\",\"onHand\":0},{\"id\":\"01a12915-787f-7000-91e0-4d02d5747e3f\",\"name\":\"انبار دمو ACC\",\"onHand\":0}]"
+    },
+    "R9-11.isolatedFreeFixtures": {
+      "ok": true,
+      "detail": "{\"admin\":\"سامسونگ هدفون سری 1\",\"seller\":\"نایک پیراهن مردانه سری 1\"}"
+    },
+    "R9-04.noFakeChannelSelect": {
+      "ok": true,
+      "detail": "no channel select"
+    },
+    "R9-05.preCreateTabs": {
+      "ok": true,
+      "detail": "{\"pricingEnabled\":true,\"conditionsEnabled\":true,\"inventoryDisabled\":true,\"historyDisabled\":true}"
+    },
+    "R9-05.createOneDraftApplied": {
+      "ok": true,
+      "detail": "{\"amount\":876543,\"policy\":\"Custom\",\"days\":9,\"min\":2,\"max\":6}"
+    },
+    "R9-02.noPersistentSuccessBanner": {
+      "ok": true,
+      "detail": "no success banner"
+    },
+    "R9-02.toastAutoClose3s": {
+      "ok": true,
+      "detail": "toast gone"
+    },
+    "R9-03.blankReasonRejected": {
+      "ok": true,
+      "detail": "blank reason error"
+    },
+    "R9-03.validReasonCorrectionSaves": {
+      "ok": true,
+      "detail": "{\"expected\":50,\"actual\":50}"
+    },
+    "R9-03.seedRestored": {
+      "ok": true,
+      "detail": "{\"expected\":199,\"actual\":199}"
+    },
+    "R9-10.secondWriteFailedMessage": {
+      "ok": true,
+      "detail": "MessageBox"
+    },
+    "R9-10.firstSavedSecondDraftKept": {
+      "ok": true,
+      "detail": "{\"first\":10,\"secondDraft\":\"20\"}"
+    },
+    "R9-10.retryRemainderOnly": {
+      "ok": true,
+      "detail": "[10,20]"
+    },
+    "R9-10.twoPositionsRestored": {
+      "ok": true,
+      "detail": "[0,0]"
+    },
+    "R9-08.dirtyExitMessageBox": {
+      "ok": true,
+      "detail": "MessageBox"
+    },
+    "R9-08.dirtyCancelKeepsForm": {
+      "ok": true,
+      "detail": "still on form"
+    },
+    "R9-07.actualThirdLocaleRoute": {
+      "ok": true,
+      "detail": "{\"dir\":\"ltr\",\"lang\":\"ru-RU\",\"tab\":\"1\\nИдентификация\"}"
+    },
+    "R9-06.noProductPlaceholder": {
+      "ok": true,
+      "detail": ""
+    },
+    "R9-07.listThirdLocale": {
+      "ok": true,
+      "detail": "Главная / Предложения продавцов\n\nПредложения продавцов\n\nСоздание и управление пр"
+    },
+    "R9-12.listOverflow.360": {
+      "ok": true,
+      "detail": "0"
+    },
+    "R9-12.listOverflow.768": {
+      "ok": true,
+      "detail": "0"
+    },
+    "R9-12.listOverflow.1440": {
+      "ok": true,
+      "detail": "0"
+    },
+    "R9-02.duplicateMessageBoxLink": {
+      "ok": true,
+      "detail": "existing link"
+    },
+    "R9-05.sellerPreCreateTabs": {
+      "ok": true,
+      "detail": "price enabled"
+    },
+    "R9-05.sellerCreateApplied": {
+      "ok": true,
+      "detail": "{\"amount\":654321,\"sku\":\"TB296-R9-SELLER-1795619914170\"}"
+    },
+    "R9-12.crossOwnerNegative": {
+      "ok": true,
+      "detail": "{\"read\":404,\"write\":404,\"admin\":403}"
+    },
+    "R9-12.ordersProductsRegression": {
+      "ok": true,
+      "detail": "{\"orders\":10,\"products\":10}"
+    },
+    "R9-12.noUnexpectedConsoleErrors": {
+      "ok": true,
+      "detail": ""
+    }
+  },
+  "errors": [],
+  "metrics": {
+    "formLoadMs": 38494
+  },
+  "ids": {
+    "r9OfferId": "dcf6776a-69f0-19ac-07ec-138a88e71820",
+    "sellerOfferId": "54e8bb2c-d130-f003-1567-f6693e21d40e"
+  },
+  "finishedAt": "2026-11-25T15:18:34.727Z",
+  "ok": true
+}

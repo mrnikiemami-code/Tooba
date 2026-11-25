@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application.Seller.Models;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -69,13 +69,24 @@ public sealed partial class SellerCatalogVariantDirectory
             .Select(group => new { ProductId = group.Key, Count = group.Count() })
             .ToListAsync(cancellationToken);
         var countMap = variantCounts.ToDictionary(row => row.ProductId, row => row.Count);
+        var unitIds = rows.Select(row => row.UnitOfMeasureId).Distinct().ToArray();
+        var units = await db.UnitsOfMeasure.AsNoTracking().Where(unit => unitIds.Contains(unit.UnitOfMeasureId)).ToListAsync(cancellationToken);
+        var unitTranslations = await db.UnitOfMeasureTranslations.AsNoTracking().Where(row => unitIds.Contains(row.UnitOfMeasureId)).ToListAsync(cancellationToken);
+        var unitMap = units.ToDictionary(unit => unit.UnitOfMeasureId);
+        var unitTranslationMap = unitTranslations.GroupBy(row => row.UnitOfMeasureId).ToDictionary(group => group.Key, group => group.First());
+        var roundingMode = await db.StoreQuantitySettings.AsNoTracking().Select(row => (string?)row.RoundingMode.ToString()).FirstOrDefaultAsync(cancellationToken);
 
         var items = rows.Select(row => new CatalogPickerProductOption(
             row.ProductId,
             nameMap.GetValueOrDefault(row.ProductId) ?? string.Empty,
             row.BrandId is Guid brandId ? brandMap.GetValueOrDefault(brandId) : null,
             primaryMedia.TryGetValue(row.ProductId, out var mediaId) ? mediaId : null,
-            countMap.GetValueOrDefault(row.ProductId, 0))).ToArray();
+            countMap.GetValueOrDefault(row.ProductId, 0),
+            unitMap.TryGetValue(row.UnitOfMeasureId, out var unit) ? unit.Code : null,
+            unitTranslationMap.TryGetValue(row.UnitOfMeasureId, out var translation) ? translation.Name : unit?.Code,
+            row.QuantityDecimalPlaces,
+            row.QuantityStep,
+            roundingMode)).ToArray();
         return new CatalogPickerProductPage(
             items,
             total,

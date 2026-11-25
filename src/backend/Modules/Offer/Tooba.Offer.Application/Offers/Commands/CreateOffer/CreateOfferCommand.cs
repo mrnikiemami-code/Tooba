@@ -41,7 +41,8 @@ internal sealed class CreateOfferHandler(
 {
     public async Task<Result<SellerOfferDetailPage>> Handle(CreateOfferCommand request, CancellationToken cancellationToken)
     {
-        if (await catalog.FindVariantAsync(request.CatalogVariantId, cancellationToken) is null)
+        var variant = await catalog.FindVariantAsync(request.CatalogVariantId, cancellationToken);
+        if (variant is null)
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CatalogVariantMissing));
         var seller = await parties.FindByIdAsync(request.SellerPartyId, cancellationToken);
         if (seller is null)
@@ -91,6 +92,9 @@ internal sealed class CreateOfferHandler(
                 return Result.Failure<SellerOfferDetailPage>(policy.Errors);
             offer.SetReturnPolicy(choice, request.CustomReturnWindowDays, clock.UtcNow);
         }
+        var quantityError = OfferQuantityPolicy.Validate(request.MinimumOrderQuantity, request.MaximumOrderQuantity, variant);
+        if (quantityError is not null)
+            return Result.Failure<SellerOfferDetailPage>(quantityError);
         if (request.MinimumOrderQuantity is not null || request.MaximumOrderQuantity is not null)
         {
             var qty = offer.SetOrderQuantityLimits(request.MinimumOrderQuantity, request.MaximumOrderQuantity, clock.UtcNow);

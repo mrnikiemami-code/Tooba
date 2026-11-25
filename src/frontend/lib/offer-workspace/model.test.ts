@@ -50,7 +50,7 @@ function detail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail 
     productUnitName: "عدد",
     productUnitShortName: "عدد",
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "WH-A", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "WH-A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
     ],
     ...over,
   };
@@ -157,8 +157,8 @@ test("inventory partial save preserves the unsaved location draft and reason", (
   const base = detail({
     onHand: 10,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", onHand: 10, reserved: 2, available: 8 },
-      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
     ],
   });
   const draft = {
@@ -170,8 +170,8 @@ test("inventory partial save preserves the unsaved location draft and reason", (
   const firstSaved = detail({
     onHand: 13,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", onHand: 12, reserved: 2, available: 10 },
-      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", locationName: "انبار الف", onHand: 12, reserved: 2, available: 10 },
+      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
     ],
   });
   const afterFirst = applySavedInventoryDraft(draft, firstSaved, "stock-a");
@@ -186,4 +186,11 @@ test("stale detail snapshots are detected before overwrite", () => {
   assert.equal(detailVersionChanged(current, detail()), false);
   assert.equal(detailVersionChanged(current, detail({ amount: 2000 })), true);
   assert.equal(detailVersionChanged(current, detail({ lastUpdatedAt: "2026-01-01T00:00:00Z" })), true);
+});
+
+test("quantity step and precision reject unaligned values", () => {
+  const base = detail({ unitQuantityDecimalPlaces: 2, unitQuantityStep: 0.5 });
+  assert.equal(validateConditions(base, { ...draftFromDetail(base), minimumOrderQuantity: "1.3" }), "offer.qty.step_invalid");
+  assert.equal(validateConditions(base, { ...draftFromDetail(base), minimumOrderQuantity: "1.5" }), null);
+  assert.equal(validateInventory(base, { ...draftFromDetail(base), inventoryOnHand: { "stock-a": "2.3", "stock-b": "4" }, inventoryReason: "شمارش" }), "offer.inventory.step_invalid");
 });

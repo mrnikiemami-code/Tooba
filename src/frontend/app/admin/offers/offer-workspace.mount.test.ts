@@ -396,7 +396,7 @@ test("a failed save keeps the typed data and surfaces the error (UX-22)", async 
   await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
   await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1500");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
-  assert.ok(tree.container.querySelector("[data-testid=offer-save-error]"));
+  assert.ok(tree.container.querySelector("[data-testid=offer-message-error]"));
   const failedValue = (q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value;
   assert.equal(normalizeDigits(failedValue).replace(/[٬,]/g, ""), "1500");
   assert.ok(tree.container.querySelector("[data-testid=offer-workspace]"));
@@ -493,8 +493,8 @@ test("existing active listing is explained and linked before create", async () =
   await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
   await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
   await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
-  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-duplicate-conflict]")));
-  const link = q(tree.container, "[data-testid=offer-duplicate-conflict] a") as HTMLAnchorElement;
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-message-duplicate]")));
+  const link = q(tree.container, "[data-testid=offer-message-duplicate] a") as HTMLAnchorElement;
   assert.equal(link.getAttribute("href"), "/admin/offers/existing-offer");
   assert.equal((q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement).disabled, true);
   await tree.unmount();
@@ -561,9 +561,9 @@ test("a network save is uncertain: draft kept, no retry button, reload action of
   await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
   await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1500");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
-  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /نتیجه ذخیره قطعی نیست/);
+  assert.match(q(tree.container, "[data-testid=offer-message-reload]").textContent ?? "", /نتیجه ذخیره قطعی نیست/);
   assert.equal(tree.container.querySelector("[data-testid=offer-save-retry]"), null);
-  assert.ok(tree.container.querySelector("[data-testid=offer-save-reload]"));
+  assert.ok(tree.container.querySelector("[data-testid=offer-message-reload]"));
   assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "1500");
   await tree.unmount();
 });
@@ -622,5 +622,48 @@ test("rapid double submit creates exactly one draft", async () => {
   await click(submit);
   await waitFor(() => created > 0);
   assert.equal(created, 1);
+  await tree.unmount();
+});
+
+test("shipping selection survives a language/reload remount with scoped recovery", async () => {
+  window.sessionStorage.clear();
+  const first = await mountEdit();
+  const { click, setSelectValue: select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(first.container, "[data-testid=offer-tab-button-shipping]"));
+  await select(q(first.container, "[data-testid=offer-shipping-responsibility]"), "Seller");
+  await waitFor(() => !(q(first.container, "[data-testid=offer-shipping-type]") as HTMLSelectElement).disabled);
+  await select(q(first.container, "[data-testid=offer-shipping-type]"), "type-standard");
+  await first.unmount();
+
+  const second = await mount(createElement(OfferWorkspace, { adapter: first.adapter }));
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid=offer-workspace]")));
+  await click(q(second.container, "[data-testid=offer-tab-button-shipping]"));
+  await waitFor(() => Boolean(second.container.querySelector("[data-testid=offer-shipping-responsibility]")));
+  assert.equal((q(second.container, "[data-testid=offer-shipping-responsibility]") as HTMLSelectElement).value, "Seller");
+  assert.equal((q(second.container, "[data-testid=offer-shipping-type]") as HTMLSelectElement).value, "type-standard");
+  await second.unmount();
+});
+
+test("partial create keeps the created Draft recoverable through MessageBox", async () => {
+  window.sessionStorage.clear();
+  let navigated = "";
+  const adapter = createAdapter({
+    createAndSaveDraft: async () => ({ ok: false, errorCode: "host-unreachable", createdOfferId: "offer-partial", partial: true }),
+    onCreated: (offerId) => { navigated = offerId; },
+  });
+  const tree = await mount(createElement(OfferWorkspace, { adapter }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+  await click(q(tree.container, "[data-testid=offer-seller-dialog-option]"));
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+  await waitFor(() => /ظرفیت:/.test(tree.container.textContent ?? ""));
+  await click(q(tree.container, "[data-testid=admin-offer-submit]"));
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-message-error]")));
+  const link = q(tree.container, "[data-testid=offer-message-error] a") as HTMLAnchorElement;
+  assert.equal(link.getAttribute("href"), "/admin/offers/offer-partial");
+  assert.equal(navigated, "");
   await tree.unmount();
 });

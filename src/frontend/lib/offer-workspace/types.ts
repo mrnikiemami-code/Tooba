@@ -22,6 +22,7 @@ export interface OfferInventoryLocation {
   stockItemId: string;
   locationId: string;
   locationCode: string;
+  locationName: string;
   onHand: number;
   reserved: number;
   available: number;
@@ -57,6 +58,9 @@ export interface OfferWorkspaceDetail {
   productUnitCode: string | null;
   productUnitName: string | null;
   productUnitShortName: string | null;
+  unitQuantityDecimalPlaces: number;
+  unitQuantityStep: number | null;
+  unitRoundingMode: string | null;
   inventoryLocations: OfferInventoryLocation[];
   variantCode: string | null;
   variantLabel: string | null;
@@ -77,6 +81,11 @@ export interface OfferProductOption {
   brandName: string | null;
   primaryMediaAssetId: string | null;
   publishedVariantCount: number;
+  unitCode?: string | null;
+  unitName?: string | null;
+  quantityDecimalPlaces?: number;
+  quantityStep?: number | null;
+  roundingMode?: string | null;
 }
 
 export interface OfferVariantOption {
@@ -152,6 +161,19 @@ export interface OfferWorkspaceAdapter {
     catalogVariantId: string;
     sellerSku: string | null;
   }) => Promise<OfferCreateResult>;
+  createAndSaveDraft?: (input: {
+    sellerPartyId?: string;
+    catalogVariantId: string;
+    sellerSku: string | null;
+    amount: number | null;
+    currency: string;
+    returnPolicyChoice: string;
+    customReturnWindowDays: number | null;
+    minimumOrderQuantity: number | null;
+    maximumOrderQuantity: number | null;
+    responsibility: OfferFulfillmentResponsibility | null;
+    shippingTypeId: string | null;
+  }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
   saveCommercial: (patch: OfferCommercialPatch) => Promise<OfferMutationResult>;
   savePrice: (input: { amount: number; currency: string }) => Promise<OfferMutationResult>;
   saveInventory: (input: {

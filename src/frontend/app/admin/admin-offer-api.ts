@@ -132,6 +132,7 @@ function mapInventoryLocations(value: unknown): OfferInventoryLocation[] {
       stockItemId: text(prop(row, "stockItemId", "StockItemId")),
       locationId: text(prop(row, "locationId", "LocationId")),
       locationCode: text(prop(row, "locationCode", "LocationCode")),
+      locationName: text(prop(row, "locationName", "LocationName"), text(prop(row, "locationCode", "LocationCode"))),
       onHand: number(prop(row, "onHand", "OnHand")),
       reserved: number(prop(row, "reserved", "Reserved")),
       available: number(prop(row, "available", "Available")),
@@ -173,6 +174,9 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     productUnitCode: prop(item, "productUnitCode", "ProductUnitCode") == null ? null : text(prop(item, "productUnitCode", "ProductUnitCode")),
     productUnitName: prop(item, "productUnitName", "ProductUnitName") == null ? null : text(prop(item, "productUnitName", "ProductUnitName")),
     productUnitShortName: prop(item, "productUnitShortName", "ProductUnitShortName") == null ? null : text(prop(item, "productUnitShortName", "ProductUnitShortName")),
+    unitQuantityDecimalPlaces: number(prop(item, "unitQuantityDecimalPlaces", "UnitQuantityDecimalPlaces")),
+    unitQuantityStep: prop(item, "unitQuantityStep", "UnitQuantityStep") == null ? null : Number(prop(item, "unitQuantityStep", "UnitQuantityStep")),
+    unitRoundingMode: prop(item, "unitRoundingMode", "UnitRoundingMode") == null ? null : text(prop(item, "unitRoundingMode", "UnitRoundingMode")),
     inventoryLocations: mapInventoryLocations(prop(item, "inventoryLocations", "InventoryLocations")),
     variantCode: prop(item, "variantCode", "VariantCode") == null ? null : text(prop(item, "variantCode", "VariantCode")),
     variantLabel: prop(item, "variantLabel", "VariantLabel") == null ? null : text(prop(item, "variantLabel", "VariantLabel")),
@@ -388,6 +392,11 @@ export interface AdminCatalogProductOption {
   brandName: string | null;
   primaryMediaAssetId: string | null;
   publishedVariantCount: number;
+  unitCode: string | null;
+  unitName: string | null;
+  quantityDecimalPlaces: number;
+  quantityStep: number | null;
+  roundingMode: string | null;
 }
 
 export interface AdminCatalogProductPage {
@@ -430,6 +439,11 @@ export async function searchAdminCatalogProducts(
       brandName: prop(item, "brandName", "BrandName") == null ? null : text(prop(item, "brandName", "BrandName")),
       primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
       publishedVariantCount: number(prop(item, "publishedVariantCount", "PublishedVariantCount")),
+      unitCode: prop(item, "unitCode", "UnitCode") == null ? null : text(prop(item, "unitCode", "UnitCode")),
+      unitName: prop(item, "unitName", "UnitName") == null ? null : text(prop(item, "unitName", "UnitName")),
+      quantityDecimalPlaces: number(prop(item, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
+      quantityStep: prop(item, "quantityStep", "QuantityStep") == null ? null : Number(prop(item, "quantityStep", "QuantityStep")),
+      roundingMode: prop(item, "roundingMode", "RoundingMode") == null ? null : text(prop(item, "roundingMode", "RoundingMode")),
     }];
   });
   return {

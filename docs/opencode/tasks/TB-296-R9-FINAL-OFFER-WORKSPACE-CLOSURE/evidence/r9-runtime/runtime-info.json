@@ -1,0 +1,18 @@
+﻿{
+    "timestamp":  "2026-11-25T18:50:52.9720452+03:30",
+    "frontend":  "http://127.0.0.1:3000",
+    "host":  "http://127.0.0.1:5088",
+    "frontendPid":  36624,
+    "hostPid":  46736,
+    "buildId":  "QtUkz110oTvxQPkjamMqI",
+    "healthStatus":  "ready",
+    "healthChecks":  {
+                         "edition":  "SingleStore",
+                         "postgresql":  "configured",
+                         "authorization":  "inmemory",
+                         "messaging-transport":  "postgresql-sql",
+                         "messaging":  "Healthy"
+                     },
+    "verifySha256":  "F1B78DFA9C1A921C521616DA5A13185984962FD578AC9E2EA63FECE83E550F12",
+    "cleanupSha256":  "932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D"
+}

@@ -8,12 +8,11 @@ import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-sy
 import type { GridColumnDef } from "../../../design-system/data-grid";
 import { ADMIN_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../saved-view-store";
 import { queryAdminOffersGrid, type AdminOfferRow } from "../admin-offer-api";
-import { useLocale } from "../../../lib/i18n/locale-context";
+import { useOfferLocaleOverride } from "../../../lib/offer-workspace/offer-locale";
 import {
   channelLabel,
   createOfferFormatters,
   offerListMessagesFor,
-  offerLocaleFromAppLocale,
   offerStatusLabel,
   type OfferListMessages,
 } from "../../../lib/offer-workspace/i18n";
@@ -161,10 +160,10 @@ function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOffe
 }
 
 export default function AdminOffersPage() {
-  const appLocale = useLocale();
-  const offerLocale = offerLocaleFromAppLocale(appLocale);
+  const localeResolution = useOfferLocaleOverride("admin");
+  const offerLocale = localeResolution.locale;
   const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
-  const t = useMemo(() => offerListMessagesFor(offerLocale.language), [offerLocale.language]);
+  const t = useMemo(() => offerListMessagesFor(offerLocale.language, localeResolution.listMessages), [offerLocale.language, localeResolution.listMessages]);
   const columns = useMemo(() => buildColumns(t, format), [t, format]);
   const adapter = useMemo(
     () => async (query: Parameters<typeof queryAdminOffersGrid>[0]) => {
@@ -184,7 +183,7 @@ export default function AdminOffersPage() {
   });
 
   return (
-    <main className="space-y-4" data-testid="admin-offers">
+    <main className="space-y-4" data-testid="admin-offers" dir={offerLocale.direction}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm text-muted">{t.breadcrumb}</p>

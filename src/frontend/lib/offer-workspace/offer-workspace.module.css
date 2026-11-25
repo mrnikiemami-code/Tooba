@@ -104,7 +104,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ow-muted);
   line-height: 1.6;
   flex-wrap: wrap;
@@ -215,7 +215,7 @@
 
 .priceCur {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--ow-ink-2);
   background: var(--ow-surface-3);
@@ -546,7 +546,7 @@
   border: 1px solid var(--ow-border);
   border-radius: 8px;
   padding: 9px 11px;
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.8;
   background: var(--ow-surface-2);
 }
@@ -624,7 +624,7 @@
   border: 1px solid var(--ow-border);
   border-radius: 6px;
   padding: 3px 7px;
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--ow-ink-2);
   background: var(--ow-surface);
   white-space: nowrap;
@@ -1113,8 +1113,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: var(--ow-muted);
+  font-size: 12px;
+  color: var(--ow-ink-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

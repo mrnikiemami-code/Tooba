@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Application;
@@ -82,9 +82,14 @@ public sealed class CatalogDirectory :
         Guid variantId,
         CancellationToken cancellationToken)
     {
-        var variant = await _db.Variants.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.VariantId == variantId, cancellationToken);
-        return variant is null ? null : new CatalogVariantLookupResult(variant.VariantId, variant.ProductId);
+        var row = await (from variant in _db.Variants.AsNoTracking()
+            join product in _db.Products.AsNoTracking() on variant.ProductId equals product.ProductId
+            where variant.VariantId == variantId
+            select new { variant.VariantId, variant.ProductId, product.QuantityDecimalPlaces, product.QuantityStep })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (row is null) return null;
+        var rounding = await _db.StoreQuantitySettings.AsNoTracking().Select(x => (string?)x.RoundingMode.ToString()).FirstOrDefaultAsync(cancellationToken);
+        return new CatalogVariantLookupResult(row.VariantId, row.ProductId, row.QuantityDecimalPlaces, row.QuantityStep, rounding);
     }
 
     async Task<IReadOnlyDictionary<Guid, Guid?>> ICatalogVariantLookup.GetPrimaryCategoryIdsByVariantIdsAsync(

@@ -64,8 +64,8 @@ export function InventoryTab(props: InventoryTabProps) {
                       return (
                         <tr key={row.stockItemId} data-testid="offer-inventory-row" data-stock-item-id={row.stockItemId}>
                           <td data-label={t.inventoryLocation}>
-                            <span style={{ display: "block", fontWeight: 600, whiteSpace: "nowrap" }} dir="ltr">{row.locationCode}</span>
-                            <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{row.locationId}</span>
+                            <span style={{ display: "block", fontWeight: 600 }}>{row.locationName || row.locationCode}</span>
+                            <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{row.locationCode}</span>
                           </td>
                           <td data-label={t.inventoryOnHand}>
                             <input
@@ -76,7 +76,7 @@ export function InventoryTab(props: InventoryTabProps) {
                               inputMode="decimal"
                               dir="ltr"
                               aria-invalid={invalid}
-                              aria-label={`${t.inventoryOnHand} ${row.locationCode}`}
+                              aria-label={`${t.inventoryOnHand} ${row.locationName || row.locationCode}`}
                               data-testid="offer-inventory-input"
                             />
                           </td>

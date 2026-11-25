@@ -1,0 +1,3 @@
+﻿# Design — offer-workspace-final-closure-296-r9
+
+R8 layout and shared components remain authoritative. Feedback uses the existing `react-toastify` container (autoClose 3000) and the shared design-system `MessageBox`; no second notification system. Offer-owned locale selection reads the DB language registry and adds only the minimum route/list integration. Draft recovery is a session aid keyed by actor/tenant/seller/offer, not a domain write. Stock and unit facts are read from Inventory/Catalog owning contracts; no synthetic stock positions. Save flows retain per-domain outcomes and independent rereads. Where authority is absent (channel policy, inventory provisioning, atomic concurrency/versioning, history/multi-currency), the exact gap is recorded instead of invented.

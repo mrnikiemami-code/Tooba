@@ -1,10 +1,11 @@
-namespace Tooba.Inventory.Contracts.Availability;
+﻿namespace Tooba.Inventory.Contracts.Availability;
 
 /// <summary>Availability for one location. Not an EF entity.</summary>
 public sealed record LocationAvailability(
     Guid StockItemId,
     Guid LocationId,
     string LocationCode,
+    string LocationName,
     decimal OnHand,
     decimal Reserved,
     decimal Available);

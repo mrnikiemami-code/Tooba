@@ -1,4 +1,4 @@
-namespace Tooba.Catalog.Contracts.Ports;
+﻿namespace Tooba.Catalog.Contracts.Ports;
 
 /// <summary>Provides a stable cross-module Catalog variant lookup.</summary>
 public interface ICatalogVariantLookup
@@ -21,4 +21,9 @@ public interface ICatalogVariantLookup
 }
 
 /// <summary>Minimal Catalog variant identity required by consumers.</summary>
-public sealed record CatalogVariantLookupResult(Guid VariantId, Guid ProductId);
+public sealed record CatalogVariantLookupResult(
+    Guid VariantId,
+    Guid ProductId,
+    int QuantityDecimalPlaces = 0,
+    decimal? QuantityStep = null,
+    string? RoundingMode = null);

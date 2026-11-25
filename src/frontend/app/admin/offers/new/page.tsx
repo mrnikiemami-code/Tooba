@@ -2,17 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useLocale } from "../../../../lib/i18n/locale-context";
-import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
+import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { queryAdminSellersGrid } from "../../../../features/admin-sellers";
 import {
+  assignAdminOfferFulfillment,
   createAdminOffer,
   findAdminActiveOffer,
+  loadAdminOfferDetail,
+  loadAdminShippingTypes,
   loadAdminProductVariants,
+  patchAdminOffer,
   searchAdminCatalogProducts,
+  writeAdminOfferPrice,
 } from "../../admin-offer-api";
 import { adminOfferIntent, clearAdminOfferIntent } from "../../offer-create-intent";
 
@@ -21,7 +25,8 @@ const PAGE_SIZE = 10;
 export default function AdminCreateOfferPage() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const offerLocale = offerLocaleFromAppLocale(useLocale());
+  const localeResolution = useOfferLocaleOverride("admin");
+  const offerLocale = localeResolution.locale;
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
     () => ({
@@ -71,6 +76,48 @@ export default function AdminCreateOfferPage() {
       },
       findActiveOffer: async (sellerPartyId, catalogVariantId) =>
         findAdminActiveOffer(sellerPartyId, catalogVariantId),
+      loadShippingTypes: () => loadAdminShippingTypes(),
+      createAndSaveDraft: async (input) => {
+        const created = await createAdminOffer({
+          sellerPartyId: input.sellerPartyId ?? "",
+          catalogVariantId: input.catalogVariantId,
+          sellerSku: input.sellerSku,
+          requestId: adminOfferIntent(`admin:${input.sellerPartyId}:${input.catalogVariantId}`),
+        });
+        if (!created.ok) return { ok: false, errorCode: created.errorCode, denied: created.denied };
+        const offerId = created.detail.offerId;
+        try {
+          if (input.amount != null) {
+            const price = await writeAdminOfferPrice(offerId, { amount: input.amount, currency: input.currency });
+            if (!price.ok) return { ok: false, errorCode: price.errorCode, createdOfferId: offerId, partial: true };
+          }
+          const conditionsChanged = input.returnPolicyChoice !== "Default"
+            || input.customReturnWindowDays != null
+            || input.minimumOrderQuantity != null
+            || input.maximumOrderQuantity != null;
+          if (conditionsChanged) {
+            const patch = await patchAdminOffer(offerId, {
+              sellerSku: input.sellerSku,
+              status: "Draft",
+              returnPolicyChoice: input.returnPolicyChoice,
+              customReturnWindowDays: input.customReturnWindowDays,
+              minimumOrderQuantity: input.minimumOrderQuantity,
+              maximumOrderQuantity: input.maximumOrderQuantity,
+            });
+            if (!patch.ok) return { ok: false, errorCode: patch.errorCode, createdOfferId: offerId, partial: true };
+          }
+          if (input.responsibility) {
+            const fulfillment = await assignAdminOfferFulfillment(offerId, { responsibility: input.responsibility, shippingTypeId: input.shippingTypeId });
+            if (!fulfillment.ok) return { ok: false, errorCode: fulfillment.errorCode, createdOfferId: offerId, partial: true };
+          }
+          const reread = await loadAdminOfferDetail(offerId);
+          if (!reread.ok) return { ok: false, errorCode: reread.errorCode, createdOfferId: offerId, partial: true };
+          clearAdminOfferIntent(`admin:${input.sellerPartyId}:${input.catalogVariantId}`);
+          return { ok: true, offerId };
+        } catch {
+          return { ok: false, errorCode: "host-unreachable", createdOfferId: offerId, partial: true };
+        }
+      },
       createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
         const scope = `admin:${sellerPartyId}:${catalogVariantId}`;
@@ -96,7 +143,7 @@ export default function AdminCreateOfferPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} />
+      <OfferWorkspace adapter={adapter} localeDefinition={localeResolution.locale} messages={localeResolution.workspaceMessages} />
     </main>
   );
 }

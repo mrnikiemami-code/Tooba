@@ -1,4 +1,4 @@
-namespace Tooba.Catalog.Application.Seller.Models;
+﻿namespace Tooba.Catalog.Application.Seller.Models;
 
 /// <summary>
 /// گزینهٔ انتخاب گونهٔ Catalog منتشرشده برای ایجاد Offer؛ فقط‌خواندنی است.
@@ -17,7 +17,12 @@ public sealed record CatalogPickerProductOption(
     string Title,
     string? BrandName,
     Guid? PrimaryMediaAssetId,
-    int PublishedVariantCount);
+    int PublishedVariantCount,
+    string? UnitCode = null,
+    string? UnitName = null,
+    int QuantityDecimalPlaces = 0,
+    decimal? QuantityStep = null,
+    string? RoundingMode = null);
 
 /// <summary>Bounded server page for the published Catalog product picker.</summary>
 public sealed record CatalogPickerProductPage(

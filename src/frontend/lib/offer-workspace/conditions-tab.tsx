@@ -47,9 +47,9 @@ export function ConditionsTab(props: ConditionsTabProps) {
         <div className={styles.cardBd}>
           <div className={styles.tilesFour}>
             <Tile label={t.unit} value={detail.productUnitName ?? detail.productUnitCode ?? "—"} />
-            <Tile label={t.precision} value="از محصول" />
-            <Tile label={t.step} value="از محصول" />
-            <Tile label={t.rounding} value="از محصول" />
+            <Tile label={t.precision} value={format.integer(detail.unitQuantityDecimalPlaces)} />
+            <Tile label={t.step} value={detail.unitQuantityStep != null ? format.number(detail.unitQuantityStep, detail.unitQuantityDecimalPlaces) : "—"} />
+            <Tile label={t.rounding} value={detail.unitRoundingMode ?? "—"} />
           </div>
           <div className={styles.formGrid} style={{ marginTop: 14 }}>
             <label className={styles.field}>

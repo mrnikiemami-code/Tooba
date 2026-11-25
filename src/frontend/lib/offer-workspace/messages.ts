@@ -10,10 +10,16 @@ export interface OfferWorkspaceMessages {
   saveDraft: string;
   saving: string;
   cancel: string;
+  close: string;
   retry: string;
   loading: string;
   unsaved: string;
   saveErrorTitle: string;
+  partialTitle: string;
+  dirtyExitTitle: string;
+  dirtyExitText: string;
+  dirtyExitConfirm: string;
+  dirtyExitCancel: string;
   saveError: string;
   saved: string;
   noChanges: string;
@@ -45,6 +51,7 @@ export interface OfferWorkspaceMessages {
   identityDesc: string;
   identityLocked: string;
   channelHint: string;
+  channelPolicyPending: string;
   sellerHint: string;
   sellerSessionHint: string;
   sellerRequired: string;
@@ -185,6 +192,7 @@ export interface OfferWorkspaceMessages {
   validationBelowReserved: string;
   validationReason: string;
   validationQty: string;
+  validationStep: string;
   validationQtyOrder: string;
   validationReturnWindow: string;
   validationReturnRange: string;
@@ -202,10 +210,16 @@ const fa: OfferWorkspaceMessages = {
   saveDraft: "ذخیره پیش‌نویس",
   saving: "در حال ذخیره…",
   cancel: "انصراف",
+  close: "بستن",
   retry: "تلاش دوباره",
   loading: "در حال بارگذاری…",
   unsaved: "تغییرات ذخیره‌نشده",
   saveErrorTitle: "ذخیره انجام نشد",
+  partialTitle: "ذخیره ناقص",
+  dirtyExitTitle: "تغییرات ذخیره‌نشده",
+  dirtyExitText: "تغییرات ذخیره‌نشده‌ای دارید. با خروج، این تغییرات از این نشست پاک می‌شوند.",
+  dirtyExitConfirm: "خروج بدون ذخیره",
+  dirtyExitCancel: "بازگشت به فرم",
   saveError: "تغییرات شما حفظ شد؛ دوباره تلاش کنید.",
   saved: "تغییرات ذخیره شد.",
   noChanges: "تغییری برای ذخیره وجود ندارد.",
@@ -237,6 +251,7 @@ const fa: OfferWorkspaceMessages = {
   identityDesc: "فروشنده، محصول و تنوع، هویت آفر را می‌سازند. تا این سه مورد کامل نشود، تب‌های دیگر فعال نمی‌شوند.",
   identityLocked: "این آفر ایجاد شده است؛ فروشنده و تنوع قابل تغییر نیستند. برای تغییر آن‌ها باید آفر جدید بسازید.",
   channelHint: "کانال فروش این آفر بازارگاه است و پس از ایجاد تغییر نمی‌کند.",
+  channelPolicyPending: "کانال فعلی سامانه؛ سیاست انتخاب کانال هنوز از سوی دامنه تعیین نشده و به‌صورت انتخاب کاربر نمایش داده نمی‌شود.",
   sellerHint: "جست‌وجو بر اساس نام یا کد فروشنده، با صفحه‌بندی سروری.",
   sellerSessionHint: "هویت فروشنده از نشست شما خوانده می‌شود.",
   sellerRequired: "فروشنده را انتخاب کنید.",
@@ -377,6 +392,7 @@ const fa: OfferWorkspaceMessages = {
   validationBelowReserved: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
   validationReason: "دلیل اصلاح الزامی است.",
   validationQty: "مقدار خرید نامعتبر است.",
+  validationStep: "مقدار با گام و دقت واحد محصول هم‌تراز نیست.",
   validationQtyOrder: "حداقل مقدار خرید نباید از حداکثر بیشتر باشد.",
   validationReturnWindow: "مهلت اختصاصی نامعتبر است.",
   validationReturnRange: "مهلت اختصاصی خارج از محدوده مجاز است.",
@@ -395,10 +411,16 @@ const en: OfferWorkspaceMessages = {
   saveDraft: "Save draft",
   saving: "Saving…",
   cancel: "Cancel",
+  close: "Close",
   retry: "Retry",
   loading: "Loading…",
   unsaved: "Unsaved changes",
   saveErrorTitle: "Save failed",
+  partialTitle: "Partial save",
+  dirtyExitTitle: "Unsaved changes",
+  dirtyExitText: "You have unsaved changes. Leaving will discard this session draft.",
+  dirtyExitConfirm: "Leave without saving",
+  dirtyExitCancel: "Return to form",
   saveError: "Your changes were kept; try again.",
   saved: "Changes saved.",
   noChanges: "Nothing to save.",
@@ -430,6 +452,7 @@ const en: OfferWorkspaceMessages = {
   identityDesc: "Seller, product and variant define the offer identity. Other tabs stay disabled until all three are complete.",
   identityLocked: "This offer exists; seller and variant cannot change. Create a new offer to change them.",
   channelHint: "This offer's sales channel is Marketplace and cannot change after creation.",
+  channelPolicyPending: "Current system channel; the owning domain has not yet decided a selectable channel policy.",
   sellerHint: "Search by seller name or code with server paging.",
   sellerSessionHint: "The seller identity comes from your session.",
   sellerRequired: "Choose a seller.",
@@ -570,6 +593,7 @@ const en: OfferWorkspaceMessages = {
   validationBelowReserved: "On-hand must not be below reserved.",
   validationReason: "Adjustment reason is required.",
   validationQty: "Invalid purchase quantity.",
+  validationStep: "Quantity does not match the product unit step and precision.",
   validationQtyOrder: "Minimum quantity must not exceed maximum.",
   validationReturnWindow: "Invalid custom window.",
   validationReturnRange: "Custom window is outside the allowed range.",
@@ -597,6 +621,9 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
     case "offer.inventory.reason_required":
       return t.validationReason;
     case "offer.qty.min_invalid":
+    case "offer.qty.step_invalid":
+    case "offer.inventory.step_invalid":
+      return t.validationStep;
     case "offer.qty.max_invalid":
       return t.validationQty;
     case "offer.qty.min_above_max":

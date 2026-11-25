@@ -2,8 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useLocale } from "../../../../lib/i18n/locale-context";
-import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
+import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
@@ -21,7 +20,8 @@ export default function AdminOfferDetailPage() {
   const params = useParams<{ offerId: string }>();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const offerLocale = offerLocaleFromAppLocale(useLocale());
+  const localeResolution = useOfferLocaleOverride("admin");
+  const offerLocale = localeResolution.locale;
   const offerId = params?.offerId ?? "";
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
@@ -62,7 +62,7 @@ export default function AdminOfferDetailPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} />
+      <OfferWorkspace adapter={adapter} localeDefinition={localeResolution.locale} messages={localeResolution.workspaceMessages} />
     </main>
   );
 }

@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.Localization.Endpoints.Admin;
+using Tooba.Localization.Endpoints.Public;
+using Tooba.Localization.Endpoints.Public;
 
 namespace Tooba.Localization.Endpoints;
 
@@ -13,6 +15,7 @@ public static class LocalizationEndpointModule
     {
         ArgumentNullException.ThrowIfNull(app);
         LocaleAdminEndpoints.Map(app.MapGroup("/v1/admin/languages"));
+        LocalePublicEndpoints.Map(app);
         return app;
     }
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -188,6 +188,8 @@ export function MessageBox({
   text,
   closeLabel = "باشه",
   testId,
+  children,
+  actions,
   onClose,
 }: {
   open: boolean;
@@ -195,6 +197,8 @@ export function MessageBox({
   text: string;
   closeLabel?: string;
   testId?: string;
+  children?: ReactNode;
+  actions?: ReactNode;
   onClose: () => void;
 }) {
   // Nothing is rendered while closed: an always-present empty <dialog> would be a second modal surface
@@ -204,15 +208,18 @@ export function MessageBox({
     <Dialog open onClose={onClose} title={title} showCloseButton={false}>
       <div className="space-y-3 text-sm text-gray-700" data-testid={testId}>
         <p className="break-words">{text}</p>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            tone="secondary"
-            onClick={onClose}
-            data-testid={testId ? `${testId}-ok` : undefined}
-          >
-            {closeLabel}
-          </Button>
+        {children}
+        <div className="flex justify-end gap-2">
+          {actions ?? (
+            <Button
+              type="button"
+              tone="secondary"
+              onClick={onClose}
+              data-testid={testId ? `${testId}-ok` : undefined}
+            >
+              {closeLabel}
+            </Button>
+          )}
         </div>
       </div>
     </Dialog>

@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks.Results;
+﻿using Tooba.BuildingBlocks.Results;
 
 namespace Tooba.Inventory.Contracts.Seller;
 
@@ -15,6 +15,7 @@ public sealed record SellerInventoryPosition(
     Guid StockItemId,
     Guid LocationId,
     string LocationCode,
+    string LocationName,
     decimal OnHand,
     decimal Reserved,
     decimal Available);

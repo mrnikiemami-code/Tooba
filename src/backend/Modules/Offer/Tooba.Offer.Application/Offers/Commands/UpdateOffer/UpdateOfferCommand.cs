@@ -1,7 +1,9 @@
-using Tooba.Offer.Application.Validation;
+﻿using Tooba.Offer.Application.Validation;
 using MediatR;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Catalog.Contracts.Ports;
+using Tooba.Offer.Application.Offers.Commands.CreateOffer;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
@@ -24,6 +26,7 @@ public sealed record UpdateOfferCommand(
 
 internal sealed class UpdateOfferHandler(
     IOfferStore store,
+    ICatalogVariantLookup catalog,
     IReturnPolicyResolver returnPolicies,
     IClock clock,
     OfferReadModelComposer readModels) : IRequestHandler<UpdateOfferCommand, Result<SellerOfferDetailPage>>
@@ -73,6 +76,13 @@ internal sealed class UpdateOfferHandler(
             if (policy.IsFailure)
                 return Result.Failure<SellerOfferDetailPage>(policy.Errors);
             offer.SetReturnPolicy(choice, request.CustomReturnWindowDays, clock.UtcNow);
+        }
+        if (request.MinimumOrderQuantity is not null || request.MaximumOrderQuantity is not null)
+        {
+            var variant = await catalog.FindVariantAsync(offer.CatalogVariantId, cancellationToken);
+            var quantityError = OfferQuantityPolicy.Validate(request.MinimumOrderQuantity, request.MaximumOrderQuantity, variant);
+            if (quantityError is not null)
+                return Result.Failure<SellerOfferDetailPage>(quantityError);
         }
         if (request.ClearOrderQuantityLimits || request.MinimumOrderQuantity is not null || request.MaximumOrderQuantity is not null)
         {

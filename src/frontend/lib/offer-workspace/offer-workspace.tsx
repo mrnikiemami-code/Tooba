@@ -1,7 +1,9 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, ImageOff, Info, Lock } from "lucide-react";
+import { AlertTriangle, Check, ImageOff, Lock } from "lucide-react";
+import { toast } from "react-toastify";
+import { MessageBox } from "../../design-system";
 import { useLocale } from "../i18n/locale-context";
 import {
   allowedStatuses,
@@ -62,8 +64,59 @@ type PersistedOfferWorkspace = {
   selectedSeller?: OfferSellerOption | null;
   selectedProduct?: OfferProductOption | null;
   selectedVariant?: OfferVariantOption | null;
+  responsibility?: OfferFulfillmentResponsibility | null;
+  shippingTypeId?: string;
+  baseLastUpdatedAt?: string | null;
 };
 
+function buildLocalDetail(
+  adapter: OfferWorkspaceAdapter,
+  seller: OfferSellerOption | null,
+  product: OfferProductOption,
+  variant: OfferVariantOption,
+  sellerSku: string,
+): OfferWorkspaceDetail {
+  return {
+    offerId: "",
+    sellerPartyId: seller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "",
+    sellerDisplayName: seller?.displayName ?? adapter.fixedSeller?.displayName ?? "",
+    catalogVariantId: variant.catalogVariantId,
+    productId: product.productId,
+    productTitle: product.title,
+    brandName: product.brandName,
+    sellerSku: sellerSku.trim() || null,
+    status: "Draft",
+    channel: "Marketplace",
+    amount: null,
+    currency: "IRR",
+    onHand: 0,
+    reserved: 0,
+    availableUnits: 0,
+    catalogReadOnly: true,
+    returnPolicyChoice: "Default",
+    customReturnWindowDays: null,
+    defaultReturnWindowDays: 7,
+    sellerCanOverrideReturnPolicy: true,
+    minReturnWindowDays: 1,
+    maxReturnWindowDays: 30,
+    allowNonReturnableOffers: true,
+    minimumOrderQuantity: null,
+    maximumOrderQuantity: null,
+    productUnitCode: product.unitCode ?? null,
+    productUnitName: product.unitName ?? null,
+    productUnitShortName: null,
+    unitQuantityDecimalPlaces: product.quantityDecimalPlaces ?? 0,
+    unitQuantityStep: product.quantityStep ?? null,
+    unitRoundingMode: product.roundingMode ?? null,
+    inventoryLocations: [],
+    variantCode: variant.catalogCode,
+    variantLabel: variant.displayLabel || null,
+    primaryMediaAssetId: product.primaryMediaAssetId ?? variant.primaryMediaAssetId ?? null,
+    fulfillmentResponsibility: null,
+    fulfillmentShippingTypeId: null,
+    lastUpdatedAt: null,
+  };
+}
 export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messages }: OfferWorkspaceProps) {
   const appLocale = useLocale();
   const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
@@ -88,15 +141,43 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [selectedProduct, setSelectedProduct] = useState<OfferProductOption | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
   const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
-  const [conflictChecking, setConflictChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm"; title: string; text: string; offerId?: string } | null>(null);
+
+  useEffect(() => {
+    if (!saveNotice) return;
+    const options = { autoClose: 3000 };
+    if (saveNotice === t.partialSaved) toast.warning(saveNotice, options);
+    else if (saveNotice === t.noChanges || saveNotice === t.reloaded || saveNotice === t.draftRestored) toast.info(saveNotice, options);
+    else toast.success(saveNotice, options);
+    setSaveNotice(null);
+  }, [saveNotice, t.draftRestored, t.noChanges, t.partialSaved, t.reloaded]);
+
+  function showBlocking(kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) {
+    setMessageBox({ kind, title, text, offerId });
+  }
+
+  function handleCancel() {
+    if (anyDirty) {
+      showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText);
+      return;
+    }
+    clearPersistedDraft();
+    adapter.onCancel();
+  }
   const [saveNeedsReload, setSaveNeedsReload] = useState(false);
-  const persistKey = useMemo(
-    () => `tooba:offer-workspace:${adapter.role}:${adapter.mode}:${adapter.offerId ?? "new"}`,
-    [adapter.role, adapter.mode, adapter.offerId],
-  );
+  const persistKey = useMemo(() => {
+    const actor = typeof window === "undefined"
+      ? "ssr"
+      : adapter.role === "admin"
+        ? window.localStorage.getItem("tooba.adminActorUserId") ?? "anonymous"
+        : window.localStorage.getItem("tooba.sellerActorUserId") ?? "anonymous";
+    const tenant = typeof window === "undefined" ? "ssr" : window.localStorage.getItem("tooba.tenantId") ?? "default";
+    const owner = detail?.sellerPartyId ?? selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "owner";
+    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${adapter.offerId ?? "new"}`;
+  }, [adapter.role, adapter.mode, adapter.offerId, adapter.fixedSeller?.sellerPartyId, detail?.sellerPartyId, selectedSeller?.sellerPartyId]);
   const restoredRef = useRef(false);
   const [saveRetryable, setSaveRetryable] = useState(true);
   const [saveReloading, setSaveReloading] = useState(false);
@@ -150,20 +231,38 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     applyLoadedDetail(result.detail);
   }, [adapter, isEdit, applyLoadedDetail]);
 
-  const commercialChanged = detail ? commercialDirty(detail, draft) : false;
-  const priceChanged = detail ? priceDirty(detail, draft) : false;
-  const stockChanged = detail ? inventoryDirty(detail, draft) : false;
-  const shippingChanged = Boolean(
-    detail &&
-      adapter.saveFulfillment &&
-      (responsibility !== detail.fulfillmentResponsibility ||
-        (shippingTypeId || null) !== (detail.fulfillmentShippingTypeId ?? null)),
-  );
   const identityReady = adapter.role === "seller"
     ? Boolean(adapter.fixedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant)
     : Boolean(selectedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant);
+  const localDetail = useMemo(
+    () => detail ?? (
+      identityReady && selectedProduct && selectedVariant
+        ? buildLocalDetail(adapter, selectedSeller, selectedProduct, selectedVariant, draft.sellerSku)
+        : null
+    ),
+    [adapter, detail, draft.sellerSku, identityReady, selectedProduct, selectedSeller, selectedVariant],
+  );
+  const dirtyDetail = detail ?? localDetail;
+  const commercialChanged = dirtyDetail ? commercialDirty(dirtyDetail, draft) : false;
+  const priceChanged = dirtyDetail ? priceDirty(dirtyDetail, draft) : false;
+  const stockChanged = detail ? inventoryDirty(detail, draft) : false;
+  const shippingChanged = Boolean(
+    dirtyDetail &&
+      adapter.saveFulfillment &&
+      (responsibility !== dirtyDetail.fulfillmentResponsibility ||
+        (shippingTypeId || null) !== (dirtyDetail.fulfillmentShippingTypeId ?? null)),
+  );
   const createReady = identityReady;
-  const createDirty = !isEdit && (Boolean(selectedSeller) || Boolean(selectedProduct) || Boolean(selectedVariant) || draft.sellerSku.trim().length > 0);
+  const preCreateTabs = adapter.role === "admin"
+    ? new Set<OfferTabId>(["pricing", "conditions", "shipping"])
+    : new Set<OfferTabId>(["pricing", "conditions"]);
+  const createDirty = !isEdit && (
+    Boolean(selectedSeller)
+    || Boolean(selectedProduct)
+    || Boolean(selectedVariant)
+    || draft.sellerSku.trim().length > 0
+    || (localDetail ? priceDirty(localDetail, draft) || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
+  );
   const anyDirty = isEdit
     ? commercialChanged || priceChanged || stockChanged || shippingChanged
     : createDirty;
@@ -182,7 +281,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     const variantId = selectedVariant?.catalogVariantId;
     if (isEdit || !adapter.findActiveOffer || !variantId) {
       setActiveConflict(null);
-      setConflictChecking(false);
       return;
     }
     const sellerId = adapter.role === "seller"
@@ -190,26 +288,28 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       : selectedSeller?.sellerPartyId;
     if (!sellerId) {
       setActiveConflict(null);
-      setConflictChecking(false);
       return;
     }
     let active = true;
-    setConflictChecking(true);
     void adapter.findActiveOffer(sellerId, variantId)
       .then((result) => {
         if (!active) return;
         setActiveConflict(result);
-        setConflictChecking(false);
-      })
+        })
       .catch(() => {
         if (!active) return;
         setActiveConflict(null);
-        setConflictChecking(false);
-      });
+        });
     return () => {
       active = false;
     };
   }, [adapter, isEdit, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId]);
+
+  useEffect(() => {
+    if (!isEdit && activeConflict) {
+      showBlocking("duplicate", t.duplicateActiveTitle, t.duplicateActive);
+    }
+  }, [activeConflict, isEdit, t.duplicateActive, t.duplicateActiveTitle]);
 
   useEffect(() => {
     void load();
@@ -225,16 +325,23 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     } catch {
       stored = null;
     }
+    if (stored && isEdit && detail?.lastUpdatedAt && stored.baseLastUpdatedAt && stored.baseLastUpdatedAt !== detail.lastUpdatedAt) {
+      try { window.sessionStorage.removeItem(persistKey); } catch { /* ignore */ }
+      stored = null;
+      setSaveNotice(t.reloaded);
+    }
     if (stored) {
       const base = detail ? draftFromDetail(detail) : emptyDraft();
       setDraft({ ...base, ...stored.draft });
       if (stored.selectedSeller) setSelectedSeller(stored.selectedSeller);
       if (stored.selectedProduct) setSelectedProduct(stored.selectedProduct);
       if (stored.selectedVariant) setSelectedVariant(stored.selectedVariant);
+      if (stored.responsibility !== undefined) setResponsibility(stored.responsibility);
+      if (stored.shippingTypeId !== undefined) setShippingTypeId(stored.shippingTypeId);
       setSaveNotice(t.draftRestored);
     }
     restoredRef.current = true;
-  }, [detail, isEdit, loading, persistKey, t.draftRestored]);
+  }, [detail, isEdit, loading, persistKey, t.draftRestored, t.reloaded]);
 
   useEffect(() => {
     if (!restoredRef.current) return;
@@ -245,11 +352,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         selectedSeller,
         selectedProduct,
         selectedVariant,
+        responsibility,
+        shippingTypeId,
+        baseLastUpdatedAt: detail?.lastUpdatedAt ?? null,
       }));
     } catch {
       // Session storage is an optional recovery aid, never a domain write.
     }
-  }, [anyDirty, draft, isEdit, persistKey, selectedProduct, selectedSeller, selectedVariant]);
+  }, [anyDirty, detail?.lastUpdatedAt, draft, isEdit, persistKey, responsibility, selectedProduct, selectedSeller, selectedVariant, shippingTypeId]);
 
   function clearPersistedDraft() {
     try {
@@ -260,7 +370,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   }
 
   useEffect(() => {
-    if (!isEdit || !adapter.loadShippingTypes) return;
+    if (!adapter.loadShippingTypes) return;
     void adapter
       .loadShippingTypes()
       .then((rows) => {
@@ -268,7 +378,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         setTypesError(null);
       })
       .catch(() => setTypesError(t.pickerError));
-  }, [adapter, isEdit, t.pickerError]);
+  }, [adapter, t.pickerError]);
 
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
@@ -294,10 +404,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     conditions: commercialChanged,
     history: false,
   };
-
   function patchDraft(patch: Partial<OfferWorkspaceDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
     setSaveNotice(null);
+    setTabError(null);
+    setSaveError(null);
   }
 
   function applyServerDetail(next: OfferWorkspaceDetail) {
@@ -339,7 +450,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setTabError({ tab, code: result.errorCode || "save" });
     setSaveNeedsReload(transient);
     setSaveRetryable(!transient);
-    setSaveError(transient ? t.saveUnknown : result.denied ? t.denied : offerErrorText(t, result.errorCode));
+    const text = transient ? t.saveUnknown : result.denied ? t.denied : offerErrorText(t, result.errorCode);
+    showBlocking(transient ? "reload" : "error", savedAny ? t.partialTitle : t.saveErrorTitle, savedAny ? `${text} ${t.partialSaved}` : text);
     if (savedAny) {
       setSaveNotice(t.partialSaved);
       setSaveRetryable(true);
@@ -352,7 +464,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     try {
       const result = await adapter.loadDetail();
       if (!result.ok) {
-        setSaveError(t.saveUnknown);
+        showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
         return;
       }
       applyServerDetail(result.detail);
@@ -360,7 +472,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       setSaveError(null);
       setSaveNotice(t.reloaded);
     } catch {
-      setSaveError(t.saveUnknown);
+      showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
     } finally {
       setSaveReloading(false);
     }
@@ -369,7 +481,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   async function runSave() {
     if (!detail || saving || saveRef.current) return;
     if (saveNeedsReload) {
-      setSaveError(t.concurrentChange);
+      showBlocking("reload", t.saveErrorTitle, t.concurrentChange);
       return;
     }
     const errors = validateDraft(detail, draft);
@@ -416,14 +528,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (adapter.loadDetail) {
         const latest = await adapter.loadDetail();
         if (!latest.ok) {
-          setSaveError(t.saveUnknown);
+          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
           setSaveNeedsReload(true);
           setSaveRetryable(false);
           return;
         }
         if (detailVersionChanged(detail, latest.detail)) {
           applyServerDetail(latest.detail);
-          setSaveError(t.concurrentChange);
+          showBlocking("reload", t.saveErrorTitle, t.concurrentChange);
           setSaveNeedsReload(true);
           setSaveRetryable(false);
           return;
@@ -504,7 +616,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (adapter.loadDetail) {
         const verification = await adapter.loadDetail();
         if (!verification.ok) {
-          setSaveError(t.saveUnknown);
+          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
           setSaveNeedsReload(true);
           setSaveRetryable(false);
           return;
@@ -524,7 +636,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             }));
         if (mismatch) {
           applyServerDetail(verification.detail);
-          setSaveError(t.saveUnknown);
+          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
           setSaveNeedsReload(true);
           setSaveRetryable(false);
           return;
@@ -538,7 +650,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       setSaveError(null);
       setTabError(null);
     } catch {
-      setSaveError(t.saveUnknown);
+      showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
       setSaveNeedsReload(true);
       setSaveRetryable(false);
     } finally {
@@ -550,13 +662,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   async function runCreate() {
     if (saving || saveRef.current) return;
     if (activeConflict) {
-      setSaveError(t.duplicateActive);
-      setSaveRetryable(false);
+      showBlocking("duplicate", t.duplicateActiveTitle, t.duplicateActive);
       return;
     }
     if (!createReady || (adapter.role === "admin" && !selectedSeller) || !selectedVariant) {
       setShowCreateErrors(true);
-      setSaveError(t.createNeedsIdentity);
       setSaveRetryable(true);
       return;
     }
@@ -567,34 +677,53 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setSaveNeedsReload(false);
     setSaveRetryable(true);
     try {
-      const result = await adapter.createDraft({
+      const createInput = {
         sellerPartyId: selectedSeller?.sellerPartyId,
         catalogVariantId: selectedVariant.catalogVariantId,
         sellerSku: draft.sellerSku.trim() || null,
-      });
+        amount: priceChanged ? parseDecimal(draft.amount) : null,
+        currency: draft.currency || "IRR",
+        returnPolicyChoice: draft.returnPolicyChoice,
+        customReturnWindowDays: draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null,
+        minimumOrderQuantity: parseDecimal(draft.minimumOrderQuantity),
+        maximumOrderQuantity: parseDecimal(draft.maximumOrderQuantity),
+        responsibility: adapter.role === "admin" ? responsibility : null,
+        shippingTypeId: adapter.role === "admin" ? shippingTypeId || null : null,
+      };
+      const result = adapter.createAndSaveDraft
+        ? await adapter.createAndSaveDraft(createInput)
+        : await adapter.createDraft({
+            sellerPartyId: createInput.sellerPartyId,
+            catalogVariantId: createInput.catalogVariantId,
+            sellerSku: createInput.sellerSku,
+          });
       if (!result.ok) {
+        if ("createdOfferId" in result && result.createdOfferId) {
+          showBlocking("error", t.partialTitle, `${offerErrorText(t, result.errorCode ?? "save")} ${t.partialSaved}`, String(result.createdOfferId));
+          return;
+        }
         if (result.errorCode === "offer.listing.duplicate_active" && adapter.findActiveOffer) {
           const sellerId = adapter.role === "seller" ? adapter.fixedSeller?.sellerPartyId : selectedSeller?.sellerPartyId;
           const existing = sellerId ? await adapter.findActiveOffer(sellerId, selectedVariant.catalogVariantId) : null;
           if (existing) setActiveConflict(existing);
-          setSaveError(t.duplicateActive);
+          else showBlocking("error", t.duplicateActiveTitle, t.duplicateActive);
           setSaveRetryable(false);
           return;
         }
         if (result.errorCode === "host-unreachable") {
-          setSaveError(t.createUnknown);
+          showBlocking("reload", t.saveErrorTitle, t.createUnknown);
           setSaveRetryable(false);
           setSaveNeedsReload(true);
           return;
         }
-        setSaveError(result.denied ? t.denied : offerErrorText(t, result.errorCode));
+        showBlocking("error", t.saveErrorTitle, result.denied ? t.denied : offerErrorText(t, result.errorCode));
         setSaveRetryable(!result.denied);
         return;
       }
       clearPersistedDraft();
       adapter.onCreated(result.offerId);
     } catch {
-      setSaveError(t.createUnknown);
+      showBlocking("reload", t.saveErrorTitle, t.createUnknown);
       setSaveRetryable(false);
       setSaveNeedsReload(true);
     } finally {
@@ -658,7 +787,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const sellerName = detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || (adapter.role === "seller" ? t.sellerSession : t.notSelected);
   const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
-  const existingOfferHref = activeConflict ? (adapter.role === "admin" ? `/admin/offers/${activeConflict.offerId}` : `/vendor-panel/products/${activeConflict.offerId}`) : null;
+  const existingOfferHref = activeConflict ? (adapter.role === "admin" ? `/admin/offers/${activeConflict.offerId}` : `/vendor-panel/products/${activeConflict.offerId}`) : messageBox?.offerId ? (adapter.role === "admin" ? `/admin/offers/${messageBox.offerId}` : `/vendor-panel/products/${messageBox.offerId}`) : null;
   const saveLabel = isEdit ? t.save : t.saveDraft;
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
@@ -757,7 +886,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
-                onClick={() => adapter.onCancel()}
+                onClick={handleCancel}
                 data-offer-cancel="true"
                 data-testid={isEdit ? "offer-cancel" : adapter.role === "admin" ? "admin-offer-cancel" : "seller-create-cancel"}
               >
@@ -770,7 +899,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         <div className={styles.tabWrap}>
           <div className={styles.tabbar} role="tablist" aria-label={t.titleEdit} ref={tabListRef}>
             {TAB_ORDER.map((tab, index) => {
-              const disabled = !isEdit && tab !== "identity";
+              const disabled = !isEdit && tab !== "identity" && !(identityReady && preCreateTabs.has(tab));
               const selected = activeTab === tab;
               return (
                 <button
@@ -799,6 +928,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       </header>
 
       <main className={styles.page} data-testid={`offer-tab-panel-${activeTab}`} id={`offer-pane-${activeTab}`} role="tabpanel" aria-labelledby={`offer-tab-${activeTab}`}>
+        {tabError ? (
+          <div className={styles.fieldErr} role="alert" data-testid="offer-tab-error" style={{ marginBottom: 10 }}>
+            {t.perTabError} {offerErrorText(t, tabError.code)}
+          </div>
+        ) : null}
         {saveError ? (
           <div className={`${styles.banner} ${styles.bannerDanger}`} role="alert" data-testid="offer-save-error" style={{ marginBottom: 12 }}>
             <AlertTriangle size={15} aria-hidden />
@@ -819,36 +953,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             </div>
           </div>
         ) : null}
-        {saveNotice ? (
-          <div className={`${styles.banner} ${styles.bannerOk}`} data-testid="offer-save-notice" style={{ marginBottom: 12 }}>
-            <Check size={14} aria-hidden />
-            <div>{saveNotice}</div>
-          </div>
-        ) : null}
-        {tabError ? (
-          <div className={`${styles.banner} ${styles.bannerDanger}`} data-testid="offer-tab-error" style={{ marginBottom: 12 }}>
-            <AlertTriangle size={14} aria-hidden />
-            <div>{t.perTabError} {offerErrorText(t, tabError.code)}</div>
-          </div>
-        ) : null}
-
-        {!isEdit && conflictChecking ? (
-          <div className={`${styles.banner} ${styles.bannerWarn}`} data-testid="offer-conflict-checking" style={{ marginBottom: 12 }}>
-            <Info size={14} aria-hidden />
-            <div>{t.conflictChecking}</div>
-          </div>
-        ) : null}
-        {!isEdit && activeConflict && existingOfferHref ? (
-          <div className={`${styles.banner} ${styles.bannerWarn}`} data-testid="offer-duplicate-conflict" style={{ marginBottom: 12 }}>
-            <AlertTriangle size={15} aria-hidden />
-            <div>
-              <span className={styles.bannerTitle}>{t.duplicateActiveTitle}</span>
-              {t.duplicateActive}{" "}
-              <a className={styles.linkBtn} href={existingOfferHref}>{t.viewExistingOffer}</a>
-            </div>
-          </div>
-        ) : null}
-
         {renderTab()}
       </main>
 
@@ -862,11 +966,45 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
         </button>
-        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => adapter.onCancel()} data-offer-cancel="true">
+        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={handleCancel} data-offer-cancel="true">
           {t.cancel}
         </button>
       </div>
-    </div>
+      <MessageBox
+        open={Boolean(messageBox)}
+        title={messageBox?.title ?? ""}
+        text={messageBox?.text ?? ""}
+        onClose={() => setMessageBox(null)}
+        testId={messageBox ? `offer-message-${messageBox.kind}` : undefined}
+        actions={
+          messageBox ? (
+            <>
+              {(messageBox.kind === "duplicate" || messageBox.offerId) && existingOfferHref ? (
+                <a className={`${styles.btn} ${styles.btnPrimary}`} href={existingOfferHref} data-testid="offer-message-open-existing">{t.viewExistingOffer}</a>
+              ) : null}
+              {messageBox.kind === "reload" ? (
+                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void reloadAfterUnknown(); }} disabled={saveReloading} data-testid="offer-message-reload">
+                  {saveReloading ? t.loading : t.reloadState}
+                </button>
+              ) : null}
+              {messageBox.kind === "confirm" ? (
+                <>
+                  <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); clearPersistedDraft(); adapter.onCancel(); }} data-testid="offer-message-confirm">
+                    {t.dirtyExitConfirm}
+                  </button>
+                  <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setMessageBox(null)}>
+                    {t.dirtyExitCancel}
+                  </button>
+                </>
+              ) : (
+                <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setMessageBox(null)}>
+                  {t.close}
+                </button>
+              )}
+            </>
+          ) : null
+        }
+      />    </div>
   );
 
   function renderTab(): ReactNode {
@@ -877,7 +1015,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           format={format}
           mode={adapter.mode}
           role={adapter.role}
-          detail={detail}
+          detail={localDetail}
           sellerSku={draft.sellerSku}
           onSellerSkuChange={(value) => patchDraft({ sellerSku: value })}
           fixedSeller={adapter.fixedSeller}
@@ -902,14 +1040,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         />
       );
     }
-    if (!detail) return <NeedsCreateTab t={t} title={tabLabel[activeTab]} />;
+    if (!localDetail) return <NeedsCreateTab t={t} title={tabLabel[activeTab]} />;
     switch (activeTab) {
       case "pricing":
         return (
           <PricingTab
             t={t}
             format={format}
-            detail={detail}
+            detail={localDetail}
             amount={draft.amount}
             currency={draft.currency}
             dirty={priceChanged}
@@ -923,7 +1061,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           <InventoryTab
             t={t}
             format={format}
-            detail={detail}
+            detail={localDetail}
             onHand={draft.inventoryOnHand}
             reason={draft.inventoryReason}
             dirty={stockChanged}
@@ -936,7 +1074,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           <ShippingTab
             t={t}
             role={adapter.role}
-            detail={detail}
+            detail={localDetail}
             shippingTypes={shippingTypes}
             typesError={typesError}
             responsibility={responsibility}
@@ -962,7 +1100,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           <ConditionsTab
             t={t}
             format={format}
-            detail={detail}
+            detail={localDetail}
             returnPolicyChoice={draft.returnPolicyChoice}
             customReturnWindowDays={draft.customReturnWindowDays}
             minimumOrderQuantity={draft.minimumOrderQuantity}
@@ -974,9 +1112,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             onMinQtyChange={(value) => patchDraft({ minimumOrderQuantity: value })}
             onMaxQtyChange={(value) => patchDraft({ maximumOrderQuantity: value })}
             onStatusChange={(value) => {
-              if (allowedStatuses(detail.status).includes(value)) patchDraft({ status: value });
+              if (allowedStatuses(localDetail.status).includes(value)) patchDraft({ status: value });
             }}
-            extra={renderExtras ? renderExtras("conditions", detail) : null}
+            extra={renderExtras ? renderExtras("conditions", localDetail) : null}
           />
         );
       case "history":

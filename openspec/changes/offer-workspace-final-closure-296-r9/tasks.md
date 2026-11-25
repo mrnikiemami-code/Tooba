@@ -1,0 +1,13 @@
+﻿# Tasks — offer-workspace-final-closure-296-r9
+- [x] Read R8 source/matrix and immutable R9 package; sync branch.
+- [x] Create and validate active OpenSpec change before coding.
+- [x] Shared Toast/MessageBox integration and permanent frontend rule.
+- [x] Inventory reason correction, local error clearing, human warehouse names, isolated 199→50 restore.
+- [x] Catalog unit code/name/precision/step/rounding read and validation.
+- [x] Channel authority audit and honest behavior/gap.
+- [x] Supported pre-create tabs + explicit single-Draft create/apply sequence.
+- [x] DB language registry actual offer route/list integration incl. ru-RU.
+- [x] Actor/tenant/owner recovery keys and stale/discard clearing.
+- [x] Save outcome/concurrency audit and rereads.
+- [x] Two-position runtime partial failure proof + restore.
+- [x] Build/typecheck/lint/tests/architecture/OpenSpec/regressions/runtime/Impeccable.

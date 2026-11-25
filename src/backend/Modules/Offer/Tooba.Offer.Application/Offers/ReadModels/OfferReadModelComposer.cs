@@ -92,6 +92,7 @@ public sealed class OfferReadModelComposer(
                 location.StockItemId,
                 location.LocationId,
                 location.LocationCode,
+                location.LocationName,
                 location.OnHand,
                 location.Reserved,
                 location.Available)).ToList(),
@@ -100,7 +101,10 @@ public sealed class OfferReadModelComposer(
             fulfillment?.Responsibility,
             fulfillment?.ShippingTypeId,
             offer.UpdatedAt,
-            product?.VariantLabel);
+            product?.VariantLabel,
+            product?.UnitQuantityDecimalPlaces ?? 0,
+            product?.UnitQuantityStep,
+            product?.UnitRoundingMode);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

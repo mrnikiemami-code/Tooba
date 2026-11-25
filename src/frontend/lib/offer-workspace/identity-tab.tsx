@@ -186,13 +186,11 @@ function CreateIdentity(props: IdentityTabProps) {
                 {showErrors && !props.fixedSeller && !props.selectedSeller ? <span className={styles.fieldErr}>{t.sellerRequired}</span> : null}
               </div>
 
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>{t.channel}</span>
-                <select className={`${styles.ctl} ${styles.select}`} value="Marketplace" disabled aria-label={t.channel}>
-                  <option value="Marketplace">{t.channelMarketplace}</option>
-                </select>
-                <span className={styles.fieldHint}>{t.channelHint}</span>
-              </div>
+              <ReadBox
+                label={t.channel}
+                value={t.channelMarketplace}
+                hint={t.channelPolicyPending}
+              />
 
               <div className={`${styles.field} ${styles.span2}`}>
                 <span className={styles.fieldLabel}>{t.product} <span className={styles.req}>*</span></span>

@@ -80,6 +80,9 @@ export interface SellerOfferDetail {
   productUnitCode: string | null;
   productUnitName: string | null;
   productUnitShortName: string | null;
+  unitQuantityDecimalPlaces: number;
+  unitQuantityStep: number | null;
+  unitRoundingMode: string | null;
   inventoryLocations: SellerInventoryLocation[];
   variantCode: string | null;
   variantLabel: string | null;
@@ -93,6 +96,7 @@ export interface SellerInventoryLocation {
   stockItemId: string;
   locationId: string;
   locationCode: string;
+  locationName: string;
   onHand: number;
   reserved: number;
   available: number;
@@ -452,6 +456,9 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     productUnitCode: asNullableString(readProp(item, "productUnitCode", "ProductUnitCode")),
     productUnitName: asNullableString(readProp(item, "productUnitName", "ProductUnitName")),
     productUnitShortName: asNullableString(readProp(item, "productUnitShortName", "ProductUnitShortName")),
+    unitQuantityDecimalPlaces: asNumber(readProp(item, "unitQuantityDecimalPlaces", "UnitQuantityDecimalPlaces")),
+    unitQuantityStep: readProp(item, "unitQuantityStep", "UnitQuantityStep") == null ? null : asNumber(readProp(item, "unitQuantityStep", "UnitQuantityStep")),
+    unitRoundingMode: asNullableString(readProp(item, "unitRoundingMode", "UnitRoundingMode")),
     inventoryLocations: (() => {
       const raw = readProp(item, "inventoryLocations", "InventoryLocations");
       return Array.isArray(raw)
@@ -461,6 +468,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
               stockItemId: asString(readProp(row, "stockItemId", "StockItemId")),
               locationId: asString(readProp(row, "locationId", "LocationId")),
               locationCode: asString(readProp(row, "locationCode", "LocationCode")),
+              locationName: asString(readProp(row, "locationName", "LocationName"), asString(readProp(row, "locationCode", "LocationCode"))),
               onHand: asNumber(readProp(row, "onHand", "OnHand")),
               reserved: asNumber(readProp(row, "reserved", "Reserved")),
               available: asNumber(readProp(row, "available", "Available")),
@@ -1351,6 +1359,11 @@ export interface SellerCatalogProductOption {
   brandName: string | null;
   primaryMediaAssetId: string | null;
   publishedVariantCount: number;
+  unitCode: string | null;
+  unitName: string | null;
+  quantityDecimalPlaces: number;
+  quantityStep: number | null;
+  roundingMode: string | null;
 }
 
 export interface SellerCatalogProductPage {
@@ -1396,6 +1409,11 @@ export async function searchSellerCatalogProducts(
         brandName: asNullableString(readProp(item, "brandName", "BrandName")),
         primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
         publishedVariantCount: asNumber(readProp(item, "publishedVariantCount", "PublishedVariantCount")),
+        unitCode: asNullableString(readProp(item, "unitCode", "UnitCode")),
+        unitName: asNullableString(readProp(item, "unitName", "UnitName")),
+        quantityDecimalPlaces: asNumber(readProp(item, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
+        quantityStep: readProp(item, "quantityStep", "QuantityStep") == null ? null : asNumber(readProp(item, "quantityStep", "QuantityStep")),
+        roundingMode: asNullableString(readProp(item, "roundingMode", "RoundingMode")),
       }];
     });
     return {

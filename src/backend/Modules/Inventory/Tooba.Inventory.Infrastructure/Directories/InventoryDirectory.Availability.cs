@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Seller;
 
@@ -28,6 +28,7 @@ public sealed partial class InventoryDirectory
             row.position.StockItemId,
             row.location.LocationId,
             row.location.Code,
+            row.location.Name,
             row.position.OnHand,
             row.position.Reserved,
             row.position.OnHand - row.position.Reserved)).ToList();
@@ -56,6 +57,7 @@ public sealed partial class InventoryDirectory
                     location.StockItemId,
                     location.LocationId,
                     location.LocationCode,
+                    location.LocationName,
                     location.OnHand,
                     location.Reserved,
                     location.Available)).ToList()));
@@ -86,6 +88,7 @@ public sealed partial class InventoryDirectory
                         row.position.StockItemId,
                         row.location.LocationId,
                         row.location.Code,
+                        row.location.Name,
                         row.position.OnHand,
                         row.position.Reserved,
                         row.position.OnHand - row.position.Reserved)).ToList();

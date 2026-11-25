@@ -95,6 +95,17 @@ export function validatePrice(amountText: string, currency: string): string | nu
   return null;
 }
 
+export function quantityAligned(value: number, decimalPlaces: number, step: number | null): boolean {
+  if (!Number.isFinite(value) || value <= 0) return false;
+  const factor = 10 ** Math.max(0, decimalPlaces);
+  if (Math.round(value * factor) !== value * factor) return false;
+  if (step != null && step > 0) {
+    const quotient = value / step;
+    if (Math.abs(quotient - Math.round(quotient)) > 1e-9) return false;
+  }
+  return true;
+}
+
 export function validateInventory(
   detail: OfferWorkspaceDetail,
   draft: OfferWorkspaceDraft,
@@ -107,6 +118,7 @@ export function validateInventory(
     const value = parseDecimal(draft.inventoryOnHand[row.stockItemId]);
     if (value == null || value < 0) return "offer.inventory.invalid";
     if (value < row.reserved) return "offer.inventory.below_reserved";
+    if (value > 0 && !quantityAligned(value, detail.unitQuantityDecimalPlaces ?? 0, detail.unitQuantityStep ?? null)) return "offer.inventory.step_invalid";
   }
   if (draft.inventoryReason.trim().length === 0) return "offer.inventory.reason_required";
   return null;
@@ -121,7 +133,9 @@ export function validateConditions(
   if (min == null && draft.minimumOrderQuantity.trim().length > 0) return "offer.qty.min_invalid";
   if (max == null && draft.maximumOrderQuantity.trim().length > 0) return "offer.qty.max_invalid";
   if (min != null && (!(min > 0) || !Number.isFinite(min))) return "offer.qty.min_invalid";
+  if (min != null && !quantityAligned(min, detail.unitQuantityDecimalPlaces ?? 0, detail.unitQuantityStep ?? null)) return "offer.qty.step_invalid";
   if (max != null && (!(max > 0) || !Number.isFinite(max))) return "offer.qty.max_invalid";
+  if (max != null && !quantityAligned(max, detail.unitQuantityDecimalPlaces ?? 0, detail.unitQuantityStep ?? null)) return "offer.qty.step_invalid";
   if (min != null && max != null && min > max) return "offer.qty.min_above_max";
   if (draft.returnPolicyChoice === "Custom") {
     const days = parseDecimal(draft.customReturnWindowDays);

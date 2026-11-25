@@ -27,7 +27,7 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
         var productIds = variants.Select(x => x.ProductId).Distinct().ToArray();
         var products = await db.Products.AsNoTracking()
             .Where(x => productIds.Contains(x.ProductId))
-            .Select(x => new { x.ProductId, x.BrandId, x.UnitOfMeasureId })
+            .Select(x => new { x.ProductId, x.BrandId, x.UnitOfMeasureId, x.QuantityDecimalPlaces, x.QuantityStep })
             .ToListAsync(cancellationToken);
         var names = await db.LocalizedTexts.AsNoTracking()
             .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
@@ -56,6 +56,7 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
             .GroupBy(x => x.ProductId)
             .ToDictionary(x => x.Key, x => x.OrderBy(row => row.DisplayOrder).First().MediaAssetId);
         var variantLabels = await ReadVariantLabelsAsync(ids, normalizedLocale, cancellationToken);
+        var roundingMode = await db.StoreQuantitySettings.AsNoTracking().Select(x => (string?)x.RoundingMode.ToString()).FirstOrDefaultAsync(cancellationToken);
 
         return variants.ToDictionary(x => x.VariantId, variant =>
         {
@@ -69,7 +70,10 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
                 brand, unit?.Code, translation?.Name ?? unit?.Code, translation?.ShortName ?? unit?.Code,
                 variant.CatalogCodeSeam,
                 primaryMedia.TryGetValue(variant.ProductId, out var mediaId) ? mediaId : null,
-                variantLabels.GetValueOrDefault(variant.VariantId));
+                variantLabels.GetValueOrDefault(variant.VariantId),
+                product.QuantityDecimalPlaces,
+                product.QuantityStep,
+                roundingMode);
         });
     }
 

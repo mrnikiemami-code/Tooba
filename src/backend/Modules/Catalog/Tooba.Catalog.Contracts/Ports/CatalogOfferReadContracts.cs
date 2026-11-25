@@ -11,7 +11,10 @@ public sealed record CatalogOfferPresentation(
     string? UnitShortName,
     string? VariantCode = null,
     Guid? PrimaryMediaAssetId = null,
-    string? VariantLabel = null);
+    string? VariantLabel = null,
+    int UnitQuantityDecimalPlaces = 0,
+    decimal? UnitQuantityStep = null,
+    string? UnitRoundingMode = null);
 
 /// <summary>Provides Catalog-owned offer presentation data without exposing persistence.</summary>
 public interface ICatalogOfferReadGateway
