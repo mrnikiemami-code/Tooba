@@ -1,0 +1,79 @@
+{
+  "taskId": "TB-296-R9-FINAL-OFFER-WORKSPACE-CLOSURE",
+  "base": "6426349f7c4d0a6b4423e64a370156a067a88a28",
+  "status": "NOT_RUN",
+  "requirements": [
+    {
+      "id": "R9-01",
+      "criterion": "Preserve owner-approved R8 visual layout and shared seven-tab workspace, four routes and two AppDataGrid lists; no redesign, shared grid replacement or new design pilot.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-02",
+      "criterion": "Reuse actual shared system Toast (success/transient feedback 3000ms, no persistent success banner) and existing shared MessageBox modal for operation errors, duplicate with authorized existing-offer link, uncertain outcome/reload and dirty exit confirmation. Inline field validation only; no duplicate banners, no invented notification system. Trace actual shared components; record permanent frontend rule in active isolated pack/skill and fidelity protocol without weakening existing rules.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-03",
+      "criterion": "Resolve inventory reason failure reported by owner: reproduce blank reason then enter valid reason and save 199→50 or equivalent isolated values; clear obsolete errors on correction, preserve dirty state, no raw UUID warehouse; localized human warehouse name from owning contract; restore fixture and reread.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-04",
+      "criterion": "Channel selection from real allowed channel authority by edition, seller, permission and applicable policy; no hardcoded Marketplace default pretending selection. Audit create command and duplicate key, pass selected channel end-to-end where authorized. Preserve immutable channel after creation; SingleStore hides marketplace-only fields. If channel policy genuinely undecided, document specific gap, do not invent channels or change unrelated domain policy.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-05",
+      "criterion": "Create form unlocks supported editable tabs once valid seller/product/variant/channel identity is selected, before any persisted offer exists. Draft price, stock, shipping and conditions locally; explicit save creates only one Draft and executes authorized owning commands, with independent per-domain result, persisted offer ID and safe recovery after partial failure. No empty create on opening/tab switch, no fake stock position; obtain real eligible locations or authorized stock provisioning contract. Duplicate guard remains server authoritative. History remains gated until actual offer/history contract; unsupported promotion/shipping service/multi-currency controls honestly gated.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-06",
+      "criterion": "Load actual Catalog unit name/code, precision, quantity step and rounding policy into conditions and inventory validation; no 'از محصول' placeholders. Test integer and fractional units, step, bounds, reserved floor and min/max, client and owning server validation. Do not invent defaults if authority missing.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-07",
+      "criterion": "Actual routes/lists use DB language registry GET /v1/admin/languages and existing shared authority, not FA/EN-only helpers or injected-only fixture. Translate all offer-owned UI/error copy and format numbers, quantities, dates, currency and dynamic Catalog labels; remove technical mobile/clothing suffix only via legitimate display-label contract, preserve canonical SKU/IDs. Test FA/EN and isolated third configured locale through actual route, correct direction and fallback; never mutate live registry. Shared locale architecture changes only minimum authorized integration, no parallel locale system.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-08",
+      "criterion": "Preserve edits including shipping across locale switch, tab switch, modal dismissal, errors and safe route transitions. Actor/tenant/owner-scoped recovery keys; clear discarded/committed drafts; prevent stale recovery overwrite. Ensure no stale success after edit, no in-flight edits silently lost.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-09",
+      "criterion": "Correct save outcome integrity: all changed commercial fields, currency/amount, shipping and stock locations independently reread; preserve remaining edits on partial failure, no retry on unknown until reconciliation, clear saving flags even on exceptions. Enforce existing owning-domain optimistic concurrency mechanisms atomically where available; if absent audit minimal safe contract, no false claim that pre-read is atomic. No unauthorized migration or financial redesign; report precise unresolved blocker and continue independent authorized work.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-10",
+      "criterion": "Retain multi-location stock ownership and reserve constraints; actual isolated runtime with two positions and second write failure, preserve first success and unsaved second/reason, retry only remaining after known failure, independently reread and restore. No fabricated positions or total-stock writes.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-11",
+      "criterion": "Test fixture safety: explicit isolated IDs and baseline snapshots, try/finally cleanup of temporary grants and stock/offer fixtures even on failure, verify role/ceiling/stock restoration and archive only task-created fixtures; no deletion or live/unrelated writes. Verify exact failure evidence; no unconditional checks.",
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "R9-12",
+      "criterion": "Run build/typecheck/lint, focused FE and owning backend tests, architecture guards without weakening, OpenSpec strict, Stage2 and orders/products/campaign regression, runtime FA/EN/third locale, admin/seller create/edit and lists at 360/768/1440. Test authorization and cross-owner negative reads/writes, duplicate races, blank reason correction, valid pre-create tabs, partial create/save, network unknown, concurrency, dirty cancel, Toast 3s and MessageBox. Record actual timings/build/host/db identity, independent rereads, Impeccable audit only; no screenshots in chat; no baseline substitution. Record PASS/FAIL/NOT_RUN with limitations and STOP_FOR_ARCHITECT.",
+      "status": "NOT_RUN",
+      "evidence": []
+    }
+  ]
+}
