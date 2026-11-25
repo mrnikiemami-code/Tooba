@@ -1,0 +1,32 @@
+# Mandatory senior architect quality gate — OpenCode
+Owner directive 2026-11-25. Applies to every new or modified production scope and every architect acceptance/recovery. This supplements existing architecture locks and delivery method; it does not replace them or authorize unrelated refactors. Worker functional PASS is not architecture ACCEPT.
+
+## Eight mandatory checks
+| ID | Gate | Required evidence |
+|---|---|---|
+| AQ-01 | Central multilingual architecture | Trace real route/provider, DB active language registry, culture/direction/calendar, resource catalog, API locale and shared UI. No feature-local locale authority, query-param workaround, hard-coded FA/EN authority or fake language fixture as runtime proof. Test configured locales and fallback; identify actual shared dependencies. |
+| AQ-02 | Clean backend layering | Domain invariants, Application use-case orchestration, stable Contracts, Infrastructure persistence, thin module Endpoints. Verify references/imports, error resources, validation, permission and transaction boundaries. |
+| AQ-03 | Clean frontend layering | Routes compose; feature owns behavior; typed clients/adapters own transport; reusable components own rendering; domain policy remains server-owned. No raw transport or repeated multi-domain mutation workflows in route/presentation files. Respect FE-BOUNDARY and existing freeze. |
+| AQ-04 | CQRS | Real MediatR requests/handlers and Result semantics, command/query separation, validators where required, thin endpoints, no handler bypass or database write in read paths. Inspect actual call chain and guard coverage. |
+| AQ-05 | Component reuse | Inspect existing Design System, AppDataGrid, forms, Toast, MessageBox and shared feature components before creating new ones. Verify reuse and adjacent consumers when shared code changes. No duplicate notification, grid, shell or localization system. |
+| AQ-06 | Physical folder/namespace ownership | Compare changed paths and namespace/project references with existing canonical capability-first module/feature structure. No arbitrary moves, ceremonial folders or cross-feature deep imports; stable public entrypoints. |
+| AQ-07 | Responsibility and source-size discipline | Inspect actual cohesive responsibilities, duplication, state/orchestration complexity and before/after physical LOC. Run existing frontend-source-size, import-boundary, flat-folder, feature-boundary and test-discovery guards via npm run test:architecture for relevant FE changes. Current FE size guard uses 800 LOC for new files and shrink-only baseline for oversized legacy files; read actual baseline at task revision. Never add exceptions or update baseline to conceal growth. Backend follow its existing structural guards and cohesion rules; do not invent a universal LOC threshold. |
+| AQ-08 | Module separation and clean Host | Contracts-only foreign module access, no foreign DbContext or internal layer references. Host composition/platform only; no new business endpoints, handlers, policy or persistence in Host. Inspect diff, owner project references and relevant existing architecture guards. |
+
+## Architect procedure
+Before issuance: read authoritative standards and actual affected source; map owner paths and apply all eight gates. Record risk-based invariant/test IDs in immutable acceptance matrix per delivery method §1A. Scope genuine shared/owning dependencies explicitly; do not assign a feature workaround for a central gap. Existing tasks remain immutable.
+Before acceptance: independently inspect source diff and relevant surrounding source, changed file sizes against baseline, dependency and folder map, actual guard commands/results, real runtime and test evidence. Compare before/after; document baseline debt versus newly introduced violations with precise paths. Each AQ gets PASS / FAIL / NOT_RUN / NOT_APPLICABLE with reason and evidence. No unsupported PASS; any material applicable FAIL or NOT_RUN blocks architecture acceptance. A pre-existing unrelated debt is not a waiver for new violations. No wholesale repository certification from a scoped audit.
+If architecture gap needs additional authority (migration, shared freeze, business policy), report exact dependency; continue safe independent authorized work per §0A. Do not auto-start AMSC or subsequent task. Use existing one consolidated repair and final rerun rule. Record architecture result separate from owner UAT. No retroactive alteration of evidence or task inputs.
+
+## Canonical references
+- docs/architecture/FRONTEND-ARCHITECTURE-STANDARD.md
+- docs/architecture/TOOBA-REFERENCE-MODULE-PATTERN.md
+- docs/architecture/TMAR-architecture-locks.md
+- docs/architecture/TMAR-HOST-EVACUATION-PROTOCOL.md
+- docs/architecture/TOOBA-DELIVERY-ASSURANCE.md
+- docs/architecture/NEXTJS-DESIGN-FIDELITY.md
+- docs/opencode/ARCHITECT-DELIVERY-METHOD.md
+- docs/evidence/TB-TMAR-FE-BASELINE/frontend-source-size-baseline.json
+
+## R9 recovery checkpoint (source audit, not local rerun)
+Base R9 implementation 63da7a2dbcaf61c0469252c65e5e42b499db6a0e. Architecture REPAIR_REQUIRED; no final phase-one acceptance. Confirmed: offer-workspace.tsx 1162 physical lines and absent from legacy size baseline (800 threshold); offer-locale.ts uses feature-specific query-param registry override and deep imports admin-languages API internals; public language endpoint reuses admin query/DTO with admin metadata; create-and-apply orchestration duplicated in admin/seller route pages and reread checks existence not all requested values. Existing channel, pre-create inventory provisioning, atomic concurrency and global/shared locale gaps unresolved. No Host production diff. Functional evidence is valuable but does not certify architecture. No local test rerun in this review. Preserve R8 approved layout and R9 verified behaviors. No financial task or bulk workspace started.
