@@ -29,6 +29,7 @@ public static class OfferEndpointModule
         var admin = app.MapGroup("/v1/admin");
         Admin.OfferFulfillmentAdminEndpoints.Map(admin);
         Admin.OfferAdminEndpoints.Map(admin);
+        Admin.OfferInventoryProvisioningAdminEndpoints.Map(app);
         return app;
     }
 

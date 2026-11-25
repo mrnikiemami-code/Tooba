@@ -2,7 +2,7 @@
 
 import { Warehouse } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
-import type { OfferWorkspaceDetail } from "./types";
+import type { OfferInventoryLocationOption, OfferLocalInventoryDraft, OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
@@ -17,6 +17,9 @@ export interface InventoryTabProps {
   dirty: boolean;
   onOnHandChange: (stockItemId: string, value: string) => void;
   onReasonChange: (value: string) => void;
+  localLocations?: OfferInventoryLocationOption[];
+  localInventory?: OfferLocalInventoryDraft[];
+  onLocalInventoryChange?: (locationId: string, patch: { onHand?: string }) => void;
 }
 
 export function InventoryTab(props: InventoryTabProps) {
@@ -25,7 +28,65 @@ export function InventoryTab(props: InventoryTabProps) {
   const totalReserved = detail.inventoryLocations.reduce((sum, row) => sum + row.reserved, 0);
   const totalAvailable = detail.inventoryLocations.reduce((sum, row) => sum + row.available, 0);
   const noPositions = detail.inventoryLocations.length === 0;
+  const preCreate = noPositions && Boolean(props.localLocations?.length && props.localInventory);
 
+  if (preCreate) {
+    return (
+      <div className={styles.stack} data-testid="offer-tab-inventory">
+        <section className={styles.card}>
+          <header className={styles.cardHd}>
+            <SectionTitle title={t.inventoryTitle} desc={t.inventoryDesc} />
+          </header>
+          <div className={styles.cardBd}>
+            <Note tone="info">{t.inventoryProvisionNote}</Note>
+            <div className={styles.tableWrap} style={{ marginTop: 14 }}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>{t.inventoryLocation}</th>
+                    <th>{t.inventoryOnHand}</th>
+                    <th>{t.inventoryReserved}</th>
+                    <th>{t.inventoryAvailable}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(props.localLocations ?? []).map((location) => {
+                    const draft = props.localInventory?.find((row) => row.locationId === location.locationId);
+                    return (
+                      <tr key={location.locationId} data-testid="offer-inventory-row" data-location-id={location.locationId}>
+                        <td data-label={t.inventoryLocation}>
+                          <span style={{ display: "block", fontWeight: 600 }}>{location.name || location.code}</span>
+                          <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{location.code}</span>
+                        </td>
+                        <td data-label={t.inventoryOnHand}>
+                          <input
+                            className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
+                            style={{ maxWidth: 128 }}
+                            value={draft?.onHand ?? ""}
+                            onChange={(event) => props.onLocalInventoryChange?.(location.locationId, { onHand: event.target.value })}
+                            inputMode="decimal"
+                            dir="ltr"
+                            data-testid="offer-inventory-input"
+                          />
+                        </td>
+                        <td data-label={t.inventoryReserved} className={styles.numCell}>—</td>
+                        <td data-label={t.inventoryAvailable} className={styles.numCell}>—</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+              <span className={styles.fieldLabel}>{t.inventoryReason}</span>
+              <input className={styles.ctl} value={props.reason} onChange={(event) => props.onReasonChange(event.target.value)} data-testid="offer-inventory-reason" />
+              <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
+            </label>
+          </div>
+        </section>
+      </div>
+    );
+  }
   return (
     <div className={styles.stack} data-testid="offer-tab-inventory">
       <section className={styles.card}>

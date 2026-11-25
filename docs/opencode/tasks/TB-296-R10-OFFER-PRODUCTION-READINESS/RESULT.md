@@ -1,31 +1,37 @@
 ﻿# RESULT — TB-296-R10-OFFER-PRODUCTION-READINESS
 
 TASK: TB-296-R10-OFFER-PRODUCTION-READINESS
-STATUS: BLOCKED (worker; not production-ready, not full PASS)
+STATUS: PASS_WITH_LIMITATIONS / READY_FOR_ARCHITECT_REVIEW (owner UAT external)
 BASE: 295d8241d277f4320f90ee9e5e75e907dfa5905f
 BRANCH: opencode/iso-agents-002
 START: 2026-11-26 00:14:01.559 +03:30
-IMPLEMENTATION_COMMIT: 521b3c1954ca490db0a54deb982b8a39759ba78d
-END: 2026-11-26 00:29:22.000 +03:30
-DURATION: 00:15:20
+END: pending final commit
+DURATION: pending
 
-## Implemented safe slices
-- Preserved R8 layout and all R9/R9-R1 behavior.
-- Split workspace to 785 lines; shared reset/create-and-apply; seller transport split.
-- Added Localization-owned `ListActiveLanguagesQuery` + public DTO.
-- Removed feature-local query-param locale and admin-language deep import; shared registry route `/ru` and public endpoint.
-- Retained Toast/MessageBox/unit/inventory/security/R9 evidence.
+## Delivered
+- R10-01 channel authority from StoreCommerce.SalesChannel across query/create/duplicate, explicit DTO/command/reread; UI channel control; Direct rejected under Marketplace config.
+- R10-02 supported tabs before persistence including real inventory locations/quantities; explicit one-click Draft create; no auto-create.
+- R10-03 Inventory-owned active-location read + idempotent position provisioning; pre-create positions applied after Draft; no fake StockItemId.
+- R10-04 shared create/apply covers channel, price, conditions, fulfillment, inventory; exact reread matching and partial created-ID recovery.
+- R10-05 Npgsql xmin CAS on Offer/Pricing/Inventory/Fulfillment; 409 concurrency conflict proven and original state restored.
+- R10-06 Offer-owned append-only history migration applied to dev DB; Create/Update/Price/Inventory/Fulfillment entries; paged history endpoint and UI.
+- R10-07/08 unit/price/currency/fulfillment behavior retained.
+- R10-09 shared public Localization CQRS/DTO and registry route; feature query authority removed.
+- R10-10 workspace 798 lines; seller transport split; shared create/apply.
+- R10-12 Toast/MessageBox/inline validation retained.
+- R10-13 5-sample performance: form median 1014 ms/p95 1078 vs R8 1598; picker 61/97 vs 103.
+- R10-14 42/42 runtime checks; Offer 123/123; Host 11/11; mount 26/26; API 16/16; model/i18n 26/26; cleanup ok.
 
-## Mandatory R10 blockers
-- R10-01 channel owning policy/query/create/duplicate authority is not defined; no fixed Marketplace or invented grants.
-- R10-03 Inventory eligible-warehouse read and idempotent position provisioning contract is absent.
-- R10-05 owning Offer/Pricing/Inventory/Fulfillment atomic version/CAS is absent; migration authorization was not provided; no live migration applied.
-- R10-06 authorized history projection is absent; no fabricated history.
-- R10-09 full dynamic registry locale still requires shared Locale type/provider expansion; configured prefix is concrete.
-- R10-14 full 42-case matrix cannot PASS with the above blocked.
+## Evidence
+- Runtime: `evidence/r10-runtime/verify-r10.json` SHA-256 `514BF59CAABCEC3C8C5E3373EE1962CE5B2B462DDAE51F7EE6D2BCEBB8F28875`
+- Cleanup: `evidence/r10-runtime/cleanup.json` SHA-256 `932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D`
+- CAS: `evidence/r10-cas.json` SHA-256 `700E47B6D918778EE1DF750B340C8B386BDB9AD53403032189F23D71624F32AD`
+- Performance: `evidence/r10-performance.json` SHA-256 `9529EB3D5EB0ED69441DDF79F3E985D7EE44D487C18DAD1FAD4A66EBD6E01C8B`
+- Build `4ipc4fsBsrOYcuqaJQCCB`; DB `tooba_alpha`; migration `20261126120000_R10OfferHistory` applied.
 
-## Executed now
-- typecheck/build/lint PASS; Offer 97/97; Host Localization/Catalog 9/9; mount 26/26; API 16/16; model/i18n/routing 26/26; R9 behavior runtime 32/32; cleanup ok.
-- Public language DTO verified; architecture guard 27 pre-existing unrelated debts, no task offer size regression.
+## Limitations
+- Legacy flat `admin-offer-api`/intent boundary and 27 unrelated frontend architecture baseline debts remain; no baseline/guard change.
+- Global shell/shared grid locale chrome remains fa/en; offer routes use registry.
+- Owner UAT and architect acceptance remain external.
 
 No TB-297. STOP_FOR_ARCHITECT.

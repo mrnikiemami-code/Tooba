@@ -10,6 +10,7 @@ import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import {
   assignAdminOfferFulfillment,
   loadAdminOfferDetail,
+  loadAdminOfferHistory,
   loadAdminProductVariants,
   loadAdminShippingTypes,
   patchAdminOffer,
@@ -31,6 +32,7 @@ export default function AdminOfferDetailPage() {
       role: "admin",
       mode: "edit",
       offerId,
+      loadHistory: (page, pageSize) => loadAdminOfferHistory(offerId, page, pageSize),
       loadDetail: async () => {
         const result = await loadAdminOfferDetail(offerId);
         return result.ok

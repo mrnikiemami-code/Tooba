@@ -86,7 +86,9 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IReturnPolicyResolver>(_ => new ReturnPolicyResolver(new ReturnPolicyOptions()));
         services.AddSingleton<IClock>(_ => new FixedClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
         services.AddSingleton<IIdGenerator>(_ => new FixedIds(Guid.Parse("11111111-1111-4111-8111-111111111111")));
+        services.AddSingleton<ICurrentEdition>(new FixedEdition(ToobaEdition.Marketplace));
         services.AddSingleton<IOfferStore, MemoryOfferStore>();
+        services.AddSingleton<IOfferHistoryWriter, NoopHistoryWriter>();
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
         services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
@@ -208,6 +210,17 @@ public sealed class OfferTraceTopologyTests
     private sealed class FixedIds(Guid id) : IIdGenerator
     {
         public Guid NewId() => id;
+    }
+
+    private sealed class NoopHistoryWriter : IOfferHistoryWriter
+    {
+        public Task AppendAsync(OfferHistoryEntry entry, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
+    private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
     }
 
     private sealed class MemoryOfferStore : IOfferStore

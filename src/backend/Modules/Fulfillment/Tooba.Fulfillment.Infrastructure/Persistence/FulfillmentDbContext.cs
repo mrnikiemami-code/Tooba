@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Fulfillment.Domain.Aggregates;
@@ -129,6 +130,7 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.PostalCode).HasMaxLength(32);
             entity.Property(x => x.ShippingMethodCode).HasMaxLength(64);
             entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128);
+            entity.UseXminAsConcurrencyToken();
             entity.Ignore(x => x.DomainEvents);
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.Shipments);

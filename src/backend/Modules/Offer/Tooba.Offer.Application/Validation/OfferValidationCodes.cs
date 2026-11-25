@@ -51,6 +51,9 @@ public static class OfferValidationCodes
     /// <summary>On-hand quantity must not be negative.</summary>
     public const string OnHandMin = "offer.validation.on_hand_min";
 
+    /// <summary>An inventory location identifier must be provided for stock-position provisioning.</summary>
+    public const string LocationIdRequired = "offer.validation.location_id_required";
+
     /// <summary>Adjustment reason must not be blank when supplied.</summary>
     public const string ReasonShape = "offer.validation.reason_shape";
 
@@ -59,4 +62,10 @@ public static class OfferValidationCodes
 
     /// <summary>Fulfillment shipping type id must not be empty when supplied.</summary>
     public const string FulfillmentShippingTypeIdShape = "offer.validation.fulfillment_shipping_type_id_shape";
+
+    /// <summary>History page number must be at least one.</summary>
+    public const string HistoryPageMin = "offer.validation.history_page_min";
+
+    /// <summary>History page size must be between one and one hundred.</summary>
+    public const string HistoryPageSizeRange = "offer.validation.history_page_size_range";
 }

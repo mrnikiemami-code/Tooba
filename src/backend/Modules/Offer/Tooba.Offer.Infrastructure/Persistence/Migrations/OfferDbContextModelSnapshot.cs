@@ -112,6 +112,56 @@ namespace Tooba.Offer.Infrastructure.Persistence.Migrations
                     b.ToTable("offers", "offer");
                 });
 
+            modelBuilder.Entity("Tooba.Offer.Domain.Aggregates.OfferHistoryEntry", b =>
+                {
+                    b.Property<Guid>("OfferHistoryEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("offer_history_entry_id");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("ChangeKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("change_kind");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("new_value");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("OfferId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("offer_id");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("old_value");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("summary");
+
+                    b.HasKey("OfferHistoryEntryId")
+                        .HasName("pk_offer_history");
+
+                    b.HasIndex("OfferId", "OccurredAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_offer_history_offer_id_occurred_at");
+
+                    b.ToTable("offer_history", "offer");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

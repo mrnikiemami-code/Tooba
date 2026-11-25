@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Application.Offers.History;
 using Tooba.Offer.Application.Offers.Mappings;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
@@ -41,7 +42,9 @@ public sealed record AssignOfferFulfillmentCommand(
 internal sealed class AssignOfferFulfillmentHandler(
     IOfferStore store,
     IShippingTypeReader shippingTypes,
-    IClock clock)
+    IClock clock,
+    IIdGenerator ids,
+    IOfferHistoryWriter history)
     : IRequestHandler<AssignOfferFulfillmentCommand, Result<OfferReference>>
 {
     public async Task<Result<OfferReference>> Handle(
@@ -71,6 +74,8 @@ internal sealed class AssignOfferFulfillmentHandler(
             }
         }
 
+        var previous = OfferHistorySummaries.Fulfillment(
+            offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId);
         var assignment = offer.AssignFulfillment(
             request.Responsibility is null ? null : (DomainResponsibility)(int)request.Responsibility.Value,
             request.ShippingTypeId,
@@ -80,6 +85,17 @@ internal sealed class AssignOfferFulfillmentHandler(
             return Result.Failure<OfferReference>(assignment.Errors);
         }
 
+        await history.AppendAsync(
+            OfferHistorySummaries.CreateEntry(
+                ids.NewId(),
+                offer.OfferId,
+                clock.UtcNow,
+                OfferHistorySummaries.FulfillmentChanged,
+                "Offer fulfillment changed",
+                previous,
+                OfferHistorySummaries.Fulfillment(
+                    offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId)),
+            cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
         return Result.Success(offer.ToReference());
     }

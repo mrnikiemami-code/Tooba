@@ -299,6 +299,8 @@ test("seller create mode disables dependent tabs, does not auto-select, and crea
     role: "seller",
     mode: "create",
     fixedSeller: { sellerPartyId: "seller-1", displayName: "" },
+    loadChannels: async () => ["Marketplace"],
+    loadInventoryLocations: async () => [],
     searchProducts: async () => ({
       rows: [{ productId: "product-1", title: "کالای اول", brandName: "برند", primaryMediaAssetId: null, publishedVariantCount: 1 }],
       totalCount: 1,
@@ -358,6 +360,8 @@ test("picker selection survives paging in both directions (UX-29)", async () => 
   const adapter: OfferWorkspaceAdapter = {
     role: "admin",
     mode: "create",
+    loadChannels: async () => ["Marketplace"],
+    loadInventoryLocations: async () => [],
     searchSellers: async (_search, page) => ({
       rows: page === 1
         ? [{ sellerPartyId: "seller-a", displayName: "فروشنده الف" }]
@@ -415,6 +419,8 @@ function createAdapter(over: Partial<OfferWorkspaceAdapter> = {}): OfferWorkspac
   return {
     role: "admin",
     mode: "create",
+    loadChannels: async () => ["Marketplace"],
+    loadInventoryLocations: async () => [],
     searchSellers: async () => ({ rows: [{ sellerPartyId: "seller-1", displayName: "فروشنده" }], totalCount: 1, page: 1, pageSize: 10, hasMore: false }),
     searchProducts: async () => ({
       rows: [

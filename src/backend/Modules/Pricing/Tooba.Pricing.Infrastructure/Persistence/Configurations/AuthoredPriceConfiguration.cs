@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Domain.Aggregates;
 
@@ -23,6 +24,7 @@ public sealed class AuthoredPriceConfiguration : IEntityTypeConfiguration<Author
         entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
         entity.Property(x => x.QualifierKind).HasConversion<string>().HasMaxLength(32);
         entity.Property(x => x.QualifierKey).HasMaxLength(64);
+        entity.UseXminAsConcurrencyToken();
         entity.Ignore(x => x.DomainEvents);
         entity.HasIndex(x => new { x.OfferId, x.Market, x.Channel, x.Currency, x.QualifierKind, x.ValidFrom });
     }

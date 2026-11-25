@@ -11,6 +11,7 @@ import type { OfferTabId, OfferWorkspaceAdapter } from "../../../../lib/offer-wo
 import { loadSellerReservationPolicy, readSellerPartyId } from "../../seller-api";
 import {
   loadSellerOfferDetail,
+  loadSellerOfferHistory,
   loadSellerProductVariants,
   patchSellerOffer,
   writeSellerOfferInventory,
@@ -62,6 +63,7 @@ export default function VendorProductDetailPage() {
       role: "seller",
       mode: "edit",
       offerId,
+      loadHistory: (page, pageSize) => loadSellerOfferHistory(sellerPartyId, offerId, page, pageSize),
       loadDetail: async () => {
         const result = await loadSellerOfferDetail(sellerPartyId, offerId);
         return result.detail

@@ -1,0 +1,16 @@
+{
+  "before": 5000000,
+  "results": [
+    {
+      "status": 409,
+      "code": "concurrency.conflict"
+    },
+    {
+      "status": 200,
+      "code": null
+    }
+  ],
+  "after": 2222222,
+  "restored": 5000000,
+  "conflictCount": 1
+}

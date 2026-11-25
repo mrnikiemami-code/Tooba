@@ -60,6 +60,12 @@
   <data name="offer.status.unsupported" xml:space="preserve">
     <value>وضعیت درخواست‌شده پشتیبانی نمی‌شود.</value>
   </data>
+  <data name="offer.channel.required" xml:space="preserve">
+    <value>برای این نسخه هیچ کانال فروشی مجاز نیست.</value>
+  </data>
+  <data name="offer.channel.not_allowed" xml:space="preserve">
+    <value>کانال فروش درخواست‌شده برای این نسخه مجاز نیست.</value>
+  </data>
   <data name="offer.archived.cannot_assign_fulfillment" xml:space="preserve">
     <value>آفر بایگانی‌شده نمی‌تواند انتساب انجام ارسال بگیرد.</value>
   </data>

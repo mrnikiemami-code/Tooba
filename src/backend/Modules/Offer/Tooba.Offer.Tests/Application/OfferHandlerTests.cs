@@ -95,7 +95,12 @@ public sealed class OfferHandlerTests
         Assert.Equal(OfferErrorCodes.NotFound, result.FirstError.Code);
     }
 
-    private static ISender BuildSender(ICatalogVariantLookup catalog, IPartyLookup party, out FakeStore store)
+    private static ISender BuildSender(
+        ICatalogVariantLookup catalog,
+        IPartyLookup party,
+        out FakeStore store,
+        ToobaEdition edition = ToobaEdition.Marketplace,
+        IOfferHistoryWriter? history = null)
     {
         store = new FakeStore();
         var services = new ServiceCollection();
@@ -104,6 +109,7 @@ public sealed class OfferHandlerTests
         services.AddSingleton<IOfferStore>(store);
         services.AddSingleton(catalog);
         services.AddSingleton(party);
+        services.AddSingleton<ICurrentEdition>(new FixedEdition(edition));
         services.AddSingleton<ICatalogOfferReadGateway, FakeCatalogReads>();
         services.AddSingleton<IPriceLookupGateway, FakePrices>();
         services.AddSingleton<ISellerOfferInventoryGateway, FakeInventory>();
@@ -111,6 +117,7 @@ public sealed class OfferHandlerTests
         services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         services.AddSingleton<IClock>(new FixedClock(Now));
         services.AddSingleton<IIdGenerator>(new FixedIds(OfferId));
+        services.AddSingleton(history ?? new NoopHistoryWriter());
         services.AddSingleton<IReturnPolicyResolver>(new ReturnPolicyResolver(new ReturnPolicyOptions()));
         return services.BuildServiceProvider().GetRequiredService<ISender>();
     }
@@ -173,6 +180,27 @@ public sealed class OfferHandlerTests
     private sealed class FixedIds(Guid id) : IIdGenerator
     { public Guid NewId() => id; }
 
+    private sealed class NoopHistoryWriter : IOfferHistoryWriter
+    {
+        public Task AppendAsync(OfferHistoryEntry entry, CancellationToken token) => Task.CompletedTask;
+    }
+
+    private sealed class RecordingHistoryWriter : IOfferHistoryWriter
+    {
+        public List<OfferHistoryEntry> Entries { get; } = [];
+
+        public Task AppendAsync(OfferHistoryEntry entry, CancellationToken token)
+        {
+            Entries.Add(entry);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition
+    {
+        public EditionContext? Current { get; } = new EditionContext(edition, "test");
+    }
+
     [Fact]
     public async Task Draft_sku_patch_stays_draft_and_clears_both_limits()
     {
@@ -197,6 +225,70 @@ public sealed class OfferHandlerTests
         Assert.Null(cleared.Value.MinimumOrderQuantity);
         Assert.Null(cleared.Value.MaximumOrderQuantity);
         Assert.Equal(0m, cleared.Value.OnHand);
+    }
+
+    [Fact]
+    public async Task Create_rejects_a_channel_not_allowed_by_the_edition_policy()
+    {
+        var sender = BuildSender(
+            new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())),
+            new FakeParty(new PartyLookupResult(SellerId, "Organization")),
+            out var store,
+            ToobaEdition.SingleStore);
+
+        var result = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(OfferErrorCodes.ChannelNotAllowed, result.FirstError.Code);
+        Assert.Empty(store.Items);
+    }
+
+    [Fact]
+    public async Task Create_and_update_stage_history_entries_with_unknown_actor()
+    {
+        var history = new RecordingHistoryWriter();
+        var sender = BuildSender(
+            new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())),
+            new FakeParty(new PartyLookupResult(SellerId, "Organization")),
+            out _,
+            history: history);
+
+        var created = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Marketplace, "SKU"));
+        Assert.True(created.IsSuccess);
+        var updated = await sender.Send(new UpdateOfferCommand(OfferId, SellerId, "SKU-2", null));
+        Assert.True(updated.IsSuccess);
+
+        Assert.Equal(2, history.Entries.Count);
+        Assert.Equal("Created", history.Entries[0].ChangeKind);
+        Assert.Null(history.Entries[0].ActorUserId);
+        Assert.Contains("status=Draft", history.Entries[0].NewValue, StringComparison.Ordinal);
+        Assert.Contains("channel=Marketplace", history.Entries[0].NewValue, StringComparison.Ordinal);
+        Assert.Equal("CommercialChanged", history.Entries[1].ChangeKind);
+        Assert.Null(history.Entries[1].ActorUserId);
+        Assert.Contains("sku=SKU", history.Entries[1].OldValue, StringComparison.Ordinal);
+        Assert.Contains("sku=SKU-2", history.Entries[1].NewValue, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Create_carries_the_allowed_channel_into_the_persisted_offer_and_reread()
+    {
+        var sender = BuildSender(
+            new FakeCatalog(new CatalogVariantLookupResult(VariantId, Guid.NewGuid())),
+            new FakeParty(new PartyLookupResult(SellerId, "Organization")),
+            out var store,
+            ToobaEdition.SingleStore);
+
+        var result = await sender.Send(new CreateOfferCommand(VariantId, SellerId, ContractChannel.Direct, "SKU"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Tooba.Offer.Domain.ValueObjects.SalesChannel.Direct, store.Items.Single().Channel);
+        Assert.Equal(nameof(ContractChannel.Direct), result.Value.Channel);
+
+        var updated = await sender.Send(new UpdateOfferCommand(OfferId, SellerId, "SKU-2", null));
+
+        Assert.True(updated.IsSuccess);
+        Assert.Equal(Tooba.Offer.Domain.ValueObjects.SalesChannel.Direct, store.Items.Single().Channel);
+        Assert.Equal(nameof(ContractChannel.Direct), updated.Value.Channel);
     }
 }
 

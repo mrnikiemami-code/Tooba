@@ -1,4 +1,4 @@
-namespace Tooba.BuildingBlocks.Presentation.Errors;
+﻿namespace Tooba.BuildingBlocks.Presentation.Errors;
 
 /// <summary>
 /// کدهای خطای عرضی مشترک (نشست مشتری و مجوز نقش‌ها) که مالکیت توصیف‌گر کاتالوگ آن‌ها در
@@ -36,6 +36,8 @@ public static class FoundationErrorCodes
 
     /// <summary>مرجع اتصال پلتفرم پیکربندی نشده است (503).</summary>
     public const string PlatformConnectionUnconfigured = "platform.connection.unconfigured";
+    /// <summary>Concurrent owning-module write lost compare-and-swap (409).</summary>
+    public const string ConcurrencyConflict = "concurrency.conflict";
 
     /// <summary>Resolve Host/Tenant با شکست fail-closed مواجه شد (404؛ بدون افشای وجود).</summary>
     public const string PlatformResolutionFailed = "platform.resolution.failed";

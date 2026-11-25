@@ -137,7 +137,7 @@ export async function loadSellerCatalogVariants(
 /** ایجاد Offer فقط برای Party فروشندهٔ احرازشده. */
 export async function createSellerOffer(
   sellerPartyId: string,
-  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; requestId?: string | null },
+  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; channel?: string | null; requestId?: string | null },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch("/v1/seller/offers", {
@@ -146,6 +146,7 @@ export async function createSellerOffer(
       body: JSON.stringify({
         catalogVariantId: input.catalogVariantId,
         sellerSku: input.sellerSku,
+        channel: input.channel ?? undefined,
         status: input.status,
         requestId: input.requestId,
       }),
@@ -358,8 +359,10 @@ export async function loadSellerProductVariants(
 export async function findSellerActiveOffer(
   sellerPartyId: string,
   catalogVariantId: string,
+  channel?: string | null,
 ): Promise<{ offerId: string } | null> {
   const params = new URLSearchParams({ catalogVariantId });
+  if (channel) params.set("channel", channel);
   try {
     const response = await fetch(`/v1/seller/offers/active-listing?${params.toString()}`, {
       headers: sellerHeaders(sellerPartyId, currentActor()),
@@ -371,4 +374,56 @@ export async function findSellerActiveOffer(
   } catch {
     return null;
   }
+}
+
+export async function loadSellerAllowedOfferChannels(sellerPartyId: string): Promise<string[]> {
+  try {
+    const response = await fetch("/v1/seller/offers/allowed-channels", { headers: sellerHeaders(sellerPartyId, currentActor()) });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload.filter((x): x is string => typeof x === "string") : [];
+  } catch { return []; }
+}
+
+export interface SellerInventoryLocationOption { locationId: string; code: string; name: string; }
+
+export async function loadSellerInventoryLocations(sellerPartyId: string): Promise<SellerInventoryLocationOption[]> {
+  try {
+    const response = await fetch("/v1/seller/offers/inventory-locations", { headers: sellerHeaders(sellerPartyId, currentActor()) });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload.flatMap((raw) => {
+      if (!raw || typeof raw !== "object") return [];
+      const item = raw as Record<string, unknown>;
+      const locationId = asString(readProp(item, "locationId", "LocationId")); if (!locationId) return [];
+      return [{ locationId, code: asString(readProp(item, "code", "Code")), name: asString(readProp(item, "name", "Name")) }];
+    }) : [];
+  } catch { return []; }
+}
+
+export async function ensureSellerInventoryPosition(sellerPartyId: string, offerId: string, locationId: string): Promise<{ stockItemId: string } | null> {
+  try {
+    const response = await fetch(`/v1/seller/offers/${offerId}/inventory/positions`, {
+      method: "POST",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({ locationId }),
+    });
+    if (!response.ok) return null;
+    const item = await readJson(response);
+    const stockItemId = item && typeof item === "object" ? asString(readProp(item as Record<string, unknown>, "stockItemId", "StockItemId")) : "";
+    return stockItemId ? { stockItemId } : null;
+  } catch { return null; }
+}
+
+export async function loadSellerOfferHistory(sellerPartyId: string, offerId: string, page = 1, pageSize = 20) {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const response = await fetch(`/v1/seller/offers/${offerId}/history?${params.toString()}`, { headers: sellerHeaders(sellerPartyId, currentActor()) });
+  if (!response.ok) return { items: [], totalCount: 0, page, pageSize };
+  const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
+  const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
+    if (!raw || typeof raw !== "object") return [];
+    const item = raw as Record<string, unknown>;
+    return [{ offerId: asString(readProp(item, "offerId", "OfferId")), occurredAt: asString(readProp(item, "occurredAt", "OccurredAt")), kind: asString(readProp(item, "kind", "Kind")), actorUserId: asNullableString(readProp(item, "actorUserId", "ActorUserId")), summary: asString(readProp(item, "summary", "Summary")), oldValue: asNullableString(readProp(item, "oldValue", "OldValue")), newValue: asNullableString(readProp(item, "newValue", "NewValue")) }];
+  });
+  return { items, totalCount: Number(payload.totalCount ?? 0), page: Number(payload.page ?? page), pageSize: Number(payload.pageSize ?? pageSize) };
 }

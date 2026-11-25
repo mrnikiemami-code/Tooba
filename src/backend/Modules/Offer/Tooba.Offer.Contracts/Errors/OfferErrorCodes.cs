@@ -51,6 +51,12 @@ public static class OfferErrorCodes
     /// <summary>The requested status is unsupported.</summary>
     public const string StatusUnsupported = "offer.status.unsupported";
 
+    /// <summary>No channel is allowed for the current edition, so a required channel cannot be resolved.</summary>
+    public const string ChannelRequired = "offer.channel.required";
+
+    /// <summary>The requested channel is not allowed by the current edition policy.</summary>
+    public const string ChannelNotAllowed = "offer.channel.not_allowed";
+
     /// <summary>An archived offer cannot take a fulfillment assignment.</summary>
     public const string ArchivedCannotAssignFulfillment = "offer.archived.cannot_assign_fulfillment";
 

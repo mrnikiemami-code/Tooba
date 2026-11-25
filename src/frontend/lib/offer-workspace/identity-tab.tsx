@@ -28,6 +28,12 @@ export interface IdentityTabProps {
   fixedSeller?: OfferSellerOption;
   selectedSeller: OfferSellerOption | null;
   onSelectSeller: (seller: OfferSellerOption) => void;
+  channels: string[];
+  selectedChannel: string;
+  onSelectChannel: (value: string) => void;
+  inventoryLocations: import("./types.ts").OfferInventoryLocationOption[];
+  localInventory: import("./types.ts").OfferLocalInventoryDraft[];
+  onLocalInventoryChange: (locationId: string, patch: { onHand?: string; reason?: string }) => void;
   selectedProduct: OfferProductOption | null;
   onSelectProduct: (product: OfferProductOption) => void;
   searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
@@ -110,7 +116,7 @@ function EditIdentity(props: IdentityTabProps & { detail: OfferWorkspaceDetail }
 }
 
 function CreateIdentity(props: IdentityTabProps) {
-  const { t, format, selectedProduct, selectedVariant, showErrors } = props;
+  const { t, format, selectedProduct, selectedVariant, showErrors, selectedChannel, channels } = props;
   const [sellerOpen, setSellerOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [variantOpen, setVariantOpen] = useState(false);
@@ -186,11 +192,19 @@ function CreateIdentity(props: IdentityTabProps) {
                 {showErrors && !props.fixedSeller && !props.selectedSeller ? <span className={styles.fieldErr}>{t.sellerRequired}</span> : null}
               </div>
 
-              <ReadBox
-                label={t.channel}
-                value={t.channelMarketplace}
-                hint={t.channelPolicyPending}
-              />
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>{t.channel}</span>
+                <select
+                  className={`${styles.ctl} ${styles.select}`}
+                  value={selectedChannel}
+                  onChange={(event) => props.onSelectChannel(event.target.value)}
+                  aria-label={t.channel}
+                  data-testid="offer-channel-select"
+                >
+                  {channels.map((channel) => <option key={channel} value={channel}>{channel === "Direct" ? t.channelDirect : channel === "Agency" ? t.channelAgency : channel === "Corporate" ? t.channelCorporate : channel === "Affiliate" ? t.channelAffiliate : channel === "Api" ? t.channelApi : t.channelMarketplace}</option>)}
+                </select>
+                <span className={styles.fieldHint}>{t.channelHint}</span>
+              </label>
 
               <div className={`${styles.field} ${styles.span2}`}>
                 <span className={styles.fieldLabel}>{t.product} <span className={styles.req}>*</span></span>

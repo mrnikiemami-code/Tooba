@@ -11,12 +11,16 @@ import { queryAdminSellersGrid } from "../../../../features/admin-sellers";
 import {
   assignAdminOfferFulfillment,
   createAdminOffer,
+  ensureAdminInventoryPosition,
   findAdminActiveOffer,
+  loadAdminAllowedOfferChannels,
+  loadAdminInventoryLocations,
   loadAdminOfferDetail,
   loadAdminShippingTypes,
   loadAdminProductVariants,
   patchAdminOffer,
   searchAdminCatalogProducts,
+  writeAdminOfferInventory,
   writeAdminOfferPrice,
 } from "../../admin-offer-api";
 import { adminOfferIntent, clearAdminOfferIntent } from "../../offer-create-intent";
@@ -77,9 +81,11 @@ export default function AdminCreateOfferPage() {
           status: row.status,
         }));
       },
-      findActiveOffer: async (sellerPartyId, catalogVariantId) =>
-        findAdminActiveOffer(sellerPartyId, catalogVariantId),
+      findActiveOffer: async (sellerPartyId, catalogVariantId, channel) =>
+        findAdminActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadShippingTypes: () => loadAdminShippingTypes(),
+      loadChannels: () => loadAdminAllowedOfferChannels(),
+      loadInventoryLocations: () => loadAdminInventoryLocations(),
       createAndSaveDraft: async (input) => {
         const scope = `admin:${input.sellerPartyId}:${input.catalogVariantId}`;
         let requestId: string;
@@ -94,6 +100,7 @@ export default function AdminCreateOfferPage() {
               sellerPartyId: input.sellerPartyId ?? "",
               catalogVariantId: input.catalogVariantId,
               sellerSku: input.sellerSku,
+              channel: input.channel,
               requestId,
             });
             return created.ok
@@ -119,6 +126,14 @@ export default function AdminCreateOfferPage() {
             });
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
+          provisionPosition: async (offerId, locationId) => {
+            const result = await ensureAdminInventoryPosition(offerId, locationId);
+            return result ? { ok: true, stockItemId: result.stockItemId } : { ok: false, errorCode: "inventory.provision.failed" };
+          },
+          saveInventory: async (offerId, stockItemId, onHand, reason) => {
+            const result = await writeAdminOfferInventory(offerId, { stockItemId, onHand, reason });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
           saveFulfillment: async (offerId, value) => {
             const result = await assignAdminOfferFulfillment(offerId, {
               responsibility: value.responsibility,
@@ -129,7 +144,7 @@ export default function AdminCreateOfferPage() {
           onCommitted: () => clearAdminOfferIntent(scope),
         }, input);
       },
-      createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku }) => {
+      createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku, channel }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
         const scope = `admin:${sellerPartyId}:${catalogVariantId}`;
         let requestId: string;
@@ -138,7 +153,7 @@ export default function AdminCreateOfferPage() {
         } catch {
           return { ok: false, errorCode: "offer.create.intent_not_durable" };
         }
-        const created = await createAdminOffer({ sellerPartyId, catalogVariantId, sellerSku, requestId });
+        const created = await createAdminOffer({ sellerPartyId, catalogVariantId, sellerSku, channel, requestId });
         if (!created.ok) return { ok: false, errorCode: created.errorCode, denied: created.denied };
         clearAdminOfferIntent(scope);
         return { ok: true, offerId: created.detail.offerId };

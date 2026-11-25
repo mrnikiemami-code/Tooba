@@ -50,6 +50,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<Tooba.Inventory.Contracts.Returns.IInventoryReturnObligationRelease, InventoryReturnObligationRelease>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ISellerOfferInventoryGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
+        services.AddScoped<IInventoryProvisioningGateway, InventoryProvisioningDirectory>();
         services.AddScoped<IFulfillmentInventoryLifecyclePort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ICartInventoryHoldPort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IInventoryPaymentHoldGate>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());

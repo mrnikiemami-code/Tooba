@@ -207,6 +207,7 @@ export async function createAdminOffer(input: {
   sellerPartyId: string;
   catalogVariantId: string;
   sellerSku?: string | null;
+  channel?: string | null;
   requestId: string;
 }): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
@@ -218,6 +219,7 @@ export async function createAdminOffer(input: {
         sellerPartyId: input.sellerPartyId,
         catalogVariantId: input.catalogVariantId,
         sellerSku: input.sellerSku,
+        channel: input.channel ?? undefined,
         status: "Draft",
         requestId: input.requestId,
       }),
@@ -489,9 +491,11 @@ export async function loadAdminProductVariants(productId: string, locale = "fa-I
 export async function findAdminActiveOffer(
   sellerPartyId: string,
   catalogVariantId: string,
+  channel?: string | null,
 ): Promise<{ offerId: string } | null> {
   await prepareAdminDevActor();
   const params = new URLSearchParams({ sellerPartyId, catalogVariantId });
+  if (channel) params.set("channel", channel);
   try {
     const response = await fetch(`/v1/admin/offers/active-listing?${params.toString()}`, { headers: headers() });
     if (!response.ok) return null;
@@ -501,4 +505,56 @@ export async function findAdminActiveOffer(
   } catch {
     return null;
   }
+}
+
+export async function loadAdminAllowedOfferChannels(): Promise<string[]> {
+  await prepareAdminDevActor();
+  try {
+    const response = await fetch("/v1/admin/offers/allowed-channels", { headers: headers() });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload.filter((x): x is string => typeof x === "string") : [];
+  } catch { return []; }
+}
+
+export interface AdminInventoryLocationOption { locationId: string; code: string; name: string; }
+
+export async function loadAdminInventoryLocations(): Promise<AdminInventoryLocationOption[]> {
+  await prepareAdminDevActor();
+  try {
+    const response = await fetch("/v1/admin/offers/inventory-locations", { headers: headers() });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload.flatMap((raw) => {
+      const item = record(raw); if (!item) return [];
+      const locationId = text(prop(item, "locationId", "LocationId")); if (!locationId) return [];
+      return [{ locationId, code: text(prop(item, "code", "Code")), name: text(prop(item, "name", "Name")) }];
+    }) : [];
+  } catch { return []; }
+}
+
+export async function ensureAdminInventoryPosition(offerId: string, locationId: string): Promise<{ stockItemId: string } | null> {
+  await prepareAdminDevActor();
+  try {
+    const response = await fetch(`/v1/admin/offers/${offerId}/inventory/positions`, {
+      method: "POST", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify({ locationId }),
+    });
+    if (!response.ok) return null;
+    const item = record(await response.json());
+    const stockItemId = item ? text(prop(item, "stockItemId", "StockItemId")) : "";
+    return stockItemId ? { stockItemId } : null;
+  } catch { return null; }
+}
+
+export async function loadAdminOfferHistory(offerId: string, page = 1, pageSize = 20) {
+  await prepareAdminDevActor();
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const response = await fetch(`/v1/admin/offers/${offerId}/history?${params.toString()}`, { headers: headers() });
+  if (!response.ok) return { items: [], totalCount: 0, page, pageSize };
+  const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
+  const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
+    const item = record(raw); if (!item) return [];
+    return [{ offerId: text(prop(item, "offerId", "OfferId")), occurredAt: text(prop(item, "occurredAt", "OccurredAt")), kind: text(prop(item, "kind", "Kind")), actorUserId: prop(item, "actorUserId", "ActorUserId") == null ? null : text(prop(item, "actorUserId", "ActorUserId")), summary: text(prop(item, "summary", "Summary")), oldValue: prop(item, "oldValue", "OldValue") == null ? null : text(prop(item, "oldValue", "OldValue")), newValue: prop(item, "newValue", "NewValue") == null ? null : text(prop(item, "newValue", "NewValue")) }];
+  });
+  return { items, totalCount: Number(payload.totalCount ?? 0), page: Number(payload.page ?? page), pageSize: Number(payload.pageSize ?? pageSize) };
 }

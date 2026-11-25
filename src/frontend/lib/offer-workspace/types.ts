@@ -107,6 +107,35 @@ export interface OfferShippingTypeOption {
   isActive: boolean;
 }
 
+export interface OfferInventoryLocationOption {
+  locationId: string;
+  code: string;
+  name: string;
+}
+
+export interface OfferLocalInventoryDraft {
+  locationId: string;
+  onHand: string;
+  reason: string;
+}
+
+export interface OfferHistoryItem {
+  offerId: string;
+  occurredAt: string;
+  kind: string;
+  actorUserId: string | null;
+  summary: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface OfferHistoryPage {
+  items: OfferHistoryItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface OfferPickerPage<T> {
   rows: T[];
   totalCount: number;
@@ -155,16 +184,21 @@ export interface OfferWorkspaceAdapter {
   searchSellers?: (search: string, page: number) => Promise<OfferPickerPage<OfferSellerOption>>;
   searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
   loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
-  findActiveOffer?: (sellerPartyId: string, catalogVariantId: string) => Promise<{ offerId: string } | null>;
+  loadChannels?: () => Promise<string[]>;
+  loadInventoryLocations?: () => Promise<OfferInventoryLocationOption[]>;
+  loadHistory?: (page: number, pageSize: number) => Promise<OfferHistoryPage>;
+  findActiveOffer?: (sellerPartyId: string, catalogVariantId: string, channel: string) => Promise<{ offerId: string } | null>;
   createDraft: (input: {
     sellerPartyId?: string;
     catalogVariantId: string;
     sellerSku: string | null;
+    channel?: string;
   }) => Promise<OfferCreateResult>;
   createAndSaveDraft?: (input: {
     sellerPartyId?: string;
     catalogVariantId: string;
     sellerSku: string | null;
+    channel: string;
     amount: number | null;
     currency: string;
     returnPolicyChoice: string;
@@ -173,6 +207,7 @@ export interface OfferWorkspaceAdapter {
     maximumOrderQuantity: number | null;
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;
+    inventory: OfferLocalInventoryDraft[];
   }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
   saveCommercial: (patch: OfferCommercialPatch) => Promise<OfferMutationResult>;
   savePrice: (input: { amount: number; currency: string }) => Promise<OfferMutationResult>;

@@ -51,6 +51,9 @@ public sealed class OfferModule : IToobaModule
             return new ReturnPolicyResolver(opts);
         });
         services.AddScoped<IOfferStore, OfferStore>();
+        services.AddScoped<OfferHistoryStore>();
+        services.AddScoped<IOfferHistoryWriter>(sp => sp.GetRequiredService<OfferHistoryStore>());
+        services.AddScoped<IOfferHistoryReader>(sp => sp.GetRequiredService<OfferHistoryStore>());
         services.AddSingleton<IPrimaryOfferSelectionPolicy, PrimaryOfferSelectionPolicy>();
         services.AddScoped<OfferReadModelComposer>();
         services.AddScoped<IOfferSellerProductIdLookup, OfferSellerProductIdLookup>();

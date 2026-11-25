@@ -10,8 +10,9 @@ namespace Tooba.Offer.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001 — endpoint-reachable Offer validator coverage.
-/// Exactly eleven Offer.Endpoints-reachable MediatR requests; six carry a concrete transport validator
-/// and five are explicitly NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY.
+/// Exactly fifteen Offer.Endpoints-reachable MediatR requests; eight carry a concrete transport validator
+/// and seven are explicitly NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY (the edition-scoped allowed-channel
+/// read has no client input and derives its set from the trusted request edition).
 /// </summary>
 public sealed class OfferEndpointValidatorCoverageGuardTests
 {
@@ -26,18 +27,22 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
         ("QueryAdminOffersQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("QuerySellerOffersQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("FindActiveOfferQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
+        ("GetAllowedOfferChannelsQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
+        ("ListEligibleInventoryLocationsQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("GetOfferQuery", "VALIDATOR_REQUIRED"),
+        ("GetOfferHistoryQuery", "VALIDATOR_REQUIRED"),
         ("CreateOfferCommand", "VALIDATOR_REQUIRED"),
         ("UpdateOfferCommand", "VALIDATOR_REQUIRED"),
         ("SetOfferPriceCommand", "VALIDATOR_REQUIRED"),
         ("SetOfferInventoryCommand", "VALIDATOR_REQUIRED"),
         ("AssignOfferFulfillmentCommand", "VALIDATOR_REQUIRED"),
+        ("EnsureOfferInventoryPositionCommand", "VALIDATOR_REQUIRED"),
     ];
 
     [Fact]
-    public void Exactly_eleven_endpoint_reachable_requests_are_manifested_once()
+    public void Exactly_fifteen_endpoint_reachable_requests_are_manifested_once()
     {
-        Assert.Equal(11, Manifest.Length);
+        Assert.Equal(15, Manifest.Length);
         var names = Manifest.Select(x => x.RequestTypeName).ToArray();
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
 
@@ -59,7 +64,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void Six_required_validators_resolve_via_foundation_DI_and_auth_scoped_query_has_none()
+    public void Eight_required_validators_resolve_via_foundation_DI_and_auth_scoped_query_has_none()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -85,7 +90,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
     }
 
     [Fact]
-    public void All_ten_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
+    public void All_fifteen_requests_are_real_mediatr_requests_and_endpoints_use_ISender()
     {
         var appAsm = typeof(CreateOfferCommand).Assembly;
         foreach (var (name, _) in Manifest)

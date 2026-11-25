@@ -98,7 +98,8 @@ public sealed record SellerOfferCreateRequest(
     string? Status,
     string? ReturnPolicyChoice = null,
     int? CustomReturnWindowDays = null,
-    string? RequestId = null);
+    string? RequestId = null,
+    string? Channel = null);
 
 /// <summary>
 /// Admin creates a Draft Offer for an explicitly selected seller. The seller id is data input,
@@ -109,7 +110,8 @@ public sealed record AdminOfferCreateRequest(
     Guid CatalogVariantId,
     string? SellerSku,
     string? Status,
-    string? RequestId = null);
+    string? RequestId = null,
+    string? Channel = null);
 
 /// <summary>
 /// فرمان نوشتن مبلغ بدون مالیات روی Offer متعلق به همان فروشنده از طریق Pricing.
@@ -126,3 +128,8 @@ public sealed record SellerOfferInventoryWriteRequest(
     decimal OnHand,
     string? Reason,
     Guid? StockItemId = null);
+
+/// <summary>
+/// Body for idempotently provisioning an empty stock position at one active location.
+/// </summary>
+public sealed record OfferInventoryPositionProvisionRequest(Guid LocationId);

@@ -105,6 +105,7 @@ export interface OfferWorkspaceMessages {
   inventoryReasonHint: string;
   inventoryEmpty: string;
   inventoryUnavailable: string;
+  inventoryProvisionNote: string;
   inventoryReservedReadOnly: string;
   shippingTitle: string;
   shippingDesc: string;
@@ -152,6 +153,11 @@ export interface OfferWorkspaceMessages {
   deniedDetail: string;
   loadFailed: string;
   channelMarketplace: string;
+  channelDirect: string;
+  channelAgency: string;
+  channelCorporate: string;
+  channelAffiliate: string;
+  channelApi: string;
   sellerSession: string;
   imageAlt: string;
   noImage: string;
@@ -305,6 +311,7 @@ const fa: OfferWorkspaceMessages = {
   inventoryReasonHint: "برای هر اصلاح موجودی الزامی است.",
   inventoryEmpty: "برای این آفر هنوز موجودی ثبت نشده است.",
   inventoryUnavailable: "افزودن انبار جدید از این صفحه ممکن نیست.",
+  inventoryProvisionNote: "موقعیت‌های انبار پس از ذخیره پیش‌نویس به‌صورت واقعی ایجاد می‌شوند.",
   inventoryReservedReadOnly: "رزرو و قابل فروش فقط‌خواندنی‌اند؛ موجودی فیزیکی نباید کمتر از رزرو باشد.",
   shippingTitle: "ارسال",
   shippingDesc: "مسئولیت ارسال این آفر و نوع ارسال آن را تعیین کنید.",
@@ -352,6 +359,11 @@ const fa: OfferWorkspaceMessages = {
   deniedDetail: "این آفر متعلق به فروشنده دیگری است یا مجوز کافی وجود ندارد.",
   loadFailed: "خواندن آفر انجام نشد",
   channelMarketplace: "بازارگاه",
+  channelDirect: "فروش مستقیم",
+  channelAgency: "نمایندگی",
+  channelCorporate: "سازمانی",
+  channelAffiliate: "همکار فروش",
+  channelApi: "API",
   sellerSession: "فروشنده نشست",
   imageAlt: "تصویر محصول",
   noImage: "بدون تصویر",
@@ -506,6 +518,7 @@ const en: OfferWorkspaceMessages = {
   inventoryReasonHint: "Required for every inventory adjustment.",
   inventoryEmpty: "No inventory is recorded for this offer yet.",
   inventoryUnavailable: "Adding a new warehouse is not available on this screen.",
+  inventoryProvisionNote: "Warehouse positions are created for real after the draft is saved.",
   inventoryReservedReadOnly: "Reserved and available are read-only; on-hand must not be below reserved.",
   shippingTitle: "Shipping",
   shippingDesc: "Set this offer's fulfilment responsibility and shipping type.",
@@ -553,6 +566,11 @@ const en: OfferWorkspaceMessages = {
   deniedDetail: "This offer belongs to another seller or the actor lacks permission.",
   loadFailed: "Offer could not be read",
   channelMarketplace: "Marketplace",
+  channelDirect: "Direct",
+  channelAgency: "Agency",
+  channelCorporate: "Corporate",
+  channelAffiliate: "Affiliate",
+  channelApi: "API",
   sellerSession: "Session seller",
   imageAlt: "Product image",
   noImage: "No image",
@@ -632,6 +650,8 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
       return t.validationReturnWindow;
     case "offer.return.window_out_of_range":
       return t.validationReturnRange;
+    case "concurrency.conflict":
+      return t.concurrentChange;
     case "offer.buyable.no_price":
       return t.buyableReasonNoPrice;
     case "offer.buyable.no_stock":

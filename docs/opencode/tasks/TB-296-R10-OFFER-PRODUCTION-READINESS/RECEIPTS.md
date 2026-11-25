@@ -2,30 +2,36 @@
 
 ## Identity
 - Base: 295d8241d277f4320f90ee9e5e75e907dfa5905f
-- Status: BLOCKED
-- Implementation commit: 521b3c1954ca490db0a54deb982b8a39759ba78d
-- Start: 2026-11-26 00:14:01.559 +03:30
-- End: 2026-11-26 00:29:22.000 +03:30
-- Duration: 00:15:20
+- Branch: opencode/iso-agents-002
 - FE: http://127.0.0.1:3000
 - Host: http://127.0.0.1:5088
-- Health: ready, SingleStore, inmemory authorization, messaging Healthy
+- DB: tooba_alpha
+- Build: 4ipc4fsBsrOYcuqaJQCCB
+- Start: 2026-11-26 00:14:01.559 +03:30
+- Status: PASS_WITH_LIMITATIONS / READY_FOR_ARCHITECT_REVIEW
 
-## Executed evidence
+## Applied dev migration
+- `20261126120000_R10OfferHistory` applied to tooba_alpha (additive `offer.offer_history`).
+- History GET observed total 18 before final test cleanup.
+
+## Gates
 | Gate | Result | File |
 |---|---|---|
-| typecheck | PASS | `evidence/r10-typecheck.log` |
-| lint | PASS pre-existing warnings | `evidence/r10-lint.log` |
-| build | PASS | `evidence/r10-build.log` |
-| Offer backend | 97/97 | `evidence/r10-offer-tests.log` |
-| Host Localization/Catalog | 9/9 | `evidence/r10-host-tests.log` |
-| mount | 26/26 | `evidence/r10-runtime` |
-| API | 16/16 | R9-R1 evidence r9r1-api.log |
-| model/i18n/routing | 26/26 | R9-R1 evidence r9r1-model-i18n.log |
-| R9 behavior runtime | 32/32 | `evidence/r10-runtime-verify.json` SHA-256 DA00DD5B… |
-| cleanup | ok | `evidence/r10-runtime-cleanup.json` SHA-256 93256140… |
-| public languages | public DTO | `evidence/r10-public-languages.json` |
-| OpenSpec | valid | `evidence/r10-openspec.log` |
+| typecheck | PASS | `evidence/r10-final2-typecheck.log` |
+| lint | PASS (pre-existing warnings) | `evidence/r10-final2-lint.log` |
+| build | PASS | `evidence/r10-final2-build.log` |
+| Offer backend | 123/123 | `evidence/r10-final2-offer-tests.log` |
+| Host Locale/Catalog/Stage2 | 11/11 | `evidence/r10-final2-host-tests.log` |
+| mount | 26/26 | `evidence/r10-final-mount.log` |
+| admin/seller API | 16/16 | `evidence/r10-final-api.log` |
+| model/i18n/routing | 26/26 | `evidence/r10-final-model-i18n.log` |
+| runtime | 42/42, 0 errors | `evidence/r10-runtime/verify-r10.json` SHA-256 983FBE8A… |
+| cleanup | ok true | `evidence/r10-runtime/cleanup.json` SHA-256 93256140… |
+| CAS | 1 winner / 1 conflict / restored | `evidence/r10-cas.json` SHA-256 700E47B6… |
+| performance | form median 1014/p95 1078; picker 61/97 | `evidence/r10-performance.json` SHA-256 9529EB3D… |
+| architecture | 27 pre-existing baseline; no offer size violation | `evidence/r10-final3-architecture.log` |
+| OpenSpec | valid (warnings only) | `evidence/r10-final2-openspec.log` |
 
-## Blockers
-R10-01/03/05/06/09 full/14 matrix. Exact owning-domain authority and authorization are absent; no migrations or fabricated contracts.
+## Cleanup
+- R9/R10 test offers remaining 0; roles [] assignments [] ceiling 0; seed 199 and two-position [0,0] restored.
+- Migration kept (additive) because it is the required production history schema.

@@ -1,4 +1,7 @@
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Presentation;
 
 namespace Tooba.Host.Errors;
@@ -22,7 +25,10 @@ internal sealed class ToobaExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        await _presentation.WriteAsync(httpContext, exception, cancellationToken);
+        var mapped = exception is DbUpdateConcurrencyException
+            ? new SemanticException(new SemanticError(FoundationErrorCodes.ConcurrencyConflict))
+            : exception;
+        await _presentation.WriteAsync(httpContext, mapped, cancellationToken);
         return true;
     }
 }

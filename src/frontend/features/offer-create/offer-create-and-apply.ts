@@ -1,9 +1,10 @@
-﻿import type { OfferFulfillmentResponsibility } from "../../lib/offer-workspace/types.ts";
+﻿import type { OfferFulfillmentResponsibility, OfferLocalInventoryDraft } from "../../lib/offer-workspace/types.ts";
 
 export interface OfferCreateAndApplyInput {
   sellerPartyId?: string;
   catalogVariantId: string;
   sellerSku: string | null;
+  channel: string;
   amount: number | null;
   currency: string;
   returnPolicyChoice: string;
@@ -12,6 +13,7 @@ export interface OfferCreateAndApplyInput {
   maximumOrderQuantity: number | null;
   responsibility: OfferFulfillmentResponsibility | null;
   shippingTypeId: string | null;
+  inventory: OfferLocalInventoryDraft[];
 }
 
 export interface OfferCreateAndApplyDetail {
@@ -19,6 +21,7 @@ export interface OfferCreateAndApplyDetail {
   sellerPartyId: string;
   catalogVariantId: string;
   sellerSku: string | null;
+  channel: string;
   amount: number | null;
   currency: string;
   returnPolicyChoice: string;
@@ -27,6 +30,7 @@ export interface OfferCreateAndApplyDetail {
   maximumOrderQuantity: number | null;
   fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
   fulfillmentShippingTypeId: string | null;
+  inventoryLocations: Array<{ locationId: string; onHand: number }>;
 }
 
 export interface OfferCreateAndApplyTransport {
@@ -34,6 +38,8 @@ export interface OfferCreateAndApplyTransport {
   load: (offerId: string) => Promise<{ ok: true; detail: OfferCreateAndApplyDetail } | { ok: false; errorCode: string }>;
   savePrice: (offerId: string, amount: number, currency: string) => Promise<{ ok: true } | { ok: false; errorCode: string }>;
   saveConditions: (offerId: string, input: OfferCreateAndApplyInput) => Promise<{ ok: true } | { ok: false; errorCode: string }>;
+  provisionPosition: (offerId: string, locationId: string) => Promise<{ ok: true; stockItemId: string } | { ok: false; errorCode: string }>;
+  saveInventory: (offerId: string, stockItemId: string, onHand: number, reason: string) => Promise<{ ok: true } | { ok: false; errorCode: string }>;
   saveFulfillment?: (offerId: string, input: OfferCreateAndApplyInput) => Promise<{ ok: true } | { ok: false; errorCode: string }>;
   onCommitted?: () => void;
 }
@@ -51,13 +57,15 @@ function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyIn
     && detail.catalogVariantId === input.catalogVariantId
     && (detail.sellerSku ?? null) === input.sellerSku
     && sameNumber(detail.amount, input.amount)
+    && detail.channel === input.channel
     && detail.currency === input.currency
     && detail.returnPolicyChoice === input.returnPolicyChoice
     && sameNumber(detail.customReturnWindowDays, input.customReturnWindowDays)
     && sameNumber(detail.minimumOrderQuantity, input.minimumOrderQuantity)
     && sameNumber(detail.maximumOrderQuantity, input.maximumOrderQuantity)
     && detail.fulfillmentResponsibility === input.responsibility
-    && (detail.fulfillmentShippingTypeId ?? null) === (input.shippingTypeId ?? null);
+    && (detail.fulfillmentShippingTypeId ?? null) === (input.shippingTypeId ?? null)
+    && input.inventory.every((position) => detail.inventoryLocations.some((row) => row.locationId === position.locationId && Number(row.onHand) === Number(position.onHand)));
 }
 
 /** Shared create-and-apply use case; route pages provide only role-specific transport. */
@@ -80,6 +88,12 @@ export async function createAndApplyOffer(
     if (conditionsChanged) {
       const conditions = await transport.saveConditions(offerId, input);
       if (!conditions.ok) return { ok: false, errorCode: conditions.errorCode, createdOfferId: offerId, partial: true };
+    }
+    for (const position of input.inventory) {
+      const provisioned = await transport.provisionPosition(offerId, position.locationId);
+      if (!provisioned.ok) return { ok: false, errorCode: provisioned.errorCode, createdOfferId: offerId, partial: true };
+      const saved = await transport.saveInventory(offerId, provisioned.stockItemId, Number(position.onHand), position.reason || "offer-create");
+      if (!saved.ok) return { ok: false, errorCode: saved.errorCode, createdOfferId: offerId, partial: true };
     }
     if (transport.saveFulfillment && input.responsibility) {
       const fulfillment = await transport.saveFulfillment(offerId, input);

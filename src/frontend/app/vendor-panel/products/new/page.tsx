@@ -11,11 +11,15 @@ import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { readSellerPartyId } from "../../seller-api";
 import {
   createSellerOffer,
+  ensureSellerInventoryPosition,
   findSellerActiveOffer,
+  loadSellerAllowedOfferChannels,
+  loadSellerInventoryLocations,
   loadSellerOfferDetail,
   loadSellerProductVariants,
   patchSellerOffer,
   searchSellerCatalogProducts,
+  writeSellerOfferInventory,
   writeSellerOfferPrice,
 } from "../../seller-offer-api";
 import { clearOfferIntent, readOrCreateOfferIntent } from "../../offer-create-intent";
@@ -63,8 +67,10 @@ export default function VendorCreateOfferPage() {
           status: row.status,
         }));
       },
-      findActiveOffer: async (_sellerId, catalogVariantId) =>
-        findSellerActiveOffer(sellerPartyId, catalogVariantId),
+      findActiveOffer: async (_sellerId, catalogVariantId, channel) =>
+        findSellerActiveOffer(sellerPartyId, catalogVariantId, channel),
+      loadChannels: () => loadSellerAllowedOfferChannels(sellerPartyId),
+      loadInventoryLocations: () => loadSellerInventoryLocations(sellerPartyId),
       createAndSaveDraft: async (input) => {
         const scope = `${sellerPartyId}:${input.catalogVariantId}`;
         let requestId: string;
@@ -95,6 +101,14 @@ export default function VendorCreateOfferPage() {
             const result = await writeSellerOfferPrice(sellerPartyId, offerId, { amount, currency });
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
+          provisionPosition: async (offerId, locationId) => {
+            const result = await ensureSellerInventoryPosition(sellerPartyId, offerId, locationId);
+            return result ? { ok: true, stockItemId: result.stockItemId } : { ok: false, errorCode: "inventory.provision.failed" };
+          },
+          saveInventory: async (offerId, stockItemId, onHand, reason) => {
+            const result = await writeSellerOfferInventory(sellerPartyId, offerId, { stockItemId, onHand, reason });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
           saveConditions: async (offerId, value) => {
             const result = await patchSellerOffer(sellerPartyId, offerId, {
               sellerSku: value.sellerSku,
@@ -109,7 +123,7 @@ export default function VendorCreateOfferPage() {
           onCommitted: () => clearOfferIntent(scope),
         }, input);
       },
-      createDraft: async ({ catalogVariantId, sellerSku }) => {
+      createDraft: async ({ catalogVariantId, sellerSku, channel }) => {
         const scope = `${sellerPartyId}:${catalogVariantId}`;
         let requestId: string;
         try {
@@ -120,6 +134,7 @@ export default function VendorCreateOfferPage() {
         const created = await createSellerOffer(sellerPartyId, {
           catalogVariantId,
           sellerSku,
+          channel,
           status: "Draft",
           requestId,
         });

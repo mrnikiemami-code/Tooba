@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Persistence;
@@ -82,6 +83,7 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.OnHand).HasColumnType("numeric(18,6)");
             entity.Property(x => x.Reserved).HasColumnType("numeric(18,6)");
             entity.Ignore(x => x.Available);
+            entity.UseXminAsConcurrencyToken();
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => new { x.OfferId, x.LocationId }).IsUnique();
         });

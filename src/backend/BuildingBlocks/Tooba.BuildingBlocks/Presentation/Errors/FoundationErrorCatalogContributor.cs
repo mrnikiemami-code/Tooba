@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace Tooba.BuildingBlocks.Presentation.Errors;
 
@@ -8,6 +8,13 @@ public sealed class FoundationErrorCatalogContributor : IErrorCatalogContributor
     /// <inheritdoc />
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
+        new(
+            Code: "concurrency.conflict",
+            Classification: ErrorClassification.Conflict,
+            HttpStatus: StatusCodes.Status409Conflict,
+            LocalizationKey: "concurrency.conflict",
+            Severity: ErrorSeverity.Warning,
+            SafeTitleFallback: "Conflict"),
         new(
             Code: "validation.failed",
             Classification: ErrorClassification.Validation,

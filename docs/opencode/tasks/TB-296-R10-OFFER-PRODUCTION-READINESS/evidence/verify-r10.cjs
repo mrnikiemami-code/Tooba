@@ -4,7 +4,7 @@ const path = require("path");
 
 const FRONT = "http://127.0.0.1:3000";
 const HOST = "http://127.0.0.1:5088";
-const OUT = process.argv[2] || path.join(__dirname, "r9-runtime");
+const OUT = process.argv[2] || path.join(__dirname, "r10-runtime");
 const ADMIN_HEADER = "X-Tooba-Dev-Actor-User-Id";
 const SELLER_HEADER = "X-Tooba-Seller-Party-Id";
 
@@ -144,8 +144,11 @@ async function main() {
     page.on("pageerror", (error) => consoleErrors.push(String(error)));
 
     // Pre-create identity and tabs.
+    const formStart = Date.now();
     await page.goto(`${FRONT}/admin/offers/new`, { waitUntil: "load" });
     await page.waitForSelector("[data-testid=offer-workspace]", { timeout: 30000 });
+    const createStartUrl = page.url();
+    result.metrics.formLoadMs = Date.now() - formStart;
     await page.click("[data-testid=offer-seller-picker-toggle]");
     await page.fill("[data-testid=offer-seller-dialog-search]", "دیجی");
     await page.keyboard.press("Enter");
@@ -165,10 +168,19 @@ async function main() {
     const conditionsEnabled = !(await page.locator("[data-testid=offer-tab-button-conditions]").isDisabled());
     const inventoryDisabled = await page.locator("[data-testid=offer-tab-button-inventory]").isDisabled();
     const historyDisabled = await page.locator("[data-testid=offer-tab-button-history]").isDisabled();
-    check("R9-04.noFakeChannelSelect", (await page.locator("[data-testid=offer-tab-identity] select").count()) === 0, "no channel select");
-    check("R9-05.preCreateTabs", pricingEnabled && conditionsEnabled && inventoryDisabled && historyDisabled, JSON.stringify({ pricingEnabled, conditionsEnabled, inventoryDisabled, historyDisabled }));
+    const channelSelect = page.locator("[data-testid=offer-channel-select]");
+    check("R10-01.channelSelect", (await channelSelect.count()) === 1 && (await channelSelect.inputValue()) === "Marketplace", await channelSelect.inputValue().catch(() => "missing"));
+    const allowed = await api(`${HOST}/v1/admin/offers/allowed-channels`, { headers: adminHeaders });
+    check("R10-01.allowedChannels", allowed.status === 200 && Array.isArray(allowed.body) && allowed.body.includes("Marketplace"), JSON.stringify(allowed.body));
+    const rejected = await api(`${HOST}/v1/admin/offers`, { method: "POST", headers: adminHeaders, body: JSON.stringify({ sellerPartyId: sellerB.sellerPartyId, catalogVariantId: adminFree.variant.catalogVariantId, channel: "Direct", requestId: `r10-bad-channel-${Date.now()}` }) });
+    check("R10-01.rejectUnallowedChannel", rejected.status === 400 || rejected.status === 409 || rejected.status === 403, String(rejected.status));
+    check("R10-02.preCreateTabs", pricingEnabled && conditionsEnabled && !inventoryDisabled && historyDisabled, JSON.stringify({ pricingEnabled, conditionsEnabled, inventoryEnabled: !inventoryDisabled, historyDisabled }));
 
-    // Pre-create price + conditions then one explicit save.
+    // Pre-create price + conditions + actual inventory position then one explicit save.
+    await page.click("[data-testid=offer-tab-button-inventory]");
+    await page.waitForSelector("[data-testid=offer-inventory-row]", { timeout: 20000 });
+    await page.locator("[data-testid=offer-inventory-row]").first().locator("[data-testid=offer-inventory-input]").fill("3");
+    await page.fill("[data-testid=offer-inventory-reason]", "R10 create position");
     await page.click("[data-testid=offer-tab-button-pricing]");
     await page.fill("[data-testid=offer-price-input]", "۸۷۶۵۴۳");
     await page.waitForTimeout(250);
@@ -187,7 +199,8 @@ async function main() {
     await page.waitForSelector("[data-testid=offer-workspace]", { timeout: 30000 });
     await page.waitForTimeout(700);
     const r9Read = await api(`${HOST}/v1/admin/offers/${r9OfferId}`, { headers: adminHeaders });
-    check("R9-05.createOneDraftApplied", r9Read.body?.amount === 876543 && r9Read.body?.returnPolicyChoice === "Custom" && r9Read.body?.customReturnWindowDays === 9 && Number(r9Read.body?.minimumOrderQuantity) === 2 && Number(r9Read.body?.maximumOrderQuantity) === 6, JSON.stringify({ amount: r9Read.body?.amount, policy: r9Read.body?.returnPolicyChoice, days: r9Read.body?.customReturnWindowDays, min: r9Read.body?.minimumOrderQuantity, max: r9Read.body?.maximumOrderQuantity }));
+    check("R10-03.createProvisionedInventory", Array.isArray(r9Read.body?.inventoryLocations) && r9Read.body.inventoryLocations.some((row) => Number(row.onHand) === 3), JSON.stringify(r9Read.body?.inventoryLocations));
+    check("R10-04.createOneDraftApplied", r9Read.body?.amount === 876543 && r9Read.body?.returnPolicyChoice === "Custom" && r9Read.body?.customReturnWindowDays === 9 && Number(r9Read.body?.minimumOrderQuantity) === 2 && Number(r9Read.body?.maximumOrderQuantity) === 6, JSON.stringify({ amount: r9Read.body?.amount, policy: r9Read.body?.returnPolicyChoice, days: r9Read.body?.customReturnWindowDays, min: r9Read.body?.minimumOrderQuantity, max: r9Read.body?.maximumOrderQuantity }));
 
     // Toast 3s and no persistent success banner.
     await page.click("[data-testid=offer-tab-button-pricing]");
@@ -361,11 +374,29 @@ async function main() {
     const orders = await api(`${HOST}/v1/admin/orders/query`, { method: "POST", headers: adminHeaders, body: JSON.stringify({ page: 1, pageSize: 10, filters: [], sorts: [] }) });
     const productsRegression = await api(`${HOST}/v1/admin/catalog/products?page=1&pageSize=10&locale=fa-IR`, { headers: adminHeaders });
     check("R9-12.ordersProductsRegression", (orders.body?.items ?? []).length === 10 && (productsRegression.body?.items ?? []).length > 0, JSON.stringify({ orders: (orders.body?.items ?? []).length, products: (productsRegression.body?.items ?? []).length }));
-    check("R9-12.noUnexpectedConsoleErrors", consoleErrors.filter((text) => !text.includes("ERR_FAILED")).length === 0, consoleErrors.filter((text) => !text.includes("ERR_FAILED")).slice(0, 3).join(" | "));
-    result.metrics.formLoadMs = await page.evaluate(() => Math.round(performance.now())).catch(() => null);
+    const duplicateScoped = await api(`${HOST}/v1/admin/offers/active-listing?sellerPartyId=${sellerA.sellerPartyId}&catalogVariantId=01a05388-6ce8-7000-9cd2-66df593dd1ff&channel=Marketplace`, { headers: adminHeaders });
+    check("R10-01.duplicateScopedChannel", duplicateScoped.status === 200 && Boolean(duplicateScoped.body?.offerId), JSON.stringify(duplicateScoped.body));
+    check("R10-02.noAutoCreate", createStartUrl.includes("/admin/offers/new"), createStartUrl);
+    const locationList = await api(`${HOST}/v1/admin/offers/inventory-locations`, { headers: adminHeaders });
+    const firstLocation = Array.isArray(locationList.body) ? locationList.body[0] : null;
+    let provisionA = null;
+    let provisionB = null;
+    if (firstLocation && r9OfferId) {
+      provisionA = await api(`${HOST}/v1/admin/offers/${r9OfferId}/inventory/positions`, { method: "POST", headers: adminHeaders, body: JSON.stringify({ locationId: firstLocation.locationId }) });
+      provisionB = await api(`${HOST}/v1/admin/offers/${r9OfferId}/inventory/positions`, { method: "POST", headers: adminHeaders, body: JSON.stringify({ locationId: firstLocation.locationId }) });
+    }
+    check("R10-03.idempotentProvision", Boolean(firstLocation) && provisionA?.status === 200 && provisionB?.status === 200 && provisionA.body?.stockItemId === provisionB.body?.stockItemId, JSON.stringify({ a: provisionA?.body, b: provisionB?.body }));
+    const historyPaged = await api(`${HOST}/v1/admin/offers/${r9OfferId}/history?page=1&pageSize=1`, { headers: adminHeaders });
+    check("R10-06.historyPagination", historyPaged.status === 200 && historyPaged.body?.items?.length <= 1 && Number(historyPaged.body?.totalCount) >= 1, JSON.stringify(historyPaged.body));
+    const sellerFulfillment = await api(`${HOST}/v1/admin/offers/${r9OfferId}/fulfillment`, { method: "PUT", headers: sellerAHeaders, body: JSON.stringify({ responsibility: "Seller", shippingTypeId: null }) });
+    check("R10-08.sellerFulfillmentDenied", sellerFulfillment.status === 401 || sellerFulfillment.status === 403, String(sellerFulfillment.status));
+    check("R10-09.noFeatureQueryAuthority", !fs.existsSync(path.resolve(process.cwd(), "src/frontend/lib/offer-workspace/offer-locale.ts")) && !fs.readFileSync(path.resolve(process.cwd(), "src/frontend/lib/i18n/registry-locale.ts"), "utf8").includes("new URLSearchParams"), "query authority absent");
+    const formMeasure = result.metrics.formLoadMs ?? null;
+    check("R10-13.performanceComparable", formMeasure == null || formMeasure <= 2000, String(formMeasure));    check("R9-12.noUnexpectedConsoleErrors", consoleErrors.filter((text) => !text.includes("ERR_FAILED")).length === 0, consoleErrors.filter((text) => !text.includes("ERR_FAILED")).slice(0, 3).join(" | "));
+    result.metrics.pagePerformanceMs = await page.evaluate(() => Math.round(performance.now())).catch(() => null);
     result.finishedAt = new Date().toISOString();
     result.ok = result.errors.length === 0;
-    fs.writeFileSync(path.join(OUT, "verify-r9.json"), JSON.stringify(result, null, 2));
+    fs.writeFileSync(path.join(OUT, "verify-r10.json"), JSON.stringify(result, null, 2));
     console.log(JSON.stringify({ ok: result.ok, checks: Object.keys(result.checks).length, errors: result.errors, ids: result.ids }, null, 2));
   } finally {
     await browser.close();

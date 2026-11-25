@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Offer.Application.Offers.Commands.CreateOffer;
+using Tooba.Offer.Application.Offers.History;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
@@ -29,6 +30,8 @@ internal sealed class UpdateOfferHandler(
     ICatalogVariantLookup catalog,
     IReturnPolicyResolver returnPolicies,
     IClock clock,
+    IIdGenerator ids,
+    IOfferHistoryWriter history,
     OfferReadModelComposer readModels) : IRequestHandler<UpdateOfferCommand, Result<SellerOfferDetailPage>>
 {
     public async Task<Result<SellerOfferDetailPage>> Handle(UpdateOfferCommand request, CancellationToken cancellationToken)
@@ -36,6 +39,7 @@ internal sealed class UpdateOfferHandler(
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
+        var previousCommercial = OfferHistorySummaries.Commercial(offer);
         if (request.SellerSku is not null)
         {
             var sku = request.SellerSku.Trim();
@@ -90,6 +94,16 @@ internal sealed class UpdateOfferHandler(
             if (qty.IsFailure)
                 return Result.Failure<SellerOfferDetailPage>(qty.Errors);
         }
+        await history.AppendAsync(
+            OfferHistorySummaries.CreateEntry(
+                ids.NewId(),
+                offer.OfferId,
+                clock.UtcNow,
+                OfferHistorySummaries.CommercialChanged,
+                "Offer commercial fields changed",
+                previousCommercial,
+                OfferHistorySummaries.Commercial(offer)),
+            cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
     }

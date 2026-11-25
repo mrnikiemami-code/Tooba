@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ImageOff, Lock } from "lucide-react";
@@ -22,6 +22,7 @@ import {
 } from "./model";
 import { offerErrorText, offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
 import { createOfferFormatters, offerLocaleFromAppLocale, type OfferFormatters, type OfferLocaleDefinition } from "./i18n";
+import { useOfferHistory } from "./use-offer-history.ts";
 import { createOfferActions } from "./offer-actions.ts";
 import { buildLocalDetail } from "./local-detail.ts";
 import { ConditionsTab } from "./conditions-tab";
@@ -35,6 +36,9 @@ import styles from "./offer-workspace.module.css";
 import type {
   OfferCommercialPatch,
   OfferFulfillmentResponsibility,
+  OfferHistoryPage,
+  OfferInventoryLocationOption,
+  OfferLocalInventoryDraft,
   OfferProductOption,
   OfferSellerOption,
   OfferShippingTypeOption,
@@ -84,7 +88,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     [baseMessages, messages],
   );
   const isEdit = adapter.mode === "edit";
-
   const [detail, setDetail] = useState<OfferWorkspaceDetail | null>(null);
   const [loading, setLoading] = useState(isEdit);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -93,13 +96,17 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [activeTab, setActiveTab] = useState<OfferTabId>("identity");
   const [selectedSeller, setSelectedSeller] = useState<OfferSellerOption | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<OfferProductOption | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState("");
+  const [channels, setChannels] = useState<string[]>([]);
+  const [inventoryLocations, setInventoryLocations] = useState<OfferInventoryLocationOption[]>([]);
+  const [localInventory, setLocalInventory] = useState<OfferLocalInventoryDraft[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
+  const history = useOfferHistory(adapter, isEdit, activeTab, detail);
   const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm"; title: string; text: string; offerId?: string } | null>(null);
-
   useEffect(() => {
     if (!saveNotice) return;
     const options = { autoClose: 3000 };
@@ -108,11 +115,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     else toast.success(saveNotice, options);
     setSaveNotice(null);
   }, [saveNotice, t.draftRestored, t.noChanges, t.partialSaved, t.reloaded]);
-
   function showBlocking(kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) {
     setMessageBox({ kind, title, text, offerId });
   }
-
   function handleCancel() {
     if (anyDirty) {
       showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText);
@@ -121,7 +126,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     clearPersistedDraft();
     adapter.onCancel();
   }
-
   const [saveNeedsReload, setSaveNeedsReload] = useState(false);
   const persistKey = useMemo(() => {
     const actor = typeof window === "undefined"
@@ -138,7 +142,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [saveReloading, setSaveReloading] = useState(false);
   const [tabError, setTabError] = useState<{ tab: OfferTabId; code: string } | null>(null);
   const [showCreateErrors, setShowCreateErrors] = useState(false);
-
   const [shippingTypes, setShippingTypes] = useState<OfferShippingTypeOption[]>([]);
   const [typesError, setTypesError] = useState<string | null>(null);
   const [responsibility, setResponsibility] = useState<OfferFulfillmentResponsibility | null>(null);
@@ -148,7 +151,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [shippingSaving, setShippingSaving] = useState(false);
   const saveRef = useRef(false);
   const tabListRef = useRef<HTMLDivElement | null>(null);
-
   const tabLabel = useMemo<Record<OfferTabId, string>>(
     () => ({
       identity: t.tabs.identity,
@@ -161,7 +163,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     }),
     [t],
   );
-
   const applyLoadedDetail = useCallback((next: OfferWorkspaceDetail) => {
     setDetail(next);
     setDraft(draftFromDetail(next));
@@ -170,7 +171,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setShippingNotice(null);
     setShippingError(null);
   }, []);
-
   const load = useCallback(async () => {
     if (!isEdit || !adapter.loadDetail) return;
     setLoading(true);
@@ -185,10 +185,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     }
     applyLoadedDetail(result.detail);
   }, [adapter, isEdit, applyLoadedDetail]);
-
   const identityReady = adapter.role === "seller"
-    ? Boolean(adapter.fixedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant)
-    : Boolean(selectedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant);
+    ? Boolean(adapter.fixedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant) && Boolean(selectedChannel)
+    : Boolean(selectedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant) && Boolean(selectedChannel);
   const localDetail = useMemo(
     () => detail ?? (
       identityReady && selectedProduct && selectedVariant
@@ -209,19 +208,19 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   );
   const createReady = identityReady;
   const preCreateTabs = adapter.role === "admin"
-    ? new Set<OfferTabId>(["pricing", "conditions", "shipping"])
-    : new Set<OfferTabId>(["pricing", "conditions"]);
+    ? new Set<OfferTabId>(["pricing", "conditions", "shipping", ...(inventoryLocations.length ? ["inventory" as OfferTabId] : [])])
+    : new Set<OfferTabId>(["pricing", "conditions", ...(inventoryLocations.length ? ["inventory" as OfferTabId] : [])]);
   const createDirty = !isEdit && (
     Boolean(selectedSeller)
     || Boolean(selectedProduct)
     || Boolean(selectedVariant)
     || draft.sellerSku.trim().length > 0
+    || localInventory.some((row) => row.onHand.trim().length > 0)
     || (localDetail ? priceDirty(localDetail, draft) || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
   );
   const anyDirty = isEdit
     ? commercialChanged || priceChanged || stockChanged || shippingChanged
     : createDirty;
-
   useEffect(() => {
     if (!anyDirty) return;
     const handler = (event: BeforeUnloadEvent) => {
@@ -231,7 +230,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [anyDirty]);
-
   useEffect(() => {
     const variantId = selectedVariant?.catalogVariantId;
     if (isEdit || !adapter.findActiveOffer || !variantId) {
@@ -246,7 +244,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       return;
     }
     let active = true;
-    void adapter.findActiveOffer(sellerId, variantId)
+    void adapter.findActiveOffer(sellerId, variantId, selectedChannel)
       .then((result) => {
         if (!active) return;
         setActiveConflict(result);
@@ -258,18 +256,35 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     return () => {
       active = false;
     };
-  }, [adapter, isEdit, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId]);
-
+  }, [adapter, isEdit, selectedChannel, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId]);
   useEffect(() => {
     if (!isEdit && activeConflict) {
       showBlocking("duplicate", t.duplicateActiveTitle, t.duplicateActive);
     }
   }, [activeConflict, isEdit, t.duplicateActive, t.duplicateActiveTitle]);
-
   useEffect(() => {
     void load();
   }, [load]);
-
+  useEffect(() => {
+    if (isEdit || !adapter.loadChannels) return;
+    let active = true;
+    void adapter.loadChannels().then((rows) => {
+      if (!active) return;
+      setChannels(rows);
+      setSelectedChannel((current) => current || rows[0] || "");
+    });
+    return () => { active = false; };
+  }, [adapter, isEdit]);
+  useEffect(() => {
+    if (isEdit || !adapter.loadInventoryLocations) return;
+    let active = true;
+    void adapter.loadInventoryLocations().then((rows) => {
+      if (!active) return;
+      setInventoryLocations(rows);
+      setLocalInventory((current) => current.length > 0 ? current : rows.map((row) => ({ locationId: row.locationId, onHand: "", reason: "" })));
+    });
+    return () => { active = false; };
+  }, [adapter, isEdit]);
   useEffect(() => {
     if (restoredRef.current) return;
     if (isEdit && (!detail || loading)) return;
@@ -297,7 +312,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     }
     restoredRef.current = true;
   }, [detail, isEdit, loading, persistKey, t.draftRestored, t.reloaded]);
-
   useEffect(() => {
     if (!restoredRef.current) return;
     if (isEdit && !anyDirty) return;
@@ -315,7 +329,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       // Session storage is an optional recovery aid, never a domain write.
     }
   }, [anyDirty, detail?.lastUpdatedAt, draft, isEdit, persistKey, responsibility, selectedProduct, selectedSeller, selectedVariant, shippingTypeId]);
-
   function clearPersistedDraft() {
     try {
       window.sessionStorage.removeItem(persistKey);
@@ -323,7 +336,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       // ignore
     }
   }
-
   useEffect(() => {
     if (!adapter.loadShippingTypes) return;
     void adapter
@@ -334,12 +346,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       })
       .catch(() => setTypesError(t.pickerError));
   }, [adapter, t.pickerError]);
-
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab && (TAB_ORDER as string[]).includes(tab)) setActiveTab(tab as OfferTabId);
   }, []);
-
   useEffect(() => {
     const bar = tabListRef.current;
     const el = document.getElementById(`offer-tab-${activeTab}`);
@@ -349,7 +359,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     if (tabRect.left < barRect.left + 8) bar.scrollLeft -= barRect.left + 8 - tabRect.left;
     else if (tabRect.right > barRect.right - 8) bar.scrollLeft += tabRect.right - (barRect.right - 8);
   }, [activeTab]);
-
   const tabDirty: Record<OfferTabId, boolean> = {
     identity: commercialChanged,
     pricing: priceChanged,
@@ -365,16 +374,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setTabError(null);
     setSaveError(null);
   }
-
   const actions = createOfferActions({
-    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant,
+    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory,
     createReady, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
     priceChanged, commercialChanged, stockChanged, shippingChanged, responsibility, shippingTypeId,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
     setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
     setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
   });
-
   if (denied) {
     return (
       <div className={styles.root}>
@@ -425,7 +432,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       </div>
     );
   }
-
   const buyability = detail ? deriveBuyability(detail) : null;
   const title = detail?.productTitle || selectedProduct?.title || t.titleCreate;
   const sellerName = detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || (adapter.role === "seller" ? t.sellerSession : t.notSelected);
@@ -436,7 +442,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
     : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
-
   return (
     <div className={styles.root} data-testid="offer-workspace" dir={offerLocale.direction} lang={offerLocale.code}>
       <header className={styles.stickyHead} data-testid="offer-workspace-header">
@@ -650,7 +655,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         }
       />    </div>
   );
-
   function renderTab(): ReactNode {
     if (activeTab === "identity") {
       return (
@@ -665,6 +669,12 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           fixedSeller={adapter.fixedSeller}
           selectedSeller={selectedSeller}
           onSelectSeller={setSelectedSeller}
+          channels={channels}
+          selectedChannel={selectedChannel}
+          onSelectChannel={setSelectedChannel}
+          inventoryLocations={inventoryLocations}
+          localInventory={localInventory}
+          onLocalInventoryChange={(locationId, patch) => setLocalInventory((current) => current.map((row) => row.locationId === locationId ? { ...row, ...patch } : row))}
           selectedProduct={selectedProduct}
           onSelectProduct={(product) => {
             setSelectedProduct(product);
@@ -711,6 +721,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             dirty={stockChanged}
             onOnHandChange={(stockItemId, value) => patchDraft({ inventoryOnHand: { ...draft.inventoryOnHand, [stockItemId]: value } })}
             onReasonChange={(value) => patchDraft({ inventoryReason: value })}
+            localLocations={inventoryLocations}
+            localInventory={localInventory}
+            onLocalInventoryChange={(locationId, patch) => setLocalInventory((current) => current.map((row) => row.locationId === locationId ? { ...row, ...patch } : row))}
           />
         );
       case "shipping":
@@ -762,7 +775,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           />
         );
       case "history":
-        return <HistoryTab t={t} />;
+        return <HistoryTab t={t} format={format} data={history.data} loading={history.loading} error={history.error} onPrev={() => history.setPage((page) => Math.max(1, page - 1))} onNext={() => history.setPage((page) => page + 1)} />;
       default:
         return null;
     }

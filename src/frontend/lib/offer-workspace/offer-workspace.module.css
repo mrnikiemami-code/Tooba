@@ -1123,3 +1123,15 @@
 .tilesFour { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 900px) { .tilesFour { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .tilesFour { gap: 8px; } }
+.historyRow {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--ow-border);
+  border-radius: 8px;
+  background: var(--ow-surface-2);
+}
+.historyKind { font-size: 12px; font-weight: 650; color: var(--ow-accent); }
+.historySummary { font-size: 13px; color: var(--ow-fg); }
+.historyMeta { font-size: 11.5px; color: var(--ow-muted); }
+.historyDelta { font-size: 11.5px; color: var(--ow-ink-2); overflow-wrap: anywhere; }

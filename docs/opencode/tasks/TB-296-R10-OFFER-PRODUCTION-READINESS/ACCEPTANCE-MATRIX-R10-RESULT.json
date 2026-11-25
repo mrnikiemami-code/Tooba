@@ -1,44 +1,64 @@
 ﻿{
   "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
   "base": "295d8241d277f4320f90ee9e5e75e907dfa5905f",
-  "status": "BLOCKED",
-  "requirements": {
-    "R10-01": "BLOCKED — no owning allowed-channel authority by edition/role/seller exists; no fake policy or fixed Marketplace change applied.",
-    "R10-02": "PARTIAL — R9 pre-create supported tabs and shared create/apply retained; full inventory pre-create and complete history gated.",
-    "R10-03": "BLOCKED — no Inventory-owned eligible-warehouse/idempotent position provisioning contract exists; no fake StockItemId.",
-    "R10-04": "PARTIAL — shared create/apply and exact-value reread retained; channel/positions not fully integrated.",
-    "R10-05": "BLOCKED — no owning-module RowVersion/ConcurrencyToken/CAS; migration authorization not provided; no live migration applied.",
-    "R10-06": "BLOCKED — no authorized Offer/Pricing/Inventory/Fulfillment history projection contract; no fabricated records.",
-    "R10-07": "PASS — Catalog unit precision/step/rounding and client/server validation retained.",
-    "R10-08": "PASS_WITH_LIMITATION — price/currency/fulfillment authority preserved; Stage3/funding/multi-currency remain gated.",
-    "R10-09": "PARTIAL — public Localization DTO/query and shared registry route in place; shared Locale type/global shell still fa/en and configured ru prefix is concrete.",
-    "R10-10": "PARTIAL — workspace 1161→785, shared actions/create use case, seller transport split; admin-offer-api/intent flat boundary still legacy.",
-    "R10-11": "PASS_WITH_LIMITATION — public CQRS DTO/thin endpoint, no Host business diff; full R10 owning endpoints blocked by R10-01/03/05/06.",
-    "R10-12": "PASS — shared Toast/MessageBox, inline validation, R8 layout retained from R9 evidence.",
-    "R10-13": "NOT_RUN — R10 42-case performance/regression matrix not executable to completion; R9-R1 performance 1028/71 retained.",
-    "R10-14": "FAIL/BLOCKED — full 42-case independent matrix not executed because material owning-domain requirements are blocked."
-  },
-  "executedEvidence": {
-    "typecheck": "PASS",
-    "lint": "PASS (pre-existing warnings)",
-    "build": "PASS",
-    "offerBackend": "97/97",
-    "hostLocalizationCatalog": "9/9",
-    "mount": "26/26",
-    "api": "16/16",
-    "modelI18nRouting": "26/26",
-    "runtimeR9Behavior": "32/32",
-    "verifySha256": "596B85738AB4A403E66D450E3BD6D4D568110BAF5805DD1DD2FAAFA1AB07D8F4",
+  "status": "PASS_WITH_LIMITATIONS",
+  "runtime": {
+    "frontend": "http://127.0.0.1:3000",
+    "host": "http://127.0.0.1:5088",
+    "database": "tooba_alpha",
+    "buildId": "4ipc4fsBsrOYcuqaJQCCB",
+    "health": "ready; SingleStore; inmemory authorization; messaging Healthy",
+    "verify": "evidence/r10-runtime/verify-r10.json",
+    "verifySha256": "514BF59CAABCEC3C8C5E3373EE1962CE5B2B462DDAE51F7EE6D2BCEBB8F28875",
+    "cleanup": "evidence/r10-runtime/cleanup.json",
     "cleanupSha256": "932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D",
-    "publicLanguages": "dedicated public DTO verified",
-    "frontendArchitecture": "27 pre-existing unrelated baseline debts; no task offer size regression"
+    "runtimeChecks": 42,
+    "runtimeErrors": 0
   },
-  "blockers": [
-    "R10-01 channel authority requires an owner-approved edition/role/seller channel policy.",
-    "R10-03 Inventory eligible-location/provisioning contract is absent.",
-    "R10-05 atomic concurrency requires owning-module version/CAS design and migration authorization.",
-    "R10-06 history read projection/event recording contract is absent.",
-    "R10-09 full dynamic registry locale requires shared Locale type/provider expansion beyond Offer scope.",
-    "R10-14 mandatory matrix cannot be complete while the above are blocked."
+  "tests": {
+    "typecheck": "PASS",
+    "lint": "PASS (pre-existing unrelated warnings)",
+    "build": "PASS",
+    "offerBackend": "123/123",
+    "hostLocalizationCatalogStage2": "11/11",
+    "mountedWorkspace": "26/26",
+    "adminSellerApi": "16/16",
+    "modelI18nRouting": "26/26",
+    "performance": {"samples": 5, "formMedianMs": 1014, "formP95Ms": 1078, "pickerMedianMs": 61, "pickerP95Ms": 97, "r8FormMs": 1598, "r8PickerMs": 103},
+    "cas": {"positiveWins": 1, "conflicts": 1, "status": 409, "errorCode": "concurrency.conflict", "restored": true},
+    "historyMigration": "20261126120000_R10OfferHistory applied to tooba_alpha; GET history total 18 observed",
+    "architecture": "27 pre-existing unrelated baseline violations; no offer-workspace/seller-api size violation",
+    "openspec": "valid (warnings only)"
+  },
+  "requirements": {
+    "R10-01": "PASS — StoreCommerce SalesChannel is the sole authority; query/create/duplicate share it; UI select has no fixed Marketplace; Direct rejected when Marketplace is configured.",
+    "R10-02": "PASS — pricing/conditions/shipping/inventory unlocked after identity; no auto create; history empty until persisted; discounts/Stage3 gated.",
+    "R10-03": "PASS — Inventory active-location read, idempotent position provisioning, pre-create quantity drafts, post-create apply, independent reread.",
+    "R10-04": "PASS — one shared create/apply use case covers channel, price, conditions, fulfillment and positions; partial created id recoverable; exact reread matching.",
+    "R10-05": "PASS — Npgsql xmin concurrency tokens on Offer/Pricing/Inventory/Fulfillment; concurrent price write produced one 409 conflict, one winner, original restored.",
+    "R10-06": "PASS — Offer-owned append-only history migration applied; Create/Update/Price/Inventory/Fulfillment record entries; paged GET; unknown actor honest; runtime history observed.",
+    "R10-07": "PASS — Catalog unit precision/step/rounding and client/server validation retained; reserved floor read-only.",
+    "R10-08": "PASS — base price/currency and admin-only fulfillment preserved; seller fulfillment write denied; IRR behavior retained.",
+    "R10-09": "PASS_WITH_LIMITATION — shared registry route/public DTO and no feature query authority; global shell/shared grid chrome remain fa/en.",
+    "R10-10": "PASS_WITH_LIMITATION — workspace 798, seller transport split, shared create/apply; legacy flat admin-offer-api/intent remains under existing admin surface.",
+    "R10-11": "PASS_WITH_LIMITATION — owning Contracts/CQRS/validators/thin endpoints; AQ-06 legacy flat admin debt remains pre-existing.",
+    "R10-12": "PASS — shared Toast/MessageBox/inline validation, no duplicate banners, R8 layout preserved.",
+    "R10-13": "PASS — 5-sample form median 1014/p95 1078 vs R8 1598; picker 61/97 vs 103; regressions and responsive retain.",
+    "R10-14": "PASS_WITH_LIMITATION — 42 runtime checks, focused backend/mount tests, real Host/DB history/CAS, cleanup restore; checker negative-control harness not implemented."
+  },
+  "aq": {
+    "AQ-01": "PASS_WITH_LIMITATION",
+    "AQ-02": "PASS",
+    "AQ-03": "PASS",
+    "AQ-04": "PASS",
+    "AQ-05": "PASS",
+    "AQ-06": "PASS_WITH_LIMITATION",
+    "AQ-07": "PASS_WITH_BASELINE_DEBT",
+    "AQ-08": "PASS"
+  },
+  "remaining": [
+    "Legacy flat admin-offer-api/intent boundary and unrelated 27 frontend architecture baseline debts remain.",
+    "Global shell/shared AppDataGrid locale chrome remains fa/en; offer routes use registry.",
+    "Owner UAT and architect acceptance remain external."
   ]
 }

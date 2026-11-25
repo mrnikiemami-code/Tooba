@@ -60,6 +60,12 @@
   <data name="offer.status.unsupported" xml:space="preserve">
     <value>Requested offer status is unsupported.</value>
   </data>
+  <data name="offer.channel.required" xml:space="preserve">
+    <value>No offer channel is allowed for this edition.</value>
+  </data>
+  <data name="offer.channel.not_allowed" xml:space="preserve">
+    <value>The requested offer channel is not allowed for this edition.</value>
+  </data>
   <data name="offer.archived.cannot_assign_fulfillment" xml:space="preserve">
     <value>An archived offer cannot take a fulfillment assignment.</value>
   </data>

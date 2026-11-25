@@ -1,9 +1,12 @@
 ﻿using Tooba.Offer.Application.Validation;
 using MediatR;
 using Tooba.BuildingBlocks;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
+using Tooba.Offer.Application.Offers.History;
+using Tooba.Offer.Application.Offers.Policies;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
@@ -37,10 +40,14 @@ internal sealed class CreateOfferHandler(
     IReturnPolicyResolver returnPolicies,
     IClock clock,
     IIdGenerator ids,
+    ICurrentStoreCommerceContext storeCommerce,
+    IOfferHistoryWriter history,
     OfferReadModelComposer readModels) : IRequestHandler<CreateOfferCommand, Result<SellerOfferDetailPage>>
 {
     public async Task<Result<SellerOfferDetailPage>> Handle(CreateOfferCommand request, CancellationToken cancellationToken)
     {
+        if (!OfferChannelPolicy.IsAllowed(storeCommerce.Current?.SalesChannel, request.Channel))
+            return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.ChannelNotAllowed));
         var variant = await catalog.FindVariantAsync(request.CatalogVariantId, cancellationToken);
         if (variant is null)
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CatalogVariantMissing));
@@ -112,6 +119,18 @@ internal sealed class CreateOfferHandler(
         {
             return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.StatusUnsupported));
         }
+
+        // Staged on the same Offer unit of work; PersistNewAsync commits the Offer and this entry together.
+        await history.AppendAsync(
+            OfferHistorySummaries.CreateEntry(
+                ids.NewId(),
+                offer.OfferId,
+                offer.CreatedAt,
+                OfferHistorySummaries.Created,
+                "Offer created",
+                null,
+                OfferHistorySummaries.StatusChannel(offer)),
+            cancellationToken);
 
         var persisted = await store.PersistNewAsync(offer, cancellationToken);
         if (persisted is not null)

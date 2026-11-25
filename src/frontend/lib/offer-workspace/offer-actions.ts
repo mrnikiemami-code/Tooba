@@ -21,6 +21,8 @@ export interface OfferActionsContext {
   selectedSeller: OfferSellerOption | null;
   selectedProduct: OfferProductOption | null;
   selectedVariant: OfferVariantOption | null;
+  selectedChannel: string;
+  localInventory: import("./types.ts").OfferLocalInventoryDraft[];
   createReady: boolean;
   identityReady: boolean;
   activeConflict: { offerId: string } | null;
@@ -85,7 +87,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
   }
 
   function finishSaveFailure(tab: OfferTabId, result: { errorCode: string; denied?: boolean }, savedAny: boolean) {
-    const transient = result.errorCode === "host-unreachable";
+    const transient = result.errorCode === "host-unreachable" || result.errorCode === "concurrency.conflict";
     ctx.setActiveTab(tab);
     ctx.setTabError({ tab, code: result.errorCode || "save" });
     ctx.setSaveNeedsReload(transient);
@@ -295,6 +297,8 @@ export function createOfferActions(ctx: OfferActionsContext) {
         sellerPartyId: ctx.selectedSeller?.sellerPartyId,
         catalogVariantId: ctx.selectedVariant.catalogVariantId,
         sellerSku: ctx.draft.sellerSku.trim() || null,
+        channel: ctx.selectedChannel,
+        inventory: ctx.localInventory.filter((row) => row.onHand.trim().length > 0).map((row) => ({ ...row, reason: ctx.draft.inventoryReason.trim() || row.reason })),
         amount: ctx.priceChanged && localDetail ? parseDecimal(ctx.draft.amount) : null,
         currency: ctx.draft.currency || "IRR",
         returnPolicyChoice: ctx.draft.returnPolicyChoice,
@@ -306,7 +310,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       };
       const result = ctx.adapter.createAndSaveDraft
         ? await ctx.adapter.createAndSaveDraft(createInput)
-        : await ctx.adapter.createDraft({ sellerPartyId: createInput.sellerPartyId, catalogVariantId: createInput.catalogVariantId, sellerSku: createInput.sellerSku });
+        : await ctx.adapter.createDraft({ sellerPartyId: createInput.sellerPartyId, catalogVariantId: createInput.catalogVariantId, sellerSku: createInput.sellerSku, channel: createInput.channel });
       if (!result.ok) {
         if ("createdOfferId" in result && result.createdOfferId) {
           ctx.showBlocking("error", ctx.t.partialTitle, `${offerErrorText(ctx.t, result.errorCode ?? "save")} ${ctx.t.partialSaved}`, String(result.createdOfferId));
@@ -314,7 +318,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         }
         if (result.errorCode === "offer.listing.duplicate_active" && ctx.adapter.findActiveOffer) {
           const sellerId = ctx.adapter.role === "seller" ? ctx.adapter.fixedSeller?.sellerPartyId : ctx.selectedSeller?.sellerPartyId;
-          const existing = sellerId ? await ctx.adapter.findActiveOffer(sellerId, ctx.selectedVariant.catalogVariantId) : null;
+          const existing = sellerId ? await ctx.adapter.findActiveOffer(sellerId, ctx.selectedVariant.catalogVariantId, ctx.selectedChannel) : null;
           if (existing) ctx.setActiveConflict(existing);
           else ctx.showBlocking("error", ctx.t.duplicateActiveTitle, ctx.t.duplicateActive);
           ctx.setSaveRetryable(false);

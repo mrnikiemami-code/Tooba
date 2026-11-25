@@ -35,11 +35,17 @@ public sealed class OfferDbContext : DbContext
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>
+    /// Append-only recorded Offer changes.
+    /// </summary>
+    public DbSet<OfferHistoryEntry> OfferHistoryEntries => Set<OfferHistoryEntry>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new SellerOfferConfiguration());
+        modelBuilder.ApplyConfiguration(new OfferHistoryConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }

@@ -1,6 +1,7 @@
-using Tooba.Offer.Domain.Aggregates;
+﻿using Tooba.Offer.Domain.Aggregates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Tooba.Offer.Domain;
 
 namespace Tooba.Offer.Infrastructure.Persistence.Configurations;
@@ -29,6 +30,7 @@ public sealed class SellerOfferConfiguration : IEntityTypeConfiguration<SellerOf
         entity.Property(x => x.FulfillmentShippingTypeId);
         // TB-287: durable immutable creation-intent fingerprint; nullable so legacy rows stay unbackfilled.
         entity.Property(x => x.CreationIntentFingerprint).HasMaxLength(64);
+        entity.UseXminAsConcurrencyToken();
         entity.Ignore(x => x.DomainEvents);
         entity.HasIndex(x => new { x.SellerPartyId, x.CatalogVariantId, x.Channel })
             .IsUnique()
