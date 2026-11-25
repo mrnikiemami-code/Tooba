@@ -15,3 +15,6 @@ MUST:
 - Do **not** invent a parallel shell, menu, or architecture track.
 
 AMSC is not a frontend default. Stop for Architect if the fix requires unauthorized cross-boundary redesign.
+
+## Mandatory approved design fidelity
+Read and follow `docs/architecture/NEXTJS-DESIGN-FIDELITY.md` for new or revised UI designs and visual integration. Require approved runnable Next.js/TSX, reuse its source, and independently verify fidelity; no HTML-only new design acceptance or visual reconstruction. Existing approved designs and already-issued repairs remain valid; do not retroactively restart TB-296-R8 or automatically launch the pilot. New design approval gates apply to the affected design scope only; safe authorized independent repair work continues under delivery method §0A.
