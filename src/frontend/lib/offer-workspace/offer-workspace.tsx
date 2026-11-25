@@ -1,26 +1,25 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, ImageOff, Lock } from "lucide-react";
+import { AlertTriangle, Check, ImageOff, Info, Lock } from "lucide-react";
 import { useLocale } from "../i18n/locale-context";
-import { formatJalaliDateTime } from "../../design-system";
 import {
   allowedStatuses,
+  applySavedInventoryDraft,
+  changedInventoryRows,
   commercialDirty,
   deriveBuyability,
-  digitsFa,
+  detailVersionChanged,
   draftFromDetail,
-  errorLabel,
-  faMoney,
   inventoryDirty,
-  marketLabel,
   parseDecimal,
   priceDirty,
   statusLabel,
   validateDraft,
   type OfferWorkspaceDraft,
 } from "./model";
-import { offerWorkspaceMessages } from "./messages";
+import { offerErrorText, offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
+import { createOfferFormatters, offerLocaleFromAppLocale, type OfferFormatters, type OfferLocaleDefinition } from "./i18n";
 import { ConditionsTab } from "./conditions-tab";
 import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
@@ -32,6 +31,7 @@ import styles from "./offer-workspace.module.css";
 import type {
   OfferCommercialPatch,
   OfferFulfillmentResponsibility,
+  OfferProductOption,
   OfferSellerOption,
   OfferShippingTypeOption,
   OfferTabId,
@@ -53,11 +53,29 @@ const TAB_ORDER: OfferTabId[] = [
 export interface OfferWorkspaceProps {
   adapter: OfferWorkspaceAdapter;
   renderExtras?: (tab: OfferTabId, detail: OfferWorkspaceDetail) => ReactNode;
+  localeDefinition?: OfferLocaleDefinition;
+  messages?: Partial<OfferWorkspaceMessages>;
 }
 
-export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
-  const locale = useLocale() === "en" ? "en" : "fa";
-  const t = offerWorkspaceMessages[locale];
+type PersistedOfferWorkspace = {
+  draft?: Partial<OfferWorkspaceDraft>;
+  selectedSeller?: OfferSellerOption | null;
+  selectedProduct?: OfferProductOption | null;
+  selectedVariant?: OfferVariantOption | null;
+};
+
+export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messages }: OfferWorkspaceProps) {
+  const appLocale = useLocale();
+  const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
+  const format: OfferFormatters = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
+  const baseMessages = useMemo(
+    () => offerWorkspaceMessages[offerLocale.language as "fa" | "en"] ?? offerWorkspaceMessages.fa,
+    [offerLocale.language],
+  );
+  const t: OfferWorkspaceMessages = useMemo(
+    () => (messages ? { ...baseMessages, ...messages, tabs: { ...baseMessages.tabs, ...(messages.tabs ?? {}) } } : baseMessages),
+    [baseMessages, messages],
+  );
   const isEdit = adapter.mode === "edit";
 
   const [detail, setDetail] = useState<OfferWorkspaceDetail | null>(null);
@@ -67,10 +85,21 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
   const [draft, setDraft] = useState<OfferWorkspaceDraft>(emptyDraft());
   const [activeTab, setActiveTab] = useState<OfferTabId>("identity");
   const [selectedSeller, setSelectedSeller] = useState<OfferSellerOption | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<OfferProductOption | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
+  const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
+  const [conflictChecking, setConflictChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [saveNeedsReload, setSaveNeedsReload] = useState(false);
+  const persistKey = useMemo(
+    () => `tooba:offer-workspace:${adapter.role}:${adapter.mode}:${adapter.offerId ?? "new"}`,
+    [adapter.role, adapter.mode, adapter.offerId],
+  );
+  const restoredRef = useRef(false);
+  const [saveRetryable, setSaveRetryable] = useState(true);
+  const [saveReloading, setSaveReloading] = useState(false);
   const [tabError, setTabError] = useState<{ tab: OfferTabId; code: string } | null>(null);
   const [showCreateErrors, setShowCreateErrors] = useState(false);
 
@@ -121,9 +150,114 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     applyLoadedDetail(result.detail);
   }, [adapter, isEdit, applyLoadedDetail]);
 
+  const commercialChanged = detail ? commercialDirty(detail, draft) : false;
+  const priceChanged = detail ? priceDirty(detail, draft) : false;
+  const stockChanged = detail ? inventoryDirty(detail, draft) : false;
+  const shippingChanged = Boolean(
+    detail &&
+      adapter.saveFulfillment &&
+      (responsibility !== detail.fulfillmentResponsibility ||
+        (shippingTypeId || null) !== (detail.fulfillmentShippingTypeId ?? null)),
+  );
+  const identityReady = adapter.role === "seller"
+    ? Boolean(adapter.fixedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant)
+    : Boolean(selectedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant);
+  const createReady = identityReady;
+  const createDirty = !isEdit && (Boolean(selectedSeller) || Boolean(selectedProduct) || Boolean(selectedVariant) || draft.sellerSku.trim().length > 0);
+  const anyDirty = isEdit
+    ? commercialChanged || priceChanged || stockChanged || shippingChanged
+    : createDirty;
+
+  useEffect(() => {
+    if (!anyDirty) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [anyDirty]);
+
+  useEffect(() => {
+    const variantId = selectedVariant?.catalogVariantId;
+    if (isEdit || !adapter.findActiveOffer || !variantId) {
+      setActiveConflict(null);
+      setConflictChecking(false);
+      return;
+    }
+    const sellerId = adapter.role === "seller"
+      ? adapter.fixedSeller?.sellerPartyId
+      : selectedSeller?.sellerPartyId;
+    if (!sellerId) {
+      setActiveConflict(null);
+      setConflictChecking(false);
+      return;
+    }
+    let active = true;
+    setConflictChecking(true);
+    void adapter.findActiveOffer(sellerId, variantId)
+      .then((result) => {
+        if (!active) return;
+        setActiveConflict(result);
+        setConflictChecking(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setActiveConflict(null);
+        setConflictChecking(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [adapter, isEdit, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (restoredRef.current) return;
+    if (isEdit && (!detail || loading)) return;
+    let stored: PersistedOfferWorkspace | null = null;
+    try {
+      const raw = window.sessionStorage.getItem(persistKey);
+      stored = raw ? JSON.parse(raw) as PersistedOfferWorkspace : null;
+    } catch {
+      stored = null;
+    }
+    if (stored) {
+      const base = detail ? draftFromDetail(detail) : emptyDraft();
+      setDraft({ ...base, ...stored.draft });
+      if (stored.selectedSeller) setSelectedSeller(stored.selectedSeller);
+      if (stored.selectedProduct) setSelectedProduct(stored.selectedProduct);
+      if (stored.selectedVariant) setSelectedVariant(stored.selectedVariant);
+      setSaveNotice(t.draftRestored);
+    }
+    restoredRef.current = true;
+  }, [detail, isEdit, loading, persistKey, t.draftRestored]);
+
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    if (isEdit && !anyDirty) return;
+    try {
+      window.sessionStorage.setItem(persistKey, JSON.stringify({
+        draft,
+        selectedSeller,
+        selectedProduct,
+        selectedVariant,
+      }));
+    } catch {
+      // Session storage is an optional recovery aid, never a domain write.
+    }
+  }, [anyDirty, draft, isEdit, persistKey, selectedProduct, selectedSeller, selectedVariant]);
+
+  function clearPersistedDraft() {
+    try {
+      window.sessionStorage.removeItem(persistKey);
+    } catch {
+      // ignore
+    }
+  }
 
   useEffect(() => {
     if (!isEdit || !adapter.loadShippingTypes) return;
@@ -151,33 +285,6 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     else if (tabRect.right > barRect.right - 8) bar.scrollLeft += tabRect.right - (barRect.right - 8);
   }, [activeTab]);
 
-  const commercialChanged = detail ? commercialDirty(detail, draft) : false;
-  const priceChanged = detail ? priceDirty(detail, draft) : false;
-  const stockChanged = detail ? inventoryDirty(detail, draft) : false;
-  const shippingChanged = Boolean(
-    detail &&
-      adapter.saveFulfillment &&
-      (responsibility !== detail.fulfillmentResponsibility ||
-        (shippingTypeId || null) !== (detail.fulfillmentShippingTypeId ?? null)),
-  );
-  const createReady = adapter.role === "seller"
-    ? Boolean(adapter.fixedSeller) && Boolean(selectedVariant)
-    : Boolean(selectedSeller) && Boolean(selectedVariant);
-  const createDirty = !isEdit && (Boolean(selectedSeller) || Boolean(selectedVariant) || draft.sellerSku.trim().length > 0);
-  const anyDirty = isEdit
-    ? commercialChanged || priceChanged || stockChanged || shippingChanged
-    : createDirty;
-
-  useEffect(() => {
-    if (!anyDirty) return;
-    const handler = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [anyDirty]);
-
   const tabDirty: Record<OfferTabId, boolean> = {
     identity: commercialChanged,
     pricing: priceChanged,
@@ -193,7 +300,13 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     setSaveNotice(null);
   }
 
-  function applySavedDetail(next: OfferWorkspaceDetail, domain: "commercial" | "price" | "inventory") {
+  function applyServerDetail(next: OfferWorkspaceDetail) {
+    setDetail(next);
+    setResponsibility(next.fulfillmentResponsibility);
+    setShippingTypeId(next.fulfillmentShippingTypeId ?? "");
+  }
+
+  function applySavedDetail(next: OfferWorkspaceDetail, domain: "commercial" | "price") {
     setDetail(next);
     setDraft((current) => {
       if (domain === "commercial") {
@@ -207,25 +320,72 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           maximumOrderQuantity: next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
         };
       }
-      if (domain === "price") {
-        return { ...current, amount: next.amount != null ? String(next.amount) : "", currency: next.currency };
-      }
-      return {
-        ...current,
-        inventoryOnHand: Object.fromEntries(next.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)])),
-        inventoryReason: "",
-      };
+      return { ...current, amount: next.amount != null ? String(next.amount) : "", currency: next.currency };
     });
+  }
+
+  function applySavedInventory(next: OfferWorkspaceDetail, stockItemId: string) {
+    setDetail(next);
+    setDraft((current) => applySavedInventoryDraft(current, next, stockItemId));
+  }
+
+  function finishSaveFailure(
+    tab: OfferTabId,
+    result: { errorCode: string; denied?: boolean },
+    savedAny: boolean,
+  ) {
+    const transient = result.errorCode === "host-unreachable";
+    setActiveTab(tab);
+    setTabError({ tab, code: result.errorCode || "save" });
+    setSaveNeedsReload(transient);
+    setSaveRetryable(!transient);
+    setSaveError(transient ? t.saveUnknown : result.denied ? t.denied : offerErrorText(t, result.errorCode));
+    if (savedAny) {
+      setSaveNotice(t.partialSaved);
+      setSaveRetryable(true);
+    }
+  }
+
+  async function reloadAfterUnknown() {
+    if (!adapter.loadDetail || saveReloading) return;
+    setSaveReloading(true);
+    try {
+      const result = await adapter.loadDetail();
+      if (!result.ok) {
+        setSaveError(t.saveUnknown);
+        return;
+      }
+      applyServerDetail(result.detail);
+      setSaveNeedsReload(false);
+      setSaveError(null);
+      setSaveNotice(t.reloaded);
+    } catch {
+      setSaveError(t.saveUnknown);
+    } finally {
+      setSaveReloading(false);
+    }
   }
 
   async function runSave() {
     if (!detail || saving || saveRef.current) return;
+    if (saveNeedsReload) {
+      setSaveError(t.concurrentChange);
+      return;
+    }
     const errors = validateDraft(detail, draft);
     if (errors.length > 0) {
       const first = errors[0]!;
       setTabError({ tab: first.tab, code: first.code });
       setActiveTab(first.tab);
-      setSaveError(errorLabel(first.code, locale));
+      setSaveError(offerErrorText(t, first.code));
+      setSaveRetryable(true);
+      return;
+    }
+    if (priceChanged && draft.amount.trim().length === 0) {
+      setTabError({ tab: "pricing", code: "offer.price.required" });
+      setActiveTab("pricing");
+      setSaveError(t.priceRequired);
+      setSaveRetryable(true);
       return;
     }
     if (!commercialChanged && !priceChanged && !stockChanged && !shippingChanged) {
@@ -234,107 +394,214 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
       setTabError(null);
       return;
     }
+
     saveRef.current = true;
     setSaving(true);
     setSaveError(null);
     setSaveNotice(null);
     setTabError(null);
     setShippingError(null);
-
-    if (commercialChanged) {
-      const result = await adapter.saveCommercial(buildCommercialPatch(detail, draft));
-      if (!result.ok) return finishSaveFailure("conditions", result.denied);
-      applySavedDetail(result.detail, "commercial");
-    }
-
-    if (priceChanged) {
-      const result = await adapter.savePrice({ amount: parseDecimal(draft.amount) ?? 0, currency: draft.currency || "IRR" });
-      if (!result.ok) return finishSaveFailure("pricing", result.denied);
-      applySavedDetail(result.detail, "price");
-    }
-
+    setSaveNeedsReload(false);
+    setSaveRetryable(true);
+    let savedAny = false;
+    const expectedAmount = parseDecimal(draft.amount);
+    const expectedInventory = new Map<string, number | null>();
     if (stockChanged) {
-      const changedRows = detail.inventoryLocations.filter(
-        (row) => parseDecimal(draft.inventoryOnHand[row.stockItemId]) !== row.onHand,
-      );
-      for (const row of changedRows) {
-        const result = await adapter.saveInventory({
-          stockItemId: row.stockItemId,
-          onHand: parseDecimal(draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
-          reason: draft.inventoryReason.trim(),
+      for (const row of detail.inventoryLocations) {
+        expectedInventory.set(row.stockItemId, parseDecimal(draft.inventoryOnHand[row.stockItemId]));
+      }
+    }
+
+    try {
+      if (adapter.loadDetail) {
+        const latest = await adapter.loadDetail();
+        if (!latest.ok) {
+          setSaveError(t.saveUnknown);
+          setSaveNeedsReload(true);
+          setSaveRetryable(false);
+          return;
+        }
+        if (detailVersionChanged(detail, latest.detail)) {
+          applyServerDetail(latest.detail);
+          setSaveError(t.concurrentChange);
+          setSaveNeedsReload(true);
+          setSaveRetryable(false);
+          return;
+        }
+      }
+
+      if (commercialChanged) {
+        const result = await adapter.saveCommercial(buildCommercialPatch(detail, draft));
+        if (!result.ok) {
+          finishSaveFailure("conditions", result, savedAny);
+          return;
+        }
+        applySavedDetail(result.detail, "commercial");
+        savedAny = true;
+      }
+
+      if (priceChanged) {
+        if (expectedAmount == null) {
+          setActiveTab("pricing");
+          setSaveError(t.validationAmount);
+          setSaveRetryable(true);
+          return;
+        }
+        const result = await adapter.savePrice({ amount: expectedAmount, currency: draft.currency || "IRR" });
+        if (!result.ok) {
+          finishSaveFailure("pricing", result, savedAny);
+          return;
+        }
+        applySavedDetail(result.detail, "price");
+        savedAny = true;
+      }
+
+      if (stockChanged) {
+        const changedRows = changedInventoryRows(detail, draft);
+        for (const row of changedRows) {
+          const result = await adapter.saveInventory({
+            stockItemId: row.stockItemId,
+            onHand: parseDecimal(draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
+            reason: draft.inventoryReason.trim(),
+          });
+          if (!result.ok) {
+            finishSaveFailure("inventory", result, savedAny);
+            return;
+          }
+          applySavedInventory(result.detail, row.stockItemId);
+          savedAny = true;
+        }
+        setDraft((current) => ({ ...current, inventoryReason: "" }));
+      }
+
+      if (shippingChanged && adapter.saveFulfillment) {
+        setShippingSaving(true);
+        const result = await adapter.saveFulfillment({
+          responsibility,
+          shippingTypeId: shippingTypeId || null,
         });
-        if (!result.ok) return finishSaveFailure("inventory", result.denied);
-        applySavedDetail(result.detail, "inventory");
+        setShippingSaving(false);
+        if (!result.ok) {
+          finishSaveFailure("shipping", result, savedAny);
+          return;
+        }
+        const verification = adapter.loadDetail ? await adapter.loadDetail() : null;
+        if (
+          !verification ||
+          !verification.ok ||
+          verification.detail.fulfillmentResponsibility !== responsibility ||
+          (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)
+        ) {
+          setShippingError(t.perTabError);
+          finishSaveFailure("shipping", { errorCode: "seller.shipping.response_mismatch" }, savedAny);
+          return;
+        }
+        applyLoadedDetail(verification.detail);
+        setShippingNotice(t.shippingSaved);
+        savedAny = true;
       }
-    }
 
-    if (shippingChanged && adapter.saveFulfillment) {
-      setShippingSaving(true);
-      const result = await adapter.saveFulfillment({
-        responsibility,
-        shippingTypeId: shippingTypeId || null,
-      });
-      setShippingSaving(false);
-      if (!result.ok) return finishSaveFailure("shipping", result.denied);
-      const verification = adapter.loadDetail ? await adapter.loadDetail() : null;
-      if (
-        !verification ||
-        !verification.ok ||
-        verification.detail.fulfillmentResponsibility !== responsibility ||
-        (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)
-      ) {
-        setShippingError(t.perTabError);
-        return finishSaveFailure("shipping", false);
+      if (adapter.loadDetail) {
+        const verification = await adapter.loadDetail();
+        if (!verification.ok) {
+          setSaveError(t.saveUnknown);
+          setSaveNeedsReload(true);
+          setSaveRetryable(false);
+          return;
+        }
+        const mismatch =
+          (commercialChanged && verification.detail.sellerSku !== draft.sellerSku.trim())
+          || (priceChanged && verification.detail.amount !== expectedAmount)
+          || (shippingChanged
+            && (verification.detail.fulfillmentResponsibility !== responsibility
+              || (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)))
+          || (stockChanged
+            && detail.inventoryLocations.some((row) => {
+              const expected = expectedInventory.get(row.stockItemId);
+              if (expected == null) return false;
+              const actual = verification.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId);
+              return !actual || actual.onHand !== expected;
+            }));
+        if (mismatch) {
+          applyServerDetail(verification.detail);
+          setSaveError(t.saveUnknown);
+          setSaveNeedsReload(true);
+          setSaveRetryable(false);
+          return;
+        }
+        applyLoadedDetail(verification.detail);
       }
-      applyLoadedDetail(verification.detail);
-      setShippingNotice(t.shippingSaved);
+
+      clearPersistedDraft();
+      if (shippingChanged) setShippingNotice(t.shippingSaved);
+      setSaveNotice(t.saved);
+      setSaveError(null);
+      setTabError(null);
+    } catch {
+      setSaveError(t.saveUnknown);
+      setSaveNeedsReload(true);
+      setSaveRetryable(false);
+    } finally {
+      saveRef.current = false;
+      setSaving(false);
     }
-
-    saveRef.current = false;
-    setSaving(false);
-    setSaveNotice(t.saved);
-  }
-
-  function finishSaveFailure(tab: OfferTabId, denied?: boolean) {
-    saveRef.current = false;
-    setSaving(false);
-    setActiveTab(tab);
-    setSaveError(denied ? t.denied : t.saveError);
-    setTabError({ tab, code: denied ? "denied" : "save" });
   }
 
   async function runCreate() {
-    if (saving) return;
-    if (!createReady) {
-      setShowCreateErrors(true);
-      setSaveError(t.createNeedsIdentity);
+    if (saving || saveRef.current) return;
+    if (activeConflict) {
+      setSaveError(t.duplicateActive);
+      setSaveRetryable(false);
       return;
     }
-    if (adapter.role === "admin" && !selectedSeller) {
+    if (!createReady || (adapter.role === "admin" && !selectedSeller) || !selectedVariant) {
       setShowCreateErrors(true);
       setSaveError(t.createNeedsIdentity);
+      setSaveRetryable(true);
       return;
     }
-    if (!selectedVariant) {
-      setShowCreateErrors(true);
-      setSaveError(t.createNeedsIdentity);
-      return;
-    }
+    saveRef.current = true;
     setSaving(true);
     setSaveError(null);
-    const result = await adapter.createDraft({
-      sellerPartyId: selectedSeller?.sellerPartyId,
-      catalogVariantId: selectedVariant.catalogVariantId,
-      sellerSku: draft.sellerSku.trim() || null,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      setSaveError(result.denied ? t.denied : errorLabel(result.errorCode, locale));
-      return;
+    setSaveNotice(null);
+    setSaveNeedsReload(false);
+    setSaveRetryable(true);
+    try {
+      const result = await adapter.createDraft({
+        sellerPartyId: selectedSeller?.sellerPartyId,
+        catalogVariantId: selectedVariant.catalogVariantId,
+        sellerSku: draft.sellerSku.trim() || null,
+      });
+      if (!result.ok) {
+        if (result.errorCode === "offer.listing.duplicate_active" && adapter.findActiveOffer) {
+          const sellerId = adapter.role === "seller" ? adapter.fixedSeller?.sellerPartyId : selectedSeller?.sellerPartyId;
+          const existing = sellerId ? await adapter.findActiveOffer(sellerId, selectedVariant.catalogVariantId) : null;
+          if (existing) setActiveConflict(existing);
+          setSaveError(t.duplicateActive);
+          setSaveRetryable(false);
+          return;
+        }
+        if (result.errorCode === "host-unreachable") {
+          setSaveError(t.createUnknown);
+          setSaveRetryable(false);
+          setSaveNeedsReload(true);
+          return;
+        }
+        setSaveError(result.denied ? t.denied : offerErrorText(t, result.errorCode));
+        setSaveRetryable(!result.denied);
+        return;
+      }
+      clearPersistedDraft();
+      adapter.onCreated(result.offerId);
+    } catch {
+      setSaveError(t.createUnknown);
+      setSaveRetryable(false);
+      setSaveNeedsReload(true);
+    } finally {
+      saveRef.current = false;
+      setSaving(false);
     }
-    adapter.onCreated(result.offerId);
   }
-
   if (denied) {
     return (
       <div className={styles.root}>
@@ -377,7 +644,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
             <div className={styles.empty}>
               <span className={styles.emptyIc}><AlertTriangle size={18} aria-hidden /></span>
               <span className={styles.emptyT}>{t.loadFailed}</span>
-              <span className={styles.emptyD}>{errorLabel(loadError, locale)}</span>
+              <span className={styles.emptyD}>{offerErrorText(t, loadError)}</span>
               <button type="button" className={styles.btn} onClick={() => void load()}>{t.retry}</button>
             </div>
           </div>
@@ -387,17 +654,18 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
   }
 
   const buyability = detail ? deriveBuyability(detail) : null;
-  const title = detail?.productTitle || selectedVariant?.productTitle || t.titleCreate;
+  const title = detail?.productTitle || selectedProduct?.title || t.titleCreate;
   const sellerName = detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || (adapter.role === "seller" ? t.sellerSession : t.notSelected);
-  const mediaId = detail?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
+  const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
+  const existingOfferHref = activeConflict ? (adapter.role === "admin" ? `/admin/offers/${activeConflict.offerId}` : `/vendor-panel/products/${activeConflict.offerId}`) : null;
   const saveLabel = isEdit ? t.save : t.saveDraft;
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
     : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
 
   return (
-    <div className={styles.root} data-testid="offer-workspace">
+    <div className={styles.root} data-testid="offer-workspace" dir={offerLocale.direction} lang={offerLocale.code}>
       <header className={styles.stickyHead} data-testid="offer-workspace-header">
         <div className={styles.headInner}>
           <div className={styles.headGrid}>
@@ -415,16 +683,22 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
                   <span>{t.breadcrumb}</span>
                   <span className={styles.dotSep} />
                   <strong>{isEdit ? t.titleEdit : t.titleCreate}</strong>
-                  {detail?.lastUpdatedAt ? <><span className={styles.dotSep} /><span>{t.lastSaved} {digitsFa(formatJalaliDateTime(detail.lastUpdatedAt, locale))}</span></> : null}
+                  {detail?.lastUpdatedAt ? <><span className={styles.dotSep} /><span>{t.lastSaved} {format.dateTime(detail.lastUpdatedAt)}</span></> : null}
                   {anyDirty ? <span className={`${styles.pill} ${styles.pillWarn}`} data-testid="offer-workspace-dirty">{t.unsaved}</span> : null}
 
                 </div>
                 <h1 className={styles.headName} data-testid="offer-workspace-title">{title}</h1>
                 <div className={styles.headSub}>
                   {detail?.brandName ? <span>{detail.brandName}</span> : null}
-                  {detail?.brandName && detail?.productUnitName ? <span className={styles.dotSep} /> : null}
+                  {detail?.brandName && (detail?.variantLabel || detail?.productUnitName) ? <span className={styles.dotSep} /> : null}
+                  {detail?.variantLabel ? <span>{detail.variantLabel}</span> : null}
+                  {detail?.variantLabel && detail?.productUnitName ? <span className={styles.dotSep} /> : null}
                   {detail?.productUnitName ? <span>{detail.productUnitName}</span> : null}
-                  {!detail?.brandName && !detail?.productUnitName ? <span>{selectedVariant ? selectedVariant.productTitle : t.notSelected}</span> : null}
+                  {!detail ? (
+                    <span>
+                      {[selectedProduct?.brandName, selectedVariant?.displayLabel].filter(Boolean).join(" · ") || selectedProduct?.title || t.notSelected}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -441,13 +715,13 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
                 </span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.metaK}>{t.buy}</span>
+                <span className={styles.metaK}>{t.buyDisplay}</span>
                 <span className={styles.metaV}>
                   <button
                     type="button"
                     className={`${styles.pill} ${buyability?.buyable ? styles.pillOk : styles.pillWarn}`}
                     data-testid="offer-workspace-buyability"
-                    title={buyability?.reason ? errorLabel(buyability.reason, locale) : undefined}
+                    title={buyability?.reason ? `${offerErrorText(t, buyability.reason)} — ${t.buyabilityHint}` : t.buyabilityHint}
                   >
                     {buyability?.buyable ? <Check size={11} aria-hidden /> : <AlertTriangle size={11} aria-hidden />}
                     {buyability?.buyable ? t.buyable : t.notBuyable}
@@ -460,8 +734,8 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
               <span className={styles.priceCap}>{t.priceSummary}</span>
               {detail?.amount != null ? (
                 <span className={styles.priceRow}>
-                  <span className={styles.priceMkt}>{marketLabel("IR", locale)}</span>
-                  <span className={styles.priceAmt}>{faMoney(detail.amount, detail.currency, locale)}</span>
+                  <span className={styles.priceMkt}>{format.regionName("IR")}</span>
+                  <span className={styles.priceAmt}>{format.money(detail.amount, detail.currency)}</span>
                   <span className={styles.priceCur} dir="ltr">{detail.currency || "IRR"}</span>
                 </span>
               ) : (
@@ -474,7 +748,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
                 onClick={() => void (isEdit ? runSave() : runCreate())}
-                disabled={saving || (!isEdit && !createReady)}
+                disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
                 data-offer-save="true"
                 data-testid={saveTestId}
               >
@@ -508,12 +782,12 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
                   aria-controls={`offer-pane-${tab}`}
                   aria-disabled={disabled}
                   disabled={disabled}
-                  title={disabled ? t.tabNeedsCreate : undefined}
+                  title={disabled ? (identityReady ? t.tabNeedsCreate : t.tabLocked) : undefined}
                   onClick={() => setActiveTab(tab)}
                   className={`${styles.tab} ${selected ? styles.tabActive : ""}`}
                   data-testid={`offer-tab-button-${tab}`}
                 >
-                  <span className={styles.tabN}>{digitsFa(index + 1)}</span>
+                  <span className={styles.tabN}>{format.integer(index + 1)}</span>
                   <span>{tabLabel[tab]}</span>
                   {tabDirty[tab] && isEdit ? <DirtyDot show label={t.dirtyTab} /> : null}
                   {disabled ? <span className={styles.tabN}><Lock size={9} aria-hidden /></span> : null}
@@ -532,9 +806,15 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
               <span className={styles.bannerTitle}>{t.saveErrorTitle}</span>
               {saveError}
               <div style={{ marginTop: 6 }}>
-                <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? runSave() : runCreate())}>
-                  {t.retry}
-                </button>
+                {isEdit && saveNeedsReload ? (
+                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void reloadAfterUnknown()} disabled={saveReloading} data-testid="offer-save-reload">
+                    {saveReloading ? t.loading : t.reloadState}
+                  </button>
+                ) : saveRetryable ? (
+                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? runSave() : runCreate())} disabled={saving} data-testid="offer-save-retry">
+                    {t.retry}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -548,7 +828,24 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
         {tabError ? (
           <div className={`${styles.banner} ${styles.bannerDanger}`} data-testid="offer-tab-error" style={{ marginBottom: 12 }}>
             <AlertTriangle size={14} aria-hidden />
-            <div>{t.perTabError} {errorLabel(tabError.code, locale)}</div>
+            <div>{t.perTabError} {offerErrorText(t, tabError.code)}</div>
+          </div>
+        ) : null}
+
+        {!isEdit && conflictChecking ? (
+          <div className={`${styles.banner} ${styles.bannerWarn}`} data-testid="offer-conflict-checking" style={{ marginBottom: 12 }}>
+            <Info size={14} aria-hidden />
+            <div>{t.conflictChecking}</div>
+          </div>
+        ) : null}
+        {!isEdit && activeConflict && existingOfferHref ? (
+          <div className={`${styles.banner} ${styles.bannerWarn}`} data-testid="offer-duplicate-conflict" style={{ marginBottom: 12 }}>
+            <AlertTriangle size={15} aria-hidden />
+            <div>
+              <span className={styles.bannerTitle}>{t.duplicateActiveTitle}</span>
+              {t.duplicateActive}{" "}
+              <a className={styles.linkBtn} href={existingOfferHref}>{t.viewExistingOffer}</a>
+            </div>
           </div>
         ) : null}
 
@@ -560,7 +857,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={() => void (isEdit ? runSave() : runCreate())}
-          disabled={saving || (!isEdit && !createReady)}
+          disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
           data-offer-save="true"
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
@@ -577,7 +874,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
       return (
         <IdentityTab
           t={t}
-          locale={locale}
+          format={format}
           mode={adapter.mode}
           role={adapter.role}
           detail={detail}
@@ -585,11 +882,21 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           onSellerSkuChange={(value) => patchDraft({ sellerSku: value })}
           fixedSeller={adapter.fixedSeller}
           selectedSeller={selectedSeller}
-          selectedVariant={selectedVariant}
           onSelectSeller={setSelectedSeller}
-          onSelectVariant={setSelectedVariant}
+          selectedProduct={selectedProduct}
+          onSelectProduct={(product) => {
+            setSelectedProduct(product);
+            setSelectedVariant(null);
+            setActiveConflict(null);
+          }}
+          searchProducts={adapter.searchProducts}
+          selectedVariant={selectedVariant}
+          onSelectVariant={(variant) => {
+            setSelectedVariant(variant);
+            setActiveConflict(null);
+          }}
+          loadProductVariants={adapter.loadProductVariants}
           searchSellers={adapter.searchSellers}
-          searchVariants={adapter.searchVariants}
           showErrors={showCreateErrors}
           extra={detail && renderExtras ? renderExtras("identity", detail) : null}
         />
@@ -601,7 +908,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
         return (
           <PricingTab
             t={t}
-            locale={locale}
+            format={format}
             detail={detail}
             amount={draft.amount}
             currency={draft.currency}
@@ -615,7 +922,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
         return (
           <InventoryTab
             t={t}
-            locale={locale}
+            format={format}
             detail={detail}
             onHand={draft.inventoryOnHand}
             reason={draft.inventoryReason}
@@ -628,7 +935,6 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
         return (
           <ShippingTab
             t={t}
-            locale={locale}
             role={adapter.role}
             detail={detail}
             shippingTypes={shippingTypes}
@@ -655,7 +961,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
         return (
           <ConditionsTab
             t={t}
-            locale={locale}
+            format={format}
             detail={detail}
             returnPolicyChoice={draft.returnPolicyChoice}
             customReturnWindowDays={draft.customReturnWindowDays}

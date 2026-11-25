@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Application.Seller.Models;
 using Tooba.Catalog.Application.Seller.Ports;
 using Tooba.Catalog.Domain;
@@ -10,7 +10,7 @@ namespace Tooba.Catalog.Infrastructure.Seller;
 /// Catalog persistence for the published variant picker. Search and paging are executed in SQL;
 /// the old newest-100-product list remains only for compatibility with existing callers.
 /// </summary>
-public sealed class SellerCatalogVariantDirectory(CatalogDbContext db) : ISellerCatalogVariantDirectory
+public sealed partial class SellerCatalogVariantDirectory(CatalogDbContext db) : ISellerCatalogVariantDirectory
 {
     /// <inheritdoc />
     public async Task<IReadOnlyList<SellerCatalogVariantOption>> ListPublishedVariantsAsync(

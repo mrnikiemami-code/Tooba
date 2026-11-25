@@ -121,7 +121,7 @@ public sealed class OfferTraceTopologyTests
     private sealed class FakeCatalogReads : ICatalogOfferReadGateway
     {
         public Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
-            IReadOnlyCollection<Guid> catalogVariantIds, CancellationToken cancellationToken)
+            IReadOnlyCollection<Guid> catalogVariantIds, CancellationToken cancellationToken, string? locale = null)
             => Task.FromResult<IReadOnlyDictionary<Guid, CatalogOfferPresentation>>(
                 catalogVariantIds.ToDictionary(
                     id => id,
@@ -225,6 +225,9 @@ public sealed class OfferTraceTopologyTests
 
         public Task<bool> ExistsActiveListingAsync(Guid sellerPartyId, Guid catalogVariantId, DomainChannel channel, CancellationToken cancellationToken)
             => Task.FromResult(false);
+
+        public Task<Guid?> FindActiveListingOfferIdAsync(Guid sellerPartyId, Guid catalogVariantId, DomainChannel channel, CancellationToken cancellationToken)
+            => Task.FromResult<Guid?>(null);
 
         public Task<bool> ExistsSellerSkuAsync(Guid sellerPartyId, string sellerSku, Guid? excludingOfferId, CancellationToken cancellationToken)
             => Task.FromResult(false);

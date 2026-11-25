@@ -2,14 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "../../../../lib/i18n/locale-context";
+import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
 import { ErrorState, Skeleton } from "../../../../design-system";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import {
   createSellerOffer,
-  loadSellerCatalogVariants,
+  findSellerActiveOffer,
+  loadSellerProductVariants,
   readSellerPartyId,
+  searchSellerCatalogProducts,
 } from "../../seller-api";
 import { clearOfferIntent, readOrCreateOfferIntent } from "../../offer-create-intent";
 
@@ -18,6 +22,7 @@ const PAGE_SIZE = 10;
 export default function VendorCreateOfferPage() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const offerLocale = offerLocaleFromAppLocale(useLocale());
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,22 +35,30 @@ export default function VendorCreateOfferPage() {
       role: "seller",
       mode: "create",
       fixedSeller: { sellerPartyId, displayName: "" },
-      searchVariants: async (search, page) => {
-        const result = await loadSellerCatalogVariants(sellerPartyId, search, page, PAGE_SIZE);
+      searchProducts: async (search, page) => {
+        const result = await searchSellerCatalogProducts(sellerPartyId, search, page, PAGE_SIZE, offerLocale.code);
         return {
-          rows: result.rows.map((row) => ({
-            catalogVariantId: row.catalogVariantId,
-            productId: row.productId,
-            productTitle: row.productTitle,
-            catalogCode: row.catalogCode,
-            productStatus: row.productStatus,
-          })),
+          rows: result.rows,
           totalCount: result.totalCount,
           page: result.page,
           pageSize: result.pageSize,
           hasMore: result.hasMore,
         };
       },
+      loadProductVariants: async (productId) => {
+        const rows = await loadSellerProductVariants(sellerPartyId, productId, offerLocale.code);
+        return rows.map((row) => ({
+          catalogVariantId: row.catalogVariantId,
+          productId: row.productId,
+          productTitle: "",
+          displayLabel: row.displayLabel,
+          axisLabels: row.axisLabels,
+          catalogCode: row.catalogCode,
+          status: row.status,
+        }));
+      },
+      findActiveOffer: async (_sellerId, catalogVariantId) =>
+        findSellerActiveOffer(sellerPartyId, catalogVariantId),
       createDraft: async ({ catalogVariantId, sellerSku }) => {
         const scope = `${sellerPartyId}:${catalogVariantId}`;
         let requestId: string;
@@ -70,7 +83,7 @@ export default function VendorCreateOfferPage() {
       onCreated: (offerId) => router.push(localizePath(`/vendor-panel/products/${offerId}`)),
       onCancel: () => router.push(localizePath("/vendor-panel/products")),
     };
-  }, [sellerPartyId, router, localizePath]);
+  }, [sellerPartyId, router, localizePath, offerLocale.code]);
 
   if (sellerPartyId === null) {
     return (

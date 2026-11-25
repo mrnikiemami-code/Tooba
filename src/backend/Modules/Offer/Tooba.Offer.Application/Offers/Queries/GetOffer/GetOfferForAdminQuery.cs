@@ -9,7 +9,7 @@ using Tooba.Offer.Contracts.Errors;
 namespace Tooba.Offer.Application.Offers.Queries.GetOffer;
 
 /// <summary>Admin detail read by offer id, without impersonating a seller.</summary>
-public sealed record GetOfferForAdminQuery(Guid OfferId) : IRequest<Result<SellerOfferDetailPage>>;
+public sealed record GetOfferForAdminQuery(Guid OfferId, string? Locale = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 public sealed class GetOfferForAdminHandler(IOfferStore store, OfferReadModelComposer readModels)
     : IRequestHandler<GetOfferForAdminQuery, Result<SellerOfferDetailPage>>
@@ -23,7 +23,7 @@ public sealed class GetOfferForAdminHandler(IOfferStore store, OfferReadModelCom
         {
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
         }
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, request.Locale));
     }
 }
 

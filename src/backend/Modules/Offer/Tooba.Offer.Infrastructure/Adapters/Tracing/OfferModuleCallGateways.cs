@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks.Observability.Tracing;
+﻿using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
@@ -92,12 +92,13 @@ internal sealed class TracedCatalogOfferReadGateway(ICatalogOfferReadGateway inn
 {
     public async Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
         IReadOnlyCollection<Guid> catalogVariantIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? locale = null)
     {
         using var trace = tracer.Begin("Offer", "Catalog", "LookupPresentations");
         try
         {
-            var result = await inner.GetOfferPresentationsAsync(catalogVariantIds, cancellationToken).ConfigureAwait(false);
+            var result = await inner.GetOfferPresentationsAsync(catalogVariantIds, cancellationToken, locale).ConfigureAwait(false);
             trace.SetOk();
             return result;
         }

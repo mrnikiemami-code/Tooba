@@ -14,7 +14,12 @@ function actorId(): string {
 }
 
 function headers(extra?: Record<string, string>): Record<string, string> {
-  return { ...adminRequestHeaders(), ...(extra ?? {}), [ADMIN_DEV_ACTOR_HEADER]: actorId() };
+  return {
+    ...adminRequestHeaders(),
+    ...(extra ?? {}),
+    "Accept-Language": typeof document !== "undefined" ? document.documentElement.lang || "fa" : "fa",
+    [ADMIN_DEV_ACTOR_HEADER]: actorId(),
+  };
 }
 
 export interface AdminOfferRow {
@@ -29,6 +34,8 @@ export interface AdminOfferRow {
   lastUpdatedAt: string | null;
   sellerDisplayName: string | null;
   variantCode: string | null;
+  variantLabel: string | null;
+  channel: string;
   brandName: string | null;
   primaryMediaAssetId: string | null;
 }
@@ -58,6 +65,8 @@ export function mapAdminOfferRow(value: unknown): AdminOfferRow | null {
     lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
     sellerDisplayName: prop(item, "sellerDisplayName", "SellerDisplayName") == null ? null : text(prop(item, "sellerDisplayName", "SellerDisplayName")),
     variantCode: prop(item, "variantCode", "VariantCode") == null ? null : text(prop(item, "variantCode", "VariantCode")),
+    variantLabel: prop(item, "variantLabel", "VariantLabel") == null ? null : text(prop(item, "variantLabel", "VariantLabel")),
+    channel: text(prop(item, "channel", "Channel"), "Marketplace"),
     brandName: prop(item, "brandName", "BrandName") == null ? null : text(prop(item, "brandName", "BrandName")),
     primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
   };
@@ -166,6 +175,7 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     productUnitShortName: prop(item, "productUnitShortName", "ProductUnitShortName") == null ? null : text(prop(item, "productUnitShortName", "ProductUnitShortName")),
     inventoryLocations: mapInventoryLocations(prop(item, "inventoryLocations", "InventoryLocations")),
     variantCode: prop(item, "variantCode", "VariantCode") == null ? null : text(prop(item, "variantCode", "VariantCode")),
+    variantLabel: prop(item, "variantLabel", "VariantLabel") == null ? null : text(prop(item, "variantLabel", "VariantLabel")),
     primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
     fulfillmentResponsibility: (() => {
       const raw = text(prop(item, "fulfillmentResponsibility", "FulfillmentResponsibility"));
@@ -370,4 +380,111 @@ export async function loadAdminShippingTypes(): Promise<OfferShippingTypeOption[
       };
     })
     .filter((row) => row.shippingTypeId.length > 0);
+}
+
+export interface AdminCatalogProductOption {
+  productId: string;
+  title: string;
+  brandName: string | null;
+  primaryMediaAssetId: string | null;
+  publishedVariantCount: number;
+}
+
+export interface AdminCatalogProductPage {
+  rows: AdminCatalogProductOption[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+export interface AdminCatalogVariantOption {
+  catalogVariantId: string;
+  productId: string;
+  displayLabel: string;
+  axisLabels: Array<{ name: string; value: string }>;
+  catalogCode: string | null;
+  status: string;
+}
+
+export async function searchAdminCatalogProducts(
+  search = "",
+  page = 1,
+  pageSize = 20,
+  locale = "fa-IR",
+): Promise<AdminCatalogProductPage> {
+  await prepareAdminDevActor();
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), locale });
+  if (search.trim()) params.set("search", search.trim());
+  const response = await fetch(`/v1/admin/catalog/products?${params.toString()}`, { headers: headers() });
+  if (!response.ok) return { rows: [], totalCount: 0, page, pageSize, hasMore: false };
+  const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number; hasMore?: boolean };
+  const rows = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw): AdminCatalogProductOption[] => {
+    const item = record(raw);
+    if (!item) return [];
+    const productId = text(prop(item, "productId", "ProductId"));
+    if (!productId) return [];
+    return [{
+      productId,
+      title: text(prop(item, "title", "Title"), "—"),
+      brandName: prop(item, "brandName", "BrandName") == null ? null : text(prop(item, "brandName", "BrandName")),
+      primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
+      publishedVariantCount: number(prop(item, "publishedVariantCount", "PublishedVariantCount")),
+    }];
+  });
+  return {
+    rows,
+    totalCount: Number(payload.totalCount ?? 0),
+    page: Number(payload.page ?? page),
+    pageSize: Number(payload.pageSize ?? pageSize),
+    hasMore: Boolean(payload.hasMore),
+  };
+}
+
+export async function loadAdminProductVariants(productId: string, locale = "fa-IR"): Promise<AdminCatalogVariantOption[]> {
+  await prepareAdminDevActor();
+  const params = new URLSearchParams({ locale });
+  const response = await fetch(`/v1/admin/catalog/products/${productId}/variants?${params.toString()}`, { headers: headers() });
+  if (!response.ok) return [];
+  const payload = await response.json();
+  const items = Array.isArray(payload) ? payload : [];
+  return items.flatMap((raw): AdminCatalogVariantOption[] => {
+    const item = record(raw);
+    if (!item) return [];
+    const catalogVariantId = text(prop(item, "catalogVariantId", "CatalogVariantId"));
+    if (!catalogVariantId) return [];
+    const axisRaw = prop(item, "axisLabels", "AxisLabels");
+    const axisLabels = Array.isArray(axisRaw)
+      ? axisRaw.flatMap((axis) => {
+          const row = record(axis);
+          if (!row) return [];
+          return [{ name: text(prop(row, "name", "Name")), value: text(prop(row, "value", "Value")) }];
+        })
+      : [];
+    return [{
+      catalogVariantId,
+      productId: text(prop(item, "productId", "ProductId")),
+      displayLabel: text(prop(item, "displayLabel", "DisplayLabel")),
+      axisLabels,
+      catalogCode: prop(item, "catalogCode", "CatalogCode") == null ? null : text(prop(item, "catalogCode", "CatalogCode")),
+      status: text(prop(item, "status", "Status")),
+    }];
+  });
+}
+
+export async function findAdminActiveOffer(
+  sellerPartyId: string,
+  catalogVariantId: string,
+): Promise<{ offerId: string } | null> {
+  await prepareAdminDevActor();
+  const params = new URLSearchParams({ sellerPartyId, catalogVariantId });
+  try {
+    const response = await fetch(`/v1/admin/offers/active-listing?${params.toString()}`, { headers: headers() });
+    if (!response.ok) return null;
+    const item = record(await response.json());
+    const offerId = item ? text(prop(item, "offerId", "OfferId")) : "";
+    return offerId ? { offerId } : null;
+  } catch {
+    return null;
+  }
 }

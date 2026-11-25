@@ -2,13 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useLocale } from "../../../../lib/i18n/locale-context";
+import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { queryAdminSellersGrid } from "../../../../features/admin-sellers";
 import {
   createAdminOffer,
-  loadAdminCatalogVariants,
+  findAdminActiveOffer,
+  loadAdminProductVariants,
+  searchAdminCatalogProducts,
 } from "../../admin-offer-api";
 import { adminOfferIntent, clearAdminOfferIntent } from "../../offer-create-intent";
 
@@ -17,6 +21,7 @@ const PAGE_SIZE = 10;
 export default function AdminCreateOfferPage() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const offerLocale = offerLocaleFromAppLocale(useLocale());
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
     () => ({
@@ -42,22 +47,30 @@ export default function AdminCreateOfferPage() {
           hasMore: page * PAGE_SIZE < total,
         };
       },
-      searchVariants: async (search, page) => {
-        const result = await loadAdminCatalogVariants(search, page, PAGE_SIZE);
+      searchProducts: async (search, page) => {
+        const result = await searchAdminCatalogProducts(search, page, PAGE_SIZE, offerLocale.code);
         return {
-          rows: result.rows.map((row) => ({
-            catalogVariantId: row.catalogVariantId,
-            productId: row.productId,
-            productTitle: row.productTitle,
-            catalogCode: row.catalogCode,
-            productStatus: row.productStatus,
-          })),
+          rows: result.rows,
           totalCount: result.totalCount,
           page: result.page,
           pageSize: result.pageSize,
           hasMore: result.hasMore,
         };
       },
+      loadProductVariants: async (productId) => {
+        const rows = await loadAdminProductVariants(productId, offerLocale.code);
+        return rows.map((row) => ({
+          catalogVariantId: row.catalogVariantId,
+          productId: row.productId,
+          productTitle: "",
+          displayLabel: row.displayLabel,
+          axisLabels: row.axisLabels,
+          catalogCode: row.catalogCode,
+          status: row.status,
+        }));
+      },
+      findActiveOffer: async (sellerPartyId, catalogVariantId) =>
+        findAdminActiveOffer(sellerPartyId, catalogVariantId),
       createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
         const scope = `admin:${sellerPartyId}:${catalogVariantId}`;
@@ -78,7 +91,7 @@ export default function AdminCreateOfferPage() {
       onCreated: (offerId) => router.push(localizePath(`/admin/offers/${offerId}`)),
       onCancel: () => router.push(localizePath("/admin/offers")),
     }),
-    [router, localizePath],
+    [router, localizePath, offerLocale.code],
   );
 
   return (

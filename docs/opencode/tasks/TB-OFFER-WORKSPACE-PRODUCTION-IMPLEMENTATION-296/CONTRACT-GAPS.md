@@ -27,3 +27,10 @@ No task-wide blocker remains for the implementable slices. The five gated capabi
 - Offer list now carries `SellerDisplayName`, `BrandName`, `VariantCode`, `PrimaryMediaAssetId`.
 - Offer detail now carries `VariantCode`, `PrimaryMediaAssetId`, `FulfillmentResponsibility`, `FulfillmentShippingTypeId`, `LastUpdatedAt`.
 - These expose existing stored/owned data only; no business decision was invented. Gated items above remain gated.
+
+## R8 residual / limits
+
+- Shared AppDataGrid chrome (toolbar/grid messages) uses the existing shared fa/en grid locale API. Offer-owned columns, actions and copy are locale-catalog driven; a third language falls back through the shared grid policy. Changing shared grid infrastructure was out of R8 scope.
+- Runtime inventory on the available seeded offer has one location. Multi-location independent partial save is proven by the mounted component test (`offer-workspace.mount.test.ts`) and pure model tests; no second warehouse was fabricated.
+- Host architecture guard pre-existing debts are retained: missing `IPartyDevelopmentSeedGateway.cs`, ProductWorkspace route count 18 vs 17, and `MarketplaceSellerAccessOptions.cs` residue. No R8 diff touches those files.
+- Gated business contracts remain discount definition, shipping service assignment (Stage-3), offer history read, multi-currency price rows and real dev-seed product photo.

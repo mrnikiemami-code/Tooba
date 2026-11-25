@@ -39,12 +39,14 @@ export interface SellerOfferListRow {
   productTitle: string;
   sellerSku: string | null;
   status: string;
+  channel: string;
   amount: number | null;
   currency: string;
   availableUnits: number;
   lastUpdatedAt: string | null;
   sellerDisplayName: string | null;
   variantCode: string | null;
+  variantLabel: string | null;
   primaryMediaAssetId: string | null;
   brandName: string | null;
 }
@@ -80,6 +82,7 @@ export interface SellerOfferDetail {
   productUnitShortName: string | null;
   inventoryLocations: SellerInventoryLocation[];
   variantCode: string | null;
+  variantLabel: string | null;
   primaryMediaAssetId: string | null;
   fulfillmentResponsibility: "Seller" | "Platform" | null;
   fulfillmentShippingTypeId: string | null;
@@ -307,6 +310,7 @@ export function writeActorUserId(actorUserId: string): void {
 function sellerHeaders(sellerPartyId: string, actorUserId: string | null, extra?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
+    "Accept-Language": typeof document !== "undefined" ? document.documentElement.lang || "fa" : "fa",
     [SELLER_PARTY_HEADER]: sellerPartyId,
     ...(extra ?? {}),
   };
@@ -386,12 +390,14 @@ export function mapSellerOfferList(payload: unknown): SellerOfferListRow[] {
         productTitle: asString(readProp(item, "productTitle", "ProductTitle"), "بدون عنوان"),
         sellerSku: asNullableString(readProp(item, "sellerSku", "SellerSku")),
         status: asString(readProp(item, "status", "Status")),
+        channel: asString(readProp(item, "channel", "Channel"), "Marketplace"),
         amount: asNullableNumber(readProp(item, "amount", "Amount")),
         currency: asString(readProp(item, "currency", "Currency"), "IRR"),
         availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
         lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
         sellerDisplayName: asNullableString(readProp(item, "sellerDisplayName", "SellerDisplayName")),
         variantCode: asNullableString(readProp(item, "variantCode", "VariantCode")),
+        variantLabel: asNullableString(readProp(item, "variantLabel", "VariantLabel")),
         primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
         brandName: asNullableString(readProp(item, "brandName", "BrandName")),
       };
@@ -463,6 +469,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
         : [];
     })(),
     variantCode: asNullableString(readProp(item, "variantCode", "VariantCode")),
+    variantLabel: asNullableString(readProp(item, "variantLabel", "VariantLabel")),
     primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
     fulfillmentResponsibility: (() => {
       const raw = asString(readProp(item, "fulfillmentResponsibility", "FulfillmentResponsibility"));
@@ -1337,3 +1344,126 @@ export async function saveSellerSettings(
 
 
 
+
+export interface SellerCatalogProductOption {
+  productId: string;
+  title: string;
+  brandName: string | null;
+  primaryMediaAssetId: string | null;
+  publishedVariantCount: number;
+}
+
+export interface SellerCatalogProductPage {
+  rows: SellerCatalogProductOption[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+export interface SellerCatalogVariantLabelOption {
+  catalogVariantId: string;
+  productId: string;
+  displayLabel: string;
+  axisLabels: Array<{ name: string; value: string }>;
+  catalogCode: string | null;
+  status: string;
+}
+
+export async function searchSellerCatalogProducts(
+  sellerPartyId: string,
+  search = "",
+  page = 1,
+  pageSize = 20,
+  locale = "fa-IR",
+): Promise<SellerCatalogProductPage> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), locale });
+  if (search.trim()) params.set("search", search.trim());
+  try {
+    const response = await fetch(`/v1/seller/catalog-products?${params.toString()}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (!response.ok) return { rows: [], totalCount: 0, page, pageSize, hasMore: false };
+    const payload = (await readJson(response)) as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number; hasMore?: boolean };
+    const rows = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw): SellerCatalogProductOption[] => {
+      const item = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+      if (!item) return [];
+      const productId = asString(readProp(item, "productId", "ProductId"));
+      if (!productId) return [];
+      return [{
+        productId,
+        title: asString(readProp(item, "title", "Title"), "بدون عنوان"),
+        brandName: asNullableString(readProp(item, "brandName", "BrandName")),
+        primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
+        publishedVariantCount: asNumber(readProp(item, "publishedVariantCount", "PublishedVariantCount")),
+      }];
+    });
+    return {
+      rows,
+      totalCount: Number(payload.totalCount ?? 0),
+      page: Number(payload.page ?? page),
+      pageSize: Number(payload.pageSize ?? pageSize),
+      hasMore: Boolean(payload.hasMore),
+    };
+  } catch {
+    return { rows: [], totalCount: 0, page, pageSize, hasMore: false };
+  }
+}
+
+export async function loadSellerProductVariants(
+  sellerPartyId: string,
+  productId: string,
+  locale = "fa-IR",
+): Promise<SellerCatalogVariantLabelOption[]> {
+  try {
+    const params = new URLSearchParams({ locale });
+    const response = await fetch(`/v1/seller/catalog-products/${productId}/variants?${params.toString()}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (!response.ok) return [];
+    const payload = await readJson(response);
+    const items = Array.isArray(payload) ? payload : [];
+    return items.flatMap((raw): SellerCatalogVariantLabelOption[] => {
+      const item = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+      if (!item) return [];
+      const catalogVariantId = asString(readProp(item, "catalogVariantId", "CatalogVariantId"));
+      if (!catalogVariantId) return [];
+      const axisRaw = readProp(item, "axisLabels", "AxisLabels");
+      const axisLabels = Array.isArray(axisRaw)
+        ? axisRaw.flatMap((axis) => {
+            const row = axis && typeof axis === "object" ? (axis as Record<string, unknown>) : null;
+            if (!row) return [];
+            return [{ name: asString(readProp(row, "name", "Name")), value: asString(readProp(row, "value", "Value")) }];
+          })
+        : [];
+      return [{
+        catalogVariantId,
+        productId: asString(readProp(item, "productId", "ProductId")),
+        displayLabel: asString(readProp(item, "displayLabel", "DisplayLabel")),
+        axisLabels,
+        catalogCode: asNullableString(readProp(item, "catalogCode", "CatalogCode")),
+        status: asString(readProp(item, "status", "Status")),
+      }];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function findSellerActiveOffer(
+  sellerPartyId: string,
+  catalogVariantId: string,
+): Promise<{ offerId: string } | null> {
+  const params = new URLSearchParams({ catalogVariantId });
+  try {
+    const response = await fetch(`/v1/seller/offers/active-listing?${params.toString()}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (!response.ok) return null;
+    const item = await readJson(response);
+    const offerId = item && typeof item === "object" ? asString(readProp(item as Record<string, unknown>, "offerId", "OfferId")) : "";
+    return offerId ? { offerId } : null;
+  } catch {
+    return null;
+  }
+}

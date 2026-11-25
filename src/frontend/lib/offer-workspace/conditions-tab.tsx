@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 import { ShieldCheck, Undo2 } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
-import { allowedStatuses, deriveBuyability, faNumber, statusLabel } from "./model";
+import { allowedStatuses, deriveBuyability, statusLabel } from "./model";
+import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
 import { DirtyDot, Note, SectionTitle } from "./tab-shared";
 
 export interface ConditionsTabProps {
   t: OfferWorkspaceMessages;
-  locale: "fa" | "en";
+  format: OfferFormatters;
   detail: OfferWorkspaceDetail;
   returnPolicyChoice: string;
   customReturnWindowDays: string;
@@ -27,7 +28,7 @@ export interface ConditionsTabProps {
 }
 
 export function ConditionsTab(props: ConditionsTabProps) {
-  const { t, locale, detail } = props;
+  const { t, format, detail } = props;
   const buyability = deriveBuyability({ status: props.status, amount: detail.amount, availableUnits: detail.availableUnits });
   const statuses = allowedStatuses(detail.status);
   const archived = detail.status === "Archived";
@@ -149,13 +150,13 @@ export function ConditionsTab(props: ConditionsTabProps) {
               <div className={styles.row}>
                 <span className={`${styles.pill} ${buyability.buyable ? styles.pillOk : styles.pillWarn}`} data-testid="offer-buyability">
                   <ShieldCheck size={12} aria-hidden />
-                  {buyability.buyable ? t.buyable : t.notBuyable}
+                  {buyability.buyable ? `${t.buyable} · ${t.buyDisplay}` : t.notBuyable}
                 </span>
                 <span className={styles.resultMeta}>
-                  {t.inventoryAvailable}: {faNumber(detail.availableUnits, locale)}
+                  {t.inventoryAvailable}: {format.number(detail.availableUnits)}
                 </span>
               </div>
-              {buyability.reason ? <span className={styles.fieldHint}>{buyabilityReason(t, buyability.reason)}</span> : null}
+              {buyability.reason ? <span className={styles.fieldHint}>{buyabilityReason(t, buyability.reason)}</span> : <span className={styles.fieldHint}>{t.buyabilityHint}</span>}
             </div>
           </div>
         </div>

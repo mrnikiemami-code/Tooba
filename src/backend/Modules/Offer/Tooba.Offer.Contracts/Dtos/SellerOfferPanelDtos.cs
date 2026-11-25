@@ -10,6 +10,7 @@ public sealed record SellerOfferListItem(
     string ProductTitle,
     string? SellerSku,
     string Status,
+    string Channel,
     decimal? Amount,
     string Currency,
     decimal AvailableUnits,
@@ -17,7 +18,8 @@ public sealed record SellerOfferListItem(
     string? SellerDisplayName = null,
     string? VariantCode = null,
     Guid? PrimaryMediaAssetId = null,
-    string? BrandName = null);
+    string? BrandName = null,
+    string? VariantLabel = null);
 
 /// <summary>
 /// جزئیات Offer فروشنده با زمینهٔ فقط‌خواندنی Catalog.
@@ -56,7 +58,8 @@ public sealed record SellerOfferDetailPage(
     Guid? PrimaryMediaAssetId = null,
     OfferFulfillmentResponsibility? FulfillmentResponsibility = null,
     Guid? FulfillmentShippingTypeId = null,
-    DateTimeOffset? LastUpdatedAt = null);
+    DateTimeOffset? LastUpdatedAt = null,
+    string? VariantLabel = null);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(

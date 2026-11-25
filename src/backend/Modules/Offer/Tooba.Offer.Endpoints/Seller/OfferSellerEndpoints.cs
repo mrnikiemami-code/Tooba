@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Presentation;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.Offer.Application.Offers.Commands.CreateOffer;
 using Tooba.Offer.Application.Offers.Commands.SetOfferInventory;
 using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
+using Tooba.Offer.Application.Offers.Queries.FindActiveOffer;
 using Tooba.Offer.Application.Offers.Queries.GetOffer;
 using Tooba.Offer.Application.Offers.Queries.ListSellerOffers;
 using Tooba.Offer.Application.Offers.Queries.QueryOffers;
@@ -26,6 +28,7 @@ public static class OfferSellerEndpoints
         ArgumentNullException.ThrowIfNull(group);
         group.MapGet("/offers", ListOffersAsync);
         group.MapPost("/offers/query", QueryOffersAsync);
+        group.MapGet("/offers/active-listing", FindActiveAsync);
         group.MapPost("/offers", CreateOfferAsync);
         group.MapGet("/offers/{offerId:guid}", GetOfferAsync);
         group.MapPatch("/offers/{offerId:guid}", PatchOfferAsync);
@@ -37,11 +40,12 @@ public static class OfferSellerEndpoints
         ISender sender,
         IOfferSellerAuthorizer authorizer,
         ApiResponseFactory api,
+        IRequestLocaleResolver localeResolver,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        var result = await sender.Send(new ListSellerOffersQuery(sellerId), token);
+        var result = await sender.Send(new ListSellerOffersQuery(sellerId, localeResolver.ResolveRequestLocale(context).Name), token);
         return api.From(result);
     }
 
@@ -50,12 +54,26 @@ public static class OfferSellerEndpoints
         ISender sender,
         IOfferSellerAuthorizer authorizer,
         ApiResponseFactory api,
+        IRequestLocaleResolver localeResolver,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        var result = await sender.Send(new QuerySellerOffersQuery(sellerId, body), token);
+        var result = await sender.Send(new QuerySellerOffersQuery(sellerId, body, localeResolver.ResolveRequestLocale(context).Name), token);
         return api.From(result);
+    }
+
+    private static async Task<IResult> FindActiveAsync(
+        Guid catalogVariantId,
+        ISender sender,
+        IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
+        return api.From(await sender.Send(
+            new FindActiveOfferQuery(sellerId, catalogVariantId, SalesChannel.Marketplace), token));
     }
 
     private static async Task<IResult> CreateOfferAsync(
@@ -80,11 +98,12 @@ public static class OfferSellerEndpoints
         ISender sender,
         IOfferSellerAuthorizer authorizer,
         ApiResponseFactory api,
+        IRequestLocaleResolver localeResolver,
         HttpContext context,
         CancellationToken token)
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
-        var result = await sender.Send(new GetOfferQuery(offerId, sellerId), token);
+        var result = await sender.Send(new GetOfferQuery(offerId, sellerId, localeResolver.ResolveRequestLocale(context).Name), token);
         return api.From(result);
     }
 

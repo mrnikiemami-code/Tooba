@@ -1,9 +1,12 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import {
   allowedStatuses,
+  applySavedInventoryDraft,
+  changedInventoryRows,
   commercialDirty,
   deriveBuyability,
+  detailVersionChanged,
   draftFromDetail,
   inventoryDirty,
   normalizeDigits,
@@ -66,6 +69,7 @@ test("IRR price rejects decimals and negatives; FX keeps decimals", () => {
   assert.equal(validatePrice("1000.5", "IRR"), "offer.price.decimals_not_allowed");
   assert.equal(validatePrice("-1", "IRR"), "offer.price.invalid");
   assert.equal(validatePrice("1000.5", "USD"), null);
+  assert.equal(validatePrice("0", "IRR"), null);
   assert.equal(validatePrice("", "IRR"), null);
 });
 
@@ -147,4 +151,39 @@ test("buyability is derived, not a manual toggle", () => {
 test("archived lifecycle is terminal", () => {
   assert.deepEqual(allowedStatuses("Archived"), ["Archived"]);
   assert.ok(!allowedStatuses("Archived").includes("Active"));
+});
+
+test("inventory partial save preserves the unsaved location draft and reason", () => {
+  const base = detail({
+    onHand: 10,
+    inventoryLocations: [
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", onHand: 4, reserved: 0, available: 4 },
+    ],
+  });
+  const draft = {
+    ...draftFromDetail(base),
+    inventoryOnHand: { "stock-a": "12", "stock-b": "9" },
+    inventoryReason: "شمارش دوره‌ای",
+  };
+  assert.deepEqual(changedInventoryRows(base, draft).map((row) => row.stockItemId), ["stock-a", "stock-b"]);
+  const firstSaved = detail({
+    onHand: 13,
+    inventoryLocations: [
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", onHand: 12, reserved: 2, available: 10 },
+      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", onHand: 4, reserved: 0, available: 4 },
+    ],
+  });
+  const afterFirst = applySavedInventoryDraft(draft, firstSaved, "stock-a");
+  assert.equal(afterFirst.inventoryOnHand["stock-a"], "12");
+  assert.equal(afterFirst.inventoryOnHand["stock-b"], "9");
+  assert.equal(afterFirst.inventoryReason, "شمارش دوره‌ای");
+  assert.deepEqual(changedInventoryRows(firstSaved, afterFirst).map((row) => row.stockItemId), ["stock-b"]);
+});
+
+test("stale detail snapshots are detected before overwrite", () => {
+  const current = detail();
+  assert.equal(detailVersionChanged(current, detail()), false);
+  assert.equal(detailVersionChanged(current, detail({ amount: 2000 })), true);
+  assert.equal(detailVersionChanged(current, detail({ lastUpdatedAt: "2026-01-01T00:00:00Z" })), true);
 });

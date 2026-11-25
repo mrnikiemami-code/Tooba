@@ -3,18 +3,25 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, Plus } from "lucide-react";
-import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate, useLegacyAdminGridDirectProps } from "../../../design-system";
+import { AppDataGrid, ErrorState, useLegacyAdminGridDirectProps } from "../../../design-system";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import { SELLER_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
 import type { GridColumnDef, GridServerPage, GridServerQuery } from "../../../design-system/data-grid";
 import {
-  formatOfferStatus,
   loadSellerOffersPage,
   readSellerPartyId,
   type HostReadSource,
   type SellerOfferListRow,
 } from "../seller-api";
-import { digitsFa, faMoney } from "../../../lib/offer-workspace/model";
+import { useLocale } from "../../../lib/i18n/locale-context";
+import {
+  channelLabel,
+  createOfferFormatters,
+  offerListMessagesFor,
+  offerLocaleFromAppLocale,
+  offerStatusLabel,
+  type OfferListMessages,
+} from "../../../lib/offer-workspace/i18n";
 
 type SellerOfferGridRow = SellerOfferListRow & { id: string };
 
@@ -24,136 +31,131 @@ function statusClass(status: string): string {
   return "bg-secondary text-secondary-foreground";
 }
 
-const rowActions: AppGridRowAction<SellerOfferGridRow>[] = [
-  {
-    id: "edit",
-    label: "مشاهده",
-    icon: Eye,
-    href: (row) => `/vendor-panel/products/${row.offerId}`,
-    testId: (row) => `seller-offer-edit-${row.offerId}`,
-  },
-];
-
-const columns: GridColumnDef<SellerOfferGridRow>[] = [
-  {
-    id: "productTitle",
-    header: "محصول",
-    accessor: (row) => row.productTitle,
-    cell: (row) => (
-      <div className="app-grid-cell-content flex min-w-0 items-center gap-2">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary">
-          {row.primaryMediaAssetId ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={`/v1/media/${row.primaryMediaAssetId}`} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-[10px] text-muted">—</span>
-          )}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate font-semibold" title={row.productTitle}>{row.productTitle}</span>
-          <span className="block truncate text-xs text-muted">{row.brandName || "—"}</span>
-        </span>
-      </div>
-    ),
-    width: 140,
-    minWidth: 160,
-    maxWidth: 300,
-    filterKind: "text",
-    sortable: true,
-  },
-  {
-    id: "sellerSku",
-    header: "کد کالا",
-    accessor: (row) => row.sellerSku ?? "",
-    cell: (row) => <span dir="ltr" className="text-sm" title={row.sellerSku || undefined}>{row.sellerSku || "—"}</span>,
-    width: 130,
-    minWidth: 80,
-    maxWidth: 170,
-    filterKind: "text",
-    sortable: true,
-  },
-  {
-    id: "channel",
-    header: "کانال",
-    accessor: () => "Marketplace",
-    cell: () => <span className="text-sm">بازارگاه</span>,
-    width: 80,
-    minWidth: 80,
-    maxWidth: 120,
-    sortable: false,
-  },
-  {
-    id: "amount",
-    header: "قیمت",
-    accessor: (row) => row.amount ?? 0,
-    cell: (row) => (
-      <span className="tabular-nums text-sm">
-        {row.amount == null ? "—" : faMoney(row.amount, row.currency, "fa")}
-      </span>
-    ),
-    width: 110,
-    minWidth: 110,
-    maxWidth: 180,
-    sortable: true,
-    filterKind: "number",
-  },
-  {
-    id: "availableUnits",
-    header: "موجودی",
-    accessor: (row) => row.availableUnits,
-    cell: (row) => (
-      <span className="tabular-nums text-sm">{row.availableUnits <= 0 ? "ناموجود" : row.availableUnits.toLocaleString("fa-IR")}</span>
-    ),
-    width: 130,
-    minWidth: 88,
-    maxWidth: 120,
-    align: "end",
-    filterKind: "number",
-    sortable: true,
-  },
-  {
-    id: "status",
-    header: "وضعیت آفر",
-    accessor: (row) => row.status,
-    cell: (row) => (
-      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(row.status)}`}>
-        {formatOfferStatus(row.status)}
-      </span>
-    ),
-    width: 110,
-    minWidth: 80,
-    maxWidth: 120,
-    filterKind: "status",
-    enumOptions: [
-      { value: "Active", label: "فعال" },
-      { value: "Suspended", label: "معلق" },
-      { value: "Draft", label: "پیش‌نویس" },
-    ],
-  },
-  {
-    id: "lastUpdatedAt",
-    header: "آخرین تغییر",
-    accessor: (row) => row.lastUpdatedAt ?? "",
-    cell: (row) => <span className="tabular-nums text-sm">{digitsFa(formatJalaliDate(row.lastUpdatedAt, "fa"))}</span>,
-    width: 130,
-    minWidth: 90,
-    maxWidth: 140,
-    sortable: true,
-  },
-  {
-    id: "actions",
-    header: "عملیات",
-    accessor: () => "",
-    cell: (row) => <AppGridRowActionsCell row={row} actions={rowActions} compact />,
-    width: 76,
-    minWidth: 68,
-    maxWidth: 96,
-    exportable: false,
-    sortable: false,
-  },
-];
+function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOfferFormatters>): GridColumnDef<SellerOfferGridRow>[] {
+  const actions: AppGridRowAction<SellerOfferGridRow>[] = [
+    {
+      id: "edit",
+      label: t.view,
+      icon: Eye,
+      href: (row) => `/vendor-panel/products/${row.offerId}`,
+      testId: (row) => `seller-offer-edit-${row.offerId}`,
+    },
+  ];
+  return [
+    {
+      id: "productTitle",
+      header: t.product,
+      accessor: (row) => row.productTitle,
+      cell: (row) => (
+        <div className="app-grid-cell-content flex min-w-0 items-center gap-2">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary">
+            {row.primaryMediaAssetId ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/v1/media/${row.primaryMediaAssetId}`} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[10px] text-muted">—</span>
+            )}
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-semibold" title={row.productTitle}>{row.productTitle}</span>
+            <span className="block truncate text-xs text-muted" title={row.variantLabel ?? ""}>
+              {row.variantLabel || row.brandName || "—"}
+            </span>
+          </span>
+        </div>
+      ),
+      width: 190,
+      minWidth: 170,
+      maxWidth: 300,
+      sortable: false,
+    },
+    {
+      id: "sellerSku",
+      header: t.sellerSku,
+      accessor: (row) => row.sellerSku ?? "",
+      cell: (row) => <span dir="ltr" className="block truncate text-sm" title={row.sellerSku || undefined}>{row.sellerSku || "—"}</span>,
+      width: 130,
+      minWidth: 100,
+      maxWidth: 180,
+      sortable: true,
+    },
+    {
+      id: "channel",
+      header: t.channel,
+      accessor: (row) => row.channel,
+      cell: (row) => <span className="text-sm">{channelLabel(t, row.channel)}</span>,
+      width: 96,
+      minWidth: 82,
+      maxWidth: 130,
+      sortable: false,
+    },
+    {
+      id: "amount",
+      header: t.price,
+      accessor: (row) => row.amount ?? 0,
+      cell: (row) => <span className="tabular-nums text-sm">{format.money(row.amount, row.currency)}</span>,
+      width: 150,
+      minWidth: 120,
+      maxWidth: 200,
+      sortable: false,
+    },
+    {
+      id: "availableUnits",
+      header: t.available,
+      accessor: (row) => row.availableUnits,
+      cell: (row) => <span className="tabular-nums text-sm">{row.availableUnits <= 0 ? t.unavailable : format.integer(row.availableUnits)}</span>,
+      width: 110,
+      minWidth: 96,
+      maxWidth: 140,
+      align: "end",
+      sortable: false,
+    },
+    {
+      id: "status",
+      header: t.status,
+      accessor: (row) => row.status,
+      cell: (row) => <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(row.status)}`}>{offerStatusLabel(t, row.status)}</span>,
+      width: 110,
+      minWidth: 96,
+      maxWidth: 140,
+      filterKind: "status",
+      enumOptions: [
+        { value: "Active", label: t.statusActive },
+        { value: "Suspended", label: t.statusSuspended },
+        { value: "Draft", label: t.statusDraft },
+      ],
+      sortable: true,
+    },
+    {
+      id: "lastUpdatedAt",
+      header: t.lastUpdated,
+      accessor: (row) => row.lastUpdatedAt ?? "",
+      cell: (row) => <span className="whitespace-nowrap tabular-nums text-sm">{format.date(row.lastUpdatedAt)}</span>,
+      width: 120,
+      minWidth: 105,
+      maxWidth: 160,
+      sortable: true,
+    },
+    {
+      id: "actions",
+      header: t.actions,
+      accessor: () => "",
+      cell: (row) => <AppGridRowActionsCell row={row} actions={actions} compact />,
+      width: 80,
+      minWidth: 72,
+      maxWidth: 100,
+      exportable: false,
+      sortable: false,
+    },
+  ];
+}
 
 export default function VendorProductsPage() {
+  const appLocale = useLocale();
+  const offerLocale = offerLocaleFromAppLocale(appLocale);
+  const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
+  const t = useMemo(() => offerListMessagesFor(offerLocale.language), [offerLocale.language]);
+  const columns = useMemo(() => buildColumns(t, format), [t, format]);
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [total, setTotal] = useState(0);
   const [message, setMessage] = useState<string | undefined>(undefined);
@@ -183,6 +185,7 @@ export default function VendorProductsPage() {
     queryAdapter,
     savedViewStore,
     exportFilenameBase: "seller-offers",
+    locale: offerLocale.language === "en" ? "en" : "fa",
   });
 
   function refresh() {
@@ -193,10 +196,10 @@ export default function VendorProductsPage() {
     return (
       <main data-testid="seller-auth-denied">
         <ErrorState
-          title="دسترسی مجاز نیست"
-          detail="این حساب اجازه مشاهده این فروشگاه را ندارد."
+          title={t.sellerLoadDenied}
+          detail={t.sellerLoadDeniedDetail}
           onRetry={refresh}
-          retryLabel={faWorkspaceMessages.retry}
+          retryLabel={t.retry}
         />
       </main>
     );
@@ -206,10 +209,10 @@ export default function VendorProductsPage() {
     <main className="space-y-4" data-testid="seller-products">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">خانه / پیشنهادهای فروش</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">پیشنهادهای فروش</h1>
+          <p className="text-sm text-muted">{t.breadcrumb}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t.title}</h1>
           <p className="mt-1 text-base text-muted">
-            {total.toLocaleString("fa-IR")} آفر · جست‌وجو و صفحه‌بندی در سرور
+            {format.integer(total)} {t.offersNoun}
           </p>
         </div>
         <Link
@@ -218,16 +221,16 @@ export default function VendorProductsPage() {
           data-testid="seller-create-offer"
         >
           <Plus className="h-4 w-4" aria-hidden />
-          ایجاد آفر
+          {t.create}
         </Link>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="p-2 md:p-4">
           {source === "error" ? (
-            <ErrorState title="فروشگاه در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+            <ErrorState title={t.hostUnavailable} detail={message} onRetry={refresh} retryLabel={t.retry} />
           ) : (
-            <AppDataGrid<SellerOfferGridRow> {...gridProps} rowHeight={64} rowCountNoun={{ fa: "آفر", en: "offers" }} />
+            <AppDataGrid<SellerOfferGridRow> {...gridProps} rowHeight={64} rowCountNoun={{ fa: t.offersNoun, en: t.offersNoun }} />
           )}
         </div>
       </section>

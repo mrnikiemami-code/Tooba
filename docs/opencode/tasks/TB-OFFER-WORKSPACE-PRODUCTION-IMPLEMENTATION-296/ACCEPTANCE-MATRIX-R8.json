@@ -1,0 +1,396 @@
+﻿{
+  "task": "TB-296-R8-OWNER-UX-I18N-DATA-INTEGRITY-REPAIR",
+  "base": "037bd1a7f10056f0aea942eb4db5cc569242703e",
+  "branch": "opencode/iso-agents-002",
+  "generatedAt": "2026-11-25T12:13:00+03:30",
+  "runtime": {
+    "frontend": "http://127.0.0.1:3000",
+    "host": "http://127.0.0.1:5088",
+    "buildId": "tRnq3kk5nCDutJy-rfGat",
+    "health": "ready: SingleStore, inmemory authorization, messaging Healthy",
+    "verifyJson": "docs/opencode/tasks/TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296/evidence/r8-runtime/verify-r8.json",
+    "verifySha256": "F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1",
+    "runtimeChecks": 58,
+    "runtimeErrors": 0,
+    "metrics": {
+      "formLoadMs": 1598,
+      "productPickerMs": 103,
+      "inventoryLocationsInCreatedOffer": 1
+    }
+  },
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "title": "Independent product and variant selection with real human labels",
+      "status": "PASS",
+      "positive": [
+        "Catalog product picker is a separate server-searched list; variants load only for the selected product.",
+        "Variant dialog displays real Catalog axis labels (e.g. رنگ: آبی · سایز: ۳۲) and keeps CatalogCode only as secondary text.",
+        "Single-variant products auto-select with an explicit note; zero-variant products show a clear message.",
+        "Product change clears the previous variant; selecting a variant from another product is rejected in the UI.",
+        "Real product media is shown when PrimaryMediaAssetId exists."
+      ],
+      "negative": [
+        "No auto product/variant selection on opening the form.",
+        "A variant cannot remain selected after its product changes."
+      ],
+      "boundary": [
+        "Search/paging retains selected seller/product/variant.",
+        "Empty variant list produces a readable empty state rather than a technical code."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#api.variantPicker.humanLabels",
+        "evidence/r8-runtime/verify-r8.json#api.variantPicker.localizedEn",
+        "evidence/r8-runtime/verify-r8.json#ui.adminCreate.variantHumanLabels",
+        "app/admin/offers/offer-workspace.mount.test.ts (product/variant independence; zero variants)",
+        "evidence/r8-runtime/admin-create-1440.png"
+      ]
+    },
+    {
+      "id": "REQ-02",
+      "title": "Standard modal pickers",
+      "status": "PASS",
+      "positive": [
+        "Seller, product and variant pickers are modal dialogs with search, paging, current selection, loading, error and empty states.",
+        "Selection closes the dialog and does not expand the form height.",
+        "Keyboard Enter searches; native dialog Escape closes; mobile width remains overflow-free."
+      ],
+      "negative": [
+        "Pickers no longer render inline panels that push the form apart."
+      ],
+      "boundary": [
+        "Selection survives paging in both directions (mount test).",
+        "No horizontal overflow at 360/768/1440."
+      ],
+      "evidence": [
+        "app/admin/offers/offer-workspace.mount.test.ts (picker selection survives paging)",
+        "evidence/r8-runtime/verify-r8.json#ui.overflow.360/768/1440",
+        "evidence/r8-runtime/admin-create-1440.png"
+      ]
+    },
+    {
+      "id": "REQ-03",
+      "title": "Layout, alignment, header and readable text",
+      "status": "PASS_WITH_OWNER_VISUAL_REVIEW_PENDING",
+      "positive": [
+        "Header now uses a container query (3-column + dedicated price row below 1180px content width, 4-column above) instead of an unbalanced 4-column squeeze at 1440 with the panel sidebar.",
+        "Controls share the 37px height; labels/hints are aligned; field hints are 13px; footer/contrast improved.",
+        "Page and form have zero horizontal overflow at 360/768/1440.",
+        "The approved R7/295 visual structure (sticky header, seven tabs, cards) is preserved."
+      ],
+      "negative": [
+        "No theme change and no parallel form architecture."
+      ],
+      "boundary": [
+        "Owner final visual acceptance of remaining tabs remains external; only owner-reported findings were repaired."
+      ],
+      "evidence": [
+        "lib/offer-workspace/offer-workspace.module.css",
+        "evidence/r8-runtime/admin-edit-360.png",
+        "evidence/r8-runtime/admin-edit-768.png",
+        "evidence/r8-runtime/admin-edit-1440.png",
+        "evidence/r8-runtime/impeccable-detect-url.json (workspace: one advisory straggler; tiny-text findings resolved)",
+        "IMPECCABLE-R8.md"
+      ]
+    },
+    {
+      "id": "REQ-04",
+      "title": "Create flow and tab locks",
+      "status": "PASS",
+      "positive": [
+        "Tabs explain whether identity is incomplete or the draft has not been saved.",
+        "Identity-valid create saves a real Draft, receives a real offerId, navigates to edit and enables allowed tabs.",
+        "No record is created when the form opens; creation is explicit and idempotent via requestId.",
+        "Create failure preserves seller/product/variant/SKU selections."
+      ],
+      "negative": [
+        "Rapid double submit creates exactly one draft (mount test).",
+        "Create is disabled while an existing active/conflicting listing is known."
+      ],
+      "boundary": [
+        "Admin and seller panel real creates both verified with independent API re-read."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.adminCreate.*, ui.sellerCreate.*",
+        "app/admin/offers/offer-workspace.mount.test.ts (seller create; rapid double submit)",
+        "evidence/r8-runtime/admin-create-1440.png",
+        "evidence/r8-runtime/seller-edit-1440.png"
+      ]
+    },
+    {
+      "id": "REQ-05",
+      "title": "Duplicate active offer and save errors",
+      "status": "PASS",
+      "positive": [
+        "Real cause is the existing non-archived seller+variant+channel listing; the constraint was preserved.",
+        "A read-only active-listing lookup returns the existing offer and the create form links to it.",
+        "Duplicate copy is natural Persian/English, never exposes offer.listing.duplicate_active, and has no meaningless retry.",
+        "Network failures are separated from validation/business conflicts and offer reload instead of blind retry."
+      ],
+      "negative": [
+        "Seller panel duplicate test shows the conflict banner, existing-offer link and disabled submit.",
+        "Non-duplicate admin and seller creates succeed."
+      ],
+      "boundary": [
+        "Lookup is seller-scoped for seller callers and admin-authorized for admin callers."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.sellerDuplicate.*",
+        "evidence/r8-runtime/verify-r8.json#api.duplicateLookup.existing",
+        "evidence/r8-runtime/seller-duplicate-1440.png",
+        "src/backend/Modules/Offer/Tooba.Offer.Application/Offers/Queries/FindActiveOffer/FindActiveOfferQuery.cs"
+      ]
+    },
+    {
+      "id": "REQ-06",
+      "title": "Real multilingual support",
+      "status": "PASS_WITH_SHARED_GRID_FALLBACK",
+      "positive": [
+        "Offer workspace receives the active locale definition (code/culture/direction/calendar) and its message catalog; it no longer coerces non-English to Persian.",
+        "Titles, fields, tabs, messages, errors, filters, column headers and actions are catalog-driven for fa/en.",
+        "Direction comes from the active locale; numbers, grouping, currency names and dates use the active culture/calendar.",
+        "Browser fa and en runtime proven; language navigation preserves unsaved draft/selections via session recovery.",
+        "An isolated third-language registry definition (tr-TR) proves direction/copy/fallback without changing the live registry; fixture test only."
+      ],
+      "negative": [
+        "Unknown locale copy falls back to the project default catalog, never to a raw machine code."
+      ],
+      "boundary": [
+        "Shared AppDataGrid chrome remains governed by the existing shared grid locale API (fa/en); the offer-owned columns/actions/copy are translated. Changing shared grid infrastructure was explicitly out of scope."
+      ],
+      "evidence": [
+        "lib/offer-workspace/i18n.ts",
+        "lib/offer-workspace/i18n.test.ts",
+        "app/admin/offers/offer-workspace.mount.test.ts (third-language definition; direction/copy)",
+        "evidence/r8-runtime/verify-r8.json#ui.language.*",
+        "evidence/r8-runtime/verify-r8.json#api.list.localeLabels",
+        "evidence/r8-runtime/admin-edit-en-1440.png"
+      ]
+    },
+    {
+      "id": "REQ-07",
+      "title": "Number and amount standard",
+      "status": "PASS",
+      "positive": [
+        "Persian display numbers use Persian digits and grouping; tabs, counters, stock and results use the active formatter.",
+        "Amount input normalizes Persian/English digits, supports grouping, paste, deletion, selection and cursor restore.",
+        "IRR save rejects decimals; SKU/UUID/CatalogCode remain semantically unchanged.",
+        "Empty amount is blocked and never saved as zero; explicit zero is allowed by the real Pricing contract (model test)."
+      ],
+      "negative": [
+        "Legacy decimal price is warned about and not auto-changed."
+      ],
+      "boundary": [
+        "Persian input ۱۲۳۴۵۶۷ persisted as 1234567; empty input left the persisted amount unchanged."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.price.*",
+        "lib/offer-workspace/model.test.ts (Persian/Arabic normalization, IRR decimals, zero policy)",
+        "lib/offer-workspace/pricing-tab.tsx"
+      ]
+    },
+    {
+      "id": "REQ-08",
+      "title": "Independent inventory location saving",
+      "status": "PASS",
+      "positive": [
+        "A successful warehouse save updates only that StockItemId draft; other drafts and the reason remain untouched.",
+        "A later failure keeps the failed warehouse input and reason; retry executes only remaining locations and creates no duplicate adjustment.",
+        "StockItemId ownership, reserved quantities and other locations are preserved."
+      ],
+      "negative": [
+        "The staged mount test fails the second warehouse after the first succeeds and asserts the first saved value plus the second retained draft.",
+        "Second save calls only the remaining location."
+      ],
+      "boundary": [
+        "Runtime has one inventory location on the available seeded offer; multi-location partial failure is proven by the real mounted component test, and runtime single-location save/restore is independently re-read."
+      ],
+      "evidence": [
+        "app/admin/offers/offer-workspace.mount.test.ts (partial inventory save)",
+        "lib/offer-workspace/model.test.ts (applySavedInventoryDraft/changedInventoryRows)",
+        "evidence/r8-runtime/verify-r8.json#ui.inventory.persisted/restored"
+      ]
+    },
+    {
+      "id": "REQ-09",
+      "title": "Save safety and error handling",
+      "status": "PASS",
+      "positive": [
+        "Save/create paths use try/catch/finally and a synchronous lock; no stuck saving state; double submit is blocked.",
+        "Partial failures preserve unsaved input; complete, partial, failed and uncertain outcomes are distinguished.",
+        "Connection loss shows an uncertain-result message, removes retry, and offers explicit server-state reload.",
+        "A stale snapshot reread blocks overwriting another session; draft remains available for review."
+      ],
+      "negative": [
+        "No automatic retry after a dropped price write.",
+        "Guard covers commercial, price, inventory and shipping changes plus create selections."
+      ],
+      "boundary": [
+        "Security/data-preservation behavior from tasks 283/284 is unchanged; cross-seller reads/writes remain 404/403 and seller shipping writes 403."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.network.*",
+        "evidence/r8-runtime/verify-r8.json#security.*",
+        "app/admin/offers/offer-workspace.mount.test.ts (network failure, rapid double submit)",
+        "lib/offer-workspace/model.test.ts (stale snapshot detection)"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "title": "Real sales channel",
+      "status": "PASS",
+      "positive": [
+        "Offer list DTO carries the real Channel from the offer aggregate; both grids display it through the active catalog.",
+        "Channel is not filterable/sortable because the current server contract only supports the status filter and sellerSku/status/date sorts.",
+        "Create channel stays the project policy (Marketplace); no fabricated channel."
+      ],
+      "negative": [
+        "Hardcoded accessor () => \"Marketplace\" removed."
+      ],
+      "boundary": [
+        "List channel equals detail channel in runtime evidence."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#api.list.channelAndLabel",
+        "evidence/r8-runtime/verify-r8.json#ui.list.channelReal",
+        "app/admin/offers/page.tsx",
+        "app/vendor-panel/products/page.tsx"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "title": "Buyability",
+      "status": "PASS",
+      "positive": [
+        "deriveBuyability matches the existing domain/storefront heuristic (Active + price + available stock); no new purchasing logic was added.",
+        "UI labels it as a display indicator and explains that final confirmation happens in cart."
+      ],
+      "negative": [
+        "The UI no longer presents the heuristic as a definitive purchase decision."
+      ],
+      "boundary": [
+        "Reason codes map to readable copy; unknown reasons do not leak technical text."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.buyability.displayHeuristic",
+        "lib/offer-workspace/conditions-tab.tsx",
+        "lib/offer-workspace/offer-workspace.tsx"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "title": "Grid readability",
+      "status": "PASS",
+      "positive": [
+        "Shared AppDataGrid retained; product is first in logical order and actions last.",
+        "Product width, seller, SKU, Jalali/active-calendar date, price and stock are readable; row height is 64.",
+        "Human variant label is shown for the product; image uses object-fit cover.",
+        "Real search, sellerSku sort, page 2 and CSV export verified; status filter verified through the real query contract.",
+        "Saved views remain on the same grid keys."
+      ],
+      "negative": [
+        "Unsupported product/channel/amount sorts are not exposed as false affordances."
+      ],
+      "boundary": [
+        "360/768/1440 overflow zero; grid remains shared infrastructure."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#ui.list.search/sort/page/export",
+        "evidence/r8-runtime/admin-list-1440.png",
+        "evidence/r8-runtime/verify-r8.json#ui.sellerList.search"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "title": "Backend changes and architecture tests",
+      "status": "PASS_WITH_PREEXISTING_HOST_GUARD_DEBT",
+      "positive": [
+        "New Catalog picker queries are server-bounded (page>=1, pageSize<=100), published-only, seller-scope validated, and read-only.",
+        "Offer duplicate lookup is auth-scoped and owner-safe.",
+        "New Offer queries are classified in the endpoint validator manifest; no assertion was deleted.",
+        "Offer tests 97/97; Catalog guard + Stage2 6/6."
+      ],
+      "negative": [
+        "No architecture guard was weakened; the Offer manifest count changed only for the new auth-scoped FindActiveOfferQuery."
+      ],
+      "boundary": [
+        "Host guard run still reports pre-existing debts unrelated to R8: missing IPartyDevelopmentSeedGateway.cs, ProductWorkspace route count 18 vs 17, and pre-existing MarketplaceSellerAccessOptions.cs residue. `git diff` shows no R8 change to those files."
+      ],
+      "evidence": [
+        "evidence/r8-offer-tests.log (97/97)",
+        "evidence/r8-host-guards-stage2.log (6/6)",
+        "src/backend/Modules/Offer/Tooba.Offer.Tests/Architecture/OfferEndpointValidatorCoverageGuardTests.cs",
+        "src/backend/Host/Tooba.Host.Tests/Architecture/CatalogModuleAmcW3CqrsGuardTests.cs"
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "title": "Test data disposition",
+      "status": "PASS",
+      "positive": [
+        "R7 test drafts identified by SKU prefix and offer id; all 9 were archived (not deleted) and remain readable.",
+        "R8 test offers identified by TB296-R8-* prefix; all 12+ run artifacts were archived, list search now returns 0.",
+        "Seeded offer 457e375f-ceec-4b66-b81e-3829c4e15893 was independently restored: Active, Default policy, custom null, min 1, max 20, onHand 199.",
+        "Temporary seller-B create capability fixture was removed: roles [], assignments [], ceiling enabled count 0, capabilities []."
+      ],
+      "negative": [
+        "No user or unrelated offer was deleted."
+      ],
+      "boundary": [
+        "Archives preserve records for audit; deletion was not authorized or performed."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json#fixture.r8OffersArchived",
+        "evidence/r8-runtime/verify-r8.json#fixture.sellerCreateGrantRemoved",
+        "RECEIPTS.md R8 test-data section"
+      ]
+    },
+    {
+      "id": "REQ-15",
+      "title": "Real independent verification",
+      "status": "PASS",
+      "positive": [
+        "58/58 runtime checks with 0 errors and real API re-reads: admin create/edit, seller create, duplicate, price, empty price, inventory save/restore, conditions, language, network uncertainty, security, responsive and grid operations.",
+        "24/24 mounted workspace tests pass, including product/variant independence, zero variants, duplicate link, amount input, partial inventory, network uncertainty, language restore, third-language fixture and double submit.",
+        "14 model/i18n tests, 16 admin/seller API tests, 97 Offer tests, 6 Catalog/Stage2 tests.",
+        "Real screenshots at 360/768/1440 plus en edit, duplicate, lists.",
+        "Performance recorded: form 1598 ms, product picker 103 ms.",
+        "Impeccable source detector [] for offer-workspace; URL scan has 12 findings mostly outside the workspace, with one advisory straggler in the workspace."
+      ],
+      "negative": [
+        "No check(..., true) without observed result; no previous-offer-only create claim; no screenshot-as-functional-test.",
+        "No claim of full security from one failed GET."
+      ],
+      "boundary": [
+        "Inventory multi-location partial failure is a real mounted component test (runtime has one location); the limitation is explicit, not hidden.",
+        "Owner visual acceptance of other tabs remains external."
+      ],
+      "evidence": [
+        "evidence/r8-runtime/verify-r8.json (SHA-256 F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1)",
+        "evidence/r8-mount-tests.log (24/24)",
+        "evidence/r8-api-tests.log (16/16)",
+        "evidence/r8-model-i18n-tests.log (14/14)",
+        "evidence/r8-offer-tests.log (97/97)",
+        "evidence/r8-host-guards-stage2.log (6/6)",
+        "evidence/r8-runtime/",
+        "IMPECCABLE-R8.md"
+      ]
+    }
+  ],
+  "gatedContracts": [
+    "Per-offer discount definition",
+    "Per-offer shipping service assignment (Stage-3)",
+    "Offer history read",
+    "Multi-currency price rows",
+    "Dev seed media product photo (generic placeholder retained; no fabricated photo)"
+  ],
+  "completion": {
+    "build": "PASS",
+    "typecheck": "PASS",
+    "lint": "PASS (pre-existing unrelated warnings only)",
+    "runtime": "PASS on FE3000/Host5088",
+    "commit": "PENDING",
+    "push": "PENDING",
+    "stopForArchitect": true
+  }
+}

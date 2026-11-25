@@ -1,13 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useLocale } from "../../../../lib/i18n/locale-context";
+import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
 import { ErrorState, Skeleton } from "../../../../design-system";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferTabId, OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import {
   loadSellerOfferDetail,
+  loadSellerProductVariants,
   loadSellerReservationPolicy,
   patchSellerOffer,
   readSellerPartyId,
@@ -22,6 +25,7 @@ export default function VendorProductDetailPage() {
   const params = useParams<{ offerId: string }>();
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const offerLocale = offerLocaleFromAppLocale(useLocale());
   const offerId = params?.offerId ?? "";
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
   const [reservation, setReservation] = useState<ReservationPolicyEditorView | null>(null);
@@ -63,7 +67,19 @@ export default function VendorProductDetailPage() {
           ? { ok: true, detail: result.detail }
           : { ok: false, errorCode: result.message ?? "seller.offer.missing", denied: result.denied };
       },
-      searchVariants: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+      searchProducts: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+      loadProductVariants: async (productId) => {
+        const rows = await loadSellerProductVariants(sellerPartyId, productId, offerLocale.code);
+        return rows.map((row) => ({
+          catalogVariantId: row.catalogVariantId,
+          productId: row.productId,
+          productTitle: "",
+          displayLabel: row.displayLabel,
+          axisLabels: row.axisLabels,
+          catalogCode: row.catalogCode,
+          status: row.status,
+        }));
+      },
       createDraft: async () => ({ ok: false, errorCode: "offer.workspace.edit_mode" }),
       saveCommercial: (patch) => patchSellerOffer(sellerPartyId, offerId, patch),
       savePrice: (input) => writeSellerOfferPrice(sellerPartyId, offerId, input),
@@ -71,7 +87,7 @@ export default function VendorProductDetailPage() {
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/vendor-panel/products")),
     };
-  }, [sellerPartyId, offerId, router, localizePath]);
+  }, [sellerPartyId, offerId, router, localizePath, offerLocale.code]);
 
   function renderExtras(tab: OfferTabId, detail: { productId: string | null }): ReactNode {
     if (tab === "identity" && detail.productId) {

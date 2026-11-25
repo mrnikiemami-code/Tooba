@@ -294,3 +294,52 @@ export function errorLabel(code: string, locale: "fa" | "en"): string {
   if (row) return row[locale];
   return code;
 }
+
+/** Applies one saved inventory location without resetting other unsaved positions or the reason. */
+export function applySavedInventoryDraft(
+  draft: OfferWorkspaceDraft,
+  next: OfferWorkspaceDetail,
+  stockItemId: string,
+): OfferWorkspaceDraft {
+  const saved = next.inventoryLocations.find((row) => row.stockItemId === stockItemId);
+  if (!saved) return draft;
+  return {
+    ...draft,
+    inventoryOnHand: {
+      ...draft.inventoryOnHand,
+      [stockItemId]: String(saved.onHand),
+    },
+  };
+}
+
+/** Rows whose draft on-hand differs from the last confirmed detail. */
+export function changedInventoryRows(
+  detail: OfferWorkspaceDetail,
+  draft: OfferWorkspaceDraft,
+): OfferWorkspaceDetail["inventoryLocations"] {
+  return detail.inventoryLocations.filter(
+    (row) => parseDecimal(draft.inventoryOnHand[row.stockItemId]) !== row.onHand,
+  );
+}
+
+/** Compares the persisted offer snapshot so a stale session cannot overwrite another session. */
+export function detailVersionChanged(current: OfferWorkspaceDetail, latest: OfferWorkspaceDetail): boolean {
+  return current.lastUpdatedAt !== latest.lastUpdatedAt
+    || current.status !== latest.status
+    || current.sellerSku !== latest.sellerSku
+    || current.returnPolicyChoice !== latest.returnPolicyChoice
+    || current.customReturnWindowDays !== latest.customReturnWindowDays
+    || current.minimumOrderQuantity !== latest.minimumOrderQuantity
+    || current.maximumOrderQuantity !== latest.maximumOrderQuantity
+    || current.amount !== latest.amount
+    || current.currency !== latest.currency
+    || current.onHand !== latest.onHand
+    || current.reserved !== latest.reserved
+    || current.fulfillmentResponsibility !== latest.fulfillmentResponsibility
+    || current.fulfillmentShippingTypeId !== latest.fulfillmentShippingTypeId
+    || current.inventoryLocations.length !== latest.inventoryLocations.length
+    || current.inventoryLocations.some((row) => {
+      const next = latest.inventoryLocations.find((item) => item.stockItemId === row.stockItemId);
+      return !next || next.onHand !== row.onHand || next.reserved !== row.reserved;
+    });
+}

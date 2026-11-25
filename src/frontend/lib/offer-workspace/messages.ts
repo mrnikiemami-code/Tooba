@@ -17,10 +17,19 @@ export interface OfferWorkspaceMessages {
   saveError: string;
   saved: string;
   noChanges: string;
+  partialSaved: string;
+  saveUnknown: string;
+  createUnknown: string;
+  reloadState: string;
+  concurrentChange: string;
+  draftRestored: string;
+  reloaded: string;
   seller: string;
   status: string;
   buy: string;
   buyable: string;
+  buyDisplay: string;
+  buyabilityHint: string;
   notBuyable: string;
   priceSummary: string;
   lastSaved: string;
@@ -143,6 +152,20 @@ export interface OfferWorkspaceMessages {
   variantCodeLabel: string;
   skuNone: string;
   select: string;
+  selectSellerTitle: string;
+  selectProductTitle: string;
+  selectVariantTitle: string;
+  changeProduct: string;
+  changeVariant: string;
+  chooseProductFirst: string;
+  productsEmpty: string;
+  variantsEmpty: string;
+  singleVariantAuto: string;
+  productPickerError: string;
+  variantPickerError: string;
+  variantUnnamed: string;
+  productResultCount: string;
+  variantCount: string;
   notSelected: string;
   search: string;
   nextPage: string;
@@ -151,7 +174,12 @@ export interface OfferWorkspaceMessages {
   noResults: string;
   pickerError: string;
   createNeedsIdentity: string;
+  duplicateActiveTitle: string;
+  duplicateActive: string;
+  viewExistingOffer: string;
+  conflictChecking: string;
   validationAmount: string;
+  priceRequired: string;
   validationDecimals: string;
   validationInventory: string;
   validationBelowReserved: string;
@@ -181,10 +209,19 @@ const fa: OfferWorkspaceMessages = {
   saveError: "تغییرات شما حفظ شد؛ دوباره تلاش کنید.",
   saved: "تغییرات ذخیره شد.",
   noChanges: "تغییری برای ذخیره وجود ندارد.",
+  partialSaved: "بخشی از تغییرات ذخیره شد؛ بخش باقی‌مانده با مقادیر شما حفظ شده است.",
+  saveUnknown: "ارتباط قطع شد و نتیجه ذخیره قطعی نیست. برای جلوگیری از ثبت تکراری، وضعیت را بازخوانی کنید.",
+  createUnknown: "ارتباط قطع شد و نتیجه ایجاد پیش‌نویس قطعی نیست. فهرست آفرها را بازخوانی کنید؛ انتخاب‌های شما حفظ شده است.",
+  reloadState: "بازخوانی وضعیت",
+  concurrentChange: "این آفر توسط نشست دیگری تغییر کرده است. ابتدا وضعیت را بازخوانی کنید؛ تغییرات شما حفظ می‌شود.",
+  draftRestored: "پیش‌نویس محلی و انتخاب‌های ذخیره‌نشده بازیابی شد.",
+  reloaded: "وضعیت سرور بازخوانی شد؛ تغییرات ذخیره‌نشده شما حفظ شده است.",
   seller: "فروشنده",
   status: "وضعیت آفر",
   buy: "خرید",
   buyable: "قابل خرید",
+  buyDisplay: "قابلیت خرید (نمایشی)",
+  buyabilityHint: "این شاخص از وضعیت فعال، قیمت و موجودی ساخته می‌شود؛ تأیید نهایی در سبد خرید انجام می‌شود.",
   notBuyable: "غیرقابل خرید",
   priceSummary: "قیمت · بازار و ارز",
   lastSaved: "ذخیره‌شده",
@@ -307,6 +344,20 @@ const fa: OfferWorkspaceMessages = {
   variantCodeLabel: "کد تنوع",
   skuNone: "بدون کد",
   select: "انتخاب",
+  selectSellerTitle: "انتخاب فروشنده",
+  selectProductTitle: "انتخاب محصول",
+  selectVariantTitle: "انتخاب تنوع محصول",
+  changeProduct: "تغییر محصول",
+  changeVariant: "تغییر تنوع",
+  chooseProductFirst: "ابتدا محصول را انتخاب کنید.",
+  productsEmpty: "محصول منتشرشده‌ای پیدا نشد.",
+  variantsEmpty: "این محصول تنوع قابل عرضه ندارد.",
+  singleVariantAuto: "این محصول یک تنوع قابل عرضه دارد و به‌صورت خودکار انتخاب شد.",
+  productPickerError: "خواندن محصولات ممکن نشد.",
+  variantPickerError: "خواندن تنوع‌ها ممکن نشد.",
+  variantUnnamed: "تنوع بدون مشخصه",
+  productResultCount: "محصول",
+  variantCount: "تنوع",
   notSelected: "انتخاب نشده",
   search: "جست‌وجو",
   nextPage: "صفحه بعد",
@@ -315,7 +366,12 @@ const fa: OfferWorkspaceMessages = {
   noResults: "نتیجه‌ای پیدا نشد.",
   pickerError: "خواندن فهرست ممکن نشد.",
   createNeedsIdentity: "ابتدا فروشنده، محصول و تنوع را انتخاب کنید.",
+  duplicateActiveTitle: "آفر فعال برای این محصول وجود دارد",
+  duplicateActive: "برای این فروشنده، محصول و کانال یک آفر فعال ثبت شده است. برای جلوگیری از آفر تکراری، همان آفر را باز کنید.",
+  viewExistingOffer: "مشاهده آفر موجود",
+  conflictChecking: "بررسی آفر موجود…",
   validationAmount: "مبلغ نامعتبر است.",
+  priceRequired: "برای ذخیره، مبلغ را وارد کنید یا تغییر قیمت را لغو کنید. مبلغ خالی صفر ثبت نمی‌شود.",
   validationDecimals: "ریال بدون اعشار است.",
   validationInventory: "موجودی نامعتبر است.",
   validationBelowReserved: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
@@ -346,10 +402,19 @@ const en: OfferWorkspaceMessages = {
   saveError: "Your changes were kept; try again.",
   saved: "Changes saved.",
   noChanges: "Nothing to save.",
+  partialSaved: "Some changes were saved; the remaining values are kept.",
+  saveUnknown: "The connection dropped and the result is uncertain. Reload the state before retrying.",
+  createUnknown: "The connection dropped and draft creation is uncertain. Reload the offer list; your selections are kept.",
+  reloadState: "Reload state",
+  concurrentChange: "Another session changed this offer. Reload the state first; your changes are kept.",
+  draftRestored: "Local draft and unsaved selections were restored.",
+  reloaded: "Server state reloaded; your unsaved changes are kept.",
   seller: "Seller",
   status: "Offer status",
   buy: "Purchase",
   buyable: "Buyable",
+  buyDisplay: "Buyability (display)",
+  buyabilityHint: "This indicator uses active status, price and stock; final confirmation happens in the cart.",
   notBuyable: "Not buyable",
   priceSummary: "Price · market and currency",
   lastSaved: "Saved",
@@ -472,6 +537,20 @@ const en: OfferWorkspaceMessages = {
   variantCodeLabel: "Variant code",
   skuNone: "No code",
   select: "Select",
+  selectSellerTitle: "Choose seller",
+  selectProductTitle: "Choose product",
+  selectVariantTitle: "Choose product variant",
+  changeProduct: "Change product",
+  changeVariant: "Change variant",
+  chooseProductFirst: "Choose a product first.",
+  productsEmpty: "No published product found.",
+  variantsEmpty: "This product has no sellable variant.",
+  singleVariantAuto: "This product has one sellable variant; it was selected automatically.",
+  productPickerError: "Products could not be read.",
+  variantPickerError: "Variants could not be read.",
+  variantUnnamed: "Variant without attributes",
+  productResultCount: "products",
+  variantCount: "variants",
   notSelected: "Not selected",
   search: "Search",
   nextPage: "Next page",
@@ -480,7 +559,12 @@ const en: OfferWorkspaceMessages = {
   noResults: "No result found.",
   pickerError: "The list could not be read.",
   createNeedsIdentity: "Choose seller, product and variant first.",
+  duplicateActiveTitle: "An active offer already exists",
+  duplicateActive: "An active offer already exists for this seller, product and channel. Open it instead of creating a duplicate.",
+  viewExistingOffer: "View existing offer",
+  conflictChecking: "Checking existing offer…",
   validationAmount: "Invalid amount.",
+  priceRequired: "Enter an amount, or undo the price change. An empty amount is never saved as zero.",
   validationDecimals: "IRR has no decimals.",
   validationInventory: "Invalid stock value.",
   validationBelowReserved: "On-hand must not be below reserved.",
@@ -496,3 +580,46 @@ const en: OfferWorkspaceMessages = {
 };
 
 export const offerWorkspaceMessages: Record<"fa" | "en", OfferWorkspaceMessages> = { fa, en };
+
+/** Maps validation/server codes to user-facing copy; never renders a raw machine code. */
+export function offerErrorText(t: OfferWorkspaceMessages, code: string): string {
+  switch (code) {
+    case "offer.price.required":
+      return t.priceRequired;
+    case "offer.price.invalid":
+      return t.validationAmount;
+    case "offer.price.decimals_not_allowed":
+      return t.validationDecimals;
+    case "offer.inventory.invalid":
+      return t.validationInventory;
+    case "offer.inventory.below_reserved":
+      return t.validationBelowReserved;
+    case "offer.inventory.reason_required":
+      return t.validationReason;
+    case "offer.qty.min_invalid":
+    case "offer.qty.max_invalid":
+      return t.validationQty;
+    case "offer.qty.min_above_max":
+      return t.validationQtyOrder;
+    case "offer.return.window_invalid":
+      return t.validationReturnWindow;
+    case "offer.return.window_out_of_range":
+      return t.validationReturnRange;
+    case "offer.buyable.no_price":
+      return t.buyableReasonNoPrice;
+    case "offer.buyable.no_stock":
+      return t.buyableReasonNoStock;
+    case "offer.buyable.inactive":
+      return t.buyableReasonInactive;
+    case "offer.lifecycle.archived_locked":
+      return t.archivedLocked;
+    case "seller.identity.missing":
+      return t.sellerSession;
+    case "host-unreachable":
+      return t.dataUnavailable;
+    case "denied":
+      return t.denied;
+    default:
+      return t.saveError;
+  }
+}

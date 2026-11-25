@@ -1,0 +1,13 @@
+﻿# Tasks — offer-workspace-owner-repair-296-r8
+- [x] Independent product/variant pickers with human Catalog labels and edge states.
+- [x] Modal seller/product/variant pickers with search, paging and close-on-select.
+- [x] Header/layout/text/overflow repairs preserving R7/295 structure.
+- [x] Create-flow locks, real Draft creation, edit navigation and double-submit protection.
+- [x] Duplicate active-listing lookup, link and natural error handling.
+- [x] Real fa/en localization, third-language fixture, active direction/calendar/numbers/currency.
+- [x] Number/amount input safety and empty-not-zero behavior.
+- [x] Independent inventory location save and partial-failure retention.
+- [x] Save safety, stale-snapshot guard and uncertain-result handling.
+- [x] Real channel and readable shared-grid lists.
+- [x] Additive Catalog/Offer read contracts and auth-scoped duplicate lookup.
+- [x] Real Playwright acceptance matrix, mounted/model/API/backend tests, Impeccable before/after and test-data disposition.

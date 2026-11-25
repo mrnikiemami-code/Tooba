@@ -63,6 +63,16 @@ public sealed partial class OfferStore(OfferDbContext db)
             && x.Channel == channel && x.Status != DomainOfferStatus.Archived, token);
 
     /// <inheritdoc />
+    public Task<Guid?> FindActiveListingOfferIdAsync(Guid sellerId, Guid variantId, Tooba.Offer.Domain.ValueObjects.SalesChannel channel, CancellationToken token) =>
+        db.Offers.AsNoTracking()
+            .Where(x => x.SellerPartyId == sellerId && x.CatalogVariantId == variantId
+                && x.Channel == channel && x.Status != DomainOfferStatus.Archived)
+            .OrderByDescending(x => x.Status == DomainOfferStatus.Active)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => (Guid?)x.OfferId)
+            .FirstOrDefaultAsync(token);
+
+    /// <inheritdoc />
     public Task<bool> ExistsSellerSkuAsync(Guid sellerId, string sku, Guid? excludingId, CancellationToken token) =>
         db.Offers.AnyAsync(x => x.SellerPartyId == sellerId && x.SellerSku == sku
             && (!excludingId.HasValue || x.OfferId != excludingId.Value), token);

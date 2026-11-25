@@ -166,3 +166,17 @@ public sealed class RequestLocaleResolver : IRequestLocaleResolver
         }
     }
 }
+
+/// <summary>HTTP boundary for the central request-locale resolver; endpoints do not parse headers directly.</summary>
+public static class RequestLocaleResolverHttpExtensions
+{
+    /// <summary>Resolves the canonical culture from the current HTTP request.</summary>
+    public static System.Globalization.CultureInfo ResolveRequestLocale(
+        this IRequestLocaleResolver resolver,
+        Microsoft.AspNetCore.Http.HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(resolver);
+        ArgumentNullException.ThrowIfNull(context);
+        return resolver.Resolve(context.Request.Headers.AcceptLanguage);
+    }
+}

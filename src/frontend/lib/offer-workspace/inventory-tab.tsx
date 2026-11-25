@@ -3,13 +3,14 @@
 import { Warehouse } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
-import { faNumber, parseDecimal } from "./model";
+import { parseDecimal } from "./model";
+import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
 import { DirtyDot, Note, SectionTitle } from "./tab-shared";
 
 export interface InventoryTabProps {
   t: OfferWorkspaceMessages;
-  locale: "fa" | "en";
+  format: OfferFormatters;
   detail: OfferWorkspaceDetail;
   onHand: Record<string, string>;
   reason: string;
@@ -19,7 +20,7 @@ export interface InventoryTabProps {
 }
 
 export function InventoryTab(props: InventoryTabProps) {
-  const { t, locale, detail } = props;
+  const { t, format, detail } = props;
   const totalOnHand = detail.inventoryLocations.reduce((sum, row) => sum + row.onHand, 0);
   const totalReserved = detail.inventoryLocations.reduce((sum, row) => sum + row.reserved, 0);
   const totalAvailable = detail.inventoryLocations.reduce((sum, row) => sum + row.available, 0);
@@ -33,9 +34,9 @@ export function InventoryTab(props: InventoryTabProps) {
         </header>
         <div className={styles.cardBd}>
           <div className={styles.tiles} data-testid="offer-inventory-summary">
-            <Tile label={t.inventoryPhysical} value={faNumber(totalOnHand, locale)} testId="offer-inventory-total-onhand" />
-            <Tile label={t.inventoryReserved} value={faNumber(totalReserved, locale)} testId="offer-inventory-total-reserved" />
-            <Tile label={t.inventoryAvailable} value={faNumber(totalAvailable, locale)} testId="offer-inventory-total-available" />
+            <Tile label={t.inventoryPhysical} value={format.number(totalOnHand)} testId="offer-inventory-total-onhand" />
+            <Tile label={t.inventoryReserved} value={format.number(totalReserved)} testId="offer-inventory-total-reserved" />
+            <Tile label={t.inventoryAvailable} value={format.number(totalAvailable)} testId="offer-inventory-total-available" />
           </div>
 
           <div style={{ marginTop: 14 }}>
@@ -80,10 +81,10 @@ export function InventoryTab(props: InventoryTabProps) {
                             />
                           </td>
                           <td data-label={t.inventoryReserved} className={styles.numCell} data-testid="offer-inventory-reserved">
-                            {faNumber(row.reserved, locale)}
+                            {format.number(row.reserved)}
                           </td>
                           <td data-label={t.inventoryAvailable} className={styles.numCell} data-testid="offer-inventory-available">
-                            {faNumber(row.available, locale)}
+                            {format.number(row.available)}
                           </td>
                         </tr>
                       );

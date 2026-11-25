@@ -1,0 +1,266 @@
+{
+  "startedAt": "2026-11-25T08:39:43.845Z",
+  "checks": {
+    "fixture.sellerCreateGranted": {
+      "ok": true,
+      "detail": "[{\"permissionId\":\"product.create\",\"module\":\"Product\",\"scopeKind\":\"GlobalWithinOwner\",\"inheritedViaRoleCodes\":[\"r8-fixture-1795595983879\"],\"deniedByCeiling\":false},{\"permissionId\":\"product.edit\",\"module\":\"Product\",\"scopeKind\":\"GlobalWithinOwner\",\"inheritedViaRoleCodes\":[\"r8-fixture-1795595983879\"],\"deniedByCeiling\":false},{\"permissionId\":\"product.view\",\"module\":\"Product\",\"scopeKind\":\"GlobalWithinOwner\",\"inheritedViaRoleCodes\":[\"r8-fixture-1795595983879\"],\"deniedByCeiling\":false}]"
+    },
+    "api.productPicker.pageAndLimit": {
+      "ok": true,
+      "detail": "{\"status\":200,\"page\":1,\"size\":100,\"count\":40}"
+    },
+    "api.productPicker.realProduct": {
+      "ok": true,
+      "detail": "{\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"title\":\"سامسونگ هدفون سری 1\",\"brandName\":\"سامسونگ\",\"primaryMediaAssetId\":\"01a05387-fb86-7000-8f52-16dbea0b0ce6\",\"publishedVariantCount\":3}"
+    },
+    "api.variantPicker.humanLabels": {
+      "ok": true,
+      "detail": "[{\"catalogVariantId\":\"01a05388-6ce8-7000-935a-9adef2652668\",\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"displayLabel\":\"رنگ (mobile): مشکی\",\"axisLabels\":[{\"name\":\"رنگ (mobile)\",\"value\":\"مشکی\"}],\"catalogCode\":\"DEMO-demo-prod-av-audio-headphones-1-1\",\"status\":\"Published\"},{\"catalogVariantId\":\"01a05388-6ce8-7000-9cd2-66df593dd1ff\",\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"displayLabel\":\"رنگ (mobile): آبی\",\"axisLabels\":[{\"name\":\"رنگ (mobile)\",\"value\":\"آبی\"}],\"catalogCode\":\"DEMO-demo-prod-av-audio-headphones-1-2\",\"status\":\"Published\"}]"
+    },
+    "api.variantPicker.localizedEn": {
+      "ok": true,
+      "detail": "[{\"catalogVariantId\":\"01a05388-6ce8-7000-935a-9adef2652668\",\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"displayLabel\":\"Color (mobile): Black\",\"axisLabels\":[{\"name\":\"Color (mobile)\",\"value\":\"Black\"}],\"catalogCode\":\"DEMO-demo-prod-av-audio-headphones-1-1\",\"status\":\"Published\"},{\"catalogVariantId\":\"01a05388-6ce8-7000-9cd2-66df593dd1ff\",\"productId\":\"01a05388-6c35-7000-b35d-97e953b28374\",\"displayLabel\":\"Color (mobile): Blue\",\"axisLabels\":[{\"name\":\"Color (mobile)\",\"value\":\"Blue\"}],\"catalogCode\":\"DEMO-demo-prod-av-audio-headphones-1-2\",\"status\":\"Published\"}]"
+    },
+    "api.sellerProductPicker": {
+      "ok": true,
+      "detail": "{\"status\":200,\"count\":3}"
+    },
+    "api.duplicateLookup.existing": {
+      "ok": true,
+      "detail": "{\"offerId\":\"457e375f-ceec-4b66-b81e-3829c4e15893\",\"catalogVariantId\":\"01a05388-6ce8-7000-9cd2-66df593dd1ff\",\"sellerPartyId\":\"01a030d1-40cb-7000-8abe-6d31739956c5\",\"channel\":\"Marketplace\",\"status\":\"Active\",\"sellerSku\":\"VAR-01a053886ce870009cd266df593dd1ff\",\"returnPolicyChoice\":\"Default\",\"minimumOrderQuantity\":1,\"maximumOrderQuantity\":20}"
+    },
+    "api.fixture.adminFree": {
+      "ok": true,
+      "detail": "\"سامسونگ هدفون سری 1\""
+    },
+    "api.fixture.sellerFree": {
+      "ok": true,
+      "detail": "\"نایک پیراهن مردانه سری 1\""
+    },
+    "api.list.channelAndLabel": {
+      "ok": true,
+      "detail": "{\"listChannel\":\"Marketplace\",\"detailChannel\":\"Marketplace\",\"label\":\"رنگ (mobile): آبی\"}"
+    },
+    "api.list.localeLabels": {
+      "ok": true,
+      "detail": "[\"Color (mobile): Blue\",\"Color (mobile): Black\"]"
+    },
+    "security.crossSellerRead": {
+      "ok": true,
+      "detail": "status=404"
+    },
+    "security.crossSellerWrite": {
+      "ok": true,
+      "detail": "status=404"
+    },
+    "security.sellerShippingWriteDenied": {
+      "ok": true,
+      "detail": "status=403"
+    },
+    "ui.adminCreate.tabsDisabled": {
+      "ok": true,
+      "detail": "pricing tab"
+    },
+    "ui.adminCreate.noAutoSelection": {
+      "ok": true,
+      "detail": "no auto selection"
+    },
+    "ui.adminCreate.sellerSearch": {
+      "ok": true,
+      "detail": "seller search result"
+    },
+    "ui.adminCreate.variantHumanLabels": {
+      "ok": true,
+      "detail": "رنگ (mobile): مشکی\nرنگ (mobile): مشکی\nDEMO-demo-prod-av-audio-headphones-1-1\nرنگ (mobile): آبی\nرنگ (mobile): آبی\nDEMO-demo-prod-av-audio-headphones-1-2\nرنگ (mobile): سفید\nرنگ (mobile): سفید\nDEMO-demo-"
+    },
+    "ui.adminCreate.url": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/admin/offers/62fe0c04-bf13-ebb8-9a4c-55dc0a60c816"
+    },
+    "ui.adminCreate.tabsEnabled": {
+      "ok": true,
+      "detail": "pricing tab enabled"
+    },
+    "ui.adminCreate.persisted": {
+      "ok": true,
+      "detail": "{\"status\":\"Draft\",\"sku\":\"TB296-R8-ADMIN-1795595988082\"}"
+    },
+    "ui.price.persianDigits": {
+      "ok": true,
+      "detail": "۱٬۲۳۴٬۵۶۷"
+    },
+    "ui.price.persisted": {
+      "ok": true,
+      "detail": "1234567"
+    },
+    "ui.price.emptyNotZero": {
+      "ok": true,
+      "detail": "ذخیره انجام نشد\nبرای ذخیره، مبلغ را وارد کنید یا تغییر قیمت را لغو کنید. مبلغ خالی صفر ثبت نمی‌شود.\nتلاش دوباره amount=1234567"
+    },
+    "ui.conditions.persisted": {
+      "ok": true,
+      "detail": "{\"policy\":\"Custom\",\"days\":9,\"min\":2,\"max\":6}"
+    },
+    "ui.buyability.displayHeuristic": {
+      "ok": true,
+      "detail": "display heuristic label"
+    },
+    "ui.language.dirty": {
+      "ok": true,
+      "detail": "dirty before language switch"
+    },
+    "ui.language.restoresDraft": {
+      "ok": true,
+      "detail": "TB296-R8-LANG-1795595990702"
+    },
+    "ui.language.direction": {
+      "ok": true,
+      "detail": "ltr"
+    },
+    "ui.language.copy": {
+      "ok": true,
+      "detail": "1\nOffer identity|2\nPricing|3\nDiscounts|4\nInventory|5\nShipping|6\nSales conditions|7\nHistory"
+    },
+    "ui.language.restoresBack": {
+      "ok": true,
+      "detail": "fa restore"
+    },
+    "ui.language.draftSaved": {
+      "ok": true,
+      "detail": "TB296-R8-LANG-1795595990702"
+    },
+    "ui.inventory.hasLocation": {
+      "ok": true,
+      "detail": "1"
+    },
+    "ui.inventory.persisted": {
+      "ok": true,
+      "detail": "{\"expected\":200,\"actual\":200}"
+    },
+    "ui.inventory.restored": {
+      "ok": true,
+      "detail": "{\"expected\":199,\"actual\":199}"
+    },
+    "ui.network.uncertain": {
+      "ok": true,
+      "detail": "ذخیره انجام نشد\nارتباط قطع شد و نتیجه ذخیره قطعی نیست. برای جلوگیری از ثبت تکراری، وضعیت را بازخوانی کنید.\nبازخوانی وضعیت"
+    },
+    "ui.network.noBlindRetry": {
+      "ok": true,
+      "detail": "no retry"
+    },
+    "ui.network.reloadAction": {
+      "ok": true,
+      "detail": "reload action"
+    },
+    "ui.network.draftKept": {
+      "ok": true,
+      "detail": "۷٬۶۵۴٬۳۲۱"
+    },
+    "ui.overflow.360": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "ui.overflow.768": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "ui.overflow.1440": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "ui.console.noErrors": {
+      "ok": true,
+      "detail": ""
+    },
+    "ui.sellerDuplicate.explained": {
+      "ok": true,
+      "detail": "آفر فعال برای این محصول وجود دارد\nبرای این فروشنده، محصول و کانال یک آفر فعال ثبت شده است. برای جلوگیری از آفر تکراری، همان آفر را باز کنید. مشاهده آفر موجود"
+    },
+    "ui.sellerDuplicate.link": {
+      "ok": true,
+      "detail": "/vendor-panel/products/457e375f-ceec-4b66-b81e-3829c4e15893"
+    },
+    "ui.sellerDuplicate.submitDisabled": {
+      "ok": true,
+      "detail": "submit disabled"
+    },
+    "ui.sellerCreate.tabsEnabled": {
+      "ok": true,
+      "detail": "pricing tab enabled"
+    },
+    "ui.sellerCreate.persisted": {
+      "ok": true,
+      "detail": "{\"status\":200,\"sku\":\"TB296-R8-SELLER-1795596042772\",\"seller\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+    },
+    "ui.sellerCreate.pricePersisted": {
+      "ok": true,
+      "detail": "987654"
+    },
+    "ui.list.channelReal": {
+      "ok": true,
+      "detail": "channel label"
+    },
+    "ui.list.search": {
+      "ok": true,
+      "detail": "{\"page\":1,\"pageSize\":10,\"search\":\"TB296-R8-LANG-1795595990702\",\"sort\":[{\"field\":\"updatedAt\",\"direction\":\"desc\"}],\"filters\":[]}"
+    },
+    "ui.list.searchRow": {
+      "ok": true,
+      "detail": "created SKU visible"
+    },
+    "ui.list.sort": {
+      "ok": true,
+      "detail": "{\"page\":1,\"pageSize\":10,\"sort\":[{\"field\":\"sellerSku\",\"direction\":\"asc\"}],\"filters\":[]}"
+    },
+    "ui.list.page": {
+      "ok": true,
+      "detail": "{\"page\":2,\"pageSize\":10,\"sort\":[{\"field\":\"sellerSku\",\"direction\":\"asc\"}],\"filters\":[]}"
+    },
+    "ui.list.export": {
+      "ok": true,
+      "detail": "admin-offers-2026-11-25.csv"
+    },
+    "ui.sellerList.search": {
+      "ok": true,
+      "detail": "seller list search"
+    },
+    "fixture.r8OffersArchived": {
+      "ok": true,
+      "detail": "{\"remaining\":0}"
+    },
+    "fixture.sellerCreateGrantRemoved": {
+      "ok": true,
+      "detail": "[]"
+    }
+  },
+  "errors": [],
+  "screenshots": [],
+  "metrics": {
+    "formLoadMs": 1598,
+    "productPickerMs": 103,
+    "inventoryLocations": 1
+  },
+  "ids": {
+    "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "sellerA": {
+      "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "actorLabel": "اپراتور آرمان",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "sellerLabel": "فروشگاه آرمان",
+      "contextKind": "seller-owner"
+    },
+    "sellerB": {
+      "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+      "actorLabel": "اپراتور دیجی‌استایل",
+      "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+      "sellerLabel": "دیجی‌استایل نمونه",
+      "contextKind": "seller-owner-alt"
+    },
+    "adminOfferId": "62fe0c04-bf13-ebb8-9a4c-55dc0a60c816",
+    "seedOfferId": "457e375f-ceec-4b66-b81e-3829c4e15893",
+    "sellerOfferId": "f039b4d8-d7da-31e2-140f-962bd6b08920"
+  },
+  "finishedAt": "2026-11-25T08:40:51.665Z",
+  "ok": true
+}

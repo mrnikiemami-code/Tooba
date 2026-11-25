@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.BuildingBlocks.Localization;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Offer.Application.Offers.Commands.CreateOffer;
 using Tooba.Offer.Application.Offers.Commands.SetOfferInventory;
 using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
+using Tooba.Offer.Application.Offers.Queries.FindActiveOffer;
 using Tooba.Offer.Application.Offers.Queries.GetOffer;
 using Tooba.Offer.Application.Offers.Queries.QueryOffers;
 using Tooba.Offer.Contracts.Dtos;
@@ -23,6 +25,7 @@ public static class OfferAdminEndpoints
     {
         ArgumentNullException.ThrowIfNull(group);
         group.MapPost("/offers/query", QueryAsync);
+        group.MapGet("/offers/active-listing", FindActiveAsync);
         group.MapPost("/offers", CreateAsync);
         group.MapGet("/offers/{offerId:guid}", GetAsync);
         group.MapPatch("/offers/{offerId:guid}", PatchAsync);
@@ -35,11 +38,26 @@ public static class OfferAdminEndpoints
         ISender sender,
         IOfferAdminAuthorizer authorizer,
         ApiResponseFactory api,
+        IRequestLocaleResolver localeResolver,
         HttpContext context,
         CancellationToken token)
     {
         await authorizer.RequireViewAsync(context, token);
-        return api.From(await sender.Send(new QueryAdminOffersQuery(body), token));
+        return api.From(await sender.Send(new QueryAdminOffersQuery(body, localeResolver.ResolveRequestLocale(context).Name), token));
+    }
+
+    private static async Task<IResult> FindActiveAsync(
+        Guid sellerPartyId,
+        Guid catalogVariantId,
+        ISender sender,
+        IOfferAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        await authorizer.RequireViewAsync(context, token);
+        return api.From(await sender.Send(
+            new FindActiveOfferQuery(sellerPartyId, catalogVariantId, SalesChannel.Marketplace), token));
     }
 
     private static async Task<IResult> CreateAsync(
@@ -67,11 +85,12 @@ public static class OfferAdminEndpoints
         ISender sender,
         IOfferAdminAuthorizer authorizer,
         ApiResponseFactory api,
+        IRequestLocaleResolver localeResolver,
         HttpContext context,
         CancellationToken token)
     {
         await authorizer.RequireViewAsync(context, token);
-        return api.From(await sender.Send(new GetOfferForAdminQuery(offerId), token));
+        return api.From(await sender.Send(new GetOfferForAdminQuery(offerId, localeResolver.ResolveRequestLocale(context).Name), token));
     }
 
     private static async Task<IResult> PatchAsync(

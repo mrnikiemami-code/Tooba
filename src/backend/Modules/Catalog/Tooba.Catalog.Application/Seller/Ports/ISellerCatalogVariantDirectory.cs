@@ -14,5 +14,18 @@ public interface ISellerCatalogVariantDirectory
         int page,
         int pageSize,
         CancellationToken cancellationToken);
-}
 
+    /// <summary>Server search/page over published Catalog products for the offer picker.</summary>
+    Task<CatalogPickerProductPage> SearchPublishedProductsAsync(
+        string? search,
+        int page,
+        int pageSize,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>Published variants of ONE product with localized human axis labels.</summary>
+    Task<IReadOnlyList<CatalogPickerVariantOption>> ListPublishedVariantsForProductAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+}

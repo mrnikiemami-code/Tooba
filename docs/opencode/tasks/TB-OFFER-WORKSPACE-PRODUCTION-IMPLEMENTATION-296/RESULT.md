@@ -111,3 +111,45 @@ STATUS: PASS (worker; STOP_FOR_ARCHITECT). Worker PASS ≠ Architect ACCEPT ≠ 
 - Evidence: `ACCEPTANCE-MATRIX-R7.json`, `IMPECCABLE-R7.md`, `evidence/r7-runtime/verify-r7.json` (SHA-256 FFD3DE6B…6823), `evidence/r7-final-shots/`.
 STOP_FOR_ARCHITECT
 - Test-infrastructure alignment: the Offer endpoint manifest now includes the real admin/query endpoints (`GetOfferForAdminQuery`, `QueryAdminOffersQuery`, `QuerySellerOffersQuery`) and the Offer architecture guard points at the moved `ProductManagement/Queries/GetProductWorkspaceHandler.cs`; a shared test fulfillment lookup keeps the Offer unit/observability fixtures resolvable. This is test maintenance only; no product behavior changed.
+
+---
+
+# TB-296-R8 — Owner UX / i18n / data-integrity repair
+
+STATUS: PASS (within issued R8 scope; owner visual acceptance of other tabs remains external)
+
+BASE: `037bd1a7f10056f0aea942eb4db5cc569242703e`
+BRANCH: `opencode/iso-agents-002`
+
+## Delivered
+
+- Independent product → variant modal pickers using real Catalog products/variants and human axis labels; single/zero-variant behavior; product change clears variant; real media.
+- Modal seller/product/variant pickers with search, paging, current selection, loading/error/empty states and close-on-select; form height no longer expands.
+- Header/container-query balance, aligned controls, readable 12–13px hints/footer, active-locale numbers/currency/dates, zero page overflow at 360/768/1440.
+- Create flow: real Draft creation after valid identity, real offerId, edit-mode navigation, tab lock reasons, no open-time record, rapid double-submit blocked.
+- Duplicate active listing: real cause preserved; auth-scoped lookup; existing-offer link; natural copy; no technical code/retry; network vs validation/conflict separated.
+- Real fa/en runtime plus isolated tr-TR registry fixture; direction/fallback; no forced fa for non-English. Shared AppDataGrid chrome remains on the project fa/en grid locale API (out of scope to change).
+- Number/amount standard: Persian digits/grouping, robust amount input, empty not zero, IRR no decimals, explicit zero follows Pricing.
+- Inventory partial save updates only the saved StockItemId; failing location keeps draft/reason; retry only remaining; no duplicate adjustment.
+- Save safety: try/catch/finally, synchronous lock, partial/uncertain classification, stale-snapshot reread, reload after unknown, no blind retry, guard covers all dirty sections.
+- Real channel from Offer; filter/sort only for server-supported fields; grid readability and preserved saved views.
+- Buyability marked as a display indicator based on Active + price + stock; no new purchasing logic.
+- Backend read enrichment: Catalog product/variant picker contract, localized variant labels, offer channel, variant label, duplicate lookup.
+- Test-data disposition: all R7 and R8 test offers archived (not deleted); seeded offer 457e… restored and reread; temporary seller-B capability fixture removed (roles/assignments empty, ceiling enabled 0).
+
+## Verification
+
+- FE build `tRnq3kk5nCDutJy-rfGat`; Host/FE running on 5088/3000; `/health/ready` ready.
+- Playwright R8: 58/58 checks, 0 errors; JSON SHA-256 `F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1`.
+- Mounted workspace tests: 24/24 (product/variant, zero variants, duplicate link, amount, partial inventory, network unknown, language restore, third-language fixture, double submit).
+- Admin/seller API tests: 16/16; model/i18n: 14/14; Offer backend: 97/97; Catalog guard + Stage2: 6/6.
+- Orders regression: 10 rows / total 11.
+- Typecheck 0; lint 0 errors (pre-existing unrelated warnings only).
+- Impeccable source `[]`; live URL 12 findings (mostly admin shell), one workspace advisory straggler.
+- Host guard baseline debts retained and documented: missing `IPartyDevelopmentSeedGateway.cs`, ProductWorkspace route count 18 vs 17, pre-existing `MarketplaceSellerAccessOptions.cs` residue; no R8 diff touches those files.
+
+## Gated / not fabricated
+
+Discount definition, shipping service assignment (Stage-3), offer history read, multi-currency price rows, and real dev-seed product photo remain gated. No fake contract or fabricated record was introduced.
+
+STOP_FOR_ARCHITECT

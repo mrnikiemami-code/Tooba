@@ -35,12 +35,13 @@ public sealed class OfferReadModelComposer(
     /// <summary>Builds enriched list items for the supplied Offer aggregates.</summary>
     public async Task<IReadOnlyList<SellerOfferListItem>> ListAsync(
         IReadOnlyList<SellerOffer> offers,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? locale = null)
     {
         if (offers.Count == 0) return [];
         var offerIds = offers.Select(x => x.OfferId).ToArray();
         var catalogRows = await catalog.GetOfferPresentationsAsync(
-            offers.Select(x => x.CatalogVariantId).Distinct().ToArray(), cancellationToken);
+            offers.Select(x => x.CatalogVariantId).Distinct().ToArray(), cancellationToken, locale);
         var prices = await pricing.ResolvePricesBatchAsync(
             offerIds, DefaultMarket, SalesChannel.Marketplace, DefaultCurrency, clock.UtcNow, cancellationToken);
         var stocks = await inventory.GetAvailabilityAsync(offerIds, cancellationToken);
@@ -53,19 +54,20 @@ public sealed class OfferReadModelComposer(
             stocks.TryGetValue(offer.OfferId, out var stock);
             return new SellerOfferListItem(
                 offer.OfferId, offer.CatalogVariantId, product?.ProductId,
-                product?.ProductTitle ?? string.Empty, offer.SellerSku, offer.Status.ToString(),
+                product?.ProductTitle ?? string.Empty, offer.SellerSku, offer.Status.ToString(), offer.Channel.ToString(),
                 price?.Amount, price?.Currency ?? DefaultCurrency, stock?.Available ?? 0, offer.UpdatedAt,
                 sellerNames.GetValueOrDefault(offer.SellerPartyId),
                 product?.VariantCode,
                 product?.PrimaryMediaAssetId,
-                product?.BrandName);
+                product?.BrandName,
+                product?.VariantLabel);
         }).ToArray();
     }
 
     /// <summary>Builds the enriched detail model for one Offer aggregate.</summary>
-    public async Task<SellerOfferDetailPage> DetailAsync(SellerOffer offer, CancellationToken cancellationToken)
+    public async Task<SellerOfferDetailPage> DetailAsync(SellerOffer offer, CancellationToken cancellationToken, string? locale = null)
     {
-        var catalogRows = await catalog.GetOfferPresentationsAsync([offer.CatalogVariantId], cancellationToken);
+        var catalogRows = await catalog.GetOfferPresentationsAsync([offer.CatalogVariantId], cancellationToken, locale);
         catalogRows.TryGetValue(offer.CatalogVariantId, out var product);
         var price = await pricing.ResolvePriceAsync(new PriceResolutionQuery(
             offer.OfferId, DefaultMarket, (SalesChannel)(int)offer.Channel, DefaultCurrency,
@@ -97,7 +99,8 @@ public sealed class OfferReadModelComposer(
             product?.PrimaryMediaAssetId,
             fulfillment?.Responsibility,
             fulfillment?.ShippingTypeId,
-            offer.UpdatedAt);
+            offer.UpdatedAt,
+            product?.VariantLabel);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

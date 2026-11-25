@@ -16,6 +16,7 @@ import {
 } from "../../../features/order-carrier-execution/test-dom-harness.ts";
 import { OfferWorkspace } from "../../../lib/offer-workspace/offer-workspace.tsx";
 import { normalizeDigits } from "../../../lib/offer-workspace/model.ts";
+import { offerWorkspaceMessages } from "../../../lib/offer-workspace/messages.ts";
 import type {
   OfferWorkspaceAdapter,
   OfferWorkspaceDetail,
@@ -83,7 +84,8 @@ function editAdapter(over: Partial<OfferWorkspaceAdapter> = {}, detail = baseDet
     mode: "edit",
     offerId: detail.offerId,
     loadDetail: async () => ({ ok: true, detail: current }),
-    searchVariants: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+    searchProducts: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+    loadProductVariants: async () => [],
     createDraft: async () => ({ ok: false, errorCode: "edit" }),
     saveCommercial: async (patch) => {
       calls.commercial += 1;
@@ -297,15 +299,16 @@ test("seller create mode disables dependent tabs, does not auto-select, and crea
     role: "seller",
     mode: "create",
     fixedSeller: { sellerPartyId: "seller-1", displayName: "" },
-    searchVariants: async () => ({
-      rows: [
-        { catalogVariantId: "variant-1", productId: "product-1", productTitle: "کالای اول", catalogCode: "C1", productStatus: "Published" },
-      ],
+    searchProducts: async () => ({
+      rows: [{ productId: "product-1", title: "کالای اول", brandName: "برند", primaryMediaAssetId: null, publishedVariantCount: 1 }],
       totalCount: 1,
       page: 1,
       pageSize: 10,
       hasMore: false,
     }),
+    loadProductVariants: async () => ([
+      { catalogVariantId: "variant-1", productId: "product-1", productTitle: "کالای اول", displayLabel: "رنگ: آبی · سایز: ۳۲", axisLabels: [{ name: "رنگ", value: "آبی" }, { name: "سایز", value: "۳۲" }], catalogCode: "C1", status: "Published" },
+    ]),
     createDraft: async (input) => {
       calls.created += 1;
       calls.createdId = input.catalogVariantId;
@@ -321,16 +324,17 @@ test("seller create mode disables dependent tabs, does not auto-select, and crea
       calls.cancelled += 1;
     },
   };
+  window.sessionStorage.clear();
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
-  await click(q(tree.container, "[data-testid=offer-variant-picker-toggle]"));
-  await waitFor(() => qq(tree.container, "[data-testid=offer-variant-option]").length === 1);
-
   const pricingTab = q(tree.container, "[data-testid=offer-tab-button-pricing]") as HTMLButtonElement;
   assert.equal(pricingTab.disabled, true);
-  assert.equal(qq(tree.container, "[data-testid=offer-variant-option]").some((el) => el.getAttribute("aria-pressed") === "true"), false);
+  assert.match(q(tree.container, "[data-testid=offer-variant-picker-toggle]").textContent ?? "", /محصول/);
 
-  await click(q(tree.container, "[data-testid=offer-variant-option]")); assert.match(tree.container.textContent ?? "", /کالای اول/);
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 1);
+  await click(q(tree.container, "[data-testid=offer-product-dialog-option]"));
+  await waitFor(() => /رنگ: آبی/.test(tree.container.textContent ?? ""));
   await click(q(tree.container, "[data-testid=seller-create-submit]"));
   assert.equal(calls.created, 1);
   assert.equal(calls.createdId, "offer-new");
@@ -363,7 +367,8 @@ test("picker selection survives paging in both directions (UX-29)", async () => 
       pageSize: 1,
       hasMore: page === 1,
     }),
-    searchVariants: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+    searchProducts: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+    loadProductVariants: async () => [],
     createDraft: async () => ({ ok: false, errorCode: "unused" }),
     saveCommercial: async () => ({ ok: false, errorCode: "create" }),
     savePrice: async () => ({ ok: false, errorCode: "create" }),
@@ -374,12 +379,12 @@ test("picker selection survives paging in both directions (UX-29)", async () => 
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
-  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-option]").length === 1);
-  await click(qq(tree.container, "[data-testid=offer-seller-option]")[0]!); await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]")); await waitFor(() => qq(tree.container, "[data-testid=offer-seller-option]").length === 1); await click(q(tree.container, "[data-testid=offer-picker-next]"));
-  await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-option]")[0]?.textContent ?? "").includes("ب"));
-  await click(q(tree.container, "[data-testid=offer-picker-prev]"));
-  await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-option]")[0]?.textContent ?? "").includes("الف"));
-  assert.equal(qq(tree.container, "[data-testid=offer-seller-option]")[0]?.getAttribute("aria-pressed"), "true");
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+  await click(qq(tree.container, "[data-testid=offer-seller-dialog-option]")[0]!); await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]")); await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1); await click(q(tree.container, "[data-testid=offer-seller-dialog-next]"));
+  await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-dialog-option]")[0]?.textContent ?? "").includes("ب"));
+  await click(q(tree.container, "[data-testid=offer-seller-dialog-prev]"));
+  await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-dialog-option]")[0]?.textContent ?? "").includes("الف"));
+  assert.equal(qq(tree.container, "[data-testid=offer-seller-dialog-option]")[0]?.getAttribute("aria-pressed"), "true");
   await tree.unmount();
 });
 
@@ -404,5 +409,218 @@ test("unsaved changes arm the beforeunload guard (UX-23)", async () => {
   const event = new window.Event("beforeunload", { cancelable: true });
   window.dispatchEvent(event);
   assert.equal(event.defaultPrevented, true);
+  await tree.unmount();
+});
+function createAdapter(over: Partial<OfferWorkspaceAdapter> = {}): OfferWorkspaceAdapter {
+  return {
+    role: "admin",
+    mode: "create",
+    searchSellers: async () => ({ rows: [{ sellerPartyId: "seller-1", displayName: "فروشنده" }], totalCount: 1, page: 1, pageSize: 10, hasMore: false }),
+    searchProducts: async () => ({
+      rows: [
+        { productId: "p-1", title: "محصول چندتنوع", brandName: "برند", primaryMediaAssetId: null, publishedVariantCount: 2 },
+        { productId: "p-2", title: "محصول تک‌تنوع", brandName: null, primaryMediaAssetId: null, publishedVariantCount: 1 },
+        { productId: "p-3", title: "محصول بدون تنوع", brandName: null, primaryMediaAssetId: null, publishedVariantCount: 0 },
+      ],
+      totalCount: 3,
+      page: 1,
+      pageSize: 10,
+      hasMore: false,
+    }),
+    loadProductVariants: async (productId) => productId === "p-1"
+      ? [
+          { catalogVariantId: "v-1a", productId: "p-1", productTitle: "محصول چندتنوع", displayLabel: "رنگ: آبی · سایز: ۳۲", axisLabels: [{ name: "رنگ", value: "آبی" }, { name: "سایز", value: "۳۲" }], catalogCode: "C-1A", status: "Published" },
+          { catalogVariantId: "v-1b", productId: "p-1", productTitle: "محصول چندتنوع", displayLabel: "رنگ: مشکی · سایز: ۳۴", axisLabels: [{ name: "رنگ", value: "مشکی" }, { name: "سایز", value: "۳۴" }], catalogCode: "C-1B", status: "Published" },
+        ]
+      : productId === "p-2"
+        ? [{ catalogVariantId: "v-2a", productId: "p-2", productTitle: "محصول تک‌تنوع", displayLabel: "ظرفیت: ۱ لیتر", axisLabels: [{ name: "ظرفیت", value: "۱ لیتر" }], catalogCode: "C-2A", status: "Published" }]
+        : [],
+    createDraft: async () => ({ ok: false, errorCode: "unused" }),
+    saveCommercial: async () => ({ ok: false, errorCode: "create" }),
+    savePrice: async () => ({ ok: false, errorCode: "create" }),
+    saveInventory: async () => ({ ok: false, errorCode: "create" }),
+    onCreated: () => undefined,
+    onCancel: () => undefined,
+    ...over,
+  };
+}
+
+test("product and variant are independent: product change clears the old variant", async () => {
+  window.sessionStorage.clear();
+  const tree = await mount(createElement(OfferWorkspace, { adapter: createAdapter() }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[0]!);
+  await waitFor(() => /محصول چندتنوع/.test(tree.container.textContent ?? ""));
+  await click(q(tree.container, "[data-testid=offer-variant-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-variant-option]").length === 2);
+  assert.match(q(tree.container, "[data-testid=offer-variant-dialog]").textContent ?? "", /رنگ: آبی/);
+  assert.match(q(tree.container, "[data-testid=offer-variant-dialog]").textContent ?? "", /سایز: ۳۲/);
+  await click(qq(tree.container, "[data-testid=offer-variant-option]")[0]!);
+  await waitFor(() => /رنگ: آبی/.test(tree.container.textContent ?? ""));
+
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+  await waitFor(() => /ظرفیت: ۱ لیتر/.test(tree.container.textContent ?? ""));
+  assert.match(tree.container.textContent ?? "", /یک تنوع قابل عرضه دارد/);
+  assert.doesNotMatch(q(tree.container, "[data-testid=offer-variant-picker-toggle]").textContent ?? "", /آبی/);
+  await tree.unmount();
+});
+
+test("a product without sellable variants shows a clear message", async () => {
+  window.sessionStorage.clear();
+  const tree = await mount(createElement(OfferWorkspace, { adapter: createAdapter() }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[2]!);
+  await waitFor(() => /این محصول تنوع قابل عرضه ندارد/.test(tree.container.textContent ?? ""));
+  await click(q(tree.container, "[data-testid=offer-variant-picker-toggle]"));
+  await waitFor(() => /این محصول تنوع قابل عرضه ندارد/.test(q(tree.container, "[data-testid=offer-variant-dialog]").textContent ?? ""));
+  await tree.unmount();
+});
+
+test("existing active listing is explained and linked before create", async () => {
+  window.sessionStorage.clear();
+  const adapter = createAdapter({ findActiveOffer: async () => ({ offerId: "existing-offer" }) });
+  const tree = await mount(createElement(OfferWorkspace, { adapter }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+  await click(q(tree.container, "[data-testid=offer-seller-dialog-option]"));
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-duplicate-conflict]")));
+  const link = q(tree.container, "[data-testid=offer-duplicate-conflict] a") as HTMLAnchorElement;
+  assert.equal(link.getAttribute("href"), "/admin/offers/existing-offer");
+  assert.equal((q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement).disabled, true);
+  await tree.unmount();
+});
+
+test("formatted amount input normalizes Persian digits and never turns empty into zero", async () => {
+  const tree = await mountEdit();
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
+  const input = q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement;
+  await setInputValue(input, "۱۲۳۴۵۶۷");
+  assert.equal(normalizeDigits(input.value).replace(/[٬,]/g, ""), "1234567");
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.equal(tree.calls.price, 1);
+  assert.equal(tree.current().amount, 1234567);
+
+  await setInputValue(input, "");
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.equal(tree.calls.price, 1);
+  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /مبلغ را وارد کنید/);
+  await tree.unmount();
+});
+
+test("partial inventory save keeps the failed location draft and retries only the remainder", async () => {
+  const harness = editAdapter();
+  let failSecond = true;
+  const calls: string[] = [];
+  const original = harness.adapter.saveInventory;
+  harness.adapter.saveInventory = async (input) => {
+    calls.push(input.stockItemId);
+    if (input.stockItemId === "stock-b" && failSecond) {
+      failSecond = false;
+      return { ok: false, errorCode: "platform.unexpected" };
+    }
+    const result = await original(input);
+    return result;
+  };
+  window.sessionStorage.clear();
+  const tree = await mount(createElement(OfferWorkspace, { adapter: harness.adapter }));
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-workspace]")));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-tab-button-inventory]"));
+  const rows = qq(tree.container, "[data-testid=offer-inventory-row]");
+  const inputA = q(rows[0]!, "[data-testid=offer-inventory-input]");
+  const inputB = q(rows[1]!, "[data-testid=offer-inventory-input]");
+  await setInputValue(inputA, "12");
+  await setInputValue(inputB, "9");
+  await setInputValue(q(tree.container, "[data-testid=offer-inventory-reason]"), "شمارش");
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.deepEqual(calls, ["stock-a", "stock-b"]);
+  assert.match(tree.container.textContent ?? "", /بخشی از تغییرات ذخیره شد/);
+  const freshRows = qq(tree.container, "[data-testid=offer-inventory-row]");
+  assert.equal((q(freshRows[1]!, "[data-testid=offer-inventory-input]") as HTMLInputElement).value, "9");
+  assert.equal((q(tree.container, "[data-testid=offer-inventory-reason]") as HTMLTextAreaElement).value, "شمارش");
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.deepEqual(calls, ["stock-a", "stock-b", "stock-b"]);
+  assert.equal(harness.current().inventoryLocations.find((row) => row.stockItemId === "stock-b")?.onHand, 9);
+  await tree.unmount();
+});
+
+test("a network save is uncertain: draft kept, no retry button, reload action offered", async () => {
+  const tree = await mountEdit({ savePrice: async () => ({ ok: false, errorCode: "host-unreachable" }) });
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
+  await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1500");
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /نتیجه ذخیره قطعی نیست/);
+  assert.equal(tree.container.querySelector("[data-testid=offer-save-retry]"), null);
+  assert.ok(tree.container.querySelector("[data-testid=offer-save-reload]"));
+  assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "1500");
+  await tree.unmount();
+});
+
+test("language navigation restores unsaved selections and drafts", async () => {
+  window.sessionStorage.clear();
+  const first = await mountEdit();
+  await setInputValue(q(first.container, "[data-testid=offer-seller-sku]"), "SKU-LANG");
+  const firstDirty = first.container.querySelector("[data-testid=offer-workspace-dirty]");
+  assert.ok(firstDirty);
+  await first.unmount();
+
+  const second = await mount(createElement(OfferWorkspace, { adapter: first.adapter }));
+  await waitFor(() => /SKU-LANG/.test((q(second.container, "[data-testid=offer-seller-sku]") as HTMLInputElement).value));
+  assert.equal((q(second.container, "[data-testid=offer-seller-sku]") as HTMLInputElement).value, "SKU-LANG");
+  await second.unmount();
+});
+
+test("an isolated third-language definition drives direction and copy without touching the live registry", async () => {
+  window.sessionStorage.clear();
+  const harness = editAdapter();
+  const tree = await mount(createElement(OfferWorkspace, {
+    adapter: harness.adapter,
+    localeDefinition: { code: "tr-TR", culture: "tr-TR", language: "tr", direction: "ltr", calendar: "gregorian" },
+    messages: { titleEdit: "Teklif", tabs: { ...offerWorkspaceMessages.fa.tabs, identity: "Kimlik" } },
+  }));
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-workspace]")));
+  const root = q(tree.container, "[data-testid=offer-workspace]");
+  assert.equal(root.getAttribute("dir"), "ltr");
+  assert.equal(root.getAttribute("lang"), "tr-TR");
+  assert.match(tree.container.textContent ?? "", /Kimlik/);
+  await tree.unmount();
+});
+
+test("rapid double submit creates exactly one draft", async () => {
+  window.sessionStorage.clear();
+  let created = 0;
+  const adapter = createAdapter({
+    createDraft: async () => {
+      created += 1;
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      return { ok: true, offerId: "offer-once" };
+    },
+  });
+  const tree = await mount(createElement(OfferWorkspace, { adapter }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+  await click(q(tree.container, "[data-testid=offer-seller-dialog-option]"));
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+  await waitFor(() => /ظرفیت:/.test(tree.container.textContent ?? ""));
+  const submit = q(tree.container, "[data-testid=admin-offer-submit]");
+  await click(submit);
+  await click(submit);
+  await waitFor(() => created > 0);
+  assert.equal(created, 1);
   await tree.unmount();
 });

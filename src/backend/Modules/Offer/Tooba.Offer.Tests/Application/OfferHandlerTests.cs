@@ -124,6 +124,7 @@ public sealed class OfferHandlerTests
         public Task<SellerOffer?> PersistNewAsync(SellerOffer offer, CancellationToken token) { Items.Add(offer); return Task.FromResult<SellerOffer?>(null); }
         public Task SaveChangesAsync(CancellationToken token) => Task.CompletedTask;
         public Task<bool> ExistsActiveListingAsync(Guid sellerId, Guid variantId, Tooba.Offer.Domain.ValueObjects.SalesChannel channel, CancellationToken token) => Task.FromResult(false);
+        public Task<Guid?> FindActiveListingOfferIdAsync(Guid sellerId, Guid variantId, Tooba.Offer.Domain.ValueObjects.SalesChannel channel, CancellationToken token) => Task.FromResult<Guid?>(null);
         public Task<bool> ExistsSellerSkuAsync(Guid sellerId, string sku, Guid? excludingId, CancellationToken token) => Task.FromResult(false);
     }
 
@@ -154,7 +155,7 @@ public sealed class OfferHandlerTests
     private sealed class FakeCatalogReads : ICatalogOfferReadGateway
     {
         public Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
-            IReadOnlyCollection<Guid> ids, CancellationToken token) =>
+            IReadOnlyCollection<Guid> ids, CancellationToken token, string? locale = null) =>
             Task.FromResult<IReadOnlyDictionary<Guid, CatalogOfferPresentation>>(
                 ids.ToDictionary(x => x, x => new CatalogOfferPresentation(x, Guid.NewGuid(), "Product", null, null, null, null)));
     }

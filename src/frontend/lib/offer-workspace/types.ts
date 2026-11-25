@@ -59,6 +59,7 @@ export interface OfferWorkspaceDetail {
   productUnitShortName: string | null;
   inventoryLocations: OfferInventoryLocation[];
   variantCode: string | null;
+  variantLabel: string | null;
   primaryMediaAssetId: string | null;
   fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
   fulfillmentShippingTypeId: string | null;
@@ -70,12 +71,22 @@ export interface OfferSellerOption {
   displayName: string;
 }
 
+export interface OfferProductOption {
+  productId: string;
+  title: string;
+  brandName: string | null;
+  primaryMediaAssetId: string | null;
+  publishedVariantCount: number;
+}
+
 export interface OfferVariantOption {
   catalogVariantId: string;
   productId: string;
   productTitle: string;
+  displayLabel: string;
+  axisLabels: Array<{ name: string; value: string }>;
   catalogCode: string | null;
-  productStatus: string;
+  status: string;
   primaryMediaAssetId?: string | null;
   brandName?: string | null;
 }
@@ -133,7 +144,9 @@ export interface OfferWorkspaceAdapter {
   fixedSeller?: OfferSellerOption;
   loadDetail?: () => Promise<OfferDetailResult>;
   searchSellers?: (search: string, page: number) => Promise<OfferPickerPage<OfferSellerOption>>;
-  searchVariants: (search: string, page: number) => Promise<OfferPickerPage<OfferVariantOption>>;
+  searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
+  loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
+  findActiveOffer?: (sellerPartyId: string, catalogVariantId: string) => Promise<{ offerId: string } | null>;
   createDraft: (input: {
     sellerPartyId?: string;
     catalogVariantId: string;

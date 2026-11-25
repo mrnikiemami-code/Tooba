@@ -25,6 +25,8 @@ public interface IOfferStore
     Task SaveChangesAsync(CancellationToken cancellationToken);
     /// <summary>Checks for a non-archived listing.</summary>
     Task<bool> ExistsActiveListingAsync(Guid sellerPartyId, Guid catalogVariantId, SalesChannel channel, CancellationToken cancellationToken);
+    /// <summary>Finds the non-archived listing id for one seller/variant/channel, if any.</summary>
+    Task<Guid?> FindActiveListingOfferIdAsync(Guid sellerPartyId, Guid catalogVariantId, SalesChannel channel, CancellationToken cancellationToken);
     /// <summary>Checks seller SKU uniqueness.</summary>
     Task<bool> ExistsSellerSkuAsync(Guid sellerPartyId, string sellerSku, Guid? excludingOfferId, CancellationToken cancellationToken);
 }

@@ -1,13 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useLocale } from "../../../../lib/i18n/locale-context";
+import { offerLocaleFromAppLocale } from "../../../../lib/offer-workspace/i18n";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import {
   assignAdminOfferFulfillment,
   loadAdminOfferDetail,
+  loadAdminProductVariants,
   loadAdminShippingTypes,
   patchAdminOffer,
   writeAdminOfferInventory,
@@ -18,6 +21,7 @@ export default function AdminOfferDetailPage() {
   const params = useParams<{ offerId: string }>();
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const offerLocale = offerLocaleFromAppLocale(useLocale());
   const offerId = params?.offerId ?? "";
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
@@ -31,7 +35,19 @@ export default function AdminOfferDetailPage() {
           ? { ok: true, detail: result.detail }
           : { ok: false, errorCode: result.errorCode, denied: result.denied };
       },
-      searchVariants: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+      searchProducts: async () => ({ rows: [], totalCount: 0, page: 1, pageSize: 10, hasMore: false }),
+      loadProductVariants: async (productId) => {
+        const rows = await loadAdminProductVariants(productId, offerLocale.code);
+        return rows.map((row) => ({
+          catalogVariantId: row.catalogVariantId,
+          productId: row.productId,
+          productTitle: "",
+          displayLabel: row.displayLabel,
+          axisLabels: row.axisLabels,
+          catalogCode: row.catalogCode,
+          status: row.status,
+        }));
+      },
       createDraft: async () => ({ ok: false, errorCode: "offer.workspace.edit_mode" }),
       saveCommercial: (patch) => patchAdminOffer(offerId, patch),
       savePrice: (input) => writeAdminOfferPrice(offerId, input),
@@ -41,7 +57,7 @@ export default function AdminOfferDetailPage() {
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/admin/offers")),
     }),
-    [offerId, router, localizePath],
+    [offerId, router, localizePath, offerLocale.code],
   );
 
   return (

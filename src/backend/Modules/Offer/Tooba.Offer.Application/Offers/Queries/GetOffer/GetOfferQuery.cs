@@ -8,7 +8,7 @@ using Tooba.Offer.Contracts.Dtos;
 namespace Tooba.Offer.Application.Offers.Queries.GetOffer;
 
 /// <summary>Gets the final seller detail model for an owned offer.</summary>
-public sealed record GetOfferQuery(Guid OfferId, Guid SellerPartyId) : IRequest<Result<SellerOfferDetailPage>>;
+public sealed record GetOfferQuery(Guid OfferId, Guid SellerPartyId, string? Locale = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class GetOfferHandler(IOfferStore store, OfferReadModelComposer readModels)
     : IRequestHandler<GetOfferQuery, Result<SellerOfferDetailPage>>
@@ -18,6 +18,6 @@ internal sealed class GetOfferHandler(IOfferStore store, OfferReadModelComposer 
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, request.Locale));
     }
 }

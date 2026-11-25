@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Tooba.Catalog.Contracts.Ports;
@@ -235,7 +235,8 @@ public sealed class MerchandisingCampaignSeedPricingTests
     {
         public Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
             IReadOnlyCollection<Guid> catalogVariantIds,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            string? locale = null) =>
             Task.FromResult<IReadOnlyDictionary<Guid, CatalogOfferPresentation>>(
                 catalogVariantIds
                     .Distinct()

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Catalog.Domain;
@@ -12,12 +12,14 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, CatalogOfferPresentation>> GetOfferPresentationsAsync(
         IReadOnlyCollection<Guid> catalogVariantIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? locale = null)
     {
         if (catalogVariantIds.Count == 0)
             return new Dictionary<Guid, CatalogOfferPresentation>();
 
         var ids = catalogVariantIds.Distinct().ToArray();
+        var normalizedLocale = string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale.Trim();
         var variants = await db.Variants.AsNoTracking()
             .Where(x => ids.Contains(x.VariantId))
             .Select(x => new { x.VariantId, x.ProductId, x.CatalogCodeSeam })
@@ -31,15 +33,13 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
             .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
                         && productIds.Contains(x.OwnerId) && x.FieldKey == "name")
             .ToListAsync(cancellationToken);
-        var titleMap = names.GroupBy(x => x.OwnerId).ToDictionary(
-            x => x.Key,
-            x => x.OrderBy(y => y.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+        var titleMap = names.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => PickLocalized(x, normalizedLocale));
         var brandIds = products.Where(x => x.BrandId != null).Select(x => x.BrandId!.Value).Distinct().ToArray();
         var brands = await db.LocalizedTexts.AsNoTracking()
             .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand
                         && brandIds.Contains(x.OwnerId) && x.FieldKey == "name")
             .ToListAsync(cancellationToken);
-        var brandMap = brands.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.OrderBy(y => y.Locale).First().Value);
+        var brandMap = brands.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => PickLocalized(x, normalizedLocale));
         var unitIds = products.Select(x => x.UnitOfMeasureId).Distinct().ToArray();
         var units = await db.UnitsOfMeasure.AsNoTracking()
             .Where(x => unitIds.Contains(x.UnitOfMeasureId)).ToListAsync(cancellationToken);
@@ -55,6 +55,7 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
         var primaryMedia = primaryMediaRows
             .GroupBy(x => x.ProductId)
             .ToDictionary(x => x.Key, x => x.OrderBy(row => row.DisplayOrder).First().MediaAssetId);
+        var variantLabels = await ReadVariantLabelsAsync(ids, normalizedLocale, cancellationToken);
 
         return variants.ToDictionary(x => x.VariantId, variant =>
         {
@@ -67,7 +68,53 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
                 titleMap.GetValueOrDefault(variant.ProductId) ?? string.Empty,
                 brand, unit?.Code, translation?.Name ?? unit?.Code, translation?.ShortName ?? unit?.Code,
                 variant.CatalogCodeSeam,
-                primaryMedia.TryGetValue(variant.ProductId, out var mediaId) ? mediaId : null);
+                primaryMedia.TryGetValue(variant.ProductId, out var mediaId) ? mediaId : null,
+                variantLabels.GetValueOrDefault(variant.VariantId));
         });
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ReadVariantLabelsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0) return new Dictionary<Guid, string>();
+        var values = await db.Set<CatalogVariantAttributeValue>().AsNoTracking()
+            .Where(value => variantIds.Contains(value.VariantId))
+            .ToListAsync(cancellationToken);
+        if (values.Count == 0) return new Dictionary<Guid, string>();
+        var definitionIds = values.Select(value => value.DefinitionId).Distinct().ToArray();
+        var optionIds = values
+            .Select(value => Guid.TryParseExact(value.CanonicalValue, "N", out var id) || Guid.TryParse(value.CanonicalValue, out id) ? id : Guid.Empty)
+            .Where(id => id != Guid.Empty).Distinct().ToArray();
+        var definitionTexts = await db.LocalizedTexts.AsNoTracking()
+            .Where(text => text.OwnerKind == CatalogLocalizedOwnerKind.AttributeDefinition && text.FieldKey == "name" && definitionIds.Contains(text.OwnerId))
+            .ToListAsync(cancellationToken);
+        var optionTexts = await db.LocalizedTexts.AsNoTracking()
+            .Where(text => text.OwnerKind == CatalogLocalizedOwnerKind.AttributeOption && text.FieldKey == "name" && optionIds.Contains(text.OwnerId))
+            .ToListAsync(cancellationToken);
+        var definitionNames = definitionTexts.GroupBy(text => text.OwnerId).ToDictionary(group => group.Key, group => PickLocalized(group, locale));
+        var optionNames = optionTexts.GroupBy(text => text.OwnerId).ToDictionary(group => group.Key, group => PickLocalized(group, locale));
+        return values.GroupBy(value => value.VariantId).ToDictionary(group => group.Key, group =>
+            string.Join(" · ", group.OrderBy(value => value.DefinitionId).Select(value =>
+            {
+                var definitionName = definitionNames.GetValueOrDefault(value.DefinitionId) ?? value.DefinitionId.ToString("N");
+                var label = value.CanonicalValue;
+                if (Guid.TryParseExact(value.CanonicalValue, "N", out var optionId) || Guid.TryParse(value.CanonicalValue, out optionId))
+                    label = optionNames.GetValueOrDefault(optionId) ?? value.CanonicalValue;
+                return $"{definitionName}: {label}";
+            })));
+    }
+    private static string PickLocalized(IEnumerable<CatalogLocalizedText> rows, string locale)
+    {
+        var normalizedLocale = string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale.Trim();
+        var language = normalizedLocale.Split('-')[0];
+        return rows
+            .OrderByDescending(row => string.Equals(row.Locale, normalizedLocale, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(row => row.Locale.StartsWith(language, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(row => row.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(row => row.Locale.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+            .ThenBy(row => row.Locale, StringComparer.Ordinal)
+            .FirstOrDefault()?.Value ?? string.Empty;
     }
 }

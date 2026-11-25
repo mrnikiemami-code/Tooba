@@ -13,7 +13,6 @@ import { Note, SectionTitle } from "./tab-shared";
 
 export interface ShippingTabProps {
   t: OfferWorkspaceMessages;
-  locale: "fa" | "en";
   role: OfferRole;
   detail: OfferWorkspaceDetail;
   shippingTypes: OfferShippingTypeOption[];

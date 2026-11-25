@@ -2,9 +2,12 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, ChevronRight, ImageOff, Lock, Search } from "lucide-react";
+import { Dialog } from "../../design-system";
 import type { OfferWorkspaceMessages } from "./messages";
+import type { OfferFormatters } from "./i18n";
 import type {
   OfferMode,
+  OfferProductOption,
   OfferRole,
   OfferSellerOption,
   OfferVariantOption,
@@ -14,22 +17,9 @@ import type {
 import styles from "./offer-workspace.module.css";
 import { Note, ReadOnlyChip, SectionTitle } from "./tab-shared";
 
-interface PickerState<T> {
-  rows: T[];
-  page: number;
-  total: number;
-  hasMore: boolean;
-  loading: boolean;
-  error: string | null;
-}
-
-function emptyPicker<T>(): PickerState<T> {
-  return { rows: [], page: 1, total: 0, hasMore: false, loading: false, error: null };
-}
-
 export interface IdentityTabProps {
   t: OfferWorkspaceMessages;
-  locale: "fa" | "en";
+  format: OfferFormatters;
   mode: OfferMode;
   role: OfferRole;
   detail: OfferWorkspaceDetail | null;
@@ -37,25 +27,27 @@ export interface IdentityTabProps {
   onSellerSkuChange: (value: string) => void;
   fixedSeller?: OfferSellerOption;
   selectedSeller: OfferSellerOption | null;
-  selectedVariant: OfferVariantOption | null;
   onSelectSeller: (seller: OfferSellerOption) => void;
-  onSelectVariant: (variant: OfferVariantOption) => void;
+  selectedProduct: OfferProductOption | null;
+  onSelectProduct: (product: OfferProductOption) => void;
+  searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
+  selectedVariant: OfferVariantOption | null;
+  onSelectVariant: (variant: OfferVariantOption | null) => void;
+  loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
   searchSellers?: (search: string, page: number) => Promise<OfferPickerPage<OfferSellerOption>>;
-  searchVariants: (search: string, page: number) => Promise<OfferPickerPage<OfferVariantOption>>;
   showErrors?: boolean;
   extra?: ReactNode;
 }
 
 export function IdentityTab(props: IdentityTabProps) {
-  const { mode, detail } = props;
-  if (mode === "edit" && detail) {
-    return <EditIdentity {...props} detail={detail} />;
+  if (props.mode === "edit" && props.detail) {
+    return <EditIdentity {...props} detail={props.detail} />;
   }
   return <CreateIdentity {...props} />;
 }
 
 function EditIdentity(props: IdentityTabProps & { detail: OfferWorkspaceDetail }) {
-  const { t, detail } = props;
+  const { t, format, detail } = props;
   const channel = detail.channel === "Marketplace" ? t.channelMarketplace : detail.channel;
   return (
     <div className={styles.split} data-testid="offer-tab-identity">
@@ -64,14 +56,12 @@ function EditIdentity(props: IdentityTabProps & { detail: OfferWorkspaceDetail }
           <header className={styles.cardHd}>
             <SectionTitle title={t.identityTitle} desc={t.identityDesc} />
             <div className={styles.cardHdActions}>
-              <ReadOnlyChip>
-                <Lock size={11} aria-hidden /> {t.sellerLocked}
-              </ReadOnlyChip>
+              <ReadOnlyChip><Lock size={11} aria-hidden /> {t.sellerLocked}</ReadOnlyChip>
             </div>
           </header>
           <div className={styles.cardBd}>
             <Note tone="info">{t.identityLocked}</Note>
-            <div className={`${styles.formGrid} mt-4`} style={{ marginTop: 14 }}>
+            <div className={styles.formGrid} style={{ marginTop: 14 }}>
               <ReadBox label={t.seller} value={detail.sellerDisplayName || detail.sellerPartyId} />
               <ReadBox label={t.channel} value={channel} hint={t.channelHint} />
               <div className={`${styles.field} ${styles.span2}`}>
@@ -79,12 +69,14 @@ function EditIdentity(props: IdentityTabProps & { detail: OfferWorkspaceDetail }
                 <ProductSummary detail={detail} t={t} />
               </div>
               <ReadBox
-                label={t.variantCodeLabel}
+                label={t.variant}
                 value={
-                  <span className={styles.sku} dir="ltr" style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
-                    {detail.variantCode || t.skuNone} <ReadOnlyChip><Lock size={10} aria-hidden /> {t.variantLocked}</ReadOnlyChip>
+                  <span className={styles.metaV}>
+                    {detail.variantLabel || t.variantUnnamed}{" "}
+                    <ReadOnlyChip><Lock size={10} aria-hidden /> {t.variantLocked}</ReadOnlyChip>
                   </span>
                 }
+                hint={detail.variantCode ? `${t.variantCodeLabel}: ${detail.variantCode}` : undefined}
               />
               <label className={styles.field}>
                 <span className={styles.fieldLabel}>{t.sellerSku}</span>
@@ -103,27 +95,71 @@ function EditIdentity(props: IdentityTabProps & { detail: OfferWorkspaceDetail }
         {props.extra ? <div>{props.extra}</div> : null}
       </div>
       <aside className={styles.stack}>
-        <ReadinessCard t={t} sellerName={detail.sellerDisplayName || detail.sellerPartyId} productName={detail.productTitle} variantCode={detail.variantCode} />
+        <ReadinessCard
+          t={t}
+          format={format}
+          sellerName={detail.sellerDisplayName || detail.sellerPartyId}
+          productName={detail.productTitle}
+          variantLabel={detail.variantLabel || detail.variantCode}
+          recordCreated
+        />
         <HistoryHint t={t} />
       </aside>
     </div>
   );
 }
 
-function ReadBox({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
-  return (
-    <div className={styles.field}>
-      <span className={styles.fieldLabel}>{label}</span>
-      <div className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center", minHeight: "var(--ow-control)" }}>
-        {value}
-      </div>
-      {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
-    </div>
-  );
-}
-
 function CreateIdentity(props: IdentityTabProps) {
-  const { t, showErrors } = props;
+  const { t, format, selectedProduct, selectedVariant, showErrors } = props;
+  const [sellerOpen, setSellerOpen] = useState(false);
+  const [productOpen, setProductOpen] = useState(false);
+  const [variantOpen, setVariantOpen] = useState(false);
+  const [variants, setVariants] = useState<OfferVariantOption[]>([]);
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantError, setVariantError] = useState<string | null>(null);
+  const [autoSelected, setAutoSelected] = useState(false);
+
+  useEffect(() => {
+    setVariants([]);
+    setAutoSelected(false);
+    setVariantError(null);
+    if (!selectedProduct) return;
+    let active = true;
+    setVariantLoading(true);
+    void props.loadProductVariants(selectedProduct.productId).then((rows) => {
+      if (!active) return;
+      setVariantLoading(false);
+      setVariants(rows);
+      if (rows.length === 1) {
+        setAutoSelected(true);
+        props.onSelectVariant(rows[0]!);
+      } else if (rows.length === 0) {
+        props.onSelectVariant(null);
+      }
+    }).catch(() => {
+      if (!active) return;
+      setVariantLoading(false);
+      setVariantError(t.variantPickerError);
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct?.productId]);
+
+  const variantDisabled = !selectedProduct || variantLoading;
+  const variantButtonLabel = selectedVariant
+    ? (selectedVariant.displayLabel || t.variantUnnamed)
+    : !selectedProduct
+      ? t.chooseProductFirst
+      : variantLoading
+        ? t.loading
+        : variantError
+          ? t.variantPickerError
+          : variants.length === 0
+            ? t.variantsEmpty
+            : t.selectVariantTitle;
+
   return (
     <div className={styles.split} data-testid="offer-tab-identity">
       <div className={styles.stack}>
@@ -134,20 +170,20 @@ function CreateIdentity(props: IdentityTabProps) {
           <div className={styles.cardBd}>
             <div className={styles.formGrid}>
               <div className={styles.field}>
-                <span className={styles.fieldLabel}>
-                  {t.seller} <span className={styles.req}>*</span>
-                </span>
+                <span className={styles.fieldLabel}>{t.seller} <span className={styles.req}>*</span></span>
                 {props.fixedSeller ? (
                   <div className={styles.ctlReadonly} data-testid="offer-fixed-seller" style={{ display: "flex", alignItems: "center", minHeight: "var(--ow-control)", borderRadius: 6, border: "1px solid var(--ow-border)", padding: "0 10px" }}>
                     {props.fixedSeller.displayName || t.sellerSession}
                   </div>
                 ) : (
-                  <SellerPicker {...props} />
+                  <ChoiceField
+                    value={props.selectedSeller?.displayName || t.select}
+                    onOpen={() => setSellerOpen(true)}
+                    testId="offer-seller-picker-toggle"
+                  />
                 )}
                 <span className={styles.fieldHint}>{props.fixedSeller ? t.sellerSessionHint : t.sellerHint}</span>
-                {showErrors && !props.fixedSeller && !props.selectedSeller ? (
-                  <span className={styles.fieldErr}>{t.sellerRequired}</span>
-                ) : null}
+                {showErrors && !props.fixedSeller && !props.selectedSeller ? <span className={styles.fieldErr}>{t.sellerRequired}</span> : null}
               </div>
 
               <div className={styles.field}>
@@ -159,25 +195,29 @@ function CreateIdentity(props: IdentityTabProps) {
               </div>
 
               <div className={`${styles.field} ${styles.span2}`}>
-                <span className={styles.fieldLabel}>
-                  {t.product} <span className={styles.req}>*</span>
-                </span>
-                <VariantPicker {...props} />
+                <span className={styles.fieldLabel}>{t.product} <span className={styles.req}>*</span></span>
+                <ChoiceField
+                  value={selectedProduct ? selectedProduct.title : t.select}
+                  onOpen={() => setProductOpen(true)}
+                  testId="offer-product-picker-toggle"
+                  detail={selectedProduct ? `${selectedProduct.brandName ?? ""} · ${format.integer(selectedProduct.publishedVariantCount)}` : undefined}
+                />
                 <span className={styles.fieldHint}>{t.productPickerHint}</span>
-                {showErrors && !props.selectedVariant ? <span className={styles.fieldErr}>{t.productRequired}</span> : null}
+                {showErrors && !selectedProduct ? <span className={styles.fieldErr}>{t.productRequired}</span> : null}
               </div>
 
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>{t.variant}</span>
-                <div className={styles.ctlReadonly} style={{ display: "flex", alignItems: "center", minHeight: "var(--ow-control)", borderRadius: 6, border: "1px solid var(--ow-border)", padding: "0 10px" }}>
-                  {props.selectedVariant ? (
-                    <span className={styles.metaV}>{props.selectedVariant.catalogCode || props.selectedVariant.catalogVariantId}</span>
-                  ) : (
-                    <span className={styles.fieldHint}>{t.select}</span>
-                  )}
-                </div>
-                <span className={styles.fieldHint}>{t.variantHint}</span>
-                {showErrors && !props.selectedVariant ? <span className={styles.fieldErr}>{t.variantRequired}</span> : null}
+              <div className={`${styles.field} ${styles.span2}`}>
+                <span className={styles.fieldLabel}>{t.variant} <span className={styles.req}>*</span></span>
+                <ChoiceField
+                  value={variantButtonLabel}
+                  onOpen={() => setVariantOpen(true)}
+                  disabled={variantDisabled}
+                  testId="offer-variant-picker-toggle"
+                  detail={selectedVariant?.axisLabels.length ? selectedVariant.axisLabels.map((axis) => `${axis.name}: ${axis.value}`).join(" · ") : selectedVariant?.catalogCode ?? undefined}
+                />
+                {autoSelected ? <span className={styles.fieldHint}>{t.singleVariantAuto}</span> : <span className={styles.fieldHint}>{t.variantHint}</span>}
+                {variantError ? <span className={styles.fieldErr}>{variantError}</span> : null}
+                {showErrors && !selectedVariant ? <span className={styles.fieldErr}>{t.variantRequired}</span> : null}
               </div>
 
               <label className={styles.field}>
@@ -197,9 +237,80 @@ function CreateIdentity(props: IdentityTabProps) {
         {props.extra ? <div>{props.extra}</div> : null}
       </div>
       <aside className={styles.stack}>
-        <ReadinessCard t={t} sellerName={props.fixedSeller?.displayName || props.selectedSeller?.displayName} productName={props.selectedVariant?.productTitle} variantCode={props.selectedVariant?.catalogCode} />
+        <ReadinessCard
+          t={t}
+          format={format}
+          sellerName={props.fixedSeller?.displayName || props.selectedSeller?.displayName}
+          productName={selectedProduct?.title}
+          variantLabel={selectedVariant ? (selectedVariant.displayLabel || t.variantUnnamed) : undefined}
+          recordCreated={false}
+        />
         <HistoryHint t={t} />
       </aside>
+
+      {props.searchSellers ? (
+        <SellerDialog
+          t={t}
+          format={format}
+          open={sellerOpen}
+          onClose={() => setSellerOpen(false)}
+          selected={props.selectedSeller}
+          onSelect={(seller) => {
+            props.onSelectSeller(seller);
+            setSellerOpen(false);
+          }}
+          searchSellers={props.searchSellers}
+        />
+      ) : null}
+      <ProductDialog
+        t={t}
+        format={format}
+        open={productOpen}
+        onClose={() => setProductOpen(false)}
+        selected={selectedProduct}
+        onSelect={(product) => {
+          props.onSelectProduct(product);
+          setProductOpen(false);
+        }}
+        searchProducts={props.searchProducts}
+      />
+      <VariantDialog
+        t={t}
+        open={variantOpen}
+        onClose={() => setVariantOpen(false)}
+        selected={selectedVariant}
+        variants={variants}
+        loading={variantLoading}
+        error={variantError}
+        onSelect={(variant) => {
+          if (!selectedProduct || variant.productId !== selectedProduct.productId) return;
+          props.onSelectVariant(variant);
+          setVariantOpen(false);
+        }}
+        onRetry={() => selectedProduct && props.loadProductVariants(selectedProduct.productId).then(setVariants)}
+      />
+    </div>
+  );
+}
+
+function ChoiceField({ value, onOpen, disabled, testId, detail }: { value: string; onOpen: () => void; disabled?: boolean; testId: string; detail?: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <button type="button" className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, textAlign: "start" }} onClick={onOpen} disabled={disabled} data-testid={testId}>
+        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+        <Search size={14} aria-hidden />
+      </button>
+      {detail ? <span className={styles.fieldHint} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{detail}</span> : null}
+    </div>
+  );
+}
+
+function ReadBox({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
+  return (
+    <div className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <div className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center", minHeight: "var(--ow-control)" }}>{value}</div>
+      {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
     </div>
   );
 }
@@ -219,27 +330,18 @@ function ProductSummary({ detail, t }: { detail: OfferWorkspaceDetail; t: OfferW
     </div>
   );
 }
-function ReadinessCard({
-  t,
-  sellerName,
-  productName,
-  variantCode,
-}: {
-  t: OfferWorkspaceMessages;
-  sellerName?: string | null;
-  productName?: string | null;
-  variantCode?: string | null;
-}) {
+
+function ReadinessCard({ t, format, sellerName, productName, variantLabel, recordCreated }: { t: OfferWorkspaceMessages; format: OfferFormatters; sellerName?: string | null; productName?: string | null; variantLabel?: string | null; recordCreated: boolean }) {
   const items = [
     { label: t.seller, value: sellerName || "—", ok: Boolean(sellerName) },
     { label: t.product, value: productName || "—", ok: Boolean(productName) },
-    { label: t.variant, value: variantCode ? t.variantSelected : "—", ok: Boolean(variantCode) },
+    { label: t.variant, value: variantLabel || "—", ok: Boolean(variantLabel) },
   ];
   const ready = items.filter((item) => item.ok).length;
   return (
     <section className={styles.card} data-testid="offer-readiness">
       <header className={styles.cardHd}>
-        <SectionTitle title={t.readiness} desc={`${ready} ${t.readinessOf}`} />
+        <SectionTitle title={t.readiness} desc={`${format.integer(ready)} ${t.readinessOf}`} />
       </header>
       <div className={styles.cardBd}>
         <ol className={styles.readinessList}>
@@ -254,7 +356,9 @@ function ReadinessCard({
           ))}
         </ol>
       </div>
-      <div className={styles.cardFt}>{t.readinessHint}</div>
+      <div className={styles.cardFt}>
+        {ready < 3 ? t.tabLocked : recordCreated ? t.readinessHint : t.tabNeedsCreate}
+      </div>
     </section>
   );
 }
@@ -263,10 +367,7 @@ function HistoryHint({ t }: { t: OfferWorkspaceMessages }) {
   return (
     <section className={styles.card}>
       <div className={styles.cardBd}>
-        <div className={styles.secHd}>
-          <Lock size={14} aria-hidden />
-          <span className={styles.secTitle}>{t.historyOnlyEdit}</span>
-        </div>
+        <div className={styles.secHd}><Lock size={14} aria-hidden /><span className={styles.secTitle}>{t.historyOnlyEdit}</span></div>
         <p className={styles.cardDesc}>{t.historyOnlyEditDesc}</p>
       </div>
     </section>
@@ -286,201 +387,241 @@ function Thumb({ mediaAssetId, alt, size = 46 }: { mediaAssetId: string | null |
   );
 }
 
-function SellerPicker(props: IdentityTabProps) {
-  const { t } = props;
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [state, setState] = useState<PickerState<OfferSellerOption>>(emptyPicker);
-
-  async function load(search: string, page: number) {
-    if (!props.searchSellers) return;
-    setState((current) => ({ ...current, loading: true, error: null }));
-    try {
-      const result = await props.searchSellers(search, page);
-      setState({ rows: result.rows, page: result.page, total: result.totalCount, hasMore: result.hasMore, loading: false, error: null });
-    } catch {
-      setState((current) => ({ ...current, loading: false, error: t.pickerError }));
-    }
-  }
-
-  useEffect(() => {
-    if (!open || !props.searchSellers) return;
-    void load("", 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  return (
-    <div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <div className={styles.ctlReadonly} style={{ flex: 1, display: "flex", alignItems: "center", minHeight: "var(--ow-control)", borderRadius: 6, border: "1px solid var(--ow-border)", padding: "0 10px" }}>
-          {props.selectedSeller ? <span className={styles.metaV}>{props.selectedSeller.displayName}</span> : <span className={styles.fieldHint}>{t.select}</span>}
-        </div>
-        <button type="button" className={styles.btn} onClick={() => setOpen((value) => !value)} data-testid="offer-seller-picker-toggle">
-          <Search size={13} aria-hidden /> {t.search}
-        </button>
-      </div>
-      {open ? (
-        <div className={styles.card} style={{ marginTop: 8 }} data-testid="offer-seller-picker">
-          <div className={styles.cardBd}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                className={styles.ctl}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void load(query, 1);
-                  }
-                }}
-                placeholder={t.search}
-                data-testid="offer-seller-search"
-              />
-              <button type="button" className={styles.btn} onClick={() => void load(query, 1)}>{t.search}</button>
-            </div>
-            <div className={styles.tableWrap} style={{ marginTop: 8 }}>
-              {state.loading ? <p className={styles.resultMeta} style={{ padding: 10 }}>{t.loading}</p> : null}
-              {state.error ? <p className={styles.fieldErr} style={{ padding: 10 }}>{state.error}</p> : null}
-              {!state.loading && !state.error && state.rows.length === 0 ? <p className={styles.resultMeta} style={{ padding: 10 }}>{t.noResults}</p> : null}
-              {state.rows.map((seller) => {
-                const active = props.selectedSeller?.sellerPartyId === seller.sellerPartyId;
-                return (
-                  <button
-                    key={seller.sellerPartyId}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => {
-                      props.onSelectSeller(seller);
-                      setOpen(false);
-                    }}
-                    className={styles.btn}
-                    style={{ width: "100%", justifyContent: "space-between", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined }}
-                    data-testid="offer-seller-option"
-                  >
-                    <span>{seller.displayName || seller.sellerPartyId}</span>
-                    {active ? <Check size={13} aria-hidden /> : null}
-                  </button>
-                );
-              })}
-            </div>
-            <Pager t={t} state={state} onPage={(page) => void load(query, page)} />
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
+interface Pager<T> {
+  rows: T[];
+  page: number;
+  totalCount: number;
+  hasMore: boolean;
 }
 
-function VariantPicker(props: IdentityTabProps) {
-  const { t } = props;
-  const [open, setOpen] = useState(false);
+function PagedDialog<T>({
+  title,
+  testId,
+  open,
+  onClose,
+  loadPage,
+  selectedId,
+  getId,
+  renderRow,
+  onSelect,
+  t,
+  format,
+  emptyLabel,
+  errorLabel,
+}: {
+  title: string;
+  testId: string;
+  open: boolean;
+  onClose: () => void;
+  loadPage: (search: string, page: number) => Promise<OfferPickerPage<T>>;
+  selectedId?: string | null;
+  getId: (row: T) => string;
+  renderRow: (row: T) => ReactNode;
+  onSelect: (row: T) => void;
+  t: OfferWorkspaceMessages;
+  format: OfferFormatters;
+  emptyLabel: string;
+  errorLabel: string;
+}) {
   const [query, setQuery] = useState("");
-  const [state, setState] = useState<PickerState<OfferVariantOption>>(emptyPicker);
+  const [state, setState] = useState<Pager<T>>({ rows: [], page: 1, totalCount: 0, hasMore: false });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function load(search: string, page: number) {
-    setState((current) => ({ ...current, loading: true, error: null }));
+  async function load(search: string, target: number) {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await props.searchVariants(search, page);
-      setState({ rows: result.rows, page: result.page, total: result.totalCount, hasMore: result.hasMore, loading: false, error: null });
+      const result = await loadPage(search, target);
+      setState({ rows: result.rows, page: result.page, totalCount: result.totalCount, hasMore: result.hasMore });
     } catch {
-      setState((current) => ({ ...current, loading: false, error: t.pickerError }));
+      setError(errorLabel);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     if (!open) return;
+    setQuery("");
     void load("", 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
-    <div data-testid="offer-variant-picker">
-      <div style={{ display: "flex", gap: 8 }}>
-        <div className={styles.ctlReadonly} style={{ flex: 1, display: "flex", alignItems: "center", minHeight: "var(--ow-control)", borderRadius: 6, border: "1px solid var(--ow-border)", padding: "0 10px", gap: 9 }}>
-          {props.selectedVariant ? (
-            <>
-              <Thumb mediaAssetId={props.selectedVariant.primaryMediaAssetId} alt={t.imageAlt} size={28} />
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 12.5, fontWeight: 600 }}>{props.selectedVariant.productTitle}</span>
-                <span className={styles.fieldHint} dir="ltr">{props.selectedVariant.catalogCode || props.selectedVariant.catalogVariantId}</span>
-              </span>
-            </>
-          ) : (
-            <span className={styles.fieldHint}>{t.select}</span>
-          )}
+    <Dialog title={title} open={open} onClose={onClose} size="lg">
+      <div style={{ display: "grid", gap: 10 }} data-testid={testId}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            className={styles.ctl}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void load(query, 1);
+              }
+            }}
+            placeholder={t.search}
+            data-testid={`${testId}-search`}
+          />
+          <button type="button" className={styles.btn} onClick={() => void load(query, 1)}>{t.search}</button>
         </div>
-        <button type="button" className={styles.btn} onClick={() => setOpen((value) => !value)} data-testid="offer-variant-picker-toggle">
-          <Search size={13} aria-hidden /> {t.search}
-        </button>
+        <div className={styles.tableWrap} style={{ maxHeight: "22rem", overflowY: "auto" }}>
+          {loading ? <p className={styles.resultMeta} style={{ padding: 12 }}>{t.loading}</p> : null}
+          {error ? <p className={styles.fieldErr} style={{ padding: 12 }}>{error}</p> : null}
+          {!loading && !error && state.rows.length === 0 ? <p className={styles.resultMeta} style={{ padding: 12 }}>{emptyLabel}</p> : null}
+          {state.rows.map((row) => {
+            const id = getId(row);
+            const active = selectedId === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onSelect(row)}
+                className={styles.btn}
+                style={{ width: "100%", justifyContent: "space-between", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined, height: "auto", padding: "10px 12px" }}
+                data-testid={`${testId}-option`}
+              >
+                <span style={{ minWidth: 0, textAlign: "start", flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>{renderRow(row)}</span>
+                {active ? <Check size={14} aria-hidden /> : null}
+              </button>
+            );
+          })}
+        </div>
+        <div className={styles.row} style={{ justifyContent: "space-between" }}>
+          <span className={styles.resultMeta} data-testid={`${testId}-page`}>
+            {t.pageInfo} {format.integer(state.page)} · {format.integer(state.totalCount)}
+          </span>
+          <span style={{ display: "flex", gap: 6 }}>
+            <button type="button" className={`${styles.btn} ${styles.btnSm}`} disabled={state.page <= 1 || loading} onClick={() => void load(query, state.page - 1)} data-testid={`${testId}-prev`}>
+              <ChevronRight size={12} aria-hidden /> {t.prevPage}
+            </button>
+            <button type="button" className={`${styles.btn} ${styles.btnSm}`} disabled={!state.hasMore || loading} onClick={() => void load(query, state.page + 1)} data-testid={`${testId}-next`}>
+              {t.nextPage} <ChevronLeft size={12} aria-hidden />
+            </button>
+          </span>
+        </div>
       </div>
-      {open ? (
-        <div className={styles.card} style={{ marginTop: 8 }}>
-          <div className={styles.cardBd}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                className={styles.ctl}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void load(query, 1);
-                  }
-                }}
-                placeholder={t.search}
-                data-testid="offer-variant-search"
-              />
-              <button type="button" className={styles.btn} onClick={() => void load(query, 1)}>{t.search}</button>
-            </div>
-            <div className={styles.tableWrap} style={{ marginTop: 8 }}>
-              {state.loading ? <p className={styles.resultMeta} style={{ padding: 10 }}>{t.loading}</p> : null}
-              {state.error ? <p className={styles.fieldErr} style={{ padding: 10 }}>{state.error}</p> : null}
-              {!state.loading && !state.error && state.rows.length === 0 ? <p className={styles.resultMeta} style={{ padding: 10 }}>{t.noResults}</p> : null}
-              {state.rows.map((variant) => {
-                const active = props.selectedVariant?.catalogVariantId === variant.catalogVariantId;
-                return (
-                  <button
-                    key={variant.catalogVariantId}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => {
-                      props.onSelectVariant(variant);
-                      setOpen(false);
-                    }}
-                    className={styles.btn}
-                    style={{ width: "100%", justifyContent: "flex-start", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined, height: "auto", padding: "8px 10px" }}
-                    data-testid="offer-variant-option"
-                  >
-                    <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", minWidth: 0 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 600 }}>{variant.productTitle}</span>
-                      <span className={styles.fieldHint} dir="ltr">{variant.catalogCode ?? variant.catalogVariantId} · {variant.productStatus}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <Pager t={t} state={state} onPage={(page) => void load(query, page)} />
-          </div>
-        </div>
-      ) : null}
-    </div>
+    </Dialog>
   );
 }
 
-function Pager<T>({ t, state, onPage }: { t: OfferWorkspaceMessages; state: PickerState<T>; onPage: (page: number) => void }) {
+function SellerDialog({ t, format, open, onClose, selected, onSelect, searchSellers }: {
+  t: OfferWorkspaceMessages;
+  format: OfferFormatters;
+  open: boolean;
+  onClose: () => void;
+  selected: OfferSellerOption | null;
+  onSelect: (seller: OfferSellerOption) => void;
+  searchSellers: (search: string, page: number) => Promise<OfferPickerPage<OfferSellerOption>>;
+}) {
   return (
-    <div className={styles.row} style={{ justifyContent: "space-between", marginTop: 8 }}>
-      <span className={styles.resultMeta} data-testid="offer-picker-page">
-        {t.pageInfo} {state.page} · {state.total.toLocaleString("fa-IR")}
-      </span>
-      <span style={{ display: "flex", gap: 6 }}>
-        <button type="button" className={`${styles.btn} ${styles.btnSm}`} disabled={state.page <= 1 || state.loading} onClick={() => onPage(state.page - 1)} data-testid="offer-picker-prev">
-          <ChevronRight size={12} aria-hidden /> {t.prevPage}
-        </button>
-        <button type="button" className={`${styles.btn} ${styles.btnSm}`} disabled={!state.hasMore || state.loading} onClick={() => onPage(state.page + 1)} data-testid="offer-picker-next">
-          {t.nextPage} <ChevronLeft size={12} aria-hidden />
-        </button>
-      </span>
-    </div>
+    <PagedDialog<OfferSellerOption>
+      title={t.selectSellerTitle}
+      testId="offer-seller-dialog"
+      open={open}
+      onClose={onClose}
+      loadPage={searchSellers}
+      selectedId={selected?.sellerPartyId}
+      getId={(row) => row.sellerPartyId}
+      renderRow={(row) => <span style={{ fontWeight: 600 }}>{row.displayName || row.sellerPartyId}</span>}
+      onSelect={onSelect}
+      t={t}
+      format={format}
+      emptyLabel={t.noResults}
+      errorLabel={t.pickerError}
+    />
+  );
+}
+
+function ProductDialog({ t, format, open, onClose, selected, onSelect, searchProducts }: {
+  t: OfferWorkspaceMessages;
+  format: OfferFormatters;
+  open: boolean;
+  onClose: () => void;
+  selected: OfferProductOption | null;
+  onSelect: (product: OfferProductOption) => void;
+  searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
+}) {
+  return (
+    <PagedDialog<OfferProductOption>
+      title={t.selectProductTitle}
+      testId="offer-product-dialog"
+      open={open}
+      onClose={onClose}
+      loadPage={searchProducts}
+      selectedId={selected?.productId}
+      getId={(row) => row.productId}
+      renderRow={(row) => (
+        <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+          <Thumb mediaAssetId={row.primaryMediaAssetId} alt={t.imageAlt} size={34} />
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</span>
+            <span className={styles.fieldHint}>
+              {row.brandName ? `${row.brandName} · ` : ""}{format.integer(row.publishedVariantCount)} {t.variantCount}
+            </span>
+          </span>
+        </span>
+      )}
+      onSelect={onSelect}
+      t={t}
+      format={format}
+      emptyLabel={t.productsEmpty}
+      errorLabel={t.productPickerError}
+    />
+  );
+}
+
+function VariantDialog({ t, open, onClose, selected, variants, loading, error, onSelect, onRetry }: {
+  t: OfferWorkspaceMessages;
+  open: boolean;
+  onClose: () => void;
+  selected: OfferVariantOption | null;
+  variants: OfferVariantOption[];
+  loading: boolean;
+  error: string | null;
+  onSelect: (variant: OfferVariantOption) => void;
+  onRetry: () => void;
+}) {
+  return (
+    <Dialog title={t.selectVariantTitle} open={open} onClose={onClose} size="lg">
+      <div style={{ display: "grid", gap: 10 }} data-testid="offer-variant-dialog">
+        <div className={styles.tableWrap} style={{ maxHeight: "22rem", overflowY: "auto" }}>
+          {loading ? <p className={styles.resultMeta} style={{ padding: 12 }}>{t.loading}</p> : null}
+          {error ? (
+            <div style={{ padding: 12 }}>
+              <p className={styles.fieldErr}>{error}</p>
+              <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={onRetry}>{t.retry}</button>
+            </div>
+          ) : null}
+          {!loading && !error && variants.length === 0 ? <p className={styles.resultMeta} style={{ padding: 12 }}>{t.variantsEmpty}</p> : null}
+          {variants.map((variant) => {
+            const active = selected?.catalogVariantId === variant.catalogVariantId;
+            return (
+              <button
+                key={variant.catalogVariantId}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onSelect(variant)}
+                className={styles.btn}
+                style={{ width: "100%", justifyContent: "space-between", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined, height: "auto", padding: "10px 12px" }}
+                data-testid="offer-variant-option"
+              >
+                <span style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2, textAlign: "start" }}>
+                  <span style={{ fontWeight: 600 }}>{variant.displayLabel || t.variantUnnamed}</span>
+                  {variant.axisLabels.length > 0 ? (
+                    <span className={styles.fieldHint}>{variant.axisLabels.map((axis) => `${axis.name}: ${axis.value}`).join(" · ")}</span>
+                  ) : null}
+                  {variant.catalogCode ? <span className={styles.fieldHint} dir="ltr">{variant.catalogCode}</span> : null}
+                </span>
+                {active ? <Check size={14} aria-hidden /> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </Dialog>
   );
 }

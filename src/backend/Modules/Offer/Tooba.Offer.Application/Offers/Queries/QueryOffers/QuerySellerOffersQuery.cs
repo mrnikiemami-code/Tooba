@@ -8,10 +8,10 @@ using Tooba.Offer.Contracts.Dtos;
 #pragma warning disable CS1591
 namespace Tooba.Offer.Application.Offers.Queries.QueryOffers;
 
-public sealed record QuerySellerOffersQuery(Guid SellerPartyId, GridQueryRequest Request)
+public sealed record QuerySellerOffersQuery(Guid SellerPartyId, GridQueryRequest Request, string? Locale = null)
     : IRequest<Result<GridPageResponse<SellerOfferListItem>>>;
 
-public sealed record QueryAdminOffersQuery(GridQueryRequest Request)
+public sealed record QueryAdminOffersQuery(GridQueryRequest Request, string? Locale = null)
     : IRequest<Result<GridPageResponse<SellerOfferListItem>>>;
 
 public sealed class QuerySellerOffersHandler(IOfferListQueryPort query, OfferReadModelComposer readModels)
@@ -22,7 +22,7 @@ public sealed class QuerySellerOffersHandler(IOfferListQueryPort query, OfferRea
         CancellationToken cancellationToken)
     {
         var result = await query.QueryAsync(Normalize(request.Request, request.SellerPartyId), cancellationToken);
-        var items = await readModels.ListAsync(result.Items, cancellationToken);
+        var items = await readModels.ListAsync(result.Items, cancellationToken, request.Locale);
         return Result.Success(new GridPageResponse<SellerOfferListItem>(items, result.Page, result.PageSize, result.TotalCount));
     }
 
@@ -52,7 +52,7 @@ public sealed class QueryAdminOffersHandler(IOfferListQueryPort query, OfferRead
         CancellationToken cancellationToken)
     {
         var result = await query.QueryAsync(QuerySellerOffersHandler.Normalize(request.Request, null), cancellationToken);
-        var items = await readModels.ListAsync(result.Items, cancellationToken);
+        var items = await readModels.ListAsync(result.Items, cancellationToken, request.Locale);
         return Result.Success(new GridPageResponse<SellerOfferListItem>(items, result.Page, result.PageSize, result.TotalCount));
     }
 }

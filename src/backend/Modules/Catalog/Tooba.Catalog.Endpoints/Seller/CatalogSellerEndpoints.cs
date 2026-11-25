@@ -19,10 +19,43 @@ public static class CatalogSellerEndpoints
     {
         var group = app.MapGroup("/v1/seller");
         group.MapGet("/catalog-variants", ListCatalogVariantsAsync);
+        group.MapGet("/catalog-products", ListCatalogProductsAsync);
+        group.MapGet("/catalog-products/{productId:guid}/variants", ListCatalogProductVariantsAsync);
         group.MapPut("/products/{productId:guid}/attributes/{definitionId:guid}", SetProductAttributeAsync);
         group.MapPut("/products/{productId:guid}/variant-axes", SetProductVariantAxesAsync);
     }
 
+    private static async Task<IResult> ListCatalogProductsAsync(
+        string? search,
+        int? page,
+        int? pageSize,
+        string? locale,
+        ISender sender,
+        ApiResponseFactory api,
+        ICatalogSellerAuthorizer auth,
+        HttpContext http,
+        CancellationToken cancellationToken)
+    {
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(
+            new SearchPublishedProductsQuery(sellerPartyId, search, page ?? 1, pageSize ?? 20, locale),
+            cancellationToken));
+    }
+
+    private static async Task<IResult> ListCatalogProductVariantsAsync(
+        Guid productId,
+        string? locale,
+        ISender sender,
+        ApiResponseFactory api,
+        ICatalogSellerAuthorizer auth,
+        HttpContext http,
+        CancellationToken cancellationToken)
+    {
+        var (_, sellerPartyId) = await auth.RequireAuthorizedAsync(http, cancellationToken);
+        return api.From(await sender.Send(
+            new ListPublishedProductVariantsQuery(productId, sellerPartyId, locale),
+            cancellationToken));
+    }
     private static async Task<IResult> ListCatalogVariantsAsync(
         string? search,
         int? page,

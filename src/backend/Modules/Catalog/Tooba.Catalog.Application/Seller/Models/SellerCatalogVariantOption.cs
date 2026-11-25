@@ -10,3 +10,31 @@ public sealed record SellerCatalogVariantOption(
     string ProductTitle,
     string? CatalogCode,
     string ProductStatus);
+
+/// <summary>Published Catalog product picker row (offer create). No price/stock is exposed.</summary>
+public sealed record CatalogPickerProductOption(
+    Guid ProductId,
+    string Title,
+    string? BrandName,
+    Guid? PrimaryMediaAssetId,
+    int PublishedVariantCount);
+
+/// <summary>Bounded server page for the published Catalog product picker.</summary>
+public sealed record CatalogPickerProductPage(
+    IReadOnlyList<CatalogPickerProductOption> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    bool HasMore);
+
+/// <summary>One human-readable variant axis label from the real Catalog schema.</summary>
+public sealed record CatalogPickerAxisLabel(string Name, string Value);
+
+/// <summary>Published Catalog variant picker row with human labels, not a technical code stand-in.</summary>
+public sealed record CatalogPickerVariantOption(
+    Guid CatalogVariantId,
+    Guid ProductId,
+    string DisplayLabel,
+    IReadOnlyList<CatalogPickerAxisLabel> AxisLabels,
+    string? CatalogCode,
+    string Status);

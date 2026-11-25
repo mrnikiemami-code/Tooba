@@ -10,8 +10,8 @@ namespace Tooba.Offer.Tests.Architecture;
 
 /// <summary>
 /// TB-TMAR-OFFER-ARCH-COMPLETE-002-STRUCTURE-001 — endpoint-reachable Offer validator coverage.
-/// Exactly ten Offer.Endpoints-reachable MediatR requests; six carry a concrete transport validator
-/// and four are explicitly NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY.
+/// Exactly eleven Offer.Endpoints-reachable MediatR requests; six carry a concrete transport validator
+/// and five are explicitly NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY.
 /// </summary>
 public sealed class OfferEndpointValidatorCoverageGuardTests
 {
@@ -25,6 +25,7 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
         ("GetOfferForAdminQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("QueryAdminOffersQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("QuerySellerOffersQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
+        ("FindActiveOfferQuery", "NO_VALIDATOR_REQUIRED_AUTH_SCOPED_QUERY"),
         ("GetOfferQuery", "VALIDATOR_REQUIRED"),
         ("CreateOfferCommand", "VALIDATOR_REQUIRED"),
         ("UpdateOfferCommand", "VALIDATOR_REQUIRED"),
@@ -34,9 +35,9 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
     ];
 
     [Fact]
-    public void Exactly_ten_endpoint_reachable_requests_are_manifested_once()
+    public void Exactly_eleven_endpoint_reachable_requests_are_manifested_once()
     {
-        Assert.Equal(10, Manifest.Length);
+        Assert.Equal(11, Manifest.Length);
         var names = Manifest.Select(x => x.RequestTypeName).ToArray();
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
 
@@ -131,11 +132,11 @@ public sealed class OfferEndpointValidatorCoverageGuardTests
             RepoRoot(),
             "src", "backend", "Modules", "Offer", "Tooba.Offer.Application",
             "Offers", "Queries", "ListSellerOffers", "ListSellerOffersQuery.cs"));
-        Assert.Contains("public sealed record ListSellerOffersQuery(Guid SellerPartyId)", query, StringComparison.Ordinal);
+        Assert.Contains("public sealed record ListSellerOffersQuery(Guid SellerPartyId, string? Locale = null)", query, StringComparison.Ordinal);
         Assert.DoesNotContain("SellerPartyId =", query, StringComparison.Ordinal);
 
         var endpoint = EndpointSource();
-        Assert.Contains("ListSellerOffersQuery(sellerId)", endpoint, StringComparison.Ordinal);
+        Assert.Contains("ListSellerOffersQuery(sellerId, localeResolver.ResolveRequestLocale(context).Name)", endpoint, StringComparison.Ordinal);
         Assert.Contains("RequireAuthorizedAsync", endpoint, StringComparison.Ordinal);
     }
 

@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application.Categories.Commands;
@@ -92,6 +92,8 @@ public sealed class CatalogModuleAmcW3CqrsGuardTests
         ("ListMegaMenuPlacementOptionsQuery", NoValidatorRequired),
         ("ListProductTagsQuery", NoValidatorRequired),
         ("ListSellerCatalogVariantsQuery", NoValidatorRequired),
+        ("SearchPublishedProductsQuery", NoValidatorRequired),
+        ("ListPublishedProductVariantsQuery", NoValidatorRequired),
         ("ListStoreLandingPageSectionsQuery", NoValidatorRequired),
         ("ListStoreLandingPagesQuery", NoValidatorRequired),
         ("ListStoreLandingSitemapQuery", NoValidatorRequired),
