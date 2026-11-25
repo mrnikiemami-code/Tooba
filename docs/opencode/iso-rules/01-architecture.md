@@ -11,3 +11,6 @@ MUST:
 - This isolated worktree is an OpenCode **agent cwd** only — product authority stays the main Tooba repository and its Git rules.
 
 When analyzing only (no edits): still name the module boundary and owning contract/path you observed.
+
+## Mandatory senior architect quality gate (owner directive 2026-11-25)
+Read and apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and independent review. All eight AQ checks are mandatory where applicable, with source/guard evidence and explicit outcomes. Functional PASS never waives architecture violations; no new debt or baseline manipulation, no feature-local locale workaround, no oversized-file growth. Existing immutable tasks and §0A scope/continuity/authorization remain intact. No automatic next task.
