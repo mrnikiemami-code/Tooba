@@ -1,0 +1,76 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "base": "295d8241d277f4320f90ee9e5e75e907dfa5905f",
+  "requirements": [
+    {
+      "id": "R10-01",
+      "title": "Channel",
+      "requirement": "Offer-owned allowed-channel query based on existing edition/role/seller policies. Enum Direct/Marketplace/Agency/Corporate/Affiliate/Api is vocabulary, not permission. Same policy in query, creation and duplicate lookup; carry explicit channel through DTO, intent and reread; no fixed Marketplace. Preserve immutable channel after creation. SingleStore hides marketplace-only fields. Undecided channel policy is a scoped decision, never invent grants."
+    },
+    {
+      "id": "R10-02",
+      "title": "Create workspace",
+      "requirement": "Enable supported editable tabs once valid identity selected, before persistence. Hold price, inventory, shipping and conditions locally; explicit save only. Initial Offer-owned fields use existing CreateOfferCommand contract. Never auto-activate incomplete listing. History honest empty until persisted; discounts and Stage3 remain roadmap gated."
+    },
+    {
+      "id": "R10-03",
+      "title": "Inventory provisioning",
+      "requirement": "Inventory-owned eligible warehouse read and idempotent position provision for persisted offer; pre-create selects actual permitted locations and drafts quantities; no fake StockItemId. Provision after Offer created, then set physical by location. Respect owner/active/edition, reserve floor, unit policy; reserved and available read-only; no total-stock mutation or implicit warehouse creation."
+    },
+    {
+      "id": "R10-04",
+      "title": "Shared persistence",
+      "requirement": "One shared admin/seller create/apply and edit use case with typed per-domain outcomes. Full reread matches exact seller, offer ID, variant, channel, status, SKU, amount/currency, return, min/max, fulfillment and positions. Partial create must recover persisted ID and retain unapplied edits; no blind duplicate. Unknown response requires reconciliation before retry. Actor/tenant/owner scoped draft storage; clear committed/discarded draft."
+    },
+    {
+      "id": "R10-05",
+      "title": "Atomic concurrency",
+      "requirement": "Real owning-module compare-and-swap or atomic transaction protection for Offer/Pricing/Inventory and affected Fulfillment. Pre-read is not atomic. Independent domain transactions and honest partial outcomes; no foreign DbContext or global transaction. Investigate existing persistence primitives; if schema change required prepare module-owned migration plan and obtain required authorization before application; disposable DB only if authorized. Never run live migration."
+    },
+    {
+      "id": "R10-06",
+      "title": "History",
+      "requirement": "Inspect actual Offer events/audit/outbox and Pricing/Inventory/Fulfillment contracts; authorized read projection of recorded changes, timestamps, actor where recorded and old/new when reliable. No fabricated historical records. Record new changes in owning module with reliable transaction/event pattern if needed. Honest empty/unknown actor, pagination; no generic Host audit authority."
+    },
+    {
+      "id": "R10-07",
+      "title": "Unit and conditions",
+      "requirement": "Catalog authoritative unit, precision, step and rounding; create/edit and inventory client/server validation; integer/fractional quantities, min/max, reserved floor. Existing return policy and days, clear limits, lifecycle. No placeholder or raw technical label."
+    },
+    {
+      "id": "R10-08",
+      "title": "Price and shipping",
+      "requirement": "Actual base price/currency and permitted fulfillment responsibility/type; no blank-to-zero; IRR precision; locale independent of currency; respect existing market/channel. Seller cannot mutate admin-only settings. Unsupported Stage3 service, funding discounts and multi-currency remain gated; no fake control. Preserve other shipping flows."
+    },
+    {
+      "id": "R10-09",
+      "title": "Central locale",
+      "requirement": "Remove hardcoded ru prefix and unsafe cast; use actual registry UrlPrefix/code/culture/direction/calendar/active/default through canonical shared provider/resolver and public Localization CQRS. Minimal shared integration for offer routes and controls; no feature-local locale authority, query hack or whole-app translation rewrite. Explicit resource fallback. No live registry mutation."
+    },
+    {
+      "id": "R10-10",
+      "title": "Frontend architecture",
+      "requirement": "Fix Offer-owned flat admin API/intent and seller transport boundaries in canonical feature structure; avoid cycles/deep imports and dumping-ground exports. Routes compose, typed adapters transport, use cases orchestrate, hooks own state, components render. Reuse AppDataGrid, Toast, MessageBox. Existing <=800 new file and shrink-only legacy guard, cohesion not cosmetic split. Preserve R8 visual design. No guard/baseline changes."
+    },
+    {
+      "id": "R10-11",
+      "title": "Backend and Host",
+      "requirement": "Apply all eight AQ gates: owning Contracts, CQRS MediatR, Result, validators, resources, namespaces, folder and DI, permissions and transactions. Thin endpoints, no foreign DbContext or Host business logic. Preserve public language minimal DTO. No unrelated AMSC."
+    },
+    {
+      "id": "R10-12",
+      "title": "UX and feedback",
+      "requirement": "Shared Toast 3000ms success, shared MessageBox operational failure/duplicate/unknown/dirty exit, inline field errors; no duplicated banners or raw IDs/errors. Preserve R8 layout, both grids, correct RTL/LTR and accessibility; clear obsolete errors upon correction."
+    },
+    {
+      "id": "R10-13",
+      "title": "Performance and regression",
+      "requirement": "Comparable actual served-build form and picker measurements versus R8 reported 1598/103 ms, define warm/cold, multiple samples median/p95 and evidence generator. Diagnose unexplained regressions. Preserve orders/products/campaigns, Stage2 cart, grid sort/filter/paging/export/saved views; real assertions, not count-only. Responsive 360/768/1440; no screenshot ceremony."
+    },
+    {
+      "id": "R10-14",
+      "title": "Evidence and closure",
+      "requirement": "Read source, OpenSpec and AQ; architecture plan and delivery manifest before code. Full frontend architecture, build/typecheck/lint, focused owner backend and mounted tests, real Chromium→Host→isolated PostgreSQL→GET/SQL for persistence. Record identity, actors, request counts and before/after; separate R10 evidence, no overwrite R9/R9-R1. Finally cleanup and verify restore. Checker rejects missing test/wrong fact/hash tamper. STOP_FOR_ARCHITECT; no TB-297."
+    }
+  ]
+}
