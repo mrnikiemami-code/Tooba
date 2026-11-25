@@ -14,3 +14,6 @@ When analyzing only (no edits): still name the module boundary and owning contra
 
 ## Mandatory senior architect quality gate (owner directive 2026-11-25)
 Read and apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and independent review. All eight AQ checks are mandatory where applicable, with source/guard evidence and explicit outcomes. Functional PASS never waives architecture violations; no new debt or baseline manipulation, no feature-local locale workaround, no oversized-file growth. Existing immutable tasks and §0A scope/continuity/authorization remain intact. No automatic next task.
+
+## Owner-approved DEV authority and stop gate (v1.4.0)
+Read `docs/opencode/DEV-HOST-TEST-POLICY.md` and delivery method §0B. Confirmed existing DEV migrations, test deletion/reset and same Host restart are already authorized within task scope; no fresh Host/DB/Testcontainers or repeat permission. A missing authorized contract or failed initial test is implementation work. Isolate actual undecided policy, continue independent work, and document exhausted safe slices before terminal BLOCKED. No architecture/security/acceptance waiver.
