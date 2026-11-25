@@ -1,0 +1,42 @@
+export { OfferWorkspace } from "./offer-workspace";
+export { offerWorkspaceMessages } from "./messages";
+export type { OfferWorkspaceProps } from "./offer-workspace";
+export {
+  allowedStatuses,
+  commercialDirty,
+  deriveBuyability,
+  draftFromDetail,
+  errorLabel,
+  faMoney,
+  faNumber,
+  inventoryDirty,
+  normalizeDigits,
+  parseDecimal,
+  priceDirty,
+  statusLabelKey,
+  validateConditions,
+  validateDraft,
+  validateInventory,
+  validatePrice,
+  type Buyability,
+  type OfferWorkspaceDraft,
+  type ValidationError,
+} from "./model";
+export type {
+  OfferCommercialPatch,
+  OfferCreateResult,
+  OfferDetailResult,
+  OfferFulfillmentResponsibility,
+  OfferInventoryLocation,
+  OfferMode,
+  OfferMutationResult,
+  OfferPickerPage,
+  OfferRole,
+  OfferSellerOption,
+  OfferShippingTypeOption,
+  OfferSimpleResult,
+  OfferTabId,
+  OfferVariantOption,
+  OfferWorkspaceAdapter,
+  OfferWorkspaceDetail,
+} from "./types";

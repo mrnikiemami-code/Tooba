@@ -1,6 +1,11 @@
 ﻿import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../lib/admin/admin-result.ts";
+import type {
+  OfferInventoryLocation,
+  OfferShippingTypeOption,
+  OfferWorkspaceDetail,
+} from "../../lib/offer-workspace/types";
 import { prepareAdminDevActor } from "./admin-api";
 
 function actorId(): string {
@@ -100,17 +105,59 @@ export async function loadAdminCatalogVariants(search = "", page = 1, pageSize =
   }
 }
 
-export interface AdminOfferDetail {
-  offerId: string;
-  sellerPartyId: string;
-  sellerDisplayName: string;
-  productTitle: string;
-  sellerSku: string | null;
-  status: string;
-  amount: number | null;
-  currency: string;
-  onHand: number;
-  availableUnits: number;
+export type AdminOfferDetail = OfferWorkspaceDetail;
+
+function mapInventoryLocations(value: unknown): OfferInventoryLocation[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object")
+    .map((row) => ({
+      stockItemId: text(prop(row, "stockItemId", "StockItemId")),
+      locationId: text(prop(row, "locationId", "LocationId")),
+      locationCode: text(prop(row, "locationCode", "LocationCode")),
+      onHand: number(prop(row, "onHand", "OnHand")),
+      reserved: number(prop(row, "reserved", "Reserved")),
+      available: number(prop(row, "available", "Available")),
+    }))
+    .filter((row) => row.stockItemId.length > 0);
+}
+
+export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
+  const item = record(value);
+  if (!item) return null;
+  const offerId = text(prop(item, "offerId", "OfferId"));
+  if (!offerId) return null;
+  return {
+    offerId,
+    sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
+    sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName")),
+    catalogVariantId: text(prop(item, "catalogVariantId", "CatalogVariantId")),
+    productId: prop(item, "productId", "ProductId") == null ? null : text(prop(item, "productId", "ProductId")),
+    productTitle: text(prop(item, "productTitle", "ProductTitle"), "—"),
+    brandName: prop(item, "brandName", "BrandName") == null ? null : text(prop(item, "brandName", "BrandName")),
+    sellerSku: prop(item, "sellerSku", "SellerSku") == null ? null : text(prop(item, "sellerSku", "SellerSku")),
+    status: text(prop(item, "status", "Status")),
+    channel: text(prop(item, "channel", "Channel"), "Marketplace"),
+    amount: nullableNumber(prop(item, "amount", "Amount")),
+    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    onHand: number(prop(item, "onHand", "OnHand")),
+    reserved: number(prop(item, "reserved", "Reserved")),
+    availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
+    catalogReadOnly: prop(item, "catalogReadOnly", "CatalogReadOnly") !== false,
+    returnPolicyChoice: text(prop(item, "returnPolicyChoice", "ReturnPolicyChoice"), "Default"),
+    customReturnWindowDays: nullableNumber(prop(item, "customReturnWindowDays", "CustomReturnWindowDays")),
+    defaultReturnWindowDays: number(prop(item, "defaultReturnWindowDays", "DefaultReturnWindowDays")) || 7,
+    sellerCanOverrideReturnPolicy: prop(item, "sellerCanOverrideReturnPolicy", "SellerCanOverrideReturnPolicy") !== false,
+    minReturnWindowDays: number(prop(item, "minReturnWindowDays", "MinReturnWindowDays")) || 1,
+    maxReturnWindowDays: number(prop(item, "maxReturnWindowDays", "MaxReturnWindowDays")) || 30,
+    allowNonReturnableOffers: prop(item, "allowNonReturnableOffers", "AllowNonReturnableOffers") !== false,
+    minimumOrderQuantity: nullableNumber(prop(item, "minimumOrderQuantity", "MinimumOrderQuantity")),
+    maximumOrderQuantity: nullableNumber(prop(item, "maximumOrderQuantity", "MaximumOrderQuantity")),
+    productUnitCode: prop(item, "productUnitCode", "ProductUnitCode") == null ? null : text(prop(item, "productUnitCode", "ProductUnitCode")),
+    productUnitName: prop(item, "productUnitName", "ProductUnitName") == null ? null : text(prop(item, "productUnitName", "ProductUnitName")),
+    productUnitShortName: prop(item, "productUnitShortName", "ProductUnitShortName") == null ? null : text(prop(item, "productUnitShortName", "ProductUnitShortName")),
+    inventoryLocations: mapInventoryLocations(prop(item, "inventoryLocations", "InventoryLocations")),
+  };
 }
 
 export async function loadAdminOfferDetail(offerId: string): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
@@ -119,23 +166,8 @@ export async function loadAdminOfferDetail(offerId: string): Promise<{ ok: true;
     const response = await fetch(`/v1/admin/offers/${offerId}`, { headers: headers() });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) return { ok: false, errorCode: `admin.offer.http.${response.status}` };
-    const item = record(await response.json());
-    if (!item) return { ok: false, errorCode: "admin.offer.invalid-response" };
-    return {
-      ok: true,
-      detail: {
-        offerId: text(prop(item, "offerId", "OfferId")),
-        sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
-        sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName")),
-        productTitle: text(prop(item, "productTitle", "ProductTitle"), "—"),
-        sellerSku: prop(item, "sellerSku", "SellerSku") == null ? null : text(prop(item, "sellerSku", "SellerSku")),
-        status: text(prop(item, "status", "Status")),
-        amount: nullableNumber(prop(item, "amount", "Amount")),
-        currency: text(prop(item, "currency", "Currency"), "IRR"),
-        onHand: number(prop(item, "onHand", "OnHand")),
-        availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
-      },
-    };
+    const detail = mapAdminOfferDetail(await response.json());
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "admin.offer.invalid-response" };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
@@ -172,19 +204,154 @@ export async function createAdminOffer(input: {
     if (!offerId || sellerPartyId !== input.sellerPartyId || text(prop(item, "catalogVariantId", "CatalogVariantId")) !== input.catalogVariantId) {
       return { ok: false, errorCode: "admin.offer.response_mismatch" };
     }
-    return { ok: true, detail: {
-      offerId, sellerPartyId,
-      sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName")),
-      productTitle: text(prop(item, "productTitle", "ProductTitle"), "—"),
-      sellerSku: prop(item, "sellerSku", "SellerSku") == null ? null : text(prop(item, "sellerSku", "SellerSku")),
-      status: text(prop(item, "status", "Status")),
-      amount: nullableNumber(prop(item, "amount", "Amount")),
-      currency: text(prop(item, "currency", "Currency"), "IRR"),
-      onHand: number(prop(item, "onHand", "OnHand")),
-      availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
-    } };
+    const detail = mapAdminOfferDetail(item);
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "admin.offer.invalid-response" };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
 }
 
+
+export async function patchAdminOffer(
+  offerId: string,
+  patch: {
+    sellerSku?: string | null;
+    status?: string | null;
+    returnPolicyChoice?: string | null;
+    customReturnWindowDays?: number | null;
+    minimumOrderQuantity?: number | null;
+    maximumOrderQuantity?: number | null;
+    clearOrderQuantityLimits?: boolean;
+  },
+): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch(`/v1/admin/offers/${offerId}`, {
+      method: "PATCH",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        sellerSku: patch.sellerSku,
+        status: patch.status,
+        returnPolicyChoice: patch.returnPolicyChoice,
+        customReturnWindowDays: patch.customReturnWindowDays,
+        minimumOrderQuantity: patch.minimumOrderQuantity,
+        maximumOrderQuantity: patch.maximumOrderQuantity,
+        clearOrderQuantityLimits: patch.clearOrderQuantityLimits,
+      }),
+    });
+    if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    if (!response.ok) {
+      const body = await response.json().catch(() => null) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "admin.offer.patch-failed" };
+    }
+    const detail = mapAdminOfferDetail(await response.json());
+    if (!detail || detail.offerId !== offerId) return { ok: false, errorCode: "admin.offer.response_mismatch" };
+    return { ok: true, detail };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+export async function writeAdminOfferPrice(
+  offerId: string,
+  input: { amount: number; currency?: string; market?: string },
+): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    await prepareAdminDevActor();
+    const currency = input.currency || "IRR";
+    const response = await fetch(`/v1/admin/offers/${offerId}/price`, {
+      method: "PUT",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ amount: input.amount, currency, market: input.market ?? "IR" }),
+    });
+    if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    if (!response.ok) {
+      const body = await response.json().catch(() => null) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "admin.price.write-failed" };
+    }
+    const detail = mapAdminOfferDetail(await response.json());
+    if (!detail || detail.offerId !== offerId || detail.amount !== input.amount || detail.currency !== currency) {
+      return { ok: false, errorCode: "admin.price.response_mismatch" };
+    }
+    return { ok: true, detail };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+export async function writeAdminOfferInventory(
+  offerId: string,
+  input: { onHand: number; reason: string; stockItemId: string },
+): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch(`/v1/admin/offers/${offerId}/inventory`, {
+      method: "PUT",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId }),
+    });
+    if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    if (!response.ok) {
+      const body = await response.json().catch(() => null) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "admin.inventory.write-failed" };
+    }
+    const detail = mapAdminOfferDetail(await response.json());
+    const target = detail?.inventoryLocations.find((row) => row.stockItemId === input.stockItemId);
+    if (!detail || detail.offerId !== offerId || !target || target.onHand !== input.onHand) {
+      return { ok: false, errorCode: "admin.inventory.response_mismatch" };
+    }
+    return { ok: true, detail };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+export async function assignAdminOfferFulfillment(
+  offerId: string,
+  input: { responsibility: "Seller" | "Platform" | null; shippingTypeId: string | null },
+): Promise<{ ok: true } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch(`/v1/admin/offers/${offerId}/fulfillment`, {
+      method: "PUT",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        responsibility: input.responsibility,
+        shippingTypeId: input.shippingTypeId,
+      }),
+    });
+    if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    if (!response.ok) {
+      const body = await response.json().catch(() => null) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "admin.fulfillment.write-failed" };
+    }
+    const item = record(await response.json().catch(() => null));
+    const returnedId = item ? text(prop(item, "offerId", "OfferId")) : "";
+    if (returnedId && returnedId !== offerId) return { ok: false, errorCode: "admin.fulfillment.response_mismatch" };
+    return { ok: true };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+export async function loadAdminShippingTypes(): Promise<OfferShippingTypeOption[]> {
+  await prepareAdminDevActor();
+  const response = await fetch("/v1/admin/shipping-types", { headers: headers() });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => null);
+  if (!Array.isArray(payload)) return [];
+  return payload
+    .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object")
+    .map((row) => {
+      const translations = Array.isArray(row.translations) ? row.translations : Array.isArray(row.Translations) ? row.Translations : [];
+      const first = translations.find((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object");
+      const label = first ? text(prop(first, "name", "Name")) : "";
+      return {
+        shippingTypeId: text(prop(row, "shippingTypeId", "ShippingTypeId")),
+        code: text(prop(row, "code", "Code")),
+        label: label || text(prop(row, "code", "Code")),
+        isActive: prop(row, "isActive", "IsActive") !== false,
+      };
+    })
+    .filter((row) => row.shippingTypeId.length > 0);
+}

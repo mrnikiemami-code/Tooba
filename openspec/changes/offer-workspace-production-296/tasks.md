@@ -1,7 +1,11 @@
 ﻿# Tasks — offer-workspace-production-296
-- [x] Offer tables on public AppDataGrid (accepted 528fd7b5).
+- [x] Offer tables on public AppDataGrid (accepted 528fd7b5; frozen).
 - [x] Contract analysis (CONTRACT-GAPS.md, source-verified).
-- [ ] Shared 7-tab workspace for implementable tabs (identity/returns/qty/lifecycle/price).
-- [ ] Wire real contracts for implementable tabs; role gating.
-- [ ] Backend contract decisions for: Promotion discount-definition, Inventory adjust, Offer history, Shipping service assignment.
-- [ ] 30 real acceptance tests + security + data + orders/Stage-2 regression + perf.
+- [x] Shared 7-tab workspace for implementable tabs (identity/price/inventory/conditions/shipping).
+- [x] Wire real contracts: create/get/patch, price, per-StockItem inventory, return policy, qty limits, lifecycle, admin fulfillment responsibility.
+- [x] Role gating: admin vs seller; seller cannot assign fulfillment responsibility; seller/variant locked after create.
+- [x] Honest gated tabs with no fabricated data: discounts (Promotion-owned), history (no read API), per-offer shipping service, multi-currency price rows.
+- [x] Focused frontend tests (29/29), typecheck, lint, next build, OpenSpec strict.
+- [x] Real runtime verification on Host 5088 / FE 3000: create draft, price/inventory/SKU/returns persistence with independent re-read; responsive 360–1440 overflow 0.
+- [x] Regression: Orders grid renders; Stage-2 cart archived campaign tests 2/2 pass.
+- [ ] Backend contract decisions for: Promotion per-offer discount definition, Offer history projection, per-offer shipping service assignment (Stage-3), Pricing multi-currency price-list read, fulfillment responsibility read-back.

@@ -1,0 +1,219 @@
+{
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "seller": {
+    "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+    "actorLabel": "اپراتور آرمان",
+    "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "sellerLabel": "فروشگاه آرمان",
+    "contextKind": "seller-owner"
+  },
+  "checks": {
+    "create.tabs7": {
+      "ok": true,
+      "detail": "مشخصات آفر|قیمت‌گذاری|تخفیفات|موجودی|ارسال|شرایط فروش|تاریخچه"
+    },
+    "create.dependentTabsDisabled": {
+      "ok": true,
+      "detail": ""
+    },
+    "create.saveDisabledWithoutIdentity": {
+      "ok": true,
+      "detail": ""
+    },
+    "create.noAutoSelect": {
+      "ok": true,
+      "detail": "0"
+    },
+    "create.saveEnabledAfterIdentity.0": {
+      "ok": true,
+      "detail": ""
+    },
+    "create.saveEnabledAfterIdentity.1": {
+      "ok": true,
+      "detail": ""
+    },
+    "create.navigatedToEdit": {
+      "ok": true,
+      "detail": "[{\"index\":0,\"error\":\"offer.listing.duplicate_active\"},{\"index\":1,\"createdId\":\"6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f\"}]"
+    },
+    "admin.persistedPrice": {
+      "ok": true,
+      "detail": "1234567"
+    },
+    "admin.persistedSku": {
+      "ok": true,
+      "detail": "TB296-VERIFY"
+    },
+    "admin.persistedReturns": {
+      "ok": true,
+      "detail": "Custom/9"
+    },
+    "admin.persistedQty": {
+      "ok": true,
+      "detail": ""
+    },
+    "admin.discountsGatedNoFake": {
+      "ok": true,
+      "detail": ""
+    },
+    "admin.historyGatedNoFake": {
+      "ok": true,
+      "detail": ""
+    },
+    "admin.shippingTypeEnabledAfterResponsibility": {
+      "ok": true,
+      "detail": ""
+    },
+    "admin.fulfillmentWriteAccepted": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.tabs7": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.shippingAdminOnly": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.noShippingSave": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.persistedPrice": {
+      "ok": true,
+      "detail": "3704749"
+    },
+    "seller.inventoryHasPosition": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.persistedInventory": {
+      "ok": true,
+      "detail": "198"
+    },
+    "responsive.360.noOverflow": {
+      "ok": true,
+      "detail": "0"
+    },
+    "responsive.390.noOverflow": {
+      "ok": true,
+      "detail": "0"
+    },
+    "responsive.768.noOverflow": {
+      "ok": true,
+      "detail": "0"
+    },
+    "responsive.1280.noOverflow": {
+      "ok": true,
+      "detail": "0"
+    },
+    "responsive.1440.noOverflow": {
+      "ok": true,
+      "detail": "0"
+    }
+  },
+  "screenshots": [
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-identity.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-pricing.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-discounts.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-inventory.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-shipping.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-conditions.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-tab-history.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\seller-edit.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\runtime\\admin-mobile-360.png"
+  ],
+  "errors": [],
+  "createAttempts": [
+    {
+      "index": 0,
+      "error": "offer.listing.duplicate_active"
+    },
+    {
+      "index": 1,
+      "createdId": "6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f"
+    }
+  ],
+  "createdOfferId": "6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f",
+  "adminReread": {
+    "status": 200,
+    "body": {
+      "offerId": "6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f",
+      "sellerPartyId": "01a0ba10-59f0-7000-b2a7-71ce300a8128",
+      "sellerDisplayName": "DEV-SEED OOS Seller",
+      "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+      "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+      "productTitle": "سامسونگ هدفون سری 1",
+      "brandName": "Samsung",
+      "sellerSku": "TB296-VERIFY",
+      "status": "Draft",
+      "channel": "Marketplace",
+      "amount": 1234567,
+      "currency": "IRR",
+      "onHand": 0,
+      "reserved": 0,
+      "availableUnits": 0,
+      "catalogReadOnly": true,
+      "returnPolicyChoice": "Custom",
+      "customReturnWindowDays": 9,
+      "defaultReturnWindowDays": 7,
+      "sellerCanOverrideReturnPolicy": true,
+      "minReturnWindowDays": 1,
+      "maxReturnWindowDays": 30,
+      "allowNonReturnableOffers": true,
+      "minimumOrderQuantity": 2,
+      "maximumOrderQuantity": 6,
+      "productUnitCode": "pcs",
+      "productUnitName": "عدد",
+      "productUnitShortName": "عدد"
+    }
+  },
+  "sellerReread": {
+    "offerId": "457e375f-ceec-4b66-b81e-3829c4e15893",
+    "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "sellerDisplayName": "فروشگاه آرمان",
+    "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+    "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+    "productTitle": "سامسونگ هدفون سری 1",
+    "brandName": "Samsung",
+    "sellerSku": "VAR-01a053886ce870009cd266df593dd1ff",
+    "status": "Active",
+    "channel": "Marketplace",
+    "amount": 3704749,
+    "currency": "IRR",
+    "onHand": 199,
+    "reserved": 0,
+    "availableUnits": 199,
+    "catalogReadOnly": true,
+    "returnPolicyChoice": "Default",
+    "defaultReturnWindowDays": 7,
+    "sellerCanOverrideReturnPolicy": true,
+    "minReturnWindowDays": 1,
+    "maxReturnWindowDays": 30,
+    "allowNonReturnableOffers": true,
+    "minimumOrderQuantity": 1,
+    "maximumOrderQuantity": 20,
+    "productUnitCode": "pcs",
+    "productUnitName": "عدد",
+    "productUnitShortName": "عدد",
+    "inventoryLocations": [
+      {
+        "stockItemId": "29f8c34d-1429-4263-84da-8df48d2633a5",
+        "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+        "locationCode": "WH-DEMO-THR",
+        "onHand": 199,
+        "reserved": 0,
+        "available": 199
+      }
+    ]
+  },
+  "overflow": {
+    "360": 0,
+    "390": 0,
+    "768": 0,
+    "1280": 0,
+    "1440": 0
+  },
+  "pass": true
+}

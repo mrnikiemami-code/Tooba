@@ -23,3 +23,9 @@ Conclusion: the offers tables already use the **shared base `DataGrid`** (AppDat
 5. Build + run on the dev environment; Impeccable independent review.
 
 This cannot be completed truthfully as a single unreviewed edit; it is a staged production change. No product source was modified in this step (so no orders regression).
+
+## R6 resolution
+- Grid: the accepted frozen correction (528fd7b5) keeps public AppDataGrid; no ServerGridPage extraction was performed. Orders/products/campaigns untouched and runtime-verified.
+- Workspace: shared seven-tab workspace implemented for admin and seller (identity, pricing, inventory, shipping responsibility, sales conditions; discounts/history gated).
+- Real wiring: create/get/patch, price, per-StockItem inventory, returns/qty/lifecycle, admin fulfillment responsibility, shipping-type catalog.
+- Remaining gaps are isolated contract decisions, not task-wide blockers; see CONTRACT-GAPS.md and ACCEPTANCE-MATRIX.json.
