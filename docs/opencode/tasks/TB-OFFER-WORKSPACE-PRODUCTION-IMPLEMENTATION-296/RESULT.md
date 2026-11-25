@@ -92,3 +92,22 @@ STOP_FOR_ARCHITECT
 ### Environment note
 - Host restarted via the repository lifecycle script with Development provenance SingleStore/dev-singlestore/store-alpha (health ready).
 - `test:architecture` exits 1 on pre-existing baseline drift (26 flat admin files, stale size baselines, admin-api exports). No new `lib/offer-workspace` or `app/admin/offers` file appears in those failure lists; our new files are all below the 800-line threshold. Recorded in `evidence/architecture-guards.log` and not reclassified as PASS.
+
+## R7 VISUAL & UX PARITY (2026-11-25)
+STATUS: PASS (worker; STOP_FOR_ARCHITECT). Worker PASS ≠ Architect ACCEPT ≠ owner acceptance.
+- Reference: approved OpenDesign 295 artifact (hash DA8AAFBF…F01A2); orders list standard; scoped offer-workspace CSS module.
+- Form: artifact-style header/summary (brand + unit, real Jalali saved timestamp, price+market/currency), numbered tabs, cards, 37/44px controls, mobile bottom bar; all four admin/seller create/edit routes use the same workspace.
+- Lists: shared AppDataGrid only; product rightmost after selection, actions pinned left with Orders-style Eye, seller name (admin), real media (placeholder asset in dev seed), brand not raw variant code, Jalali/Persian dates and currency, no large blue row buttons; filters/search/sort/paging/export/saved views preserved.
+- Content: no raw UUID in main view; technical variant code only in a labeled `کد تنوع`; natural Persian; no fabricated discounts/history/shipping service; shipping changes in unsaved guard and success verified by detail re-read.
+- Verification:
+  - frontend focused 29/29; typecheck 0; lint 0 warnings from changed files.
+  - next build 0, BUILD_ID `iLmDj6VKtku_4lD1PdAtc`.
+  - live FE3000/Host5088 verify-r7 PASS: all 7 tabs, four form routes, two lists, 0 overflow at 360/768/1440, cross-seller 404, admin persistence (price 1234567, SKU, Custom/9, qty 2..6, fulfillment re-read), seller price/inventory persisted and restored.
+  - Offer module tests 97/97; Stage-2 cart campaign 2/2; orders regression 10 rows.
+  - Independent Impeccable before 76/100 → after 85/100 (PASS_WITH_FINDINGS); post-audit clipping/width/readiness fixes applied; detector [] is not treated as proof.
+- Geometry vs artifact: tab 44 vs 44–46, control 37/44 vs 37/44, card radius 9 vs 9; sticky header 160/193/224 vs 148/202/198 at 1440/768/360.
+- Create note: the final round reused an existing Draft because the first seller's first 10 variants all had active listings (business duplicate guard); real draft creation succeeded in earlier rounds (a3aa…, f5fd…).
+- Still gated: per-offer discount definition, per-offer shipping service assignment, offer history read, multi-currency price rows; dev seed media is a placeholder (no fabricated photo).
+- Evidence: `ACCEPTANCE-MATRIX-R7.json`, `IMPECCABLE-R7.md`, `evidence/r7-runtime/verify-r7.json` (SHA-256 FFD3DE6B…6823), `evidence/r7-final-shots/`.
+STOP_FOR_ARCHITECT
+- Test-infrastructure alignment: the Offer endpoint manifest now includes the real admin/query endpoints (`GetOfferForAdminQuery`, `QueryAdminOffersQuery`, `QuerySellerOffersQuery`) and the Offer architecture guard points at the moved `ProductManagement/Queries/GetProductWorkspaceHandler.cs`; a shared test fulfillment lookup keeps the Offer unit/observability fixtures resolvable. This is test maintenance only; no product behavior changed.

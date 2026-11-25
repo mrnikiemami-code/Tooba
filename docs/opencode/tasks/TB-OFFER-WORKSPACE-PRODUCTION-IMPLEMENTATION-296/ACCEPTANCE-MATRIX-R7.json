@@ -1,0 +1,92 @@
+{
+  "taskId": "TB-296-R7-VISUAL-AND-UX-PARITY",
+  "baseCommit": "1817fe551e95782f19851f13a046295cd8a210b4",
+  "designAuthority": {
+    "path": "D:\\Tooba-Offer-OpenDesign\\295\\FINAL\\index.html",
+    "sha256": "DA8AAFBF960B4494C2EE2F24E177F33ED55F9CBAC51648240B909B7DD36F01A2"
+  },
+  "status": "PASS_WORKER_STOP_FOR_ARCHITECT",
+  "note": "Worker PASS is not Architect ACCEPT or owner visual acceptance. Dev seed media/seller/SKU strings are data, not UI invention; placeholder media is rendered as real media, no product photo was fabricated.",
+  "build": { "status": "PASS", "id": "iLmDj6VKtku_4lD1PdAtc", "log": "evidence/r7-build-final14.log", "sha256": "526F1EBA5292DAE1D526D008E00A243F6155A8BE763B262E68671B7E55A98B26" },
+  "typecheck": { "status": "PASS", "log": "evidence/r7-typecheck11.log", "sha256": "3AC063984AC4E2245FB4CC2F7C6E5A59125B9EB616DFD5926C952317EB1564B9" },
+  "lint": { "status": "PASS", "log": "evidence/r7-lint11.log", "sha256": "8AFC9DE3357DF006B80839070E5024C201A54EF00D242224BFA267A048E23371" },
+  "forms": [
+    { "route": "/admin/offers/new", "status": "PASS", "evidence": "tabs, no auto-select, disabled dependent tabs, pickers; create submission exercised successfully in earlier rounds (a3aa67a4-9663-70e8-05c5-1fe6dd1fc744, f5fd1b05-db7f-018e-88df-e4a70168f8aa); final round used an existing Draft because the first seller's first 10 variants all had active listings (business duplicate guard)." },
+    { "route": "/admin/offers/[offerId]", "status": "PASS", "evidence": "all 7 tabs, price/SKU/returns/qty/fulfillment persisted and independently re-read" },
+    { "route": "/vendor-panel/products/new", "status": "PASS", "evidence": "fixed session seller, product picker, disabled dependent tabs" },
+    { "route": "/vendor-panel/products/[offerId]", "status": "PASS", "evidence": "seller-owned offer 457e375f... rendered; price/inventory persisted and re-read; shipping read-only; attributes collapsible" }
+  ],
+  "lists": {
+    "admin": { "status": "PASS", "rows": 10, "productX": 903, "actionsX": 49, "order": "product > seller > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-runtime/verify-r7.json; evidence/r7-final-shots/admin-list-1440.png" },
+    "seller": { "status": "PASS", "rows": 10, "productX": 903, "actionsX": 49, "order": "product > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-final-shots/seller-list-1440.png" },
+    "rules": {
+      "ordersStandardLayout": "PASS",
+      "createActionLeft": "PASS",
+      "productFirstRtlAfterSelection": "PASS",
+      "actionsLogicalEndLeft": "PASS",
+      "compactEyeRowAction": "PASS",
+      "noLargeBlueRowButtons": "PASS",
+      "adminSellerName": "PASS",
+      "realMediaOrPlaceholderOnly": "PASS (dev seed media is a placeholder asset; no product photo fabricated)",
+      "brandInsteadOfRawVariantCodeInList": "PASS",
+      "jalaliDates": "PASS (Persian digits)",
+      "understandableCurrency": "PASS (ریال)",
+      "tokensAndBadges": "PASS",
+      "filtersSearchSortPagingExportSavedViews": "PASS (shared AppDataGrid untouched)"
+    }
+  },
+  "tabs": {
+    "identity": { "status": "PASS", "notes": "no raw UUID in main view; brand/unit; labeled variant code; last-saved Jalali timestamp" },
+    "pricing": { "status": "PASS", "notes": "Persian grouped amount in table/preview; IRR no decimals; legacy decimals preserved and warned; multi-currency still gated" },
+    "discounts": { "status": "PASS_GATED", "notes": "approved card/empty layout; no fake discount/save control" },
+    "inventory": { "status": "PASS", "notes": "tiles/table/reason; zero vs no-position distinction; StockItemId adjust; mobile card layout" },
+    "shipping": { "status": "PASS_GATED", "notes": "real responsibility/type write; service assignment gated and read-only; unsaved guard includes shipping; success verified by detail re-read" },
+    "conditions": { "status": "PASS", "notes": "quantity/unit tiles, returns, qty limits, lifecycle, derived buyability; archived terminal" },
+    "history": { "status": "PASS_GATED", "notes": "edit-only empty state; no fabricated events" }
+  },
+  "geometry": {
+    "artifact": {
+      "360": { "sticky": 198, "tab": 46, "ctl": 44, "cardRadius": "9px" },
+      "768": { "sticky": 202, "tab": 46, "ctl": 44, "cardRadius": "9px" },
+      "1440": { "sticky": 148, "tab": 44, "ctl": 37, "cardRadius": "9px" }
+    },
+    "implementation": {
+      "360": { "header": 224, "tab": 44, "ctl": 44, "cardRadius": "9px", "actionBar": true },
+      "768": { "header": 193, "ctl": 44, "cardRadius": "9px" },
+      "1440": { "header": 160, "tab": 44, "ctl": 37, "cardRadius": "9px" }
+    },
+    "verdict": "PASS (tabs/controls/radius exact or within 2px; header within 26px of the artifact sticky header)"
+  },
+  "overflow": { "status": "PASS", "detail": "0 document overflow at 360/768/1440 for admin edit, admin list, seller list" },
+  "security": { "crossSellerDenied": "PASS (404)", "sellerShippingWrite": "ABSENT (read-only in seller UI)" },
+  "persistence": {
+    "admin": { "price": 1234567, "sku": "unique TB296-R7-V-*", "returns": "Custom/9", "qty": "2..6", "fulfillment": "target responsibility + type re-read" },
+    "seller": { "price": 3704749, "onHand": 198, "restored": "3704748 / 199" }
+  },
+  "tests": {
+    "frontendFocused": { "status": "PASS", "detail": "29/29" },
+    "offerModule": { "status": "PASS", "detail": "97/97", "log": "evidence/r7-offer-tests.log", "sha256": "8C1AD49E313F2AFE4C4F20EEAA44AE0B113879D423957C6D07FF75D35A5917EF" },
+    "stage2CartCampaign": { "status": "PASS", "detail": "2/2", "log": "evidence/r7-stage2-campaign-cart.log", "sha256": "7C7BFE55935448ADEED8A610040DB6F082E239BAB9F4B7EE62C3940BB0D0167D" },
+    "ordersRegression": { "status": "PASS", "detail": "10 rows" }
+  },
+  "impeccable": {
+    "beforeIndependent": { "score": 76, "verdict": "PASS_WITH_FINDINGS", "detail": "P1 placeholder imagery, raw vocabulary, evidence validity; P2 header/density/format/list/scroll/actions" },
+    "afterIndependent": { "score": 85, "verdict": "PASS_WITH_FINDINGS", "detail": "all prior P1/P2 resolved; remaining P2 row clipping/header truncation + P3 polish" },
+    "postAuditFixes": ["rowHeight=64 removes subtitle clipping", "header widths/labels adjusted to remove header truncation", "identity variant code wraps and readiness no longer prints raw code", "mobile seller name line and object-fit cover"],
+    "mechanicalDetector": { "result": "[]", "path": "evidence/r7-impeccable-detect.json", "sha256": "2708BE578E03E792E308E41C26495572A8AA7654CB654BCA2C5CCCCC7C8EF761", "caveat": "empty detector output is not proof of design parity" }
+  },
+  "gatedOrDataLimited": [
+    "Offer photo: dev seed media is a generic placeholder; no real product photo exists to display (no fabrication).",
+    "Per-offer discount definition (Promotion policy) remains gated.",
+    "Per-offer shipping service assignment (Stage-3) remains gated; responsibility/type only.",
+    "Offer history read API remains gated.",
+    "Multi-currency/market/validity price rows remain gated; single resolved IRR/IR base price.",
+    "Offer code (OFR-...) is not a product contract; not invented. Real last-saved Jalali timestamp is shown instead."
+  ],
+  "evidence": {
+    "verify": "evidence/r7-runtime/verify-r7.json",
+    "verifySha256": "FFD3DE6BF63BE109817BEBB5FEC453F16B1A101E420691C9463CE9CE033D6823",
+    "finalScreenshots": "evidence/r7-final-shots/",
+    "runtimeScreenshots": "evidence/r7-runtime/"
+  }
+}

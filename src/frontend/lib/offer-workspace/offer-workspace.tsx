@@ -1,22 +1,26 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Button, ErrorState, Skeleton } from "../../design-system";
+import { AlertTriangle, Check, ImageOff, Lock } from "lucide-react";
 import { useLocale } from "../i18n/locale-context";
+import { formatJalaliDateTime } from "../../design-system";
 import {
   allowedStatuses,
   commercialDirty,
   deriveBuyability,
+  digitsFa,
   draftFromDetail,
   errorLabel,
   faMoney,
   inventoryDirty,
+  marketLabel,
   parseDecimal,
   priceDirty,
+  statusLabel,
   validateDraft,
   type OfferWorkspaceDraft,
 } from "./model";
-import { offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
+import { offerWorkspaceMessages } from "./messages";
 import { ConditionsTab } from "./conditions-tab";
 import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
@@ -24,6 +28,7 @@ import { InventoryTab } from "./inventory-tab";
 import { PricingTab } from "./pricing-tab";
 import { ShippingTab } from "./shipping-tab";
 import { DirtyDot, StatusPill } from "./tab-shared";
+import styles from "./offer-workspace.module.css";
 import type {
   OfferCommercialPatch,
   OfferFulfillmentResponsibility,
@@ -67,29 +72,39 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [tabError, setTabError] = useState<{ tab: OfferTabId; code: string } | null>(null);
+  const [showCreateErrors, setShowCreateErrors] = useState(false);
 
   const [shippingTypes, setShippingTypes] = useState<OfferShippingTypeOption[]>([]);
   const [typesError, setTypesError] = useState<string | null>(null);
   const [responsibility, setResponsibility] = useState<OfferFulfillmentResponsibility | null>(null);
   const [shippingTypeId, setShippingTypeId] = useState("");
-  const [serviceId, setServiceId] = useState("");
-  const [shippingSaving, setShippingSaving] = useState(false);
   const [shippingNotice, setShippingNotice] = useState<string | null>(null);
   const [shippingError, setShippingError] = useState<string | null>(null);
+  const [shippingSaving, setShippingSaving] = useState(false);
   const saveRef = useRef(false);
+  const tabListRef = useRef<HTMLDivElement | null>(null);
 
   const tabLabel = useMemo<Record<OfferTabId, string>>(
     () => ({
-      identity: t.identityTab,
-      pricing: t.pricingTab,
-      discounts: t.discountsTab,
-      inventory: t.inventoryTab,
-      shipping: t.shippingTab,
-      conditions: t.conditionsTab,
-      history: t.historyTab,
+      identity: t.tabs.identity,
+      pricing: t.tabs.pricing,
+      discounts: t.tabs.discounts,
+      inventory: t.tabs.inventory,
+      shipping: t.tabs.shipping,
+      conditions: t.tabs.conditions,
+      history: t.tabs.history,
     }),
     [t],
   );
+
+  const applyLoadedDetail = useCallback((next: OfferWorkspaceDetail) => {
+    setDetail(next);
+    setDraft(draftFromDetail(next));
+    setResponsibility(next.fulfillmentResponsibility);
+    setShippingTypeId(next.fulfillmentShippingTypeId ?? "");
+    setShippingNotice(null);
+    setShippingError(null);
+  }, []);
 
   const load = useCallback(async () => {
     if (!isEdit || !adapter.loadDetail) return;
@@ -103,9 +118,8 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
       setLoadError(result.errorCode);
       return;
     }
-    setDetail(result.detail);
-    setDraft(draftFromDetail(result.detail));
-  }, [adapter, isEdit]);
+    applyLoadedDetail(result.detail);
+  }, [adapter, isEdit, applyLoadedDetail]);
 
   useEffect(() => {
     void load();
@@ -124,20 +138,34 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
 
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    if (tab && (TAB_ORDER as string[]).includes(tab)) {
-      setActiveTab(tab as OfferTabId);
-    }
+    if (tab && (TAB_ORDER as string[]).includes(tab)) setActiveTab(tab as OfferTabId);
   }, []);
+
+  useEffect(() => {
+    const bar = tabListRef.current;
+    const el = document.getElementById(`offer-tab-${activeTab}`);
+    if (!bar || !el) return;
+    const barRect = bar.getBoundingClientRect();
+    const tabRect = el.getBoundingClientRect();
+    if (tabRect.left < barRect.left + 8) bar.scrollLeft -= barRect.left + 8 - tabRect.left;
+    else if (tabRect.right > barRect.right - 8) bar.scrollLeft += tabRect.right - (barRect.right - 8);
+  }, [activeTab]);
 
   const commercialChanged = detail ? commercialDirty(detail, draft) : false;
   const priceChanged = detail ? priceDirty(detail, draft) : false;
   const stockChanged = detail ? inventoryDirty(detail, draft) : false;
+  const shippingChanged = Boolean(
+    detail &&
+      adapter.saveFulfillment &&
+      (responsibility !== detail.fulfillmentResponsibility ||
+        (shippingTypeId || null) !== (detail.fulfillmentShippingTypeId ?? null)),
+  );
   const createReady = adapter.role === "seller"
     ? Boolean(adapter.fixedSeller) && Boolean(selectedVariant)
     : Boolean(selectedSeller) && Boolean(selectedVariant);
   const createDirty = !isEdit && (Boolean(selectedSeller) || Boolean(selectedVariant) || draft.sellerSku.trim().length > 0);
   const anyDirty = isEdit
-    ? commercialChanged || priceChanged || stockChanged
+    ? commercialChanged || priceChanged || stockChanged || shippingChanged
     : createDirty;
 
   useEffect(() => {
@@ -155,7 +183,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     pricing: priceChanged,
     discounts: false,
     inventory: stockChanged,
-    shipping: false,
+    shipping: shippingChanged,
     conditions: commercialChanged,
     history: false,
   };
@@ -174,12 +202,9 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           sellerSku: next.sellerSku ?? "",
           status: next.status,
           returnPolicyChoice: next.returnPolicyChoice,
-          customReturnWindowDays:
-            next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
-          minimumOrderQuantity:
-            next.minimumOrderQuantity != null ? String(next.minimumOrderQuantity) : "",
-          maximumOrderQuantity:
-            next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
+          customReturnWindowDays: next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
+          minimumOrderQuantity: next.minimumOrderQuantity != null ? String(next.minimumOrderQuantity) : "",
+          maximumOrderQuantity: next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
         };
       }
       if (domain === "price") {
@@ -187,9 +212,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
       }
       return {
         ...current,
-        inventoryOnHand: Object.fromEntries(
-          next.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)]),
-        ),
+        inventoryOnHand: Object.fromEntries(next.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)])),
         inventoryReason: "",
       };
     });
@@ -205,7 +228,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
       setSaveError(errorLabel(first.code, locale));
       return;
     }
-    if (!commercialChanged && !priceChanged && !stockChanged) {
+    if (!commercialChanged && !priceChanged && !stockChanged && !shippingChanged) {
       setSaveNotice(t.noChanges);
       setSaveError(null);
       setTabError(null);
@@ -216,26 +239,17 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     setSaveError(null);
     setSaveNotice(null);
     setTabError(null);
+    setShippingError(null);
 
     if (commercialChanged) {
-      const patch = buildCommercialPatch(detail, draft);
-      const result = await adapter.saveCommercial(patch);
-      if (!result.ok) {
-        finishSaveFailure("conditions", result.denied);
-        return;
-      }
+      const result = await adapter.saveCommercial(buildCommercialPatch(detail, draft));
+      if (!result.ok) return finishSaveFailure("conditions", result.denied);
       applySavedDetail(result.detail, "commercial");
     }
 
     if (priceChanged) {
-      const result = await adapter.savePrice({
-        amount: parseDecimal(draft.amount) ?? 0,
-        currency: draft.currency || "IRR",
-      });
-      if (!result.ok) {
-        finishSaveFailure("pricing", result.denied);
-        return;
-      }
+      const result = await adapter.savePrice({ amount: parseDecimal(draft.amount) ?? 0, currency: draft.currency || "IRR" });
+      if (!result.ok) return finishSaveFailure("pricing", result.denied);
       applySavedDetail(result.detail, "price");
     }
 
@@ -249,12 +263,31 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           onHand: parseDecimal(draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
           reason: draft.inventoryReason.trim(),
         });
-        if (!result.ok) {
-          finishSaveFailure("inventory", result.denied);
-          return;
-        }
+        if (!result.ok) return finishSaveFailure("inventory", result.denied);
         applySavedDetail(result.detail, "inventory");
       }
+    }
+
+    if (shippingChanged && adapter.saveFulfillment) {
+      setShippingSaving(true);
+      const result = await adapter.saveFulfillment({
+        responsibility,
+        shippingTypeId: shippingTypeId || null,
+      });
+      setShippingSaving(false);
+      if (!result.ok) return finishSaveFailure("shipping", result.denied);
+      const verification = adapter.loadDetail ? await adapter.loadDetail() : null;
+      if (
+        !verification ||
+        !verification.ok ||
+        verification.detail.fulfillmentResponsibility !== responsibility ||
+        (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)
+      ) {
+        setShippingError(t.perTabError);
+        return finishSaveFailure("shipping", false);
+      }
+      applyLoadedDetail(verification.detail);
+      setShippingNotice(t.shippingSaved);
     }
 
     saveRef.current = false;
@@ -271,12 +304,19 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
   }
 
   async function runCreate() {
-    if (!createReady || saving) return;
+    if (saving) return;
+    if (!createReady) {
+      setShowCreateErrors(true);
+      setSaveError(t.createNeedsIdentity);
+      return;
+    }
     if (adapter.role === "admin" && !selectedSeller) {
+      setShowCreateErrors(true);
       setSaveError(t.createNeedsIdentity);
       return;
     }
     if (!selectedVariant) {
+      setShowCreateErrors(true);
       setSaveError(t.createNeedsIdentity);
       return;
     }
@@ -295,172 +335,240 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
     adapter.onCreated(result.offerId);
   }
 
-  async function runShippingSave() {
-    if (!adapter.saveFulfillment || shippingSaving) return;
-    setShippingSaving(true);
-    setShippingNotice(null);
-    setShippingError(null);
-    const result = await adapter.saveFulfillment({
-      responsibility,
-      shippingTypeId: shippingTypeId || null,
-    });
-    setShippingSaving(false);
-    if (!result.ok) {
-      setShippingError(result.denied ? t.denied : errorLabel(result.errorCode, locale));
-      return;
-    }
-    setShippingNotice(t.shippingSaved);
-  }
-
   if (denied) {
     return (
-      <ErrorState title={t.denied} detail={t.deniedDetail} onRetry={() => void load()} retryLabel={t.retry} />
+      <div className={styles.root}>
+        <div className={styles.page}>
+          <div className={styles.card}>
+            <div className={styles.empty}>
+              <span className={styles.emptyIc}><AlertTriangle size={18} aria-hidden /></span>
+              <span className={styles.emptyT}>{t.denied}</span>
+              <span className={styles.emptyD}>{t.deniedDetail}</span>
+              <button type="button" className={styles.btn} onClick={() => void load()}>{t.retry}</button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
   if (loading) {
     return (
-      <div className="grid gap-3" aria-busy="true" data-testid="offer-workspace-loading">
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-48 w-full" />
+      <div className={styles.root}>
+        <div className={styles.page}>
+          <div className={styles.card} aria-busy="true">
+            <div className={styles.cardBd}>
+              <div className={styles.row} style={{ gap: 12 }}>
+                <span className={styles.thumb} />
+                <div style={{ flex: 1 }}>
+                  <div className={styles.emptyD}>{t.loading}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
   if (loadError) {
     return (
-      <ErrorState
-        title={t.loadFailed}
-        detail={errorLabel(loadError, locale)}
-        onRetry={() => void load()}
-        retryLabel={t.retry}
-      />
+      <div className={styles.root}>
+        <div className={styles.page}>
+          <div className={styles.card}>
+            <div className={styles.empty}>
+              <span className={styles.emptyIc}><AlertTriangle size={18} aria-hidden /></span>
+              <span className={styles.emptyT}>{t.loadFailed}</span>
+              <span className={styles.emptyD}>{errorLabel(loadError, locale)}</span>
+              <button type="button" className={styles.btn} onClick={() => void load()}>{t.retry}</button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   const buyability = detail ? deriveBuyability(detail) : null;
-  const createTitle = t.titleCreate;
+  const title = detail?.productTitle || selectedVariant?.productTitle || t.titleCreate;
+  const sellerName = detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || (adapter.role === "seller" ? t.sellerSession : t.notSelected);
+  const mediaId = detail?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
+  const currentStatus = detail ? draft.status : "Draft";
+  const saveLabel = isEdit ? t.save : t.saveDraft;
+  const saveTestId = isEdit
+    ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
+    : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
 
   return (
-    <div className="grid gap-4" data-testid="offer-workspace">
-      <header
-        className="sticky top-0 z-20 rounded-ds border border-border bg-surface/95 p-3 shadow-sm backdrop-blur"
-        data-testid="offer-workspace-header"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] text-muted">{t.breadcrumb}</p>
-            <h1 className="truncate text-lg font-bold" data-testid="offer-workspace-title">
-              {detail ? t.titleEdit : createTitle}
-            </h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-              <span className="max-w-[18rem] truncate font-medium text-foreground" data-testid="offer-workspace-product">
-                {detail?.productTitle ?? selectedVariant?.productTitle ?? t.selectProduct}
+    <div className={styles.root} data-testid="offer-workspace">
+      <header className={styles.stickyHead} data-testid="offer-workspace-header">
+        <div className={styles.headInner}>
+          <div className={styles.headGrid}>
+            <div className={styles.headId}>
+              <span className={styles.thumb}>
+                {mediaId ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`/v1/media/${mediaId}`} alt={t.imageAlt} />
+                ) : (
+                  <ImageOff size={16} aria-hidden />
+                )}
               </span>
-              <span aria-hidden="true">·</span>
-              <span data-testid="offer-workspace-seller">
-                {detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || "—"}
-              </span>
-              <span aria-hidden="true">·</span>
-              <span dir="ltr" className="font-mono" data-testid="offer-workspace-offer-id">
-                {detail?.offerId ?? "—"}
-              </span>
+              <div className={styles.headTxt}>
+                <div className={styles.eyebrow}>
+                  <span>{t.breadcrumb}</span>
+                  <span className={styles.dotSep} />
+                  <strong>{isEdit ? t.titleEdit : t.titleCreate}</strong>
+                  {detail?.lastUpdatedAt ? <><span className={styles.dotSep} /><span>{t.lastSaved} {digitsFa(formatJalaliDateTime(detail.lastUpdatedAt, locale))}</span></> : null}
+                  {anyDirty ? <span className={`${styles.pill} ${styles.pillWarn}`} data-testid="offer-workspace-dirty">{t.unsaved}</span> : null}
+
+                </div>
+                <h1 className={styles.headName} data-testid="offer-workspace-title">{title}</h1>
+                <div className={styles.headSub}>
+                  {detail?.brandName ? <span>{detail.brandName}</span> : null}
+                  {detail?.brandName && detail?.productUnitName ? <span className={styles.dotSep} /> : null}
+                  {detail?.productUnitName ? <span>{detail.productUnitName}</span> : null}
+                  {!detail?.brandName && !detail?.productUnitName ? <span>{selectedVariant ? selectedVariant.productTitle : t.notSelected}</span> : null}
+                </div>
+              </div>
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-              {detail ? <StatusPill status={draft.status} label={statusLabel(t, draft.status)} /> : null}
-              {detail ? (
-                <span
-                  className={`rounded-full px-2 py-0.5 ${buyability?.buyable ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}
-                  data-testid="offer-workspace-buyability"
-                >
-                  {buyability?.buyable ? t.buyable : t.notBuyable}
+
+            <div className={styles.meta} data-testid="offer-workspace-meta">
+              <div className={styles.metaItem}>
+                <span className={styles.metaK}>{t.seller}</span>
+                <span className={styles.metaV} data-testid="offer-workspace-seller">{sellerName}</span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaK}>{t.status}</span>
+                <span className={styles.metaV}>
+                  <StatusPill status={currentStatus} label={statusLabel(t, currentStatus)} />
                 </span>
-              ) : null}
-              <span className="tabular-nums" data-testid="offer-workspace-price">
-                {detail ? faMoney(detail.amount, detail.currency, locale) : "—"} · {t.market} IR
-              </span>
-              {anyDirty ? (
-                <span className="font-medium text-warning" data-testid="offer-workspace-dirty">
-                  {t.unsaved}
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaK}>{t.buy}</span>
+                <span className={styles.metaV}>
+                  <button
+                    type="button"
+                    className={`${styles.pill} ${buyability?.buyable ? styles.pillOk : styles.pillWarn}`}
+                    data-testid="offer-workspace-buyability"
+                    title={buyability?.reason ? errorLabel(buyability.reason, locale) : undefined}
+                  >
+                    {buyability?.buyable ? <Check size={11} aria-hidden /> : <AlertTriangle size={11} aria-hidden />}
+                    {buyability?.buyable ? t.buyable : t.notBuyable}
+                  </button>
                 </span>
-              ) : null}
+              </div>
+            </div>
+
+            <div className={styles.price} data-testid="offer-workspace-price">
+              <span className={styles.priceCap}>{t.priceSummary}</span>
+              {detail?.amount != null ? (
+                <span className={styles.priceRow}>
+                  <span className={styles.priceMkt}>{marketLabel("IR", locale)}</span>
+                  <span className={styles.priceAmt}>{faMoney(detail.amount, detail.currency, locale)}</span>
+                  <span className={styles.priceCur} dir="ltr">{detail.currency || "IRR"}</span>
+                </span>
+              ) : (
+                <span className={styles.priceEmpty}>{t.priceEmpty}</span>
+              )}
+            </div>
+
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
+                onClick={() => void (isEdit ? runSave() : runCreate())}
+                disabled={saving || (!isEdit && !createReady)}
+                data-offer-save="true"
+                data-testid={saveTestId}
+              >
+                <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
+              </button>
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
+                onClick={() => adapter.onCancel()}
+                data-offer-cancel="true"
+                data-testid={isEdit ? "offer-cancel" : adapter.role === "admin" ? "admin-offer-cancel" : "seller-create-cancel"}
+              >
+                {t.cancel}
+              </button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              onClick={() => void (isEdit ? runSave() : runCreate())}
-              disabled={saving || (!isEdit && !createReady)}
-              data-offer-save="true"
-              data-testid={saveTestId(adapter)}
-            >
-              {saving ? t.saving : isEdit ? t.save : t.saveDraft}
-            </Button>
-            <Button
-              type="button"
-              tone="secondary"
-              onClick={() => adapter.onCancel()}
-              data-offer-cancel="true"
-              data-testid={isEdit ? "offer-cancel" : adapter.role === "admin" ? "admin-offer-cancel" : "seller-create-cancel"}
-            >
-              {t.cancel}
-            </Button>
+        </div>
+
+        <div className={styles.tabWrap}>
+          <div className={styles.tabbar} role="tablist" aria-label={t.titleEdit} ref={tabListRef}>
+            {TAB_ORDER.map((tab, index) => {
+              const disabled = !isEdit && tab !== "identity";
+              const selected = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  id={`offer-tab-${tab}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`offer-pane-${tab}`}
+                  aria-disabled={disabled}
+                  disabled={disabled}
+                  title={disabled ? t.tabNeedsCreate : undefined}
+                  onClick={() => setActiveTab(tab)}
+                  className={`${styles.tab} ${selected ? styles.tabActive : ""}`}
+                  data-testid={`offer-tab-button-${tab}`}
+                >
+                  <span className={styles.tabN}>{digitsFa(index + 1)}</span>
+                  <span>{tabLabel[tab]}</span>
+                  {tabDirty[tab] && isEdit ? <DirtyDot show label={t.dirtyTab} /> : null}
+                  {disabled ? <span className={styles.tabN}><Lock size={9} aria-hidden /></span> : null}
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>
 
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1" role="tablist" aria-label={t.titleEdit}>
-        {TAB_ORDER.map((tab) => {
-          const disabled = !isEdit && tab !== "identity";
-          return (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab}
-              disabled={disabled}
-              title={disabled ? t.tabNeedsCreate : undefined}
-              onClick={() => setActiveTab(tab)}
-              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-ds px-3 text-sm ${
-                activeTab === tab
-                  ? "bg-primary text-primary-foreground"
-                  : disabled
-                    ? "bg-secondary/40 text-muted opacity-60"
-                    : "bg-secondary"
-              }`}
-              data-testid={`offer-tab-button-${tab}`}
-            >
-              {tabLabel[tab]}
-              {tabDirty[tab] && isEdit ? <DirtyDot show label="" /> : null}
-            </button>
-          );
-        })}
-      </div>
+      <main className={styles.page} data-testid={`offer-tab-panel-${activeTab}`} id={`offer-pane-${activeTab}`} role="tabpanel" aria-labelledby={`offer-tab-${activeTab}`}>
+        {saveError ? (
+          <div className={`${styles.banner} ${styles.bannerDanger}`} role="alert" data-testid="offer-save-error" style={{ marginBottom: 12 }}>
+            <AlertTriangle size={15} aria-hidden />
+            <div style={{ flex: 1 }}>
+              <span className={styles.bannerTitle}>{t.saveErrorTitle}</span>
+              {saveError}
+              <div style={{ marginTop: 6 }}>
+                <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? runSave() : runCreate())}>
+                  {t.retry}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {saveNotice ? (
+          <div className={`${styles.banner} ${styles.bannerOk}`} data-testid="offer-save-notice" style={{ marginBottom: 12 }}>
+            <Check size={14} aria-hidden />
+            <div>{saveNotice}</div>
+          </div>
+        ) : null}
+        {tabError ? (
+          <div className={`${styles.banner} ${styles.bannerDanger}`} data-testid="offer-tab-error" style={{ marginBottom: 12 }}>
+            <AlertTriangle size={14} aria-hidden />
+            <div>{t.perTabError} {errorLabel(tabError.code, locale)}</div>
+          </div>
+        ) : null}
 
-      {saveError ? (
-        <p className="rounded-ds border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger" data-testid="offer-save-error">
-          {saveError}
-        </p>
-      ) : null}
-      {saveNotice ? (
-        <p className="rounded-ds border border-success/40 bg-success/10 px-3 py-2 text-sm text-success" data-testid="offer-save-notice">
-          {saveNotice}
-        </p>
-      ) : null}
-      {tabError ? (
-        <p className="text-xs text-danger" data-testid="offer-tab-error">
-          {t.perTabError} {errorLabel(tabError.code, locale)}
-        </p>
-      ) : null}
-
-      <section className="rounded-ds border border-border bg-surface p-4" data-testid={`offer-tab-panel-${activeTab}`}>
         {renderTab()}
-      </section>
+      </main>
 
-      {detail ? (
-        <p className="text-[11px] text-muted" data-testid="offer-workspace-note">
-          {t.readonlySeam}
-        </p>
-      ) : null}
+      <div className={styles.mobileActions}>
+        <button
+          type="button"
+          className={`${styles.btn} ${styles.btnPrimary}`}
+          onClick={() => void (isEdit ? runSave() : runCreate())}
+          disabled={saving || (!isEdit && !createReady)}
+          data-offer-save="true"
+        >
+          <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
+        </button>
+        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => adapter.onCancel()} data-offer-cancel="true">
+          {t.cancel}
+        </button>
+      </div>
     </div>
   );
 
@@ -482,13 +590,12 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
           onSelectVariant={setSelectedVariant}
           searchSellers={adapter.searchSellers}
           searchVariants={adapter.searchVariants}
+          showErrors={showCreateErrors}
           extra={detail && renderExtras ? renderExtras("identity", detail) : null}
         />
       );
     }
-    if (!detail) {
-      return <NeedsCreateTab t={t} title={tabLabel[activeTab]} />;
-    }
+    if (!detail) return <NeedsCreateTab t={t} title={tabLabel[activeTab]} />;
     switch (activeTab) {
       case "pricing":
         return (
@@ -513,9 +620,7 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
             onHand={draft.inventoryOnHand}
             reason={draft.inventoryReason}
             dirty={stockChanged}
-            onOnHandChange={(stockItemId, value) =>
-              patchDraft({ inventoryOnHand: { ...draft.inventoryOnHand, [stockItemId]: value } })
-            }
+            onOnHandChange={(stockItemId, value) => patchDraft({ inventoryOnHand: { ...draft.inventoryOnHand, [stockItemId]: value } })}
             onReasonChange={(value) => patchDraft({ inventoryReason: value })}
           />
         );
@@ -530,20 +635,20 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
             typesError={typesError}
             responsibility={responsibility}
             shippingTypeId={shippingTypeId}
-            serviceId={serviceId}
             saving={shippingSaving}
             notice={shippingNotice}
             error={shippingError}
             onResponsibilityChange={(value) => {
               setResponsibility(value);
-              if (value == null) {
-                setShippingTypeId("");
-                setServiceId("");
-              }
+              setShippingNotice(null);
+              setShippingError(null);
+              if (value == null) setShippingTypeId("");
             }}
-            onShippingTypeChange={setShippingTypeId}
-            onServiceChange={setServiceId}
-            onSave={() => void runShippingSave()}
+            onShippingTypeChange={(value) => {
+              setShippingTypeId(value);
+              setShippingNotice(null);
+              setShippingError(null);
+            }}
           />
         );
       case "conditions":
@@ -576,13 +681,6 @@ export function OfferWorkspace({ adapter, renderExtras }: OfferWorkspaceProps) {
   }
 }
 
-function saveTestId(adapter: OfferWorkspaceAdapter): string {
-  if (adapter.mode === "edit") {
-    return adapter.role === "admin" ? "admin-offer-save" : "offer-save";
-  }
-  return adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
-}
-
 function emptyDraft(): OfferWorkspaceDraft {
   return {
     sellerSku: "",
@@ -598,34 +696,13 @@ function emptyDraft(): OfferWorkspaceDraft {
   };
 }
 
-function statusLabel(t: OfferWorkspaceMessages, status: string): string {
-  switch (status) {
-    case "Draft":
-      return t.lifecycleDraft;
-    case "Active":
-      return t.lifecycleActive;
-    case "Suspended":
-      return t.lifecycleSuspended;
-    case "Archived":
-      return t.lifecycleArchived;
-    default:
-      return status;
-  }
-}
-
-function buildCommercialPatch(
-  detail: OfferWorkspaceDetail,
-  draft: OfferWorkspaceDraft,
-): OfferCommercialPatch {
+function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): OfferCommercialPatch {
   const min = parseDecimal(draft.minimumOrderQuantity);
   const max = parseDecimal(draft.maximumOrderQuantity);
-  const customDays =
-    draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null;
+  const customDays = draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null;
   const returnsChanged =
-    draft.returnPolicyChoice !== detail.returnPolicyChoice ||
-    customDays !== detail.customReturnWindowDays;
-  const qtyChanged =
-    min !== detail.minimumOrderQuantity || max !== detail.maximumOrderQuantity;
+    draft.returnPolicyChoice !== detail.returnPolicyChoice || customDays !== detail.customReturnWindowDays;
+  const qtyChanged = min !== detail.minimumOrderQuantity || max !== detail.maximumOrderQuantity;
   return {
     sellerSku: draft.sellerSku.trim() || null,
     status: draft.status !== detail.status ? draft.status : undefined,

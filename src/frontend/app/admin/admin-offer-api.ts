@@ -27,6 +27,10 @@ export interface AdminOfferRow {
   currency: string;
   availableUnits: number;
   lastUpdatedAt: string | null;
+  sellerDisplayName: string | null;
+  variantCode: string | null;
+  brandName: string | null;
+  primaryMediaAssetId: string | null;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -52,6 +56,10 @@ export function mapAdminOfferRow(value: unknown): AdminOfferRow | null {
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
     lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
+    sellerDisplayName: prop(item, "sellerDisplayName", "SellerDisplayName") == null ? null : text(prop(item, "sellerDisplayName", "SellerDisplayName")),
+    variantCode: prop(item, "variantCode", "VariantCode") == null ? null : text(prop(item, "variantCode", "VariantCode")),
+    brandName: prop(item, "brandName", "BrandName") == null ? null : text(prop(item, "brandName", "BrandName")),
+    primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
   };
 }
 
@@ -157,6 +165,14 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     productUnitName: prop(item, "productUnitName", "ProductUnitName") == null ? null : text(prop(item, "productUnitName", "ProductUnitName")),
     productUnitShortName: prop(item, "productUnitShortName", "ProductUnitShortName") == null ? null : text(prop(item, "productUnitShortName", "ProductUnitShortName")),
     inventoryLocations: mapInventoryLocations(prop(item, "inventoryLocations", "InventoryLocations")),
+    variantCode: prop(item, "variantCode", "VariantCode") == null ? null : text(prop(item, "variantCode", "VariantCode")),
+    primaryMediaAssetId: prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId") == null ? null : text(prop(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
+    fulfillmentResponsibility: (() => {
+      const raw = text(prop(item, "fulfillmentResponsibility", "FulfillmentResponsibility"));
+      return raw === "Seller" || raw === "Platform" ? raw : null;
+    })(),
+    fulfillmentShippingTypeId: prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId") == null ? null : text(prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId")),
+    lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
   };
 }
 

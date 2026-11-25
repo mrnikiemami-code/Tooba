@@ -20,7 +20,7 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
         var ids = catalogVariantIds.Distinct().ToArray();
         var variants = await db.Variants.AsNoTracking()
             .Where(x => ids.Contains(x.VariantId))
-            .Select(x => new { x.VariantId, x.ProductId })
+            .Select(x => new { x.VariantId, x.ProductId, x.CatalogCodeSeam })
             .ToListAsync(cancellationToken);
         var productIds = variants.Select(x => x.ProductId).Distinct().ToArray();
         var products = await db.Products.AsNoTracking()
@@ -48,6 +48,13 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
         var productMap = products.ToDictionary(x => x.ProductId);
         var unitMap = units.ToDictionary(x => x.UnitOfMeasureId);
         var translationMap = translations.GroupBy(x => x.UnitOfMeasureId).ToDictionary(x => x.Key, x => x.First());
+        var primaryMediaRows = await db.MediaReferences.AsNoTracking()
+            .Where(x => productIds.Contains(x.ProductId) && x.IsPrimary)
+            .Select(x => new { x.ProductId, x.MediaAssetId, x.DisplayOrder })
+            .ToListAsync(cancellationToken);
+        var primaryMedia = primaryMediaRows
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(x => x.Key, x => x.OrderBy(row => row.DisplayOrder).First().MediaAssetId);
 
         return variants.ToDictionary(x => x.VariantId, variant =>
         {
@@ -58,7 +65,9 @@ public sealed class CatalogOfferReadGateway(CatalogDbContext db) : ICatalogOffer
             return new CatalogOfferPresentation(
                 variant.VariantId, variant.ProductId,
                 titleMap.GetValueOrDefault(variant.ProductId) ?? string.Empty,
-                brand, unit?.Code, translation?.Name ?? unit?.Code, translation?.ShortName ?? unit?.Code);
+                brand, unit?.Code, translation?.Name ?? unit?.Code, translation?.ShortName ?? unit?.Code,
+                variant.CatalogCodeSeam,
+                primaryMedia.TryGetValue(variant.ProductId, out var mediaId) ? mediaId : null);
         });
     }
 }

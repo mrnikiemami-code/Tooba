@@ -1,0 +1,713 @@
+{
+  "checks": {
+    "form.adminCreate.tabs": {
+      "ok": true,
+      "detail": "مشخصات آفر|قیمت‌گذاری|تخفیفات|موجودی|ارسال|شرایط فروش|تاریخچه"
+    },
+    "form.adminCreate.dependentDisabled": {
+      "ok": true,
+      "detail": ""
+    },
+    "form.adminCreate.noAutoSelect": {
+      "ok": true,
+      "detail": ""
+    },
+    "form.adminCreate.routeVerified": {
+      "ok": true,
+      "detail": ""
+    },
+    "form.adminEdit.tabs": {
+      "ok": true,
+      "detail": "مشخصات آفر|قیمت‌گذاری|تخفیفات|موجودی|ارسال|شرایط فروش|تاریخچه"
+    },
+    "geometry.desktop.tab44": {
+      "ok": true,
+      "detail": "44"
+    },
+    "geometry.desktop.control37": {
+      "ok": true,
+      "detail": "37"
+    },
+    "geometry.desktop.cardRadius9": {
+      "ok": true,
+      "detail": "9px"
+    },
+    "tab.identity.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.identity.content": {
+      "ok": true,
+      "detail": "717"
+    },
+    "tab.identity.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.pricing.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.pricing.content": {
+      "ok": true,
+      "detail": "315"
+    },
+    "tab.pricing.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.discounts.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.discounts.content": {
+      "ok": true,
+      "detail": "189"
+    },
+    "tab.discounts.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.inventory.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.inventory.content": {
+      "ok": true,
+      "detail": "346"
+    },
+    "tab.inventory.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.shipping.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.shipping.content": {
+      "ok": true,
+      "detail": "256"
+    },
+    "tab.shipping.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.conditions.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.conditions.content": {
+      "ok": true,
+      "detail": "448"
+    },
+    "tab.conditions.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.history.renders": {
+      "ok": true,
+      "detail": ""
+    },
+    "tab.history.content": {
+      "ok": true,
+      "detail": "161"
+    },
+    "tab.history.onlyOne": {
+      "ok": true,
+      "detail": ""
+    },
+    "shipping.typeAvailable": {
+      "ok": true,
+      "detail": "01a16f43-6b4a-7000-8670-4c16e14c6345"
+    },
+    "persist.price": {
+      "ok": true,
+      "detail": "1234567"
+    },
+    "persist.sku": {
+      "ok": true,
+      "detail": "TB296-R7-V-1795584813924"
+    },
+    "persist.returns": {
+      "ok": true,
+      "detail": ""
+    },
+    "persist.qty": {
+      "ok": true,
+      "detail": ""
+    },
+    "persist.fulfillment": {
+      "ok": true,
+      "detail": "Platform/01a16f43-6b4a-7000-8670-4c16e14c6345"
+    },
+    "form.sellerEdit.tabs": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.shippingNoWrite": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.shippingReadOnly": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.inventoryPosition": {
+      "ok": true,
+      "detail": ""
+    },
+    "seller.pricePersist": {
+      "ok": true,
+      "detail": "3704749"
+    },
+    "seller.inventoryPersist": {
+      "ok": true,
+      "detail": "198"
+    },
+    "form.sellerCreate.tabs": {
+      "ok": true,
+      "detail": ""
+    },
+    "form.sellerCreate.fixedSeller": {
+      "ok": true,
+      "detail": ""
+    },
+    "list.admin.rows": {
+      "ok": true,
+      "detail": "10"
+    },
+    "list.admin.productRightmost": {
+      "ok": true,
+      "detail": "[{\"text\":\"عملیات\",\"x\":49,\"w\":76},{\"text\":\"محصول\",\"x\":923,\"w\":160},{\"text\":\"فروشنده\",\"x\":763,\"w\":160},{\"text\":\"کد کالا\",\"x\":633,\"w\":130},{\"text\":\"کانال\",\"x\":553,\"w\":80},{\"text\":\"قیمت\",\"x\":443,\"w\":110},{\"text\":\"موجودی\",\"x\":313,\"w\":130},{\"text\":\"وضعیت\",\"x\":203,\"w\":110},{\"text\":\"آخرین تغییر\",\"x\":73,\"w\":130}]"
+    },
+    "list.admin.actionsLeftmost": {
+      "ok": true,
+      "detail": "[{\"text\":\"عملیات\",\"x\":49,\"w\":76},{\"text\":\"محصول\",\"x\":923,\"w\":160},{\"text\":\"فروشنده\",\"x\":763,\"w\":160},{\"text\":\"کد کالا\",\"x\":633,\"w\":130},{\"text\":\"کانال\",\"x\":553,\"w\":80},{\"text\":\"قیمت\",\"x\":443,\"w\":110},{\"text\":\"موجودی\",\"x\":313,\"w\":130},{\"text\":\"وضعیت\",\"x\":203,\"w\":110},{\"text\":\"آخرین تغییر\",\"x\":73,\"w\":130}]"
+    },
+    "list.admin.order.1": {
+      "ok": true,
+      "detail": "محصول@923 > فروشنده@763"
+    },
+    "list.admin.order.2": {
+      "ok": true,
+      "detail": "فروشنده@763 > کد کالا@633"
+    },
+    "list.admin.order.3": {
+      "ok": true,
+      "detail": "کد کالا@633 > کانال@553"
+    },
+    "list.admin.order.4": {
+      "ok": true,
+      "detail": "کانال@553 > قیمت@443"
+    },
+    "list.admin.order.5": {
+      "ok": true,
+      "detail": "قیمت@443 > موجودی@313"
+    },
+    "list.admin.order.6": {
+      "ok": true,
+      "detail": "موجودی@313 > وضعیت@203"
+    },
+    "list.admin.order.7": {
+      "ok": true,
+      "detail": "وضعیت@203 > آخرین تغییر@73"
+    },
+    "list.admin.order.8": {
+      "ok": true,
+      "detail": "آخرین تغییر@73 > عملیات@49"
+    },
+    "list.admin.sellerColumn": {
+      "ok": true,
+      "detail": ""
+    },
+    "list.admin.sellerNameVisible": {
+      "ok": true,
+      "detail": "DEV-SEED OOS Seller | DEV-SEED OOS Seller | DEV-SEED OOS Seller"
+    },
+    "list.admin.jalaliDateVisible": {
+      "ok": true,
+      "detail": "۱۴۰۵/۰۹/۰۴ | ۱۴۰۵/۰۹/۰۴ | ۱۴۰۵/۰۹/۰۴"
+    },
+    "list.admin.currencyLabelVisible": {
+      "ok": true,
+      "detail": "۱٬۲۳۴٬۵۶۷ ریال | ۱٬۲۳۴٬۵۶۷ ریال | ۱٬۲۳۴٬۵۶۷ ریال"
+    },
+    "list.seller.rows": {
+      "ok": true,
+      "detail": "10"
+    },
+    "list.seller.productRightmost": {
+      "ok": true,
+      "detail": "[{\"text\":\"عملیات\",\"x\":49,\"w\":76},{\"text\":\"محصول\",\"x\":923,\"w\":160},{\"text\":\"کد کالا\",\"x\":793,\"w\":130},{\"text\":\"کانال\",\"x\":713,\"w\":80},{\"text\":\"قیمت\",\"x\":603,\"w\":110},{\"text\":\"موجودی\",\"x\":483,\"w\":120},{\"text\":\"وضعیت آفر\",\"x\":373,\"w\":110},{\"text\":\"آخرین تغییر\",\"x\":243,\"w\":130}]"
+    },
+    "list.seller.actionsLeftmost": {
+      "ok": true,
+      "detail": "[{\"text\":\"عملیات\",\"x\":49,\"w\":76},{\"text\":\"محصول\",\"x\":923,\"w\":160},{\"text\":\"کد کالا\",\"x\":793,\"w\":130},{\"text\":\"کانال\",\"x\":713,\"w\":80},{\"text\":\"قیمت\",\"x\":603,\"w\":110},{\"text\":\"موجودی\",\"x\":483,\"w\":120},{\"text\":\"وضعیت آفر\",\"x\":373,\"w\":110},{\"text\":\"آخرین تغییر\",\"x\":243,\"w\":130}]"
+    },
+    "list.seller.order.1": {
+      "ok": true,
+      "detail": "محصول@923 > کد کالا@793"
+    },
+    "list.seller.order.2": {
+      "ok": true,
+      "detail": "کد کالا@793 > کانال@713"
+    },
+    "list.seller.order.3": {
+      "ok": true,
+      "detail": "کانال@713 > قیمت@603"
+    },
+    "list.seller.order.4": {
+      "ok": true,
+      "detail": "قیمت@603 > موجودی@483"
+    },
+    "list.seller.order.5": {
+      "ok": true,
+      "detail": "موجودی@483 > وضعیت آفر@373"
+    },
+    "list.seller.order.6": {
+      "ok": true,
+      "detail": "وضعیت آفر@373 > آخرین تغییر@243"
+    },
+    "list.seller.order.7": {
+      "ok": true,
+      "detail": "آخرین تغییر@243 > عملیات@49"
+    },
+    "security.crossSellerDenied": {
+      "ok": true,
+      "detail": "404"
+    },
+    "overflow.adminEdit.360": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.adminEdit.768": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.adminEdit.1440": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "geometry.mobile.tab44": {
+      "ok": true,
+      "detail": "44"
+    },
+    "geometry.mobile.control44": {
+      "ok": true,
+      "detail": "44"
+    },
+    "geometry.mobile.actionBar": {
+      "ok": true,
+      "detail": ""
+    },
+    "geometry.tablet.control44": {
+      "ok": true,
+      "detail": "44"
+    },
+    "overflow.adminList.360": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.adminList.768": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.adminList.1440": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.sellerList.360": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.sellerList.768": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "overflow.sellerList.1440": {
+      "ok": true,
+      "detail": "{\"document\":0,\"body\":0}"
+    },
+    "orders.regression": {
+      "ok": true,
+      "detail": "10"
+    }
+  },
+  "errors": [],
+  "screenshots": [
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-admin-create-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\admin-tab-1-identity.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\admin-tab-2-pricing.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\admin-tab-3-discounts.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\admin-shipping-saved.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-seller-create-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-admin-edit-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-seller-edit-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\list-admin-final-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\list-seller-final-1440.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-admin-edit-360.png",
+    "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296\\evidence\\r7-runtime\\form-admin-edit-768.png"
+  ],
+  "artifact": {
+    "360": {
+      "sticky": {
+        "h": 198,
+        "w": 360,
+        "radius": "0px"
+      },
+      "tab": {
+        "h": 46,
+        "w": 105,
+        "radius": "0px"
+      },
+      "card": {
+        "h": 992,
+        "w": 338,
+        "radius": "9px"
+      },
+      "ctl": {
+        "h": 44,
+        "w": 310,
+        "radius": "6px"
+      }
+    },
+    "768": {
+      "sticky": {
+        "h": 202,
+        "w": 768,
+        "radius": "0px"
+      },
+      "tab": {
+        "h": 46,
+        "w": 114,
+        "radius": "0px"
+      },
+      "card": {
+        "h": 905,
+        "w": 740,
+        "radius": "9px"
+      },
+      "ctl": {
+        "h": 44,
+        "w": 712,
+        "radius": "6px"
+      }
+    },
+    "1440": {
+      "sticky": {
+        "h": 148,
+        "w": 1440,
+        "radius": "0px"
+      },
+      "tab": {
+        "h": 44,
+        "w": 114,
+        "radius": "0px"
+      },
+      "card": {
+        "h": 568,
+        "w": 1050,
+        "radius": "9px"
+      },
+      "ctl": {
+        "h": 37,
+        "w": 499,
+        "radius": "6px"
+      }
+    }
+  },
+  "ours": {
+    "360": {
+      "header": 224,
+      "tab": 44,
+      "input": 44,
+      "actionsBar": true
+    },
+    "768": {
+      "header": 193,
+      "input": 44
+    },
+    "1440": {
+      "header": {
+        "h": 160,
+        "w": 1122,
+        "radius": "0px"
+      },
+      "tab": {
+        "h": 44,
+        "font": "12.5px"
+      },
+      "input": {
+        "h": 37,
+        "radius": "6px"
+      },
+      "card": {
+        "radius": "9px"
+      }
+    }
+  },
+  "lists": {
+    "admin": {
+      "rows": 10,
+      "headers": [
+        {
+          "text": "عملیات",
+          "x": 49,
+          "w": 76
+        },
+        {
+          "text": "محصول",
+          "x": 923,
+          "w": 160
+        },
+        {
+          "text": "فروشنده",
+          "x": 763,
+          "w": 160
+        },
+        {
+          "text": "کد کالا",
+          "x": 633,
+          "w": 130
+        },
+        {
+          "text": "کانال",
+          "x": 553,
+          "w": 80
+        },
+        {
+          "text": "قیمت",
+          "x": 443,
+          "w": 110
+        },
+        {
+          "text": "موجودی",
+          "x": 313,
+          "w": 130
+        },
+        {
+          "text": "وضعیت",
+          "x": 203,
+          "w": 110
+        },
+        {
+          "text": "آخرین تغییر",
+          "x": 73,
+          "w": 130
+        }
+      ]
+    },
+    "seller": {
+      "rows": 10,
+      "headers": [
+        {
+          "text": "عملیات",
+          "x": 49,
+          "w": 76
+        },
+        {
+          "text": "محصول",
+          "x": 923,
+          "w": 160
+        },
+        {
+          "text": "کد کالا",
+          "x": 793,
+          "w": 130
+        },
+        {
+          "text": "کانال",
+          "x": 713,
+          "w": 80
+        },
+        {
+          "text": "قیمت",
+          "x": 603,
+          "w": 110
+        },
+        {
+          "text": "موجودی",
+          "x": 483,
+          "w": 120
+        },
+        {
+          "text": "وضعیت آفر",
+          "x": 373,
+          "w": 110
+        },
+        {
+          "text": "آخرین تغییر",
+          "x": 243,
+          "w": 130
+        }
+      ]
+    }
+  },
+  "createAttempts": [
+    {
+      "index": 0,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 1,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 2,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 3,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 4,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 5,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 6,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 7,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 8,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    },
+    {
+      "index": 9,
+      "error": "ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"
+    }
+  ],
+  "createFallback": true,
+  "createdOfferId": "6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f",
+  "adminReread": {
+    "offerId": "6a0cd198-c5f6-fc58-6aa0-ad7d26a70d6f",
+    "sellerPartyId": "01a0ba10-59f0-7000-b2a7-71ce300a8128",
+    "sellerDisplayName": "DEV-SEED OOS Seller",
+    "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+    "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+    "productTitle": "سامسونگ هدفون سری 1",
+    "brandName": "Samsung",
+    "sellerSku": "TB296-R7-V-1795584813924",
+    "status": "Draft",
+    "channel": "Marketplace",
+    "amount": 1234567,
+    "currency": "IRR",
+    "onHand": 0,
+    "reserved": 0,
+    "availableUnits": 0,
+    "catalogReadOnly": true,
+    "returnPolicyChoice": "Custom",
+    "customReturnWindowDays": 9,
+    "defaultReturnWindowDays": 7,
+    "sellerCanOverrideReturnPolicy": true,
+    "minReturnWindowDays": 1,
+    "maxReturnWindowDays": 30,
+    "allowNonReturnableOffers": true,
+    "minimumOrderQuantity": 2,
+    "maximumOrderQuantity": 6,
+    "productUnitCode": "pcs",
+    "productUnitName": "عدد",
+    "productUnitShortName": "عدد",
+    "variantCode": "DEMO-demo-prod-av-audio-headphones-1-2",
+    "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+    "fulfillmentResponsibility": "Platform",
+    "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345",
+    "lastUpdatedAt": "2026-11-25T05:34:28.136013+00:00"
+  },
+  "sellerReread": {
+    "offerId": "457e375f-ceec-4b66-b81e-3829c4e15893",
+    "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "sellerDisplayName": "فروشگاه آرمان",
+    "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+    "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+    "productTitle": "سامسونگ هدفون سری 1",
+    "brandName": "Samsung",
+    "sellerSku": "VAR-01a053886ce870009cd266df593dd1ff",
+    "status": "Active",
+    "channel": "Marketplace",
+    "amount": 3704749,
+    "currency": "IRR",
+    "onHand": 198,
+    "reserved": 0,
+    "availableUnits": 198,
+    "catalogReadOnly": true,
+    "returnPolicyChoice": "Default",
+    "defaultReturnWindowDays": 7,
+    "sellerCanOverrideReturnPolicy": true,
+    "minReturnWindowDays": 1,
+    "maxReturnWindowDays": 30,
+    "allowNonReturnableOffers": true,
+    "minimumOrderQuantity": 1,
+    "maximumOrderQuantity": 20,
+    "productUnitCode": "pcs",
+    "productUnitName": "عدد",
+    "productUnitShortName": "عدد",
+    "inventoryLocations": [
+      {
+        "stockItemId": "29f8c34d-1429-4263-84da-8df48d2633a5",
+        "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+        "locationCode": "WH-DEMO-THR",
+        "onHand": 198,
+        "reserved": 0,
+        "available": 198
+      }
+    ],
+    "variantCode": "DEMO-demo-prod-av-audio-headphones-1-2",
+    "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+    "fulfillmentResponsibility": "Platform",
+    "fulfillmentShippingTypeId": "01a1785e-01f3-7000-b50d-d6372e756f89",
+    "lastUpdatedAt": "2026-11-08T03:18:08.044785+00:00"
+  },
+  "overflowEdit": {
+    "360": {
+      "document": 0,
+      "body": 0
+    },
+    "768": {
+      "document": 0,
+      "body": 0
+    },
+    "1440": {
+      "document": 0,
+      "body": 0
+    }
+  },
+  "overflowList": {
+    "360": {
+      "document": 0,
+      "body": 0
+    },
+    "768": {
+      "document": 0,
+      "body": 0
+    },
+    "1440": {
+      "document": 0,
+      "body": 0
+    }
+  },
+  "overflowSellerList": {
+    "360": {
+      "document": 0,
+      "body": 0
+    },
+    "768": {
+      "document": 0,
+      "body": 0
+    },
+    "1440": {
+      "document": 0,
+      "body": 0
+    }
+  },
+  "ordersRows": 10,
+  "pass": true
+}

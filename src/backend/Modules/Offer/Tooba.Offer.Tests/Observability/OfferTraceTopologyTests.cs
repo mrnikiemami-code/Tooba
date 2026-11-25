@@ -51,6 +51,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IClock>(_ => new FixedClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         var sp = services.BuildServiceProvider();
         var composer = sp.GetRequiredService<OfferReadModelComposer>();
 
@@ -88,6 +89,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IOfferStore, MemoryOfferStore>();
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         services.AddToobaCqrsFoundation(typeof(CreateOfferCommand).Assembly);
         var sp = services.BuildServiceProvider();
         var sender = sp.GetRequiredService<MediatR.ISender>();

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Shared Offer workspace contracts (TB-296).
  *
  * These types describe the real HTTP-visible Offer read model plus a small adapter surface.
@@ -58,6 +58,11 @@ export interface OfferWorkspaceDetail {
   productUnitName: string | null;
   productUnitShortName: string | null;
   inventoryLocations: OfferInventoryLocation[];
+  variantCode: string | null;
+  primaryMediaAssetId: string | null;
+  fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
+  fulfillmentShippingTypeId: string | null;
+  lastUpdatedAt: string | null;
 }
 
 export interface OfferSellerOption {
@@ -71,6 +76,8 @@ export interface OfferVariantOption {
   productTitle: string;
   catalogCode: string | null;
   productStatus: string;
+  primaryMediaAssetId?: string | null;
+  brandName?: string | null;
 }
 
 export interface OfferShippingTypeOption {

@@ -43,6 +43,10 @@ export interface SellerOfferListRow {
   currency: string;
   availableUnits: number;
   lastUpdatedAt: string | null;
+  sellerDisplayName: string | null;
+  variantCode: string | null;
+  primaryMediaAssetId: string | null;
+  brandName: string | null;
 }
 
 export interface SellerOfferDetail {
@@ -75,6 +79,11 @@ export interface SellerOfferDetail {
   productUnitName: string | null;
   productUnitShortName: string | null;
   inventoryLocations: SellerInventoryLocation[];
+  variantCode: string | null;
+  primaryMediaAssetId: string | null;
+  fulfillmentResponsibility: "Seller" | "Platform" | null;
+  fulfillmentShippingTypeId: string | null;
+  lastUpdatedAt: string | null;
 }
 
 export interface SellerInventoryLocation {
@@ -381,6 +390,10 @@ export function mapSellerOfferList(payload: unknown): SellerOfferListRow[] {
         currency: asString(readProp(item, "currency", "Currency"), "IRR"),
         availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
         lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
+        sellerDisplayName: asNullableString(readProp(item, "sellerDisplayName", "SellerDisplayName")),
+        variantCode: asNullableString(readProp(item, "variantCode", "VariantCode")),
+        primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
+        brandName: asNullableString(readProp(item, "brandName", "BrandName")),
       };
     })
     .filter((row) => row.offerId.length > 0);
@@ -449,6 +462,16 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
             .filter((row) => row.stockItemId.length > 0)
         : [];
     })(),
+    variantCode: asNullableString(readProp(item, "variantCode", "VariantCode")),
+    primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
+    fulfillmentResponsibility: (() => {
+      const raw = asString(readProp(item, "fulfillmentResponsibility", "FulfillmentResponsibility"));
+      return raw === "Seller" || raw === "Platform" ? raw : null;
+    })(),
+    fulfillmentShippingTypeId: asNullableString(
+      readProp(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId"),
+    ),
+    lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
   };
 }
 

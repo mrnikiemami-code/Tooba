@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Contracts.Dtos;
+﻿namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
 /// ردیف فهرست Offer فروشنده. Product.Price و Product.Stock ندارد.
@@ -13,7 +13,11 @@ public sealed record SellerOfferListItem(
     decimal? Amount,
     string Currency,
     decimal AvailableUnits,
-    DateTimeOffset? LastUpdatedAt);
+    DateTimeOffset? LastUpdatedAt,
+    string? SellerDisplayName = null,
+    string? VariantCode = null,
+    Guid? PrimaryMediaAssetId = null,
+    string? BrandName = null);
 
 /// <summary>
 /// جزئیات Offer فروشنده با زمینهٔ فقط‌خواندنی Catalog.
@@ -47,7 +51,12 @@ public sealed record SellerOfferDetailPage(
     string? ProductUnitCode = null,
     string? ProductUnitName = null,
     string? ProductUnitShortName = null,
-    IReadOnlyList<SellerOfferInventoryLocation>? InventoryLocations = null);
+    IReadOnlyList<SellerOfferInventoryLocation>? InventoryLocations = null,
+    string? VariantCode = null,
+    Guid? PrimaryMediaAssetId = null,
+    OfferFulfillmentResponsibility? FulfillmentResponsibility = null,
+    Guid? FulfillmentShippingTypeId = null,
+    DateTimeOffset? LastUpdatedAt = null);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(

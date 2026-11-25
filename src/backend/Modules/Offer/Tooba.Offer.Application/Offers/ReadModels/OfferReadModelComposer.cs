@@ -1,4 +1,4 @@
-using Tooba.BuildingBlocks;
+﻿using Tooba.BuildingBlocks;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
 using Tooba.Inventory.Contracts.Availability;
@@ -9,6 +9,7 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
+using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Contracts.ReturnPolicy;
 using Tooba.Offer.Domain.Aggregates;
 using Tooba.BuildingBlocks.Results;
@@ -25,6 +26,7 @@ public sealed class OfferReadModelComposer(
     ISellerOfferInventoryGateway inventory,
     IPartyLookup parties,
     IReturnPolicyResolver returnPolicies,
+    IOfferFulfillmentAssignmentLookup fulfillmentAssignments,
     IClock clock)
 {
     private const string DefaultMarket = "IR";
@@ -42,6 +44,8 @@ public sealed class OfferReadModelComposer(
         var prices = await pricing.ResolvePricesBatchAsync(
             offerIds, DefaultMarket, SalesChannel.Marketplace, DefaultCurrency, clock.UtcNow, cancellationToken);
         var stocks = await inventory.GetAvailabilityAsync(offerIds, cancellationToken);
+        var sellerNames = await parties.GetDisplayNamesAsync(
+            offers.Select(x => x.SellerPartyId).Distinct().ToArray(), cancellationToken);
         return offers.Select(offer =>
         {
             catalogRows.TryGetValue(offer.CatalogVariantId, out var product);
@@ -50,7 +54,11 @@ public sealed class OfferReadModelComposer(
             return new SellerOfferListItem(
                 offer.OfferId, offer.CatalogVariantId, product?.ProductId,
                 product?.ProductTitle ?? string.Empty, offer.SellerSku, offer.Status.ToString(),
-                price?.Amount, price?.Currency ?? DefaultCurrency, stock?.Available ?? 0, offer.UpdatedAt);
+                price?.Amount, price?.Currency ?? DefaultCurrency, stock?.Available ?? 0, offer.UpdatedAt,
+                sellerNames.GetValueOrDefault(offer.SellerPartyId),
+                product?.VariantCode,
+                product?.PrimaryMediaAssetId,
+                product?.BrandName);
         }).ToArray();
     }
 
@@ -66,6 +74,8 @@ public sealed class OfferReadModelComposer(
         stocks.TryGetValue(offer.OfferId, out var stock);
         var seller = await parties.FindByIdAsync(offer.SellerPartyId, cancellationToken);
         var options = returnPolicies.Options;
+        var assignments = await fulfillmentAssignments.GetAssignmentsAsync([offer.OfferId], cancellationToken);
+        assignments.TryGetValue(offer.OfferId, out var fulfillment);
         return new SellerOfferDetailPage(
             offer.OfferId, offer.SellerPartyId, seller?.DisplayName ?? string.Empty,
             offer.CatalogVariantId, product?.ProductId, product?.ProductTitle ?? string.Empty,
@@ -82,7 +92,12 @@ public sealed class OfferReadModelComposer(
                 location.LocationCode,
                 location.OnHand,
                 location.Reserved,
-                location.Available)).ToList());
+                location.Available)).ToList(),
+            product?.VariantCode,
+            product?.PrimaryMediaAssetId,
+            fulfillment?.Responsibility,
+            fulfillment?.ShippingTypeId,
+            offer.UpdatedAt);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

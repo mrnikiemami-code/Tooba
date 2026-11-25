@@ -1,4 +1,4 @@
-export { OfferWorkspace } from "./offer-workspace";
+﻿export { OfferWorkspace } from "./offer-workspace";
 export { offerWorkspaceMessages } from "./messages";
 export type { OfferWorkspaceProps } from "./offer-workspace";
 export {
@@ -8,6 +8,7 @@ export {
   draftFromDetail,
   errorLabel,
   faMoney,
+  formatAmountDisplay,
   faNumber,
   inventoryDirty,
   normalizeDigits,

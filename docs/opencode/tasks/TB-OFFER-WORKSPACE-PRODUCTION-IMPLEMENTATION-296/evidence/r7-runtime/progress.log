@@ -1,0 +1,7 @@
+2026-11-25T05:33:33.895Z artifact-geometry-done
+2026-11-25T05:34:23.968Z create-attempts [{"index":0,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":1,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":2,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":3,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":4,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":5,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":6,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":7,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":8,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"},{"index":9,"error":"ذخیره انجام نشدoffer.listing.duplicate_activeتلاش دوباره"}]
+2026-11-25T05:34:28.454Z admin-mutations-done
+2026-11-25T05:34:29.857Z seller-mutations-done
+2026-11-25T05:34:32.893Z form-routes-done
+2026-11-25T05:34:37.242Z lists-done
+2026-11-25T05:34:37.277Z security-done

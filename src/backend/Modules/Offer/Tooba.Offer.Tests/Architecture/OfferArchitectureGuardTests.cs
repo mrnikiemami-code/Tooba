@@ -537,6 +537,7 @@ public sealed class OfferArchitectureGuardTests
                 "ProductWorkspace",
                 "Tooba.ProductWorkspace.Application",
                 "Composition",
+                "ProductManagement",
                 "Queries",
                 "GetProductWorkspaceHandler.cs"),
             Path.Combine(

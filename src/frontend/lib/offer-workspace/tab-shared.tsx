@@ -1,11 +1,12 @@
 ﻿import type { ReactNode } from "react";
-import { Badge } from "../../design-system";
+import { AlertTriangle, Info } from "lucide-react";
+import styles from "./offer-workspace.module.css";
 
-export function TabHeading({ title, hint }: { title: string; hint?: string }) {
+export function SectionTitle({ title, desc }: { title: string; desc?: string }) {
   return (
-    <div className="mb-3">
-      <h3 className="text-base font-semibold">{title}</h3>
-      {hint ? <p className="mt-1 text-xs leading-5 text-muted">{hint}</p> : null}
+    <div className={styles.cardHdMain}>
+      <h2 className={styles.cardTitle}>{title}</h2>
+      {desc ? <p className={styles.cardDesc}>{desc}</p> : null}
     </div>
   );
 }
@@ -14,45 +15,61 @@ export function Note({
   tone = "neutral",
   children,
 }: {
-  tone?: "neutral" | "warning" | "danger";
+  tone?: "neutral" | "info" | "warning" | "danger" | "ok";
   children: ReactNode;
 }) {
   const cls =
     tone === "warning"
-      ? "border-warning/40 bg-warning/10"
+      ? styles.bannerWarn
       : tone === "danger"
-        ? "border-danger/40 bg-danger/10"
-        : "border-border bg-secondary/40";
-  return <div className={`rounded-ds border px-3 py-2 text-xs leading-5 ${cls}`}>{children}</div>;
+        ? styles.bannerDanger
+        : tone === "info"
+          ? styles.bannerInfo
+          : tone === "ok"
+            ? styles.bannerOk
+            : "";
+  return (
+    <div className={`${styles.banner} ${cls}`} role={tone === "danger" ? "alert" : undefined}>
+      {tone === "danger" || tone === "warning" ? <AlertTriangle size={14} aria-hidden /> : tone === "info" ? <Info size={14} aria-hidden /> : null}
+      <div>{children}</div>
+    </div>
+  );
 }
 
 export function FieldRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="grid gap-0.5">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="break-words text-sm font-medium">{value}</dd>
+    <div className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <div className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center" }}>
+        {value}
+      </div>
     </div>
   );
 }
 
 export function StatusPill({ status, label }: { status: string; label: string }) {
-  const tone =
+  const cls =
     status === "Active"
-      ? "success"
+      ? styles.pillOk
       : status === "Suspended"
-        ? "warning"
+        ? styles.pillWarn
         : status === "Archived"
-          ? "neutral"
-          : "pending";
-  return <Badge tone={tone}>{label}</Badge>;
+          ? styles.pillNeutral
+          : styles.pillWarn;
+  return <span className={`${styles.pill} ${cls}`}>{label}</span>;
 }
 
 export function DirtyDot({ show, label }: { show: boolean; label: string }) {
   if (!show) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] text-warning" title={label}>
-      <span className="h-1.5 w-1.5 rounded-full bg-warning" aria-hidden="true" />
-      {label}
-    </span>
+    <span className={styles.tabDot} title={label} aria-label={label} role="img" />
   );
+}
+
+export function ReadOnlyChip({ children }: { children: ReactNode }) {
+  return <span className={styles.chip}>{children}</span>;
+}
+
+export function InfoIcon() {
+  return <Info size={14} aria-hidden />;
 }

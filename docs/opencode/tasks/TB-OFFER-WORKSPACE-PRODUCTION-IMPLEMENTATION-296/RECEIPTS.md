@@ -39,3 +39,25 @@ All paths relative to the worktree root. Worker PASS ≠ Architect ACCEPT.
 
 ## Gated (not fabricated)
 Per-offer discount definition (Promotion), offer history read projection, per-offer shipping service assignment (Stage-3), Pricing multi-currency/validity price-list read, fulfillment responsibility read-back.
+
+## R7 receipts (visual & UX parity)
+| Command / artifact | Result | Evidence |
+|---|---|---|
+| `next build` | EXIT 0, BUILD_ID `iLmDj6VKtku_4lD1PdAtc` | `evidence/r7-build-final14.log` (SHA-256 526F1EBA…8B26) |
+| `tsc --noEmit` | EXIT 0 | `evidence/r7-typecheck11.log` (3AC06398…64B9) |
+| `next lint` | EXIT 0, no changed-file warnings | `evidence/r7-lint11.log` (8AFC9DE3…3371) |
+| focused frontend tests | 29/29 | `evidence/frontend-focused-tests.log` (R6 suite; R7 code verified by same 29 tests) |
+| Offer module tests | 97/97 | `evidence/r7-offer-tests.log` (8C1AD49E…17EF) |
+| Stage-2 cart campaign | 2/2 | `evidence/r7-stage2-campaign-cart.log` (7C7BFE55…167D) |
+| live Playwright verify | PASS | `evidence/r7-runtime/verify-r7.json` (FFD3DE6B…6823) |
+| Impeccable detector | `[]` | `evidence/r7-impeccable-detect.json` (2708BE57…F761) |
+| OpenSpec strict | valid | `evidence/r7-openspec-validate.log` |
+
+Runtime facts:
+- Lists: product x=903 rightmost after selection; actions x=49 leftmost; rows 10/10; order chain product→seller→sku→channel→price→available→status→date→actions all pass.
+- Geometry: tabs 44; controls 37 desktop / 44 mobile; card radius 9px; header 160/193/224 vs artifact 148/202/198 at 1440/768/360.
+- Persistence: admin price 1234567, unique SKU, returns Custom/9, qty 2..6, fulfillment responsibility/type re-read; seller 457e price 3704749/onHand 198 persisted then restored 3704748/199.
+- Security: cross-seller offer read 404; seller has no shipping write.
+- Overflow 0 at 360/768/1440 for both form and lists.
+- Create fallback note: final round reused a Draft after 10 duplicate-active attempts; earlier rounds created real drafts (a3aa67a4…, f5fd1b05…).
+- Test maintenance (no product behavior): Offer endpoint manifest expanded to the real 10 endpoint-reachable requests; stale ProductWorkspace guard path corrected; `TestFulfillmentAssignments` added for Offer unit/observability DI. Offer tests 97/97 after these fixes.

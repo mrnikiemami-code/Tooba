@@ -1,11 +1,12 @@
 ﻿"use client";
 
 import type { ReactNode } from "react";
-import { Input, Select } from "../../design-system";
+import { ShieldCheck, Undo2 } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
-import { allowedStatuses, deriveBuyability, faNumber } from "./model";
-import { DirtyDot, Note, TabHeading } from "./tab-shared";
+import { allowedStatuses, deriveBuyability, faNumber, statusLabel } from "./model";
+import styles from "./offer-workspace.module.css";
+import { DirtyDot, Note, SectionTitle } from "./tab-shared";
 
 export interface ConditionsTabProps {
   t: OfferWorkspaceMessages;
@@ -27,120 +28,136 @@ export interface ConditionsTabProps {
 
 export function ConditionsTab(props: ConditionsTabProps) {
   const { t, locale, detail } = props;
-  const buyability = deriveBuyability({
-    status: props.status,
-    amount: detail.amount,
-    availableUnits: detail.availableUnits,
-  });
+  const buyability = deriveBuyability({ status: props.status, amount: detail.amount, availableUnits: detail.availableUnits });
   const statuses = allowedStatuses(detail.status);
   const archived = detail.status === "Archived";
-  const returnOptions: Array<{ value: string; label: string }> = [
-    { value: "Default", label: t.returnDefault },
-  ];
+  const returnOptions: Array<{ value: string; label: string }> = [{ value: "Default", label: t.returnDefault }];
   if (detail.sellerCanOverrideReturnPolicy) {
     returnOptions.push({ value: "Custom", label: t.returnCustom });
-    if (detail.allowNonReturnableOffers) {
-      returnOptions.push({ value: "NonReturnable", label: t.returnNonReturnable });
-    }
+    if (detail.allowNonReturnableOffers) returnOptions.push({ value: "NonReturnable", label: t.returnNonReturnable });
   }
 
   return (
-    <div data-testid="offer-tab-conditions" className="grid gap-6">
-      <section>
-        <TabHeading title={t.returnPolicy} hint={t.returnWindowHint + ` ${detail.defaultReturnWindowDays}`} />
-        <label className="flex max-w-md flex-col gap-1 text-sm">
-          <span className="flex items-center gap-2">
-            {t.returnPolicy}
-            <DirtyDot show={props.dirty} label={t.dirtyTab} />
-          </span>
-          <Select
-            value={props.returnPolicyChoice}
-            onChange={(event) => props.onReturnPolicyChange(event.target.value)}
-            disabled={!detail.sellerCanOverrideReturnPolicy && props.returnPolicyChoice === "Default"}
-            data-testid="offer-return-policy"
-          >
-            {returnOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
-          <span className="text-xs text-muted">
-            {detail.sellerCanOverrideReturnPolicy
-              ? `${t.returnWindowHint}: ${detail.defaultReturnWindowDays} · ${detail.minReturnWindowDays}–${detail.maxReturnWindowDays}`
-              : t.returnSellerCannotOverride}
-          </span>
-        </label>
-        {props.returnPolicyChoice === "Custom" ? (
-          <label className="mt-2 flex max-w-md flex-col gap-1 text-sm">
-            {t.returnCustomDays}
-            <Input
-              value={props.customReturnWindowDays}
-              onChange={(event) => props.onCustomReturnWindowChange(event.target.value)}
-              inputMode="numeric"
-              dir="ltr"
-              data-testid="offer-custom-return-days"
-            />
-          </label>
-        ) : null}
-      </section>
-
-      <section>
-        <TabHeading title={`${t.minQty} / ${t.maxQty}`} hint={t.unitReadOnly} />
-        <div className="grid max-w-lg gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
-            {t.minQty}
-            <Input
-              value={props.minimumOrderQuantity}
-              onChange={(event) => props.onMinQtyChange(event.target.value)}
-              inputMode="decimal"
-              dir="ltr"
-              data-testid="offer-min-qty"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            {t.maxQty}
-            <Input
-              value={props.maximumOrderQuantity}
-              onChange={(event) => props.onMaxQtyChange(event.target.value)}
-              inputMode="decimal"
-              dir="ltr"
-              data-testid="offer-max-qty"
-            />
-          </label>
-        </div>
-        <p className="mt-2 text-xs text-muted" data-testid="offer-product-unit">
-          {t.unit}: {detail.productUnitName ?? detail.productUnitCode ?? "—"}
-          {detail.productUnitShortName ? ` (${detail.productUnitShortName})` : ""}
-        </p>
-        <Note>{t.roundingNeedsContract}</Note>
-      </section>
-
-      <section>
-        <TabHeading title={t.lifecycle} />
-        <div className="grid max-w-md gap-2">
-          <Select
-            value={props.status}
-            onChange={(event) => props.onStatusChange(event.target.value)}
-            disabled={archived}
-            data-testid="offer-lifecycle"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {statusLabel(t, status)}
-              </option>
-            ))}
-          </Select>
-          {archived ? <Note tone="warning">{t.archivedLocked}</Note> : null}
-          <div className="rounded-ds border border-border px-3 py-2 text-sm" data-testid="offer-buyability">
-            <span className="text-muted">{buyability.buyable ? t.buyable : t.notBuyable}</span>
-            {buyability.reason ? (
-              <span className="ms-2 text-xs text-danger">{buyabilityReason(t, buyability.reason)}</span>
-            ) : null}
+    <div className={styles.stack} data-testid="offer-tab-conditions">
+      <section className={styles.card}>
+        <header className={styles.cardHd}>
+          <SectionTitle title={t.quantityTitle} desc={t.unitHint} />
+        </header>
+        <div className={styles.cardBd}>
+          <div className={styles.tilesFour}>
+            <Tile label={t.unit} value={detail.productUnitName ?? detail.productUnitCode ?? "—"} />
+            <Tile label={t.precision} value="از محصول" />
+            <Tile label={t.step} value="از محصول" />
+            <Tile label={t.rounding} value="از محصول" />
           </div>
-          <span className="text-xs text-muted">
-            {t.inventoryAvailable}: {faNumber(detail.availableUnits, locale)}
-          </span>
+          <div className={styles.formGrid} style={{ marginTop: 14 }}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{t.minQty}</span>
+              <input
+                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
+                value={props.minimumOrderQuantity}
+                onChange={(event) => props.onMinQtyChange(event.target.value)}
+                inputMode="decimal"
+                dir="ltr"
+                data-testid="offer-min-qty"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{t.maxQty}</span>
+              <input
+                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
+                value={props.maximumOrderQuantity}
+                onChange={(event) => props.onMaxQtyChange(event.target.value)}
+                inputMode="decimal"
+                dir="ltr"
+                data-testid="offer-max-qty"
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.card}>
+        <header className={styles.cardHd}>
+          <SectionTitle title={t.returnPolicy} desc={t.returnPolicyDesc} />
+        </header>
+        <div className={styles.cardBd}>
+          <label className={styles.field} style={{ maxWidth: 460 }}>
+            <span className={styles.fieldLabel}>
+              {t.returnPolicy}
+              <DirtyDot show={props.dirty} label={t.dirtyTab} />
+            </span>
+            <select
+              className={`${styles.ctl} ${styles.select}`}
+              value={props.returnPolicyChoice}
+              onChange={(event) => props.onReturnPolicyChange(event.target.value)}
+              disabled={!detail.sellerCanOverrideReturnPolicy && props.returnPolicyChoice === "Default"}
+              data-testid="offer-return-policy"
+            >
+              {returnOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <span className={styles.fieldHint}>
+              {detail.sellerCanOverrideReturnPolicy
+                ? `${t.returnWindowHint}: ${detail.defaultReturnWindowDays} · ${detail.minReturnWindowDays}–${detail.maxReturnWindowDays}`
+                : t.returnSellerCannotOverride}
+            </span>
+          </label>
+          {props.returnPolicyChoice === "Custom" ? (
+            <label className={styles.field} style={{ marginTop: 10, maxWidth: 460 }}>
+              <span className={styles.fieldLabel}>{t.returnCustomDays}</span>
+              <input
+                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
+                value={props.customReturnWindowDays}
+                onChange={(event) => props.onCustomReturnWindowChange(event.target.value)}
+                inputMode="numeric"
+                dir="ltr"
+                data-testid="offer-custom-return-days"
+              />
+            </label>
+          ) : null}
+          <div style={{ marginTop: 12 }}>
+            <Note tone="info"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Undo2 size={13} aria-hidden /> {t.returnWindowHint}: {detail.defaultReturnWindowDays}</span></Note>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.card}>
+        <header className={styles.cardHd}>
+          <SectionTitle title={t.lifecycle} />
+        </header>
+        <div className={styles.cardBd}>
+          <div className={styles.formGrid}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{t.lifecycle}</span>
+              <select
+                className={`${styles.ctl} ${styles.select}`}
+                value={props.status}
+                onChange={(event) => props.onStatusChange(event.target.value)}
+                disabled={archived}
+                data-testid="offer-lifecycle"
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>{statusLabel(t, status)}</option>
+                ))}
+              </select>
+              {archived ? <span className={styles.fieldHint}>{t.archivedLocked}</span> : null}
+            </label>
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>{t.buy}</span>
+              <div className={styles.row}>
+                <span className={`${styles.pill} ${buyability.buyable ? styles.pillOk : styles.pillWarn}`} data-testid="offer-buyability">
+                  <ShieldCheck size={12} aria-hidden />
+                  {buyability.buyable ? t.buyable : t.notBuyable}
+                </span>
+                <span className={styles.resultMeta}>
+                  {t.inventoryAvailable}: {faNumber(detail.availableUnits, locale)}
+                </span>
+              </div>
+              {buyability.reason ? <span className={styles.fieldHint}>{buyabilityReason(t, buyability.reason)}</span> : null}
+            </div>
+          </div>
         </div>
       </section>
       {props.extra ? <div>{props.extra}</div> : null}
@@ -148,19 +165,13 @@ export function ConditionsTab(props: ConditionsTabProps) {
   );
 }
 
-function statusLabel(t: OfferWorkspaceMessages, status: string): string {
-  switch (status) {
-    case "Draft":
-      return t.lifecycleDraft;
-    case "Active":
-      return t.lifecycleActive;
-    case "Suspended":
-      return t.lifecycleSuspended;
-    case "Archived":
-      return t.lifecycleArchived;
-    default:
-      return status;
-  }
+function Tile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.tile}>
+      <div className={styles.tileK}>{label}</div>
+      <div className={styles.tileV} style={{ fontSize: 13 }}>{value}</div>
+    </div>
+  );
 }
 
 function buyabilityReason(t: OfferWorkspaceMessages, reason: string): string {

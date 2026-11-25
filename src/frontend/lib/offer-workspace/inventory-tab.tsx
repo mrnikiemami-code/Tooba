@@ -1,10 +1,11 @@
 ﻿"use client";
 
-import { Input } from "../../design-system";
+import { Warehouse } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
 import { faNumber, parseDecimal } from "./model";
-import { DirtyDot, Note, TabHeading } from "./tab-shared";
+import styles from "./offer-workspace.module.css";
+import { DirtyDot, Note, SectionTitle } from "./tab-shared";
 
 export interface InventoryTabProps {
   t: OfferWorkspaceMessages;
@@ -22,94 +23,106 @@ export function InventoryTab(props: InventoryTabProps) {
   const totalOnHand = detail.inventoryLocations.reduce((sum, row) => sum + row.onHand, 0);
   const totalReserved = detail.inventoryLocations.reduce((sum, row) => sum + row.reserved, 0);
   const totalAvailable = detail.inventoryLocations.reduce((sum, row) => sum + row.available, 0);
+  const noPositions = detail.inventoryLocations.length === 0;
 
   return (
-    <div data-testid="offer-tab-inventory">
-      <TabHeading title={t.inventoryTab} hint={t.inventoryReservedReadOnly} />
-      <dl className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <Summary label={t.inventoryPhysical} value={faNumber(totalOnHand, locale)} testId="offer-inventory-total-onhand" />
-        <Summary label={t.inventoryReserved} value={faNumber(totalReserved, locale)} testId="offer-inventory-total-reserved" />
-        <Summary label={t.inventoryAvailable} value={faNumber(totalAvailable, locale)} testId="offer-inventory-total-available" />
-      </dl>
-      {detail.inventoryLocations.length === 0 ? (
-        <Note tone="warning">{t.inventoryNoPositions}</Note>
-      ) : (
-        <div className="overflow-x-auto rounded-ds border border-border">
-          <table className="w-full min-w-[36rem] text-sm">
-            <thead className="bg-secondary/60 text-xs text-muted">
-              <tr>
-                <th className="px-3 py-2 text-start">{t.inventoryLocation}</th>
-                <th className="px-3 py-2 text-start">{t.inventoryOnHand}</th>
-                <th className="px-3 py-2 text-start">{t.inventoryReserved}</th>
-                <th className="px-3 py-2 text-start">{t.inventoryAvailable}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.inventoryLocations.map((row) => {
-                const value = parseDecimal(props.onHand[row.stockItemId]);
-                const invalid = value != null && (value < 0 || value < row.reserved);
-                return (
-                  <tr key={row.stockItemId} data-testid="offer-inventory-row" data-stock-item-id={row.stockItemId}>
-                    <td className="px-3 py-2">
-                      <span className="block font-medium" dir="ltr">
-                        {row.locationCode}
-                      </span>
-                      <span className="block text-[11px] text-muted" dir="ltr">
-                        {row.locationId}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="max-w-32"
-                        value={props.onHand[row.stockItemId] ?? ""}
-                        onChange={(event) => props.onOnHandChange(row.stockItemId, event.target.value)}
-                        inputMode="decimal"
-                        dir="ltr"
-                        invalid={invalid}
-                        aria-label={`${t.inventoryOnHand} ${row.locationCode}`}
-                        data-testid="offer-inventory-input"
-                      />
-                    </td>
-                    <td className="px-3 py-2 tabular-nums text-muted" data-testid="offer-inventory-reserved">
-                      {faNumber(row.reserved, locale)}
-                    </td>
-                    <td className="px-3 py-2 tabular-nums" data-testid="offer-inventory-available">
-                      {faNumber(row.available, locale)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <div className={styles.stack} data-testid="offer-tab-inventory">
+      <section className={styles.card}>
+        <header className={styles.cardHd}>
+          <SectionTitle title={t.inventoryTitle} desc={t.inventoryDesc} />
+        </header>
+        <div className={styles.cardBd}>
+          <div className={styles.tiles} data-testid="offer-inventory-summary">
+            <Tile label={t.inventoryPhysical} value={faNumber(totalOnHand, locale)} testId="offer-inventory-total-onhand" />
+            <Tile label={t.inventoryReserved} value={faNumber(totalReserved, locale)} testId="offer-inventory-total-reserved" />
+            <Tile label={t.inventoryAvailable} value={faNumber(totalAvailable, locale)} testId="offer-inventory-total-available" />
+          </div>
+
+          <div style={{ marginTop: 14 }}>
+            {noPositions ? (
+              <div className={styles.empty} data-testid="offer-inventory-empty">
+                <span className={styles.emptyIc}><Warehouse size={16} aria-hidden /></span>
+                <span className={styles.emptyT}>{t.inventoryEmpty}</span>
+                <span className={styles.emptyD}>{t.inventoryUnavailable}</span>
+              </div>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>{t.inventoryLocation}</th>
+                      <th>{t.inventoryOnHand}</th>
+                      <th>{t.inventoryReserved}</th>
+                      <th>{t.inventoryAvailable}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.inventoryLocations.map((row) => {
+                      const value = parseDecimal(props.onHand[row.stockItemId]);
+                      const invalid = value != null && (value < 0 || value < row.reserved);
+                      return (
+                        <tr key={row.stockItemId} data-testid="offer-inventory-row" data-stock-item-id={row.stockItemId}>
+                          <td data-label={t.inventoryLocation}>
+                            <span style={{ display: "block", fontWeight: 600, whiteSpace: "nowrap" }} dir="ltr">{row.locationCode}</span>
+                            <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{row.locationId}</span>
+                          </td>
+                          <td data-label={t.inventoryOnHand}>
+                            <input
+                              className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
+                              style={{ maxWidth: 128 }}
+                              value={props.onHand[row.stockItemId] ?? ""}
+                              onChange={(event) => props.onOnHandChange(row.stockItemId, event.target.value)}
+                              inputMode="decimal"
+                              dir="ltr"
+                              aria-invalid={invalid}
+                              aria-label={`${t.inventoryOnHand} ${row.locationCode}`}
+                              data-testid="offer-inventory-input"
+                            />
+                          </td>
+                          <td data-label={t.inventoryReserved} className={styles.numCell} data-testid="offer-inventory-reserved">
+                            {faNumber(row.reserved, locale)}
+                          </td>
+                          <td data-label={t.inventoryAvailable} className={styles.numCell} data-testid="offer-inventory-available">
+                            {faNumber(row.available, locale)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+            <span className={styles.fieldLabel}>
+              {t.inventoryReason}
+              <DirtyDot show={props.dirty} label={t.dirtyTab} />
+            </span>
+            <input
+              className={styles.ctl}
+              value={props.reason}
+              onChange={(event) => props.onReasonChange(event.target.value)}
+              data-testid="offer-inventory-reason"
+            />
+            <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
+          </label>
+
+          <div className={styles.stack} style={{ marginTop: 12 }}>
+            <Note>{t.inventoryReservedReadOnly}</Note>
+            <Note tone="warning">{t.inventoryUnavailable}</Note>
+          </div>
         </div>
-      )}
-      <label className="mt-4 flex max-w-md flex-col gap-1 text-sm">
-        <span className="flex items-center gap-2">
-          {t.inventoryReason}
-          <DirtyDot show={props.dirty} label={t.dirtyTab} />
-        </span>
-        <Input
-          value={props.reason}
-          onChange={(event) => props.onReasonChange(event.target.value)}
-          data-testid="offer-inventory-reason"
-        />
-        <span className="text-xs text-muted">{t.inventoryReasonHint}</span>
-      </label>
-      <div className="mt-4 grid gap-2">
-        <Note>{t.inventoryImmutableLocation}</Note>
-        <Note tone="warning">{t.inventoryNeedsContract}</Note>
-      </div>
+      </section>
     </div>
   );
 }
 
-function Summary({ label, value, testId }: { label: string; value: string; testId: string }) {
+function Tile({ label, value, testId }: { label: string; value: string; testId: string }) {
   return (
-    <div className="rounded-ds border border-border bg-secondary/30 px-3 py-2">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="mt-0.5 tabular-nums text-lg font-semibold" data-testid={testId}>
-        {value}
-      </dd>
+    <div className={styles.tile}>
+      <div className={styles.tileK}>{label}</div>
+      <div className={styles.tileV} data-testid={testId}>{value}</div>
     </div>
   );
 }

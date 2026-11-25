@@ -2,21 +2,37 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Package, Plus } from "lucide-react";
-import { AppDataGrid, ErrorState, faWorkspaceMessages, useLegacyAdminGridDirectProps } from "../../../design-system";
+import { Eye, Plus } from "lucide-react";
+import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate, useLegacyAdminGridDirectProps } from "../../../design-system";
+import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import { SELLER_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
 import type { GridColumnDef, GridServerPage, GridServerQuery } from "../../../design-system/data-grid";
 import {
-  formatMoney,
   formatOfferStatus,
-  formatUnits,
   loadSellerOffersPage,
   readSellerPartyId,
   type HostReadSource,
   type SellerOfferListRow,
 } from "../seller-api";
+import { digitsFa, faMoney } from "../../../lib/offer-workspace/model";
 
 type SellerOfferGridRow = SellerOfferListRow & { id: string };
+
+function statusClass(status: string): string {
+  if (status === "Active") return "bg-success/15 text-success";
+  if (status === "Suspended") return "bg-warning/15 text-warning";
+  return "bg-secondary text-secondary-foreground";
+}
+
+const rowActions: AppGridRowAction<SellerOfferGridRow>[] = [
+  {
+    id: "edit",
+    label: "مشاهده",
+    icon: Eye,
+    href: (row) => `/vendor-panel/products/${row.offerId}`,
+    testId: (row) => `seller-offer-edit-${row.offerId}`,
+  },
+];
 
 const columns: GridColumnDef<SellerOfferGridRow>[] = [
   {
@@ -24,60 +40,58 @@ const columns: GridColumnDef<SellerOfferGridRow>[] = [
     header: "محصول",
     accessor: (row) => row.productTitle,
     cell: (row) => (
-      <Link className="block min-w-0 hover:underline" href={`/vendor-panel/products/${row.offerId}`}>
-        <span className="block truncate font-semibold">{row.productTitle}</span>
-        <span className="block truncate text-xs text-muted">{row.sellerSku ?? "بدون SKU"}</span>
-      </Link>
+      <div className="app-grid-cell-content flex min-w-0 items-center gap-2">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary">
+          {row.primaryMediaAssetId ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`/v1/media/${row.primaryMediaAssetId}`} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-[10px] text-muted">—</span>
+          )}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate font-semibold" title={row.productTitle}>{row.productTitle}</span>
+          <span className="block truncate text-xs text-muted">{row.brandName || "—"}</span>
+        </span>
+      </div>
     ),
-    width: 220,
+    width: 140,
     minWidth: 160,
     maxWidth: 300,
-    sticky: "start",
     filterKind: "text",
     sortable: true,
   },
   {
     id: "sellerSku",
-    header: "SKU فروشنده",
+    header: "کد کالا",
     accessor: (row) => row.sellerSku ?? "",
-    cell: (row) => <span dir="ltr">{row.sellerSku ?? "—"}</span>,
-    width: 120,
-    minWidth: 96,
-    maxWidth: 160,
+    cell: (row) => <span dir="ltr" className="text-sm" title={row.sellerSku || undefined}>{row.sellerSku || "—"}</span>,
+    width: 130,
+    minWidth: 80,
+    maxWidth: 170,
     filterKind: "text",
     sortable: true,
   },
   {
-    id: "status",
-    header: "وضعیت Offer",
-    accessor: (row) => row.status,
-    cell: (row) => (
-      <span
-        className={
-          row.status === "Active"
-            ? "inline-flex rounded-full bg-[rgb(220_252_231)] px-2.5 py-1 text-xs font-medium text-[rgb(22_163_74)]"
-            : "inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium"
-        }
-      >
-        {formatOfferStatus(row.status)}
-      </span>
-    ),
-    width: 110,
-    minWidth: 96,
-    maxWidth: 140,
-    filterKind: "status",
-    enumOptions: [
-      { value: "Active", label: "فعال" },
-      { value: "Suspended", label: "معلق" },
-      { value: "Draft", label: "پیش‌نویس" },
-    ],
+    id: "channel",
+    header: "کانال",
+    accessor: () => "Marketplace",
+    cell: () => <span className="text-sm">بازارگاه</span>,
+    width: 80,
+    minWidth: 80,
+    maxWidth: 120,
+    sortable: false,
   },
   {
     id: "amount",
     header: "قیمت",
     accessor: (row) => row.amount ?? 0,
-    cell: (row) => <span className="tabular-nums">{formatMoney(row.amount, row.currency)}</span>,
-    width: 140,
+    cell: (row) => (
+      <span className="tabular-nums text-sm">
+        {row.amount == null ? "—" : faMoney(row.amount, row.currency, "fa")}
+      </span>
+    ),
+    width: 110,
     minWidth: 110,
     maxWidth: 180,
     sortable: true,
@@ -88,53 +102,57 @@ const columns: GridColumnDef<SellerOfferGridRow>[] = [
     header: "موجودی",
     accessor: (row) => row.availableUnits,
     cell: (row) => (
-      <span className="tabular-nums">
-        {row.availableUnits <= 0 ? "ناموجود" : formatUnits(row.availableUnits)}
-      </span>
+      <span className="tabular-nums text-sm">{row.availableUnits <= 0 ? "ناموجود" : row.availableUnits.toLocaleString("fa-IR")}</span>
     ),
-    width: 110,
+    width: 130,
     minWidth: 88,
-    maxWidth: 140,
+    maxWidth: 120,
     align: "end",
     filterKind: "number",
     sortable: true,
   },
   {
-    id: "lastUpdatedAt",
-    header: "به‌روزرسانی",
-    accessor: (row) => row.lastUpdatedAt ?? "",
+    id: "status",
+    header: "وضعیت آفر",
+    accessor: (row) => row.status,
     cell: (row) => (
-      <span className="tabular-nums text-sm">
-        {row.lastUpdatedAt ? row.lastUpdatedAt.slice(0, 10) : "—"}
+      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(row.status)}`}>
+        {formatOfferStatus(row.status)}
       </span>
     ),
-    width: 120,
-    minWidth: 100,
-    maxWidth: 150,
+    width: 110,
+    minWidth: 80,
+    maxWidth: 120,
+    filterKind: "status",
+    enumOptions: [
+      { value: "Active", label: "فعال" },
+      { value: "Suspended", label: "معلق" },
+      { value: "Draft", label: "پیش‌نویس" },
+    ],
+  },
+  {
+    id: "lastUpdatedAt",
+    header: "آخرین تغییر",
+    accessor: (row) => row.lastUpdatedAt ?? "",
+    cell: (row) => <span className="tabular-nums text-sm">{digitsFa(formatJalaliDate(row.lastUpdatedAt, "fa"))}</span>,
+    width: 130,
+    minWidth: 90,
+    maxWidth: 140,
     sortable: true,
   },
   {
-    id: "open",
+    id: "actions",
     header: "عملیات",
-    accessor: (row) => row.offerId,
-    cell: (row) => (
-      <Link
-        className="inline-flex min-h-9 items-center rounded-ds bg-primary px-3 text-sm text-primary-foreground"
-        href={`/vendor-panel/products/${row.offerId}`}
-      >
-        ویرایش
-      </Link>
-    ),
-    width: 96,
-    minWidth: 88,
-    maxWidth: 120,
+    accessor: () => "",
+    cell: (row) => <AppGridRowActionsCell row={row} actions={rowActions} compact />,
+    width: 76,
+    minWidth: 68,
+    maxWidth: 96,
+    exportable: false,
     sortable: false,
   },
 ];
 
-/**
- * فهرست Offerهای فروشنده با Data Grid داخل زبان بصری Vendor.
- */
 export default function VendorProductsPage() {
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [total, setTotal] = useState(0);
@@ -149,9 +167,8 @@ export default function VendorProductsPage() {
   }, []);
 
   const queryAdapter = useCallback(async (query: GridServerQuery): Promise<GridServerPage<SellerOfferGridRow>> => {
-    if (!sellerPartyId) {
-      return { rows: [], total: 0 };
-    }
+    void reloadKey;
+    if (!sellerPartyId) return { rows: [], total: 0 };
     const result = await loadSellerOffersPage(sellerPartyId, query);
     setSource(result.source);
     setTotal(result.page.total);
@@ -177,7 +194,7 @@ export default function VendorProductsPage() {
       <main data-testid="seller-auth-denied">
         <ErrorState
           title="دسترسی مجاز نیست"
-          detail="این Actor مجوز مشاهدهٔ محصولات این فروشنده را ندارد."
+          detail="این حساب اجازه مشاهده این فروشگاه را ندارد."
           onRetry={refresh}
           retryLabel={faWorkspaceMessages.retry}
         />
@@ -185,56 +202,35 @@ export default function VendorProductsPage() {
     );
   }
 
-
   return (
-    <main className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
-            <Package className="w-5 h-5 text-[#2563EB]" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">مدیریت محصولات</h2>
-            <p className="text-xs text-gray-500">
-              {total.toLocaleString("fa-IR")} پیشنهاد · صفحه‌بندی و جست‌وجو در سرور
-            </p>
-          </div>
+    <main className="space-y-4" data-testid="seller-products">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted">خانه / پیشنهادهای فروش</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">پیشنهادهای فروش</h1>
+          <p className="mt-1 text-base text-muted">
+            {total.toLocaleString("fa-IR")} آفر · جست‌وجو و صفحه‌بندی در سرور
+          </p>
         </div>
         <Link
           href="/vendor-panel/products/new"
-          className="px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/30 flex items-center gap-1"
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
           data-testid="seller-create-offer"
         >
-          <Plus className="w-4 h-4" />
-          محصول جدید
+          <Plus className="h-4 w-4" aria-hidden />
+          ایجاد آفر
         </Link>
       </div>
 
-      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 md:px-5">
-          <p className="text-sm text-gray-500" data-testid="seller-products-source">
-            {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری" : "اتصال Host برقرار نیست"}
-          </p>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs tabular-nums text-gray-700">
-            {total.toLocaleString("fa-IR")} ردیف
-          </span>
-        </div>
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="p-2 md:p-4">
           {source === "error" ? (
-            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+            <ErrorState title="فروشگاه در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
-            <div className="overflow-x-auto">
-              <AppDataGrid<SellerOfferGridRow> {...gridProps} rowCountNoun={{ fa: "آفر", en: "offers" }} />
-            </div>
+            <AppDataGrid<SellerOfferGridRow> {...gridProps} rowHeight={64} rowCountNoun={{ fa: "آفر", en: "offers" }} />
           )}
         </div>
       </section>
     </main>
   );
 }
-
-
-
-
-
-

@@ -8,7 +8,9 @@ public sealed record CatalogOfferPresentation(
     string? BrandName,
     string? UnitCode,
     string? UnitName,
-    string? UnitShortName);
+    string? UnitShortName,
+    string? VariantCode = null,
+    Guid? PrimaryMediaAssetId = null);
 
 /// <summary>Provides Catalog-owned offer presentation data without exposing persistence.</summary>
 public interface ICatalogOfferReadGateway

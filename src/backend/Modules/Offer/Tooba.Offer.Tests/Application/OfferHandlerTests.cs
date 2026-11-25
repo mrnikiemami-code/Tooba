@@ -108,6 +108,7 @@ public sealed class OfferHandlerTests
         services.AddSingleton<IPriceLookupGateway, FakePrices>();
         services.AddSingleton<ISellerOfferInventoryGateway, FakeInventory>();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         services.AddSingleton<IClock>(new FixedClock(Now));
         services.AddSingleton<IIdGenerator>(new FixedIds(OfferId));
         services.AddSingleton<IReturnPolicyResolver>(new ReturnPolicyResolver(new ReturnPolicyOptions()));

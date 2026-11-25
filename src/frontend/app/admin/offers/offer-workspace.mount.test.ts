@@ -15,6 +15,7 @@ import {
   waitFor,
 } from "../../../features/order-carrier-execution/test-dom-harness.ts";
 import { OfferWorkspace } from "../../../lib/offer-workspace/offer-workspace.tsx";
+import { normalizeDigits } from "../../../lib/offer-workspace/model.ts";
 import type {
   OfferWorkspaceAdapter,
   OfferWorkspaceDetail,
@@ -111,10 +112,7 @@ function editAdapter(over: Partial<OfferWorkspaceAdapter> = {}, detail = baseDet
       };
       return { ok: true, detail: current };
     },
-    saveFulfillment: async () => {
-      calls.fulfillment += 1;
-      return { ok: true };
-    },
+    saveFulfillment: async (input) => { calls.fulfillment += 1; current = { ...current, fulfillmentResponsibility: input.responsibility, fulfillmentShippingTypeId: input.shippingTypeId }; return { ok: true }; },
     loadShippingTypes: async () => [
       { shippingTypeId: "type-standard", code: "standard", label: "عادی", isActive: true },
       { shippingTypeId: "type-heavy", code: "heavy", label: "سنگین", isActive: false },
@@ -164,7 +162,7 @@ async function mountEdit(over: Partial<OfferWorkspaceAdapter> = {}, detail = bas
 
 test("edit workspace renders the seven tabs in order and only one panel at a time", async () => {
   const tree = await mountEdit();
-  const labels = qq(tree.container, "[role=tab]").map((tab) => tab.textContent?.trim());
+  const labels = qq(tree.container, "[role=tab]").map((tab) => (tab.textContent ?? "").replace(/[۰-۹]/g, "").trim());
   assert.deepEqual(labels, ["مشخصات آفر", "قیمت‌گذاری", "تخفیفات", "موجودی", "ارسال", "شرایط فروش", "تاریخچه"]);
   assert.ok(tree.container.querySelector("[data-testid=offer-tab-panel-identity]"));
   assert.equal(tree.container.querySelector("[data-testid=offer-tab-panel-pricing]"), null);
@@ -258,16 +256,13 @@ test("admin shipping gates the type until responsibility is chosen and saves the
   const { click, setSelectValue: select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   await click(q(tree.container, "[data-testid=offer-tab-button-shipping]"));
   const type = q(tree.container, "[data-testid=offer-shipping-type]") as HTMLSelectElement;
-  const service = q(tree.container, "[data-testid=offer-shipping-service]") as HTMLInputElement;
   assert.equal(type.disabled, true);
-  assert.equal(service.disabled, true);
+  assert.equal(tree.container.querySelector("[data-testid=offer-shipping-service]"), null);
   await select(q(tree.container, "[data-testid=offer-shipping-responsibility]"), "Seller");
   assert.equal(type.disabled, false);
-  assert.equal(service.disabled, false);
   await select(type, "type-standard");
-  await click(q(tree.container, "[data-testid=offer-shipping-save]"));
-  assert.equal(tree.calls.fulfillment, 1);
-  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-shipping-notice]")));
+  await click(q(tree.container, "[data-testid=admin-offer-save]"));
+  assert.equal(tree.calls.fulfillment, 1); await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-shipping-notice]")));
   await tree.unmount();
 });
 
@@ -276,11 +271,11 @@ test("discounts and history stay explicitly gated with no fabricated data", asyn
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   await click(q(tree.container, "[data-testid=offer-tab-button-discounts]"));
   const discounts = q(tree.container, "[data-testid=offer-tab-discounts]").textContent ?? "";
-  assert.match(discounts, /Promotion/);
-  assert.match(discounts, /ساختگی/);
+  assert.match(discounts, /تخفیفی برای این آفر ثبت نشده/);
+  assert.match(discounts, /هنوز فعال نیست/);
   await click(q(tree.container, "[data-testid=offer-tab-button-history]"));
   const history = q(tree.container, "[data-testid=offer-tab-history]").textContent ?? "";
-  assert.match(history, /قرارداد/);
+  assert.match(history, /تاریخچه‌ای برای این آفر در دسترس نیست/);
   assert.equal(tree.container.querySelectorAll("[data-testid=offer-tab-history] li").length, 0);
   await tree.unmount();
 });
@@ -327,16 +322,15 @@ test("seller create mode disables dependent tabs, does not auto-select, and crea
     },
   };
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
-  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-variant-picker]")));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-variant-picker-toggle]"));
   await waitFor(() => qq(tree.container, "[data-testid=offer-variant-option]").length === 1);
 
   const pricingTab = q(tree.container, "[data-testid=offer-tab-button-pricing]") as HTMLButtonElement;
   assert.equal(pricingTab.disabled, true);
   assert.equal(qq(tree.container, "[data-testid=offer-variant-option]").some((el) => el.getAttribute("aria-pressed") === "true"), false);
 
-  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
-  await click(q(tree.container, "[data-testid=offer-variant-option]"));
-  assert.equal(qq(tree.container, "[data-testid=offer-variant-option]")[0]?.getAttribute("aria-pressed"), "true");
+  await click(q(tree.container, "[data-testid=offer-variant-option]")); assert.match(tree.container.textContent ?? "", /کالای اول/);
   await click(q(tree.container, "[data-testid=seller-create-submit]"));
   assert.equal(calls.created, 1);
   assert.equal(calls.createdId, "offer-new");
@@ -350,7 +344,8 @@ test("tab switches preserve typed draft values (UX-03)", async () => {
   await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1500");
   await click(q(tree.container, "[data-testid=offer-tab-button-conditions]"));
   await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
-  assert.equal((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value, "1500");
+  const failedValue = (q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value;
+  assert.equal(normalizeDigits(failedValue).replace(/[٬,]/g, ""), "1500");
   assert.ok(tree.container.querySelector("[data-testid=offer-workspace-dirty]"));
   await tree.unmount();
 });
@@ -377,10 +372,10 @@ test("picker selection survives paging in both directions (UX-29)", async () => 
     onCancel: () => undefined,
   };
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
-  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-option]").length === 1);
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
-  await click(qq(tree.container, "[data-testid=offer-seller-option]")[0]!);
-  await click(q(tree.container, "[data-testid=offer-picker-next]"));
+  await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-option]").length === 1);
+  await click(qq(tree.container, "[data-testid=offer-seller-option]")[0]!); await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]")); await waitFor(() => qq(tree.container, "[data-testid=offer-seller-option]").length === 1); await click(q(tree.container, "[data-testid=offer-picker-next]"));
   await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-option]")[0]?.textContent ?? "").includes("ب"));
   await click(q(tree.container, "[data-testid=offer-picker-prev]"));
   await waitFor(() => (qq(tree.container, "[data-testid=offer-seller-option]")[0]?.textContent ?? "").includes("الف"));
@@ -397,7 +392,8 @@ test("a failed save keeps the typed data and surfaces the error (UX-22)", async 
   await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1500");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.ok(tree.container.querySelector("[data-testid=offer-save-error]"));
-  assert.equal((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value, "1500");
+  const failedValue = (q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value;
+  assert.equal(normalizeDigits(failedValue).replace(/[٬,]/g, ""), "1500");
   assert.ok(tree.container.querySelector("[data-testid=offer-workspace]"));
   await tree.unmount();
 });

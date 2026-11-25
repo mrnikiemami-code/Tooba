@@ -1,11 +1,11 @@
-/**
- * Offer workspace copy (fa default, en mirror). UI text only; no domain decisions.
+﻿/**
+ * Offer workspace copy (fa default, en mirror). Natural product language only; no internal
+ * architecture vocabulary is exposed to the operator.
  */
 export interface OfferWorkspaceMessages {
   titleCreate: string;
   titleEdit: string;
   breadcrumb: string;
-  backToList: string;
   save: string;
   saveDraft: string;
   saving: string;
@@ -13,52 +13,73 @@ export interface OfferWorkspaceMessages {
   retry: string;
   loading: string;
   unsaved: string;
+  saveErrorTitle: string;
   saveError: string;
   saved: string;
   noChanges: string;
-  offerId: string;
   seller: string;
+  status: string;
+  buy: string;
+  buyable: string;
+  notBuyable: string;
+  priceSummary: string;
+  lastSaved: string;
+  priceEmpty: string;
+  market: string;
+  currency: string;
   product: string;
   variant: string;
   channel: string;
-  status: string;
-  buyable: string;
-  notBuyable: string;
-  price: string;
-  market: string;
-  lockedIdentity: string;
-  lockedSeller: string;
-  lockedVariant: string;
-  channelImmutable: string;
   sellerSku: string;
-  selectSeller: string;
-  selectProduct: string;
-  search: string;
-  nextPage: string;
-  prevPage: string;
-  pageInfo: string;
-  noResults: string;
-  pickerError: string;
-  dependentDisabled: string;
-  createNeedsIdentity: string;
-  identityTab: string;
-  pricingTab: string;
-  discountsTab: string;
-  inventoryTab: string;
-  shippingTab: string;
-  conditionsTab: string;
-  historyTab: string;
+  offerId: string;
+  identityTitle: string;
+  identityDesc: string;
+  identityLocked: string;
+  channelHint: string;
+  sellerHint: string;
+  sellerSessionHint: string;
+  sellerRequired: string;
+  productRequired: string;
+  variantRequired: string;
+  productPickerHint: string;
+  variantHint: string;
+  skuHint: string;
+  skuLockedHint: string;
+  offerIdHint: string;
+  readiness: string;
+  readinessOf: string;
+  readinessHint: string;
+  historyOnlyEdit: string;
+  historyOnlyEditDesc: string;
+  tabs: {
+    identity: string;
+    pricing: string;
+    discounts: string;
+    inventory: string;
+    shipping: string;
+    conditions: string;
+    history: string;
+  };
+  tabLocked: string;
   tabNeedsCreate: string;
-  pricingCurrent: string;
+  pricingTitle: string;
+  pricingDesc: string;
   pricingAmount: string;
   pricingCurrency: string;
   pricingType: string;
   pricingTypeBase: string;
   pricingStatus: string;
-  pricingNotWired: string;
-  pricingIrradix: string;
-  discountsGated: string;
-  discountsOwner: string;
+  pricingValidity: string;
+  pricingCurrent: string;
+  pricingNoDecimals: string;
+  pricingLegacyDecimals: string;
+  pricingUnavailable: string;
+  discountsTitle: string;
+  discountsDesc: string;
+  discountsEmpty: string;
+  discountsUnavailable: string;
+  inventoryTitle: string;
+  inventoryDesc: string;
   inventoryPhysical: string;
   inventoryReserved: string;
   inventoryAvailable: string;
@@ -66,22 +87,23 @@ export interface OfferWorkspaceMessages {
   inventoryOnHand: string;
   inventoryReason: string;
   inventoryReasonHint: string;
-  inventoryImmutableLocation: string;
-  inventoryNeedsContract: string;
-  inventoryNoPositions: string;
+  inventoryEmpty: string;
+  inventoryUnavailable: string;
   inventoryReservedReadOnly: string;
+  shippingTitle: string;
+  shippingDesc: string;
   shippingResponsibility: string;
   shippingUnassigned: string;
   shippingSeller: string;
   shippingPlatform: string;
   shippingType: string;
   shippingService: string;
-  shippingServiceDisabled: string;
-  shippingServiceGated: string;
-  shippingCurrentUnknown: string;
+  shippingServiceUnavailable: string;
   shippingAdminOnly: string;
-  shippingSave: string;
   shippingSaved: string;
+  conditionsTitle: string;
+  quantityTitle: string;
+  returnPolicyDesc: string;
   returnPolicy: string;
   returnDefault: string;
   returnCustom: string;
@@ -92,8 +114,10 @@ export interface OfferWorkspaceMessages {
   minQty: string;
   maxQty: string;
   unit: string;
-  unitReadOnly: string;
-  roundingNeedsContract: string;
+  precision: string;
+  step: string;
+  rounding: string;
+  unitHint: string;
   lifecycle: string;
   lifecycleDraft: string;
   lifecycleActive: string;
@@ -103,246 +127,372 @@ export interface OfferWorkspaceMessages {
   buyableReasonNoPrice: string;
   buyableReasonNoStock: string;
   buyableReasonInactive: string;
-  historyGated: string;
-  historyNoFake: string;
+  historyTitle: string;
+  historyDesc: string;
+  historyEmpty: string;
   perTabError: string;
   dirtyTab: string;
   denied: string;
   deniedDetail: string;
-  missingIdentity: string;
   loadFailed: string;
   channelMarketplace: string;
   sellerSession: string;
-  readonlySeam: string;
+  imageAlt: string;
+  noImage: string;
+  productMetaSeparator: string;
+  variantCodeLabel: string;
+  skuNone: string;
+  select: string;
+  notSelected: string;
+  search: string;
+  nextPage: string;
+  prevPage: string;
+  pageInfo: string;
+  noResults: string;
+  pickerError: string;
+  createNeedsIdentity: string;
+  validationAmount: string;
+  validationDecimals: string;
+  validationInventory: string;
+  validationBelowReserved: string;
+  validationReason: string;
+  validationQty: string;
+  validationQtyOrder: string;
+  validationReturnWindow: string;
+  validationReturnRange: string;
+  sellerLocked: string;
+  variantLocked: string;
+  variantSelected: string;
+  dataUnavailable: string;
 }
 
-export const offerWorkspaceMessages: Record<"fa" | "en", OfferWorkspaceMessages> = {
-  fa: {
-    titleCreate: "ایجاد آفر",
-    titleEdit: "ویرایش آفر",
-    breadcrumb: "خانه / آفرها",
-    backToList: "بازگشت",
-    save: "ذخیره تغییرات",
-    saveDraft: "ذخیرهٔ پیش‌نویس",
-    saving: "در حال ذخیره…",
-    cancel: "انصراف",
-    retry: "تلاش دوباره",
-    loading: "در حال بارگذاری…",
-    unsaved: "تغییرات ذخیره‌نشده",
-    saveError: "ذخیره انجام نشد؛ داده‌های واردشده حفظ شد.",
-    saved: "تغییرات ذخیره شد.",
-    noChanges: "تغییری برای ذخیره وجود ندارد.",
-    offerId: "شناسهٔ آفر",
-    seller: "فروشنده",
-    product: "محصول",
-    variant: "گونه",
-    channel: "کانال فروش",
-    status: "وضعیت",
-    buyable: "قابل خرید",
-    notBuyable: "غیرقابل خرید",
-    price: "قیمت",
-    market: "بازار",
-    lockedIdentity: "پس از ایجاد، فروشنده و گونه قفل می‌شوند.",
-    lockedSeller: "فروشنده قفل است",
-    lockedVariant: "گونه قفل است",
-    channelImmutable: "کانال پس از ایجاد تغییرناپذیر است.",
-    sellerSku: "SKU فروشنده",
-    selectSeller: "انتخاب فروشنده",
-    selectProduct: "انتخاب محصول",
-    search: "جست‌وجو",
-    nextPage: "صفحهٔ بعد",
-    prevPage: "صفحهٔ قبل",
-    pageInfo: "صفحه",
-    noResults: "نتیجه‌ای پیدا نشد.",
-    pickerError: "خواندن فهرست ممکن نشد.",
-    dependentDisabled: "تا انتخاب فروشنده، محصول و گونه، زبانه‌های دیگر غیرفعال‌اند.",
-    createNeedsIdentity: "ابتدا فروشنده، محصول و گونه را انتخاب کنید.",
-    identityTab: "مشخصات آفر",
-    pricingTab: "قیمت‌گذاری",
-    discountsTab: "تخفیفات",
-    inventoryTab: "موجودی",
-    shippingTab: "ارسال",
-    conditionsTab: "شرایط فروش",
-    historyTab: "تاریخچه",
-    tabNeedsCreate: "پس از ذخیرهٔ پیش‌نویس فعال می‌شود.",
-    pricingCurrent: "قیمت جاری",
-    pricingAmount: "مبلغ",
-    pricingCurrency: "ارز",
-    pricingType: "نوع قیمت",
-    pricingTypeBase: "پایه",
-    pricingStatus: "وضعیت قیمت",
-    pricingNotWired: "مدیریت چندارزی/چندبازاری و بازهٔ اعتبار نیازمند قرارداد خواندن فهرست قیمت‌ها است و در این نسخه نمایش داده نمی‌شود.",
-    pricingIrradix: "ریال بدون اعشار است.",
-    discountsGated: "تعریف تخفیف برای یک آفر در مالکیت Promotion است و قرارداد آن هنوز تصمیم‌گیری نشده است.",
-    discountsOwner: "هیچ تخفیف ساختگی یا پیش‌نمایش قیمت جعلی نمایش داده نمی‌شود.",
-    inventoryPhysical: "موجودی فیزیکی",
-    inventoryReserved: "رزرو",
-    inventoryAvailable: "قابل فروش",
-    inventoryLocation: "محل انبار",
-    inventoryOnHand: "موجودی",
-    inventoryReason: "دلیل اصلاح",
-    inventoryReasonHint: "برای هر اصلاح موجودی الزامی است.",
-    inventoryImmutableLocation: "هویت محل انبار تغییرناپذیر است.",
-    inventoryNeedsContract: "افزودن یا حذف موقعیت انبار نیازمند قرارداد و کنترل وابستگی است.",
-    inventoryNoPositions: "هنوز موقعیت انباری برای این آفر ثبت نشده است.",
-    inventoryReservedReadOnly: "رزرو و قابل فروش فقط‌خواندنی‌اند؛ موجودی فیزیکی نباید کمتر از رزرو باشد.",
-    shippingResponsibility: "مسئولیت ارسال",
-    shippingUnassigned: "تعیین‌نشده",
-    shippingSeller: "فروشنده",
-    shippingPlatform: "پلتفرم",
-    shippingType: "نوع ارسال",
-    shippingService: "سرویس ارسال",
-    shippingServiceDisabled: "سرویس ارسال تا تعیین مسئولیت غیرفعال است.",
-    shippingServiceGated: "انتساب سرویس ارسال هر آفر در مرحلهٔ ۳ تصمیم‌گیری نشده و این نسخه آن را جعل نمی‌کند.",
-    shippingCurrentUnknown: "قرارداد خواندن مسئولیت فعلی آفر در دسترس نیست؛ پس از ذخیره در همین نشست نمایش داده می‌شود.",
-    shippingAdminOnly: "تعیین مسئولیت ارسال فقط توسط مدیر پلتفرم انجام می‌شود.",
-    shippingSave: "ذخیرهٔ مسئولیت ارسال",
-    shippingSaved: "مسئولیت ارسال ذخیره شد.",
-    returnPolicy: "سیاست مرجوعی",
-    returnDefault: "سیاست پیش‌فرض فروشگاه",
-    returnCustom: "مهلت اختصاصی",
-    returnNonReturnable: "غیرقابل مرجوعی",
-    returnCustomDays: "مهلت اختصاصی (روز)",
-    returnWindowHint: "مهلت پیش‌فرض فروشگاه",
-    returnSellerCannotOverride: "تغییر سیاست مرجوعی توسط فروشنده مجاز نیست.",
-    minQty: "حداقل مقدار خرید",
-    maxQty: "حداکثر مقدار خرید",
-    unit: "واحد کالا",
-    unitReadOnly: "واحد، دقت اعشار، گام و گرد کردن فقط‌خواندنی و از محصول می‌آید.",
-    roundingNeedsContract: "نمایش دقت اعشار/گام/گرد کردن به قرارداد تکمیلی محصول نیاز دارد.",
-    lifecycle: "چرخهٔ عمر",
-    lifecycleDraft: "پیش‌نویس",
-    lifecycleActive: "فعال",
-    lifecycleSuspended: "معلق",
-    lifecycleArchived: "بایگانی‌شده",
-    archivedLocked: "آفر بایگانی‌شده قابل فعال‌سازی دوباره نیست.",
-    buyableReasonNoPrice: "قیمت مؤثر ثبت نشده است",
-    buyableReasonNoStock: "موجودی قابل فروش صفر است",
-    buyableReasonInactive: "آفر فعال نیست",
-    historyGated: "قرارداد خواندن تاریخچه/رویدادهای آفر در دسترس نیست.",
-    historyNoFake: "هیچ تاریخچه یا رویداد ساختگی نمایش داده نمی‌شود.",
-    perTabError: "ذخیرهٔ این بخش ناموفق بود.",
-    dirtyTab: "تغییر ذخیره‌نشده",
-    denied: "دسترسی مجاز نیست",
-    deniedDetail: "این آفر متعلق به فروشندهٔ دیگری است یا مجوز کافی وجود ندارد.",
-    missingIdentity: "هویت فروشنده در نشست مشخص نیست.",
-    loadFailed: "خواندن آفر انجام نشد.",
-    channelMarketplace: "بازارگاه",
-    sellerSession: "فروشندهٔ نشست",
-    readonlySeam: "قیمت از Pricing و موجودی از Inventory خوانده می‌شود؛ روی محصول نوشته نمی‌شود.",
+const fa: OfferWorkspaceMessages = {
+  titleCreate: "ایجاد آفر",
+  titleEdit: "ویرایش آفر",
+  breadcrumb: "خانه / آفرها",
+  save: "ذخیره تغییرات",
+  saveDraft: "ذخیره پیش‌نویس",
+  saving: "در حال ذخیره…",
+  cancel: "انصراف",
+  retry: "تلاش دوباره",
+  loading: "در حال بارگذاری…",
+  unsaved: "تغییرات ذخیره‌نشده",
+  saveErrorTitle: "ذخیره انجام نشد",
+  saveError: "تغییرات شما حفظ شد؛ دوباره تلاش کنید.",
+  saved: "تغییرات ذخیره شد.",
+  noChanges: "تغییری برای ذخیره وجود ندارد.",
+  seller: "فروشنده",
+  status: "وضعیت آفر",
+  buy: "خرید",
+  buyable: "قابل خرید",
+  notBuyable: "غیرقابل خرید",
+  priceSummary: "قیمت · بازار و ارز",
+  lastSaved: "ذخیره‌شده",
+  priceEmpty: "قیمتی ثبت نشده است",
+  market: "بازار",
+  currency: "ارز",
+  product: "محصول",
+  variant: "تنوع محصول",
+  channel: "کانال فروش",
+  sellerSku: "کد کالای فروشنده",
+  offerId: "شناسه آفر",
+  identityTitle: "شناسه آفر",
+  identityDesc: "فروشنده، محصول و تنوع، هویت آفر را می‌سازند. تا این سه مورد کامل نشود، تب‌های دیگر فعال نمی‌شوند.",
+  identityLocked: "این آفر ایجاد شده است؛ فروشنده و تنوع قابل تغییر نیستند. برای تغییر آن‌ها باید آفر جدید بسازید.",
+  channelHint: "کانال فروش این آفر بازارگاه است و پس از ایجاد تغییر نمی‌کند.",
+  sellerHint: "جست‌وجو بر اساس نام یا کد فروشنده، با صفحه‌بندی سروری.",
+  sellerSessionHint: "هویت فروشنده از نشست شما خوانده می‌شود.",
+  sellerRequired: "فروشنده را انتخاب کنید.",
+  productRequired: "محصول را از کاتالوگ انتخاب کنید.",
+  variantRequired: "یک تنوع معتبر انتخاب کنید.",
+  productPickerHint: "انتخاب قبلی هنگام صفحه‌بندی حفظ می‌شود.",
+  variantHint: "فقط تنوع‌های معتبر همین محصول نمایش داده می‌شود.",
+  skuHint: "کد یکتای کالا در سیستم فروشنده (حروف انگلیسی).",
+  skuLockedHint: "پس از ایجاد آفر قابل تغییر نیست.",
+  offerIdHint: "شناسه یکتا در سرور ساخته می‌شود و قابل تغییر نیست.",
+  readiness: "مسیر تکمیل",
+  readinessOf: "از ۳ مورد آماده است.",
+  readinessHint: "۵ تب دیگر پس از انتخاب هر سه مورد فعال می‌شوند.",
+  historyOnlyEdit: "تاریخچه، فقط در ویرایش",
+  historyOnlyEditDesc: "برای آفر تازه تاریخچه‌ای وجود ندارد. رویدادها فقط پس از تغییر واقعی ثبت می‌شوند.",
+  tabs: {
+    identity: "مشخصات آفر",
+    pricing: "قیمت‌گذاری",
+    discounts: "تخفیفات",
+    inventory: "موجودی",
+    shipping: "ارسال",
+    conditions: "شرایط فروش",
+    history: "تاریخچه",
   },
-  en: {
-    titleCreate: "Create offer",
-    titleEdit: "Edit offer",
-    breadcrumb: "Home / Offers",
-    backToList: "Back",
-    save: "Save changes",
-    saveDraft: "Save draft",
-    saving: "Saving…",
-    cancel: "Cancel",
-    retry: "Retry",
-    loading: "Loading…",
-    unsaved: "Unsaved changes",
-    saveError: "Save failed; entered data was preserved.",
-    saved: "Changes saved.",
-    noChanges: "Nothing to save.",
-    offerId: "Offer id",
-    seller: "Seller",
-    product: "Product",
-    variant: "Variant",
-    channel: "Sales channel",
-    status: "Status",
-    buyable: "Buyable",
-    notBuyable: "Not buyable",
-    price: "Price",
-    market: "Market",
-    lockedIdentity: "After creation, seller and variant are locked.",
-    lockedSeller: "Seller is locked",
-    lockedVariant: "Variant is locked",
-    channelImmutable: "Channel is immutable after creation.",
-    sellerSku: "Seller SKU",
-    selectSeller: "Select seller",
-    selectProduct: "Select product",
-    search: "Search",
-    nextPage: "Next page",
-    prevPage: "Previous page",
-    pageInfo: "Page",
-    noResults: "No result found.",
-    pickerError: "List could not be read.",
-    dependentDisabled: "Other tabs stay disabled until seller, product and variant are chosen.",
-    createNeedsIdentity: "Choose seller, product and variant first.",
-    identityTab: "Offer identity",
-    pricingTab: "Pricing",
-    discountsTab: "Discounts",
-    inventoryTab: "Inventory",
-    shippingTab: "Shipping",
-    conditionsTab: "Sales conditions",
-    historyTab: "History",
-    tabNeedsCreate: "Available after the draft is saved.",
-    pricingCurrent: "Current price",
-    pricingAmount: "Amount",
-    pricingCurrency: "Currency",
-    pricingType: "Price type",
-    pricingTypeBase: "Base",
-    pricingStatus: "Price status",
-    pricingNotWired: "Multi-currency/market rows and validity ranges need a price-list read contract and are not shown in this build.",
-    pricingIrradix: "IRR has no decimals.",
-    discountsGated: "Per-offer discount definition is owned by Promotion and its contract is not decided yet.",
-    discountsOwner: "No fabricated discount or fake price preview is shown.",
-    inventoryPhysical: "Physical",
-    inventoryReserved: "Reserved",
-    inventoryAvailable: "Available",
-    inventoryLocation: "Warehouse",
-    inventoryOnHand: "On hand",
-    inventoryReason: "Adjustment reason",
-    inventoryReasonHint: "Required for every inventory adjustment.",
-    inventoryImmutableLocation: "Warehouse identity is immutable.",
-    inventoryNeedsContract: "Adding or deleting an inventory position needs a contract and dependency control.",
-    inventoryNoPositions: "No inventory position is recorded for this offer yet.",
-    inventoryReservedReadOnly: "Reserved and available are read-only; on-hand must not be below reserved.",
-    shippingResponsibility: "Fulfillment responsibility",
-    shippingUnassigned: "Unassigned",
-    shippingSeller: "Seller",
-    shippingPlatform: "Platform",
-    shippingType: "Shipping type",
-    shippingService: "Shipping service",
-    shippingServiceDisabled: "Shipping service is disabled until responsibility is set.",
-    shippingServiceGated: "Per-offer service assignment is an unresolved Stage-3 decision and is not fabricated here.",
-    shippingCurrentUnknown: "No read contract exposes the current assignment; it is shown for this session after save.",
-    shippingAdminOnly: "Fulfillment responsibility is assigned by the platform admin only.",
-    shippingSave: "Save responsibility",
-    shippingSaved: "Fulfillment responsibility saved.",
-    returnPolicy: "Return policy",
-    returnDefault: "Store default policy",
-    returnCustom: "Custom window",
-    returnNonReturnable: "Non-returnable",
-    returnCustomDays: "Custom window (days)",
-    returnWindowHint: "Store default",
-    returnSellerCannotOverride: "Seller is not allowed to override the return policy.",
-    minQty: "Minimum order quantity",
-    maxQty: "Maximum order quantity",
-    unit: "Product unit",
-    unitReadOnly: "Unit, decimal precision, step and rounding are read-only from the product.",
-    roundingNeedsContract: "Decimal precision/step/rounding display needs a product contract extension.",
-    lifecycle: "Lifecycle",
-    lifecycleDraft: "Draft",
-    lifecycleActive: "Active",
-    lifecycleSuspended: "Suspended",
-    lifecycleArchived: "Archived",
-    archivedLocked: "An archived offer cannot be reactivated.",
-    buyableReasonNoPrice: "No effective price is recorded",
-    buyableReasonNoStock: "Available units are zero",
-    buyableReasonInactive: "Offer is not active",
-    historyGated: "No offer history/event read contract is available.",
-    historyNoFake: "No fabricated history or events are shown.",
-    perTabError: "This section failed to save.",
-    dirtyTab: "Unsaved change",
-    denied: "Access denied",
-    deniedDetail: "This offer belongs to another seller or the actor lacks permission.",
-    missingIdentity: "Seller identity is missing from the session.",
-    loadFailed: "Offer could not be read.",
-    channelMarketplace: "Marketplace",
-    sellerSession: "Session seller",
-    readonlySeam: "Price comes from Pricing and stock from Inventory; nothing is written onto the product.",
-  },
+  tabLocked: "پس از انتخاب فروشنده، محصول و تنوع فعال می‌شود.",
+  tabNeedsCreate: "پس از ذخیره پیش‌نویس فعال می‌شود.",
+  pricingTitle: "قیمت‌گذاری",
+  pricingDesc: "قیمت پایه همین آفر را ثبت کنید. مبلغ ریال با اعداد فارسی و بدون اعشار نمایش داده می‌شود.",
+  pricingAmount: "مبلغ",
+  pricingCurrency: "ارز",
+  pricingType: "نوع قیمت",
+  pricingTypeBase: "پایه",
+  pricingStatus: "وضعیت قیمت",
+  pricingValidity: "اعتبار",
+  pricingCurrent: "قیمت جاری",
+  pricingNoDecimals: "مبلغ ریال بدون اعشار است.",
+  pricingLegacyDecimals: "این قیمت اعشار دارد؛ تا زمانی که آن را تغییر ندهید، مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
+  pricingUnavailable: "ثبت قیمت برای بازارها و ارزهای دیگر از این صفحه در دسترس نیست.",
+  discountsTitle: "تخفیفات",
+  discountsDesc: "تخفیف‌های مرتبط با این آفر و شرایط اعمال آن‌ها.",
+  discountsEmpty: "تخفیفی برای این آفر ثبت نشده است.",
+  discountsUnavailable: "تعریف تخفیف برای یک آفر از این صفحه هنوز فعال نیست.",
+  inventoryTitle: "موجودی",
+  inventoryDesc: "موجودی هر انبار را جداگانه ثبت کنید. رزرو و موجودی قابل فروش فقط‌خواندنی هستند.",
+  inventoryPhysical: "موجودی فیزیکی",
+  inventoryReserved: "رزرو",
+  inventoryAvailable: "قابل فروش",
+  inventoryLocation: "انبار",
+  inventoryOnHand: "موجودی",
+  inventoryReason: "دلیل اصلاح",
+  inventoryReasonHint: "برای هر اصلاح موجودی الزامی است.",
+  inventoryEmpty: "برای این آفر هنوز موجودی ثبت نشده است.",
+  inventoryUnavailable: "افزودن انبار جدید از این صفحه ممکن نیست.",
+  inventoryReservedReadOnly: "رزرو و قابل فروش فقط‌خواندنی‌اند؛ موجودی فیزیکی نباید کمتر از رزرو باشد.",
+  shippingTitle: "ارسال",
+  shippingDesc: "مسئولیت ارسال این آفر و نوع ارسال آن را تعیین کنید.",
+  shippingResponsibility: "مسئولیت ارسال",
+  shippingUnassigned: "تعیین‌نشده",
+  shippingSeller: "فروشنده",
+  shippingPlatform: "پلتفرم",
+  shippingType: "نوع ارسال",
+  shippingService: "سرویس ارسال",
+  shippingServiceUnavailable: "انتخاب سرویس ارسال برای این آفر در این نسخه ممکن نیست.",
+  shippingAdminOnly: "تعیین مسئولیت ارسال فقط توسط مدیر پلتفرم انجام می‌شود.",
+  shippingSaved: "مسئولیت ارسال ثبت شد.",
+  conditionsTitle: "شرایط فروش",
+  quantityTitle: "مقدار و واحد فروش",
+  returnPolicyDesc: "سیاست مرجوعی این آفر؛ پیش‌فرض فروشگاه یا مهلت اختصاصی.",
+  returnPolicy: "سیاست مرجوعی",
+  returnDefault: "سیاست پیش‌فرض فروشگاه",
+  returnCustom: "مهلت اختصاصی",
+  returnNonReturnable: "غیرقابل مرجوعی",
+  returnCustomDays: "مهلت اختصاصی (روز)",
+  returnWindowHint: "مهلت پیش‌فرض فروشگاه",
+  returnSellerCannotOverride: "تغییر سیاست مرجوعی توسط فروشنده مجاز نیست.",
+  minQty: "حداقل مقدار خرید",
+  maxQty: "حداکثر مقدار خرید",
+  unit: "واحد کالا",
+  precision: "دقت اعشار",
+  step: "گام",
+  rounding: "روش گرد کردن",
+  unitHint: "واحد، دقت اعشار، گام و گرد کردن از محصول خوانده می‌شود.",
+  lifecycle: "وضعیت آفر",
+  lifecycleDraft: "پیش‌نویس",
+  lifecycleActive: "فعال",
+  lifecycleSuspended: "معلق",
+  lifecycleArchived: "بایگانی‌شده",
+  archivedLocked: "آفر بایگانی‌شده قابل فعال‌سازی دوباره نیست.",
+  buyableReasonNoPrice: "قیمتی برای این آفر ثبت نشده است",
+  buyableReasonNoStock: "موجودی قابل فروش صفر است",
+  buyableReasonInactive: "آفر فعال نیست",
+  historyTitle: "تاریخچه",
+  historyDesc: "تغییرات واقعی این آفر به ترتیب زمان.",
+  historyEmpty: "تاریخچه‌ای برای این آفر در دسترس نیست.",
+  perTabError: "ذخیره این بخش ناموفق بود.",
+  dirtyTab: "تغییر ذخیره‌نشده",
+  denied: "دسترسی مجاز نیست",
+  deniedDetail: "این آفر متعلق به فروشنده دیگری است یا مجوز کافی وجود ندارد.",
+  loadFailed: "خواندن آفر انجام نشد",
+  channelMarketplace: "بازارگاه",
+  sellerSession: "فروشنده نشست",
+  imageAlt: "تصویر محصول",
+  noImage: "بدون تصویر",
+  productMetaSeparator: "·",
+  variantCodeLabel: "کد تنوع",
+  skuNone: "بدون کد",
+  select: "انتخاب",
+  notSelected: "انتخاب نشده",
+  search: "جست‌وجو",
+  nextPage: "صفحه بعد",
+  prevPage: "صفحه قبل",
+  pageInfo: "صفحه",
+  noResults: "نتیجه‌ای پیدا نشد.",
+  pickerError: "خواندن فهرست ممکن نشد.",
+  createNeedsIdentity: "ابتدا فروشنده، محصول و تنوع را انتخاب کنید.",
+  validationAmount: "مبلغ نامعتبر است.",
+  validationDecimals: "ریال بدون اعشار است.",
+  validationInventory: "موجودی نامعتبر است.",
+  validationBelowReserved: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
+  validationReason: "دلیل اصلاح الزامی است.",
+  validationQty: "مقدار خرید نامعتبر است.",
+  validationQtyOrder: "حداقل مقدار خرید نباید از حداکثر بیشتر باشد.",
+  validationReturnWindow: "مهلت اختصاصی نامعتبر است.",
+  validationReturnRange: "مهلت اختصاصی خارج از محدوده مجاز است.",
+  sellerLocked: "شناسه قفل",
+  variantLocked: "تنوع قفل",
+  variantSelected: "انتخاب‌شده",
+  dataUnavailable: "اطلاعات این بخش در دسترس نیست.",
 };
+
+const en: OfferWorkspaceMessages = {
+  ...fa,
+  titleCreate: "Create offer",
+  titleEdit: "Edit offer",
+  breadcrumb: "Home / Offers",
+  save: "Save changes",
+  saveDraft: "Save draft",
+  saving: "Saving…",
+  cancel: "Cancel",
+  retry: "Retry",
+  loading: "Loading…",
+  unsaved: "Unsaved changes",
+  saveErrorTitle: "Save failed",
+  saveError: "Your changes were kept; try again.",
+  saved: "Changes saved.",
+  noChanges: "Nothing to save.",
+  seller: "Seller",
+  status: "Offer status",
+  buy: "Purchase",
+  buyable: "Buyable",
+  notBuyable: "Not buyable",
+  priceSummary: "Price · market and currency",
+  lastSaved: "Saved",
+  priceEmpty: "No price recorded",
+  market: "Market",
+  currency: "Currency",
+  product: "Product",
+  variant: "Product variant",
+  channel: "Sales channel",
+  sellerSku: "Seller item code",
+  offerId: "Offer id",
+  identityTitle: "Offer identity",
+  identityDesc: "Seller, product and variant define the offer identity. Other tabs stay disabled until all three are complete.",
+  identityLocked: "This offer exists; seller and variant cannot change. Create a new offer to change them.",
+  channelHint: "This offer's sales channel is Marketplace and cannot change after creation.",
+  sellerHint: "Search by seller name or code with server paging.",
+  sellerSessionHint: "The seller identity comes from your session.",
+  sellerRequired: "Choose a seller.",
+  productRequired: "Choose a product from the catalogue.",
+  variantRequired: "Choose a valid variant.",
+  productPickerHint: "Your selection is kept while paging.",
+  variantHint: "Only valid variants of this product are shown.",
+  skuHint: "Unique item code in the seller system (Latin characters).",
+  skuLockedHint: "Cannot change after creation.",
+  offerIdHint: "The unique server id is created automatically and cannot change.",
+  readiness: "Completion path",
+  readinessOf: "of 3 ready.",
+  readinessHint: "The other five tabs enable after all three are chosen.",
+  historyOnlyEdit: "History, edit mode only",
+  historyOnlyEditDesc: "A new offer has no history. Events are recorded only after a real change.",
+  tabs: {
+    identity: "Offer identity",
+    pricing: "Pricing",
+    discounts: "Discounts",
+    inventory: "Inventory",
+    shipping: "Shipping",
+    conditions: "Sales conditions",
+    history: "History",
+  },
+  tabLocked: "Enabled after seller, product and variant are chosen.",
+  tabNeedsCreate: "Enabled after the draft is saved.",
+  pricingTitle: "Pricing",
+  pricingDesc: "Record this offer's base price. IRR is shown in Persian digits without decimals.",
+  pricingAmount: "Amount",
+  pricingCurrency: "Currency",
+  pricingType: "Price type",
+  pricingTypeBase: "Base",
+  pricingStatus: "Price status",
+  pricingValidity: "Validity",
+  pricingCurrent: "Current price",
+  pricingNoDecimals: "IRR has no decimals.",
+  pricingLegacyDecimals: "This price has decimals; the stored value stays untouched until you change it.",
+  pricingUnavailable: "Recording prices for other markets and currencies is not available on this screen.",
+  discountsTitle: "Discounts",
+  discountsDesc: "Discounts related to this offer and their conditions.",
+  discountsEmpty: "No discount is recorded for this offer.",
+  discountsUnavailable: "Defining a discount for one offer is not available on this screen yet.",
+  inventoryTitle: "Inventory",
+  inventoryDesc: "Record each warehouse separately. Reserved and available are read-only.",
+  inventoryPhysical: "Physical",
+  inventoryReserved: "Reserved",
+  inventoryAvailable: "Available",
+  inventoryLocation: "Warehouse",
+  inventoryOnHand: "On hand",
+  inventoryReason: "Adjustment reason",
+  inventoryReasonHint: "Required for every inventory adjustment.",
+  inventoryEmpty: "No inventory is recorded for this offer yet.",
+  inventoryUnavailable: "Adding a new warehouse is not available on this screen.",
+  inventoryReservedReadOnly: "Reserved and available are read-only; on-hand must not be below reserved.",
+  shippingTitle: "Shipping",
+  shippingDesc: "Set this offer's fulfilment responsibility and shipping type.",
+  shippingResponsibility: "Fulfilment responsibility",
+  shippingUnassigned: "Unassigned",
+  shippingSeller: "Seller",
+  shippingPlatform: "Platform",
+  shippingType: "Shipping type",
+  shippingService: "Shipping service",
+  shippingServiceUnavailable: "Choosing a shipping service for this offer is not available in this version.",
+  shippingAdminOnly: "Only the platform admin assigns fulfilment responsibility.",
+  shippingSaved: "Fulfilment responsibility recorded.",
+  conditionsTitle: "Sales conditions",
+  quantityTitle: "Quantity and unit",
+  returnPolicyDesc: "This offer's return policy; store default or a custom window.",
+  returnPolicy: "Return policy",
+  returnDefault: "Store default policy",
+  returnCustom: "Custom window",
+  returnNonReturnable: "Non-returnable",
+  returnCustomDays: "Custom window (days)",
+  returnWindowHint: "Store default",
+  returnSellerCannotOverride: "The seller cannot override the return policy.",
+  minQty: "Minimum order quantity",
+  maxQty: "Maximum order quantity",
+  unit: "Product unit",
+  precision: "Decimal precision",
+  step: "Step",
+  rounding: "Rounding",
+  unitHint: "Unit, decimal precision, step and rounding come from the product.",
+  lifecycle: "Offer status",
+  lifecycleDraft: "Draft",
+  lifecycleActive: "Active",
+  lifecycleSuspended: "Suspended",
+  lifecycleArchived: "Archived",
+  archivedLocked: "An archived offer cannot be reactivated.",
+  buyableReasonNoPrice: "No price is recorded for this offer",
+  buyableReasonNoStock: "Available units are zero",
+  buyableReasonInactive: "The offer is not active",
+  historyTitle: "History",
+  historyDesc: "Real changes to this offer in time order.",
+  historyEmpty: "No history is available for this offer.",
+  perTabError: "This section failed to save.",
+  dirtyTab: "Unsaved change",
+  denied: "Access denied",
+  deniedDetail: "This offer belongs to another seller or the actor lacks permission.",
+  loadFailed: "Offer could not be read",
+  channelMarketplace: "Marketplace",
+  sellerSession: "Session seller",
+  imageAlt: "Product image",
+  noImage: "No image",
+  productMetaSeparator: "·",
+  variantCodeLabel: "Variant code",
+  skuNone: "No code",
+  select: "Select",
+  notSelected: "Not selected",
+  search: "Search",
+  nextPage: "Next page",
+  prevPage: "Previous page",
+  pageInfo: "Page",
+  noResults: "No result found.",
+  pickerError: "The list could not be read.",
+  createNeedsIdentity: "Choose seller, product and variant first.",
+  validationAmount: "Invalid amount.",
+  validationDecimals: "IRR has no decimals.",
+  validationInventory: "Invalid stock value.",
+  validationBelowReserved: "On-hand must not be below reserved.",
+  validationReason: "Adjustment reason is required.",
+  validationQty: "Invalid purchase quantity.",
+  validationQtyOrder: "Minimum quantity must not exceed maximum.",
+  validationReturnWindow: "Invalid custom window.",
+  validationReturnRange: "Custom window is outside the allowed range.",
+  sellerLocked: "Identity locked",
+  variantLocked: "Variant locked",
+  variantSelected: "Selected",
+  dataUnavailable: "This section's data is unavailable.",
+};
+
+export const offerWorkspaceMessages: Record<"fa" | "en", OfferWorkspaceMessages> = { fa, en };

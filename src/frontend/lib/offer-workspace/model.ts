@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Pure Offer workspace model helpers: digit normalization, validation, dirty detection and
  * buyability derivation. No React, no network, no domain writes.
  */
@@ -195,13 +195,71 @@ export function statusLabelKey(status: string): string {
 
 export function faNumber(value: number | null | undefined, locale: "fa" | "en"): string {
   if (value == null || !Number.isFinite(value)) return "—";
-  return value.toLocaleString(locale === "fa" ? "fa-IR" : "en-US");
+  return value.toLocaleString(locale === "fa" ? "fa-IR" : "en-US", { maximumFractionDigits: 3 });
+}
+
+export function digitsFa(value: string | number): string {
+  return String(value).replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)]!);
+}
+
+export function currencyLabel(currency: string, locale: "fa" | "en"): string {
+  const code = (currency || "IRR").toUpperCase();
+  const labels: Record<string, { fa: string; en: string }> = {
+    IRR: { fa: "ریال", en: "IRR" },
+    IRT: { fa: "تومان", en: "Toman" },
+    USD: { fa: "دلار", en: "USD" },
+    EUR: { fa: "یورو", en: "EUR" },
+    AED: { fa: "درهم", en: "AED" },
+  };
+  return labels[code]?.[locale] ?? code;
+}
+
+export function marketLabel(market: string, locale: "fa" | "en"): string {
+  const key = (market || "IR").toUpperCase();
+  const labels: Record<string, { fa: string; en: string }> = {
+    IR: { fa: "ایران", en: "Iran" },
+    AE: { fa: "امارات", en: "UAE" },
+    TR: { fa: "ترکیه", en: "Türkiye" },
+    DE: { fa: "آلمان", en: "Germany" },
+  };
+  return labels[key]?.[locale] ?? market;
+}
+
+export function formatAmountDisplay(input: string): string {
+  const normalized = normalizeDigits(input).replace(/,/g, "").trim();
+  if (normalized.length === 0) return "";
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(normalized);
+  if (!match) return input;
+  const sign = match[1] ?? "";
+  const integerPart = Number(match[2]);
+  if (!Number.isFinite(integerPart)) return input;
+  const grouped = integerPart.toLocaleString("fa-IR");
+  const fraction = match[3];
+  return `${sign}${grouped}${fraction ? `٫${digitsFa(fraction)}` : ""}`;
 }
 
 export function faMoney(amount: number | null | undefined, currency: string, locale: "fa" | "en"): string {
   if (amount == null) return "—";
-  const formatted = faNumber(amount, locale);
-  return `${formatted} ${currency || "IRR"}`.trim();
+  const formatted = amount.toLocaleString(locale === "fa" ? "fa-IR" : "en-US", { maximumFractionDigits: 4 });
+  return `${formatted} ${currencyLabel(currency, locale)}`;
+}
+
+export function statusLabel(
+  t: { lifecycleDraft: string; lifecycleActive: string; lifecycleSuspended: string; lifecycleArchived: string },
+  status: string,
+): string {
+  switch (status) {
+    case "Draft":
+      return t.lifecycleDraft;
+    case "Active":
+      return t.lifecycleActive;
+    case "Suspended":
+      return t.lifecycleSuspended;
+    case "Archived":
+      return t.lifecycleArchived;
+    default:
+      return status;
+  }
 }
 
 export function errorLabel(code: string, locale: "fa" | "en"): string {

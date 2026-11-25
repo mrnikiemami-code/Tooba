@@ -22,3 +22,8 @@ Verified against live Host 5088 and source (2026-11-25).
 
 ## Conclusion
 No task-wide blocker remains for the implementable slices. The five gated capabilities require an Architect/owner contract decision and are visibly marked in the workspace; they are not implemented with invented behavior.
+
+## R7 read enrichment (additive, no new endpoint/migration)
+- Offer list now carries `SellerDisplayName`, `BrandName`, `VariantCode`, `PrimaryMediaAssetId`.
+- Offer detail now carries `VariantCode`, `PrimaryMediaAssetId`, `FulfillmentResponsibility`, `FulfillmentShippingTypeId`, `LastUpdatedAt`.
+- These expose existing stored/owned data only; no business decision was invented. Gated items above remain gated.

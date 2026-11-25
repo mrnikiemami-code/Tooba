@@ -75,7 +75,14 @@ export default function VendorProductDetailPage() {
 
   function renderExtras(tab: OfferTabId, detail: { productId: string | null }): ReactNode {
     if (tab === "identity" && detail.productId) {
-      return <SellerProductAttributesPanel productId={detail.productId} />;
+      return (
+        <details className="rounded-ds border border-border bg-surface" data-testid="seller-product-attributes">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">اطلاعات تکمیلی محصول</summary>
+          <div className="border-t border-border p-3">
+            <SellerProductAttributesPanel productId={detail.productId} />
+          </div>
+        </details>
+      );
     }
     if (tab === "conditions" && reservation) {
       return (
