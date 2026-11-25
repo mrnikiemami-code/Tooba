@@ -1,12 +1,12 @@
 # TOOBA — OpenCode Architect Delivery Method
 
 Protocol: **TOOBA-OPENCODE-DELIVERY-V1**
-Version: **1.3.0**
+Version: **1.4.0**
 Adopted: **2026-11-22**
 Owner: **Tooba architect**
-Status: **ACTIVE for new OpenCode tasks only**
-Supersedes: **1.2.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.2.0.md)); older [v1.1.0](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md), [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
-Revision authority: **owner explicit approval on 2026-11-22**
+Status: **ACTIVE for new OpenCode tasks; owner DEV authority and continuity clarification also bind current tasks**
+Supersedes: **1.3.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.3.0.md)); earlier **1.2.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.2.0.md)); older [v1.1.0](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md), [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
+Revision authority: **owner explicit approval on 2026-11-26 (Tehran), following R10 premature stop**
 Pilot evidence: 283 → connected 284 → TB-OCC-284 independent acceptance. The owner explicitly authorized recording this method **only on success**, and subsequently confirmed adoption.
 Reviewed code: `611f97a85ec7c2e464e4f649820992202ca3754c`.
 Connected evidence: `fc40d412aa6d085d3db3f1deac461eb93a10f48d`.
@@ -30,6 +30,12 @@ Interpretation rule: **MUST** means mandatory whenever the stated applicability 
 - Build/test failures are work to diagnose and fix within authorized scope. Initial implementation, debugging and fixture repair are not the post-matrix correction round. Large scope, missing code, token thrift, or completing one internal wave are not reasons to end a task. No arbitrary task splitting or repeated planning instead of implementation.
 - Preflight gates remain hard for the affected unsafe operation: never perform unauthorized writes, bypass permissions or fake proof. Safe independent work may proceed with its own applicable preflight. A task-wide stop is justified only if no further safe authorized work remains, or a demonstrated global safety issue makes all further work unsafe. Record exact evidence and exhausted independent slices.
 - STOP_FOR_ARCHITECT is a terminal review gate, not an instruction to stop after each wave. The existing one consolidated post-matrix correction and final rerun limit remains; do not loop or auto-issue tasks. Owner-approved task-specific constraints prevail. This clarification applies to current and future OpenCode tasks, including TB-296; Cursor/main rules are unchanged.
+
+## 0B. Standing DEV authority and terminal-stop gate (owner-approved)
+- Read `docs/opencode/DEV-HOST-TEST-POLICY.md` first. Existing Host 5088, Next 3000 and PostgreSQL tooba_alpha are the only default test environment. Owner already authorizes necessary in-scope module migrations, destructive tests, deletion, reset, fixture changes and controlled restart of the same Host. Verify actual DEV identity, candidate build and restorable backup for destructive operations. No new Host/database/Testcontainers or repeated approval. Never target production or unknown databases.
+- This standing authority supersedes contradictory earlier task/OpenSpec isolation, teardown and migration-approval wording for this confirmed DEV target; immutable historical inputs stay unchanged. Read task-local owner addenda before preflight. Independent GET/SQL and restoration/cleanup evidence remain mandatory.
+- Before issuing tasks, architect MUST reconcile TASK, OpenSpec, matrix and loader with this policy. Do not require a fresh DB or separate owner approval for already authorized operations. Scope missing business-policy decisions to the affected slice only.
+- Before any terminal BLOCKED, record for every unfinished requirement exact source evidence, attempted implementation or safety reason, applicable authority and why no independent safe work remains. Missing authorized endpoints, migrations, history/provisioning contracts, in-scope build/test failures, time/token thrift and incomplete first matrix are not themselves terminal blockers. Continue implementation and independent tests. STOP_FOR_ARCHITECT after completion or genuinely exhausted safe work; no automatic next task. No weakening CQRS, DDD, Contracts, security, design or acceptance gates.
 
 ## 1. Architect PRE-ISSUE — mandatory before dispatch
 
@@ -71,7 +77,7 @@ Architect reads the current real source and records all of these fields in `docs
 After `git fetch origin`, read task and this protocol from `origin/main`; verify repository, HEAD/base ancestry, existing work and remote parity without overwriting user work.
 
 For a persistent UI operation, demonstrate **before product-code edits** a safe end-to-end test path:
-real Chromium via Playwright → served Next build → real owning Host endpoint → isolated PostgreSQL → independent GET and SQL → disposable teardown. Show test actor and seller scope, ports, Host DLL/build identity, database identity, fixture values, write boundary and ability to clean up. A health check or mocked request alone is not enough. For non-persistent/non-UI tasks define the equivalent owning-provider evidence chain explicitly.
+real Chromium via Playwright → served Next build → real owning Host endpoint → confirmed existing DEV PostgreSQL → independent GET and SQL → verified cleanup/restoration. Show test actor and seller scope, ports, Host DLL/build identity, database identity, fixture values, write boundary and ability to clean up. A health check or mocked request alone is not enough. For non-persistent/non-UI tasks define the equivalent owning-provider evidence chain explicitly.
 
 If unsafe or infeasible, stop the affected operation **before its product edits** as `BLOCKED_PREFLIGHT` with one exact cause and smallest unblock; continue safe independent slices under §0A. Do not substitute fake data for required real-provider proof. No live user/business writes, migrations, resets, grants or provider effects without explicit authorization.
 
@@ -81,7 +87,7 @@ If unsafe or infeasible, stop the affected operation **before its product edits*
 
 **Impeccable:** for any actual UI design, form, accessibility or interaction change, document `critique → explicit design choices → implementation → post-change evaluation` and concrete evidence. Merely installing or reading it is not usage. For evidence-only tasks without UI changes, state `NOT_APPLICABLE: NO_UI_CHANGE`; do not falsely claim execution.
 
-**Playwright:** real installed Chromium against served app; use owning Host + isolated persistence for claims about Save/reload. Controlled HTTP is permitted for deterministic malformed/lost/wrong-response **error branches only**, labeled explicitly; it cannot replace connected success proof. Record exact request methods/bodies/counts and browser outcomes. Use test tools proportionately; no ritual use of unrelated tools.
+**Playwright:** real installed Chromium against served app; use owning existing DEV Host + confirmed DEV persistence for claims about Save/reload. Controlled HTTP is permitted for deterministic malformed/lost/wrong-response **error branches only**, labeled explicitly; it cannot replace connected success proof. Record exact request methods/bodies/counts and browser outcomes. Use test tools proportionately; no ritual use of unrelated tools.
 
 ## 3A. Token-efficient OpenCode conversation and tool-output policy — v1.2.0
 
@@ -127,7 +133,7 @@ The checker MUST independently parse the manifest, immutable issued acceptance m
 2. Each required test MUST directly emit its observed facts from its actual code path and provider (HTTP, independent GET/SQL where persistence matters). Never manually enrich evidence JSON after the script runs. A script/result mismatch is `NOT_PROVEN`, not PASS. Preserve timestamps, source revision, test command/exit and relevant environment identity.
 3. The task-local checker MUST, within the **same final acceptance run**, recompute artifact hashes **and** parse actual result values against the fixed issued expectations. Reject missing/unproduced properties and nonzero unexpected effects; for claims of zero Pricing/Inventory effects, require measured before/after values on the owning tables or equivalent authoritative journal, not merely an Offer-row count. Reject extra asserted fields with no generator provenance when material to the claim.
 4. Include a **single targeted checker mutation self-test** that flips a material observed fact or removes a required fact and proves rejection. Reuse existing self-test infrastructure; no separate testing task, duplicate harness or repeated full matrix for this rule.
-5. **Smallest sufficient proof:** use focused unit/component tests for local logic; real browser→owning Host→isolated DB only when UI and durable business flows are in scope; targeted controlled-error simulation for unreachable error branches, accurately labeled. Skip inapplicable providers with a recorded reason. No screenshots or repeated builds as ceremony.
+5. **Smallest sufficient proof:** use focused unit/component tests for local logic; real browser→owning existing DEV Host→confirmed DEV DB only when UI and durable business flows are in scope; targeted controlled-error simulation for unreachable error branches, accurately labeled. Skip inapplicable providers with a recorded reason. No screenshots or repeated builds as ceremony.
 6. **Finite outcome:** one initial complete matrix; at most **one consolidated repair** for genuine failed criteria; one final complete rerun. Architect review is a **decision**, not a hidden new development phase. If the gate fails after the repair, report `BLOCKED`, name the exact unresolved fact and STOP. A further verification or implementation request needs a new, **explicit owner decision**, never auto-generated.
 7. **Proportionality and time/token discipline:** front-load obvious negative/boundary cases in the initial matrix; use one collection of evidence and one verifier; concise tool output with preserved full logs. Do not divide a straightforward correction into multiple tickets, artificially increase test count, or repeatedly reread/retest unchanged material.
 
@@ -151,7 +157,7 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 | Unsafe/no connected test chain before coding | BLOCKED_PREFLIGHT; no product edit |
 | OpenSpec strict invalid for applicable behavior task | BLOCKED before code |
 | UI changed without documented Impeccable critique/post-check | NOT_READY |
-| Persistence claimed without owning Host + isolated DB + independent GET/SQL | BLOCKED_EVIDENCE |
+| Persistence claimed without owning existing DEV Host + confirmed DEV DB + independent GET/SQL | BLOCKED_EVIDENCE |
 | Any mandatory issued invariant/test FAIL/NOT_RUN (not only REQ count) | NOT_READY; one bounded repair after first full matrix |
 | One repair and final rerun still fail | BLOCKED; no auto task |
 | All REQs pass but checker/hashes/negative control fail | BLOCKED_EVIDENCE |
@@ -169,7 +175,7 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 
 ## 9. Stable recovery rule for future architect sessions
 
-On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.3.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
+On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.4.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
 
 **This file is the canonical OpenCode architect procedure. The Cursor procedure remains separate.**
 
