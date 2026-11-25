@@ -13,5 +13,5 @@
                          "messaging-transport":  "postgresql-sql",
                          "messaging":  "Healthy"
                      },
-    "verifySha256":  "F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1"
+    "verifySha256":  "743C38D993A718AFF8634E54444D82313F3BBEE424F6AA28B0BBC1E8989807A2"
 }

@@ -141,7 +141,7 @@ CODE: `0111d89b45cb932c4c3449d8b4512b8379e383e4`
 ## Verification
 
 - FE build `tRnq3kk5nCDutJy-rfGat`; Host/FE running on 5088/3000; `/health/ready` ready.
-- Playwright R8: 58/58 checks, 0 errors; JSON SHA-256 `F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1`.
+- Playwright R8: 58/58 checks, 0 errors; JSON SHA-256 `743C38D993A718AFF8634E54444D82313F3BBEE424F6AA28B0BBC1E8989807A2`.
 - Mounted workspace tests: 24/24 (product/variant, zero variants, duplicate link, amount, partial inventory, network unknown, language restore, third-language fixture, double submit).
 - Admin/seller API tests: 16/16; model/i18n: 14/14; Offer backend: 97/97; Catalog guard + Stage2: 6/6.
 - Orders regression: 10 rows / total 11.

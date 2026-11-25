@@ -9,7 +9,7 @@
     "buildId": "tRnq3kk5nCDutJy-rfGat",
     "health": "ready: SingleStore, inmemory authorization, messaging Healthy",
     "verifyJson": "docs/opencode/tasks/TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296/evidence/r8-runtime/verify-r8.json",
-    "verifySha256": "F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1",
+    "verifySha256": "743C38D993A718AFF8634E54444D82313F3BBEE424F6AA28B0BBC1E8989807A2",
     "runtimeChecks": 58,
     "runtimeErrors": 0,
     "metrics": {
@@ -366,7 +366,7 @@
         "Owner visual acceptance of other tabs remains external."
       ],
       "evidence": [
-        "evidence/r8-runtime/verify-r8.json (SHA-256 F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1)",
+        "evidence/r8-runtime/verify-r8.json (SHA-256 743C38D993A718AFF8634E54444D82313F3BBEE424F6AA28B0BBC1E8989807A2)",
         "evidence/r8-mount-tests.log (24/24)",
         "evidence/r8-api-tests.log (16/16)",
         "evidence/r8-model-i18n-tests.log (14/14)",
