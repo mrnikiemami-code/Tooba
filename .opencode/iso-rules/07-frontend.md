@@ -15,3 +15,6 @@ MUST:
 - Do **not** invent a parallel shell, menu, or architecture track.
 
 AMSC is not a frontend default. Stop for Architect if the fix requires unauthorized cross-boundary redesign.
+
+## Approved design fidelity (mandatory for UI work)
+Read `docs/architecture/NEXTJS-DESIGN-FIDELITY.md` and follow its design/approval/integration gates. No HTML-only design acceptance or visual reconstruction.
