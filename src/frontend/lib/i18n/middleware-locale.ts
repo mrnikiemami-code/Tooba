@@ -1,4 +1,4 @@
-import {
+﻿import {
   isExcludedFromLocalePrefix,
   isPublicStorefrontPath,
   parseInvalidLocalePrefix,
@@ -22,6 +22,11 @@ export function planLocaleMiddleware(
   cookieValue: string | undefined,
   rewrittenLocaleHeader: string | null,
 ): LocaleMiddlewarePlan {
+  const prefixedEarly = parseLocalePrefix(pathname);
+  if (prefixedEarly) {
+    return { type: "rewrite", locale: prefixedEarly.locale, internalPath: prefixedEarly.pathname };
+  }
+
   if (isExcludedFromLocalePrefix(pathname)) {
     return { type: "pass" };
   }
@@ -36,7 +41,7 @@ export function planLocaleMiddleware(
   }
 
   if (isPublicStorefrontPath(pathname)) {
-    if (rewrittenLocaleHeader === "fa" || rewrittenLocaleHeader === "en") {
+    if (rewrittenLocaleHeader === "fa" || rewrittenLocaleHeader === "en" || rewrittenLocaleHeader === "ru") {
       return { type: "pass" };
     }
 

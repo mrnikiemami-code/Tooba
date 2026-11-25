@@ -2,30 +2,33 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
+import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
+import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { ErrorState, Skeleton } from "../../../../design-system";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
+import { readSellerPartyId } from "../../seller-api";
 import {
   createSellerOffer,
   findSellerActiveOffer,
   loadSellerOfferDetail,
   loadSellerProductVariants,
   patchSellerOffer,
-  readSellerPartyId,
   searchSellerCatalogProducts,
   writeSellerOfferPrice,
-} from "../../seller-api";
+} from "../../seller-offer-api";
 import { clearOfferIntent, readOrCreateOfferIntent } from "../../offer-create-intent";
+import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
 
 const PAGE_SIZE = 10;
 
 export default function VendorCreateOfferPage() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const localeResolution = useOfferLocaleOverride("seller");
-  const offerLocale = localeResolution.locale;
+  const registry = useRegistryLocale();
+  const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,36 +67,47 @@ export default function VendorCreateOfferPage() {
         findSellerActiveOffer(sellerPartyId, catalogVariantId),
       createAndSaveDraft: async (input) => {
         const scope = `${sellerPartyId}:${input.catalogVariantId}`;
-        const created = await createSellerOffer(sellerPartyId, { catalogVariantId: input.catalogVariantId, sellerSku: input.sellerSku, status: "Draft", requestId: readOrCreateOfferIntent(scope) });
-        if (!created.ok) return { ok: false, errorCode: created.errorCode, denied: created.denied };
-        const offerId = created.detail.offerId;
+        let requestId: string;
         try {
-          if (input.amount != null) {
-            const price = await writeSellerOfferPrice(sellerPartyId, offerId, { amount: input.amount, currency: input.currency });
-            if (!price.ok) return { ok: false, errorCode: price.errorCode, createdOfferId: offerId, partial: true };
-          }
-          const conditionsChanged = input.returnPolicyChoice !== "Default"
-            || input.customReturnWindowDays != null
-            || input.minimumOrderQuantity != null
-            || input.maximumOrderQuantity != null;
-          if (conditionsChanged) {
-            const patch = await patchSellerOffer(sellerPartyId, offerId, {
+          requestId = readOrCreateOfferIntent(scope);
+        } catch {
+          return { ok: false, errorCode: "offer.create.intent_not_durable" };
+        }
+        return createAndApplyOffer({
+          create: async () => {
+            const created = await createSellerOffer(sellerPartyId, {
+              catalogVariantId: input.catalogVariantId,
               sellerSku: input.sellerSku,
               status: "Draft",
-              returnPolicyChoice: input.returnPolicyChoice,
-              customReturnWindowDays: input.customReturnWindowDays,
-              minimumOrderQuantity: input.minimumOrderQuantity,
-              maximumOrderQuantity: input.maximumOrderQuantity,
+              requestId,
             });
-            if (!patch.ok) return { ok: false, errorCode: patch.errorCode, createdOfferId: offerId, partial: true };
-          }
-          const reread = await loadSellerOfferDetail(sellerPartyId, offerId);
-          if (reread.source !== "host" || !reread.detail) return { ok: false, errorCode: "host-unreachable", createdOfferId: offerId, partial: true };
-          clearOfferIntent(scope);
-          return { ok: true, offerId };
-        } catch {
-          return { ok: false, errorCode: "host-unreachable", createdOfferId: offerId, partial: true };
-        }
+            return created.ok
+              ? { ok: true, offerId: created.detail.offerId }
+              : { ok: false, errorCode: created.errorCode, denied: created.denied };
+          },
+          load: async (offerId) => {
+            const result = await loadSellerOfferDetail(sellerPartyId, offerId);
+            return result.source === "host" && result.detail
+              ? { ok: true, detail: result.detail }
+              : { ok: false, errorCode: result.message ?? "host-unreachable" };
+          },
+          savePrice: async (offerId, amount, currency) => {
+            const result = await writeSellerOfferPrice(sellerPartyId, offerId, { amount, currency });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
+          saveConditions: async (offerId, value) => {
+            const result = await patchSellerOffer(sellerPartyId, offerId, {
+              sellerSku: value.sellerSku,
+              status: "Draft",
+              returnPolicyChoice: value.returnPolicyChoice,
+              customReturnWindowDays: value.customReturnWindowDays,
+              minimumOrderQuantity: value.minimumOrderQuantity,
+              maximumOrderQuantity: value.maximumOrderQuantity,
+            });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
+          onCommitted: () => clearOfferIntent(scope),
+        }, input);
       },
       createDraft: async ({ catalogVariantId, sellerSku }) => {
         const scope = `${sellerPartyId}:${catalogVariantId}`;
@@ -144,7 +158,7 @@ export default function VendorCreateOfferPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} localeDefinition={localeResolution.locale} messages={localeResolution.workspaceMessages} />
+      <OfferWorkspace adapter={adapter} localeDefinition={offerLocale} messages={workspaceMessages} />
     </main>
   );
 }

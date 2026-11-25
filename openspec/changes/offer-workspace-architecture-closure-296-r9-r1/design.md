@@ -1,0 +1,3 @@
+﻿# Design — offer-workspace-architecture-closure-296-r9-r1
+
+Use the existing R8 layout and R9 functionality. Extract save/create orchestration and local detail into cohesive modules; keep the route pages as adapters. Use the shared i18n middleware/routing and registry-backed locale hook instead of a feature query parameter. Public language DTO/query lives in Localization.Application and exposes only active public fields. Shared create-and-apply use case validates every requested commercial/price/condition/fulfillment value on reread. Gaps without owning authority are documented, not fabricated.

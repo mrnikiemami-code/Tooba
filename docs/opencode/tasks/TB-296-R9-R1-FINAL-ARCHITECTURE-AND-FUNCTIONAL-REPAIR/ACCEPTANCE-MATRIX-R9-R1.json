@@ -1,0 +1,56 @@
+﻿{
+  "taskId": "TB-296-R9-R1-FINAL-ARCHITECTURE-AND-FUNCTIONAL-REPAIR",
+  "base": "63da7a2dbcaf61c0469252c65e5e42b499db6a0e",
+  "status": "PASS_WITH_LIMITATIONS",
+  "architecture": {
+    "AQ-01": "PASS_WITH_LIMITATION",
+    "AQ-02": "PASS",
+    "AQ-03": "PASS",
+    "AQ-04": "PASS",
+    "AQ-05": "PASS",
+    "AQ-06": "PASS_WITH_LIMITATION",
+    "AQ-07": "PASS_WITH_BASELINE_DEBT",
+    "AQ-08": "PASS"
+  },
+  "source": {
+    "workspaceLocBefore": 1161,
+    "workspaceLocAfter": 785,
+    "sellerApiBefore": 1488,
+    "sellerApiAfter": 1116,
+    "newModules": [
+      "src/frontend/lib/offer-workspace/offer-actions.ts",
+      "src/frontend/lib/offer-workspace/local-detail.ts",
+      "src/frontend/features/offer-create/offer-create-and-apply.ts",
+      "src/frontend/lib/i18n/registry-locale.ts",
+      "src/frontend/app/vendor-panel/seller-offer-api.ts",
+      "src/backend/Modules/Localization/Tooba.Localization.Application/Languages/Queries/ListActiveLanguagesQuery.cs"
+    ]
+  },
+  "verification": {
+    "typecheck": "PASS",
+    "lint": "PASS (pre-existing unrelated warnings)",
+    "build": "PASS",
+    "frontendArchitecture": "27 pre-existing baseline violations; no task offer file in violations; thresholds/baseline unchanged",
+    "offerBackend": "97/97",
+    "hostLocalizationCatalogStage2": "11/11",
+    "mountedWorkspace": "26/26",
+    "adminSellerApi": "16/16",
+    "modelI18nRouting": "26/26",
+    "runtime": "32/32",
+    "openspec": "valid strict",
+    "performance": {"formLoadMs": 1028, "pickerMs": 71, "r8Comparable": {"formLoadMs": 1598, "pickerMs": 103}},
+    "publicLanguages": "dedicated public DTO verified",
+    "verifySha256": "DA00DD5B86A5333D4798EE20BB8C201F36DFABC47C5AF15C989DDDE4A176DAFB",
+    "cleanupSha256": "932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D",
+    "performanceSha256": "7777F7666A3DF4F09236F86FB622FA950948D01D09E158566954FD11E9651359",
+    "publicLanguagesSha256": "C9EC5F68210B71971A56783BD1A51851C954B95A2269FFD4F936DCE214960826"
+  },
+  "limitations": [
+    "Channel authority by edition/seller/permission/policy absent; no selection/fake policy invented.",
+    "Pre-create inventory provisioning and offer history contracts absent; tabs remain honestly gated.",
+    "Atomic optimistic concurrency absent in Offer/Pricing/Inventory; pre-read remains non-atomic and is not claimed otherwise.",
+    "Shared root locale type/global shell and AppDataGrid chrome remain fa/en; dynamic registry route support is currently the configured ru prefix.",
+    "27 unrelated frontend architecture baseline debts remain; no baseline suppression.",
+    "Owner UAT remains external; TB-297 not started."
+  ]
+}

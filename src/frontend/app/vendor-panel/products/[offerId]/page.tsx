@@ -2,20 +2,20 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
+import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
+import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { ErrorState, Skeleton } from "../../../../design-system";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferTabId, OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
+import { loadSellerReservationPolicy, readSellerPartyId } from "../../seller-api";
 import {
   loadSellerOfferDetail,
   loadSellerProductVariants,
-  loadSellerReservationPolicy,
   patchSellerOffer,
-  readSellerPartyId,
   writeSellerOfferInventory,
   writeSellerOfferPrice,
-} from "../../seller-api";
+} from "../../seller-offer-api";
 import { SellerProductAttributesPanel } from "../../../admin/catalog-attribute-ui";
 import { ReservationPolicyEditor, draftFromView, type ReservationPolicyDraft } from "../../../admin/reservation-policy-editor.tsx";
 import type { ReservationPolicyEditorView } from "../../../admin/reservation-policy-api";
@@ -24,8 +24,9 @@ export default function VendorProductDetailPage() {
   const params = useParams<{ offerId: string }>();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const localeResolution = useOfferLocaleOverride("seller");
-  const offerLocale = localeResolution.locale;
+  const registry = useRegistryLocale();
+  const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
   const offerId = params?.offerId ?? "";
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
   const [reservation, setReservation] = useState<ReservationPolicyEditorView | null>(null);

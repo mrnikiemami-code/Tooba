@@ -22,6 +22,8 @@ import {
 } from "./model";
 import { offerErrorText, offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
 import { createOfferFormatters, offerLocaleFromAppLocale, type OfferFormatters, type OfferLocaleDefinition } from "./i18n";
+import { createOfferActions } from "./offer-actions.ts";
+import { buildLocalDetail } from "./local-detail.ts";
 import { ConditionsTab } from "./conditions-tab";
 import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
@@ -69,54 +71,6 @@ type PersistedOfferWorkspace = {
   baseLastUpdatedAt?: string | null;
 };
 
-function buildLocalDetail(
-  adapter: OfferWorkspaceAdapter,
-  seller: OfferSellerOption | null,
-  product: OfferProductOption,
-  variant: OfferVariantOption,
-  sellerSku: string,
-): OfferWorkspaceDetail {
-  return {
-    offerId: "",
-    sellerPartyId: seller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "",
-    sellerDisplayName: seller?.displayName ?? adapter.fixedSeller?.displayName ?? "",
-    catalogVariantId: variant.catalogVariantId,
-    productId: product.productId,
-    productTitle: product.title,
-    brandName: product.brandName,
-    sellerSku: sellerSku.trim() || null,
-    status: "Draft",
-    channel: "Marketplace",
-    amount: null,
-    currency: "IRR",
-    onHand: 0,
-    reserved: 0,
-    availableUnits: 0,
-    catalogReadOnly: true,
-    returnPolicyChoice: "Default",
-    customReturnWindowDays: null,
-    defaultReturnWindowDays: 7,
-    sellerCanOverrideReturnPolicy: true,
-    minReturnWindowDays: 1,
-    maxReturnWindowDays: 30,
-    allowNonReturnableOffers: true,
-    minimumOrderQuantity: null,
-    maximumOrderQuantity: null,
-    productUnitCode: product.unitCode ?? null,
-    productUnitName: product.unitName ?? null,
-    productUnitShortName: null,
-    unitQuantityDecimalPlaces: product.quantityDecimalPlaces ?? 0,
-    unitQuantityStep: product.quantityStep ?? null,
-    unitRoundingMode: product.roundingMode ?? null,
-    inventoryLocations: [],
-    variantCode: variant.catalogCode,
-    variantLabel: variant.displayLabel || null,
-    primaryMediaAssetId: product.primaryMediaAssetId ?? variant.primaryMediaAssetId ?? null,
-    fulfillmentResponsibility: null,
-    fulfillmentShippingTypeId: null,
-    lastUpdatedAt: null,
-  };
-}
 export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messages }: OfferWorkspaceProps) {
   const appLocale = useLocale();
   const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
@@ -167,6 +121,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     clearPersistedDraft();
     adapter.onCancel();
   }
+
   const [saveNeedsReload, setSaveNeedsReload] = useState(false);
   const persistKey = useMemo(() => {
     const actor = typeof window === "undefined"
@@ -411,326 +366,15 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setSaveError(null);
   }
 
-  function applyServerDetail(next: OfferWorkspaceDetail) {
-    setDetail(next);
-    setResponsibility(next.fulfillmentResponsibility);
-    setShippingTypeId(next.fulfillmentShippingTypeId ?? "");
-  }
+  const actions = createOfferActions({
+    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant,
+    createReady, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
+    priceChanged, commercialChanged, stockChanged, shippingChanged, responsibility, shippingTypeId,
+    setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
+    setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
+    setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
+  });
 
-  function applySavedDetail(next: OfferWorkspaceDetail, domain: "commercial" | "price") {
-    setDetail(next);
-    setDraft((current) => {
-      if (domain === "commercial") {
-        return {
-          ...current,
-          sellerSku: next.sellerSku ?? "",
-          status: next.status,
-          returnPolicyChoice: next.returnPolicyChoice,
-          customReturnWindowDays: next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
-          minimumOrderQuantity: next.minimumOrderQuantity != null ? String(next.minimumOrderQuantity) : "",
-          maximumOrderQuantity: next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
-        };
-      }
-      return { ...current, amount: next.amount != null ? String(next.amount) : "", currency: next.currency };
-    });
-  }
-
-  function applySavedInventory(next: OfferWorkspaceDetail, stockItemId: string) {
-    setDetail(next);
-    setDraft((current) => applySavedInventoryDraft(current, next, stockItemId));
-  }
-
-  function finishSaveFailure(
-    tab: OfferTabId,
-    result: { errorCode: string; denied?: boolean },
-    savedAny: boolean,
-  ) {
-    const transient = result.errorCode === "host-unreachable";
-    setActiveTab(tab);
-    setTabError({ tab, code: result.errorCode || "save" });
-    setSaveNeedsReload(transient);
-    setSaveRetryable(!transient);
-    const text = transient ? t.saveUnknown : result.denied ? t.denied : offerErrorText(t, result.errorCode);
-    showBlocking(transient ? "reload" : "error", savedAny ? t.partialTitle : t.saveErrorTitle, savedAny ? `${text} ${t.partialSaved}` : text);
-    if (savedAny) {
-      setSaveNotice(t.partialSaved);
-      setSaveRetryable(true);
-    }
-  }
-
-  async function reloadAfterUnknown() {
-    if (!adapter.loadDetail || saveReloading) return;
-    setSaveReloading(true);
-    try {
-      const result = await adapter.loadDetail();
-      if (!result.ok) {
-        showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-        return;
-      }
-      applyServerDetail(result.detail);
-      setSaveNeedsReload(false);
-      setSaveError(null);
-      setSaveNotice(t.reloaded);
-    } catch {
-      showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-    } finally {
-      setSaveReloading(false);
-    }
-  }
-
-  async function runSave() {
-    if (!detail || saving || saveRef.current) return;
-    if (saveNeedsReload) {
-      showBlocking("reload", t.saveErrorTitle, t.concurrentChange);
-      return;
-    }
-    const errors = validateDraft(detail, draft);
-    if (errors.length > 0) {
-      const first = errors[0]!;
-      setTabError({ tab: first.tab, code: first.code });
-      setActiveTab(first.tab);
-      setSaveError(offerErrorText(t, first.code));
-      setSaveRetryable(true);
-      return;
-    }
-    if (priceChanged && draft.amount.trim().length === 0) {
-      setTabError({ tab: "pricing", code: "offer.price.required" });
-      setActiveTab("pricing");
-      setSaveError(t.priceRequired);
-      setSaveRetryable(true);
-      return;
-    }
-    if (!commercialChanged && !priceChanged && !stockChanged && !shippingChanged) {
-      setSaveNotice(t.noChanges);
-      setSaveError(null);
-      setTabError(null);
-      return;
-    }
-
-    saveRef.current = true;
-    setSaving(true);
-    setSaveError(null);
-    setSaveNotice(null);
-    setTabError(null);
-    setShippingError(null);
-    setSaveNeedsReload(false);
-    setSaveRetryable(true);
-    let savedAny = false;
-    const expectedAmount = parseDecimal(draft.amount);
-    const expectedInventory = new Map<string, number | null>();
-    if (stockChanged) {
-      for (const row of detail.inventoryLocations) {
-        expectedInventory.set(row.stockItemId, parseDecimal(draft.inventoryOnHand[row.stockItemId]));
-      }
-    }
-
-    try {
-      if (adapter.loadDetail) {
-        const latest = await adapter.loadDetail();
-        if (!latest.ok) {
-          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-          setSaveNeedsReload(true);
-          setSaveRetryable(false);
-          return;
-        }
-        if (detailVersionChanged(detail, latest.detail)) {
-          applyServerDetail(latest.detail);
-          showBlocking("reload", t.saveErrorTitle, t.concurrentChange);
-          setSaveNeedsReload(true);
-          setSaveRetryable(false);
-          return;
-        }
-      }
-
-      if (commercialChanged) {
-        const result = await adapter.saveCommercial(buildCommercialPatch(detail, draft));
-        if (!result.ok) {
-          finishSaveFailure("conditions", result, savedAny);
-          return;
-        }
-        applySavedDetail(result.detail, "commercial");
-        savedAny = true;
-      }
-
-      if (priceChanged) {
-        if (expectedAmount == null) {
-          setActiveTab("pricing");
-          setSaveError(t.validationAmount);
-          setSaveRetryable(true);
-          return;
-        }
-        const result = await adapter.savePrice({ amount: expectedAmount, currency: draft.currency || "IRR" });
-        if (!result.ok) {
-          finishSaveFailure("pricing", result, savedAny);
-          return;
-        }
-        applySavedDetail(result.detail, "price");
-        savedAny = true;
-      }
-
-      if (stockChanged) {
-        const changedRows = changedInventoryRows(detail, draft);
-        for (const row of changedRows) {
-          const result = await adapter.saveInventory({
-            stockItemId: row.stockItemId,
-            onHand: parseDecimal(draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
-            reason: draft.inventoryReason.trim(),
-          });
-          if (!result.ok) {
-            finishSaveFailure("inventory", result, savedAny);
-            return;
-          }
-          applySavedInventory(result.detail, row.stockItemId);
-          savedAny = true;
-        }
-        setDraft((current) => ({ ...current, inventoryReason: "" }));
-      }
-
-      if (shippingChanged && adapter.saveFulfillment) {
-        setShippingSaving(true);
-        const result = await adapter.saveFulfillment({
-          responsibility,
-          shippingTypeId: shippingTypeId || null,
-        });
-        setShippingSaving(false);
-        if (!result.ok) {
-          finishSaveFailure("shipping", result, savedAny);
-          return;
-        }
-        const verification = adapter.loadDetail ? await adapter.loadDetail() : null;
-        if (
-          !verification ||
-          !verification.ok ||
-          verification.detail.fulfillmentResponsibility !== responsibility ||
-          (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)
-        ) {
-          setShippingError(t.perTabError);
-          finishSaveFailure("shipping", { errorCode: "seller.shipping.response_mismatch" }, savedAny);
-          return;
-        }
-        applyLoadedDetail(verification.detail);
-        setShippingNotice(t.shippingSaved);
-        savedAny = true;
-      }
-
-      if (adapter.loadDetail) {
-        const verification = await adapter.loadDetail();
-        if (!verification.ok) {
-          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-          setSaveNeedsReload(true);
-          setSaveRetryable(false);
-          return;
-        }
-        const mismatch =
-          (commercialChanged && verification.detail.sellerSku !== draft.sellerSku.trim())
-          || (priceChanged && verification.detail.amount !== expectedAmount)
-          || (shippingChanged
-            && (verification.detail.fulfillmentResponsibility !== responsibility
-              || (verification.detail.fulfillmentShippingTypeId ?? null) !== (shippingTypeId || null)))
-          || (stockChanged
-            && detail.inventoryLocations.some((row) => {
-              const expected = expectedInventory.get(row.stockItemId);
-              if (expected == null) return false;
-              const actual = verification.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId);
-              return !actual || actual.onHand !== expected;
-            }));
-        if (mismatch) {
-          applyServerDetail(verification.detail);
-          showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-          setSaveNeedsReload(true);
-          setSaveRetryable(false);
-          return;
-        }
-        applyLoadedDetail(verification.detail);
-      }
-
-      clearPersistedDraft();
-      if (shippingChanged) setShippingNotice(t.shippingSaved);
-      setSaveNotice(t.saved);
-      setSaveError(null);
-      setTabError(null);
-    } catch {
-      showBlocking("reload", t.saveErrorTitle, t.saveUnknown);
-      setSaveNeedsReload(true);
-      setSaveRetryable(false);
-    } finally {
-      saveRef.current = false;
-      setSaving(false);
-    }
-  }
-
-  async function runCreate() {
-    if (saving || saveRef.current) return;
-    if (activeConflict) {
-      showBlocking("duplicate", t.duplicateActiveTitle, t.duplicateActive);
-      return;
-    }
-    if (!createReady || (adapter.role === "admin" && !selectedSeller) || !selectedVariant) {
-      setShowCreateErrors(true);
-      setSaveRetryable(true);
-      return;
-    }
-    saveRef.current = true;
-    setSaving(true);
-    setSaveError(null);
-    setSaveNotice(null);
-    setSaveNeedsReload(false);
-    setSaveRetryable(true);
-    try {
-      const createInput = {
-        sellerPartyId: selectedSeller?.sellerPartyId,
-        catalogVariantId: selectedVariant.catalogVariantId,
-        sellerSku: draft.sellerSku.trim() || null,
-        amount: priceChanged ? parseDecimal(draft.amount) : null,
-        currency: draft.currency || "IRR",
-        returnPolicyChoice: draft.returnPolicyChoice,
-        customReturnWindowDays: draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null,
-        minimumOrderQuantity: parseDecimal(draft.minimumOrderQuantity),
-        maximumOrderQuantity: parseDecimal(draft.maximumOrderQuantity),
-        responsibility: adapter.role === "admin" ? responsibility : null,
-        shippingTypeId: adapter.role === "admin" ? shippingTypeId || null : null,
-      };
-      const result = adapter.createAndSaveDraft
-        ? await adapter.createAndSaveDraft(createInput)
-        : await adapter.createDraft({
-            sellerPartyId: createInput.sellerPartyId,
-            catalogVariantId: createInput.catalogVariantId,
-            sellerSku: createInput.sellerSku,
-          });
-      if (!result.ok) {
-        if ("createdOfferId" in result && result.createdOfferId) {
-          showBlocking("error", t.partialTitle, `${offerErrorText(t, result.errorCode ?? "save")} ${t.partialSaved}`, String(result.createdOfferId));
-          return;
-        }
-        if (result.errorCode === "offer.listing.duplicate_active" && adapter.findActiveOffer) {
-          const sellerId = adapter.role === "seller" ? adapter.fixedSeller?.sellerPartyId : selectedSeller?.sellerPartyId;
-          const existing = sellerId ? await adapter.findActiveOffer(sellerId, selectedVariant.catalogVariantId) : null;
-          if (existing) setActiveConflict(existing);
-          else showBlocking("error", t.duplicateActiveTitle, t.duplicateActive);
-          setSaveRetryable(false);
-          return;
-        }
-        if (result.errorCode === "host-unreachable") {
-          showBlocking("reload", t.saveErrorTitle, t.createUnknown);
-          setSaveRetryable(false);
-          setSaveNeedsReload(true);
-          return;
-        }
-        showBlocking("error", t.saveErrorTitle, result.denied ? t.denied : offerErrorText(t, result.errorCode));
-        setSaveRetryable(!result.denied);
-        return;
-      }
-      clearPersistedDraft();
-      adapter.onCreated(result.offerId);
-    } catch {
-      showBlocking("reload", t.saveErrorTitle, t.createUnknown);
-      setSaveRetryable(false);
-      setSaveNeedsReload(true);
-    } finally {
-      saveRef.current = false;
-      setSaving(false);
-    }
-  }
   if (denied) {
     return (
       <div className={styles.root}>
@@ -876,7 +520,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
-                onClick={() => void (isEdit ? runSave() : runCreate())}
+                onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
                 disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
                 data-offer-save="true"
                 data-testid={saveTestId}
@@ -941,11 +585,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               {saveError}
               <div style={{ marginTop: 6 }}>
                 {isEdit && saveNeedsReload ? (
-                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void reloadAfterUnknown()} disabled={saveReloading} data-testid="offer-save-reload">
+                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void actions.reloadAfterUnknown()} disabled={saveReloading} data-testid="offer-save-reload">
                     {saveReloading ? t.loading : t.reloadState}
                   </button>
                 ) : saveRetryable ? (
-                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? runSave() : runCreate())} disabled={saving} data-testid="offer-save-retry">
+                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())} disabled={saving} data-testid="offer-save-retry">
                     {t.retry}
                   </button>
                 ) : null}
@@ -960,7 +604,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         <button
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={() => void (isEdit ? runSave() : runCreate())}
+          onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
           disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
           data-offer-save="true"
         >
@@ -983,7 +627,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 <a className={`${styles.btn} ${styles.btnPrimary}`} href={existingOfferHref} data-testid="offer-message-open-existing">{t.viewExistingOffer}</a>
               ) : null}
               {messageBox.kind === "reload" ? (
-                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void reloadAfterUnknown(); }} disabled={saveReloading} data-testid="offer-message-reload">
+                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void actions.reloadAfterUnknown(); }} disabled={saveReloading} data-testid="offer-message-reload">
                   {saveReloading ? t.loading : t.reloadState}
                 </button>
               ) : null}
@@ -1137,25 +781,5 @@ function emptyDraft(): OfferWorkspaceDraft {
     minimumOrderQuantity: "",
     maximumOrderQuantity: "",
     status: "Draft",
-  };
-}
-
-function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): OfferCommercialPatch {
-  const min = parseDecimal(draft.minimumOrderQuantity);
-  const max = parseDecimal(draft.maximumOrderQuantity);
-  const customDays = draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null;
-  const returnsChanged =
-    draft.returnPolicyChoice !== detail.returnPolicyChoice || customDays !== detail.customReturnWindowDays;
-  const qtyChanged = min !== detail.minimumOrderQuantity || max !== detail.maximumOrderQuantity;
-  return {
-    sellerSku: draft.sellerSku.trim() || null,
-    status: draft.status !== detail.status ? draft.status : undefined,
-    returnPolicyChoice: returnsChanged ? draft.returnPolicyChoice : undefined,
-    customReturnWindowDays: returnsChanged ? customDays : undefined,
-    minimumOrderQuantity: qtyChanged ? min : undefined,
-    maximumOrderQuantity: qtyChanged ? max : undefined,
-    clearOrderQuantityLimits:
-      qtyChanged && min == null && max == null &&
-      (detail.minimumOrderQuantity != null || detail.maximumOrderQuantity != null),
   };
 }

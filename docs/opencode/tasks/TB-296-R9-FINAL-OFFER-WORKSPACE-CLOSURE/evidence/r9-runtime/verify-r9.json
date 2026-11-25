@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-11-25T15:17:38.683Z",
+  "startedAt": "2026-11-25T17:39:41.658Z",
   "checks": {
     "R9-02.sharedToastAutoClose3000": {
       "ok": true,
@@ -7,7 +7,7 @@
     },
     "R9-07.publicLanguageRegistry": {
       "ok": true,
-      "detail": "{\"status\":200,\"ru\":{\"languageId\":\"01a0844c-829e-7000-ab25-64b381896053\",\"code\":\"ru-RU\",\"urlPrefix\":\"ru\",\"displayName\":\"Russian\",\"nativeName\":\"Русский\",\"direction\":\"ltr\",\"culture\":\"ru-RU\",\"calendarDisplay\":\"Gregorian\",\"active\":true,\"isDefault\":false,\"sortOrder\":20,\"createdAt\":\"2026-09-09T03:53:21.815373+00:00\",\"updatedAt\":\"2026-09-09T03:53:21.815373+00:00\",\"isReferenced\":false,\"canEditCode\":true,\"canEditUrlPrefix\":true}}"
+      "detail": "{\"status\":200,\"ru\":{\"languageId\":\"01a0844c-829e-7000-ab25-64b381896053\",\"code\":\"ru-RU\",\"urlPrefix\":\"ru\",\"displayName\":\"Russian\",\"nativeName\":\"Русский\",\"direction\":\"ltr\",\"culture\":\"ru-RU\",\"calendarDisplay\":\"Gregorian\",\"isActive\":true,\"isDefault\":false,\"sortOrder\":20}}"
     },
     "R9-06.unitMetadataRead": {
       "ok": true,
@@ -115,7 +115,7 @@
     },
     "R9-05.sellerCreateApplied": {
       "ok": true,
-      "detail": "{\"amount\":654321,\"sku\":\"TB296-R9-SELLER-1795619914170\"}"
+      "detail": "{\"amount\":654321,\"sku\":\"TB296-R9-SELLER-1795628436979\"}"
     },
     "R9-12.crossOwnerNegative": {
       "ok": true,
@@ -132,12 +132,12 @@
   },
   "errors": [],
   "metrics": {
-    "formLoadMs": 38494
+    "formLoadMs": 38153
   },
   "ids": {
-    "r9OfferId": "dcf6776a-69f0-19ac-07ec-138a88e71820",
-    "sellerOfferId": "54e8bb2c-d130-f003-1567-f6693e21d40e"
+    "r9OfferId": "734ff9ed-896d-9e41-f662-0523c8bf466a",
+    "sellerOfferId": "0ca61f0e-a979-3a60-3176-fc781d42fa3a"
   },
-  "finishedAt": "2026-11-25T15:18:34.727Z",
+  "finishedAt": "2026-11-25T17:40:37.297Z",
   "ok": true
 }

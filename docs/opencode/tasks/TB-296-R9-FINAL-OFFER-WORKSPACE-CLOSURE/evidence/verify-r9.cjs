@@ -38,7 +38,7 @@ async function main() {
   // Registry and data contracts.
   const languages = await api(`${HOST}/v1/languages`);
   const ru = (Array.isArray(languages.body) ? languages.body : []).find((row) => row.code === "ru-RU");
-  check("R9-07.publicLanguageRegistry", languages.status === 200 && Boolean(ru?.active), JSON.stringify({ status: languages.status, ru }));
+  check("R9-07.publicLanguageRegistry", languages.status === 200 && Boolean(ru?.isActive), JSON.stringify({ status: languages.status, ru }));
   const products = await api(`${HOST}/v1/admin/catalog/products?page=1&pageSize=100&locale=fa-IR`, { headers: adminHeaders });
   const unitProduct = (products.body.items ?? []).find((row) => row.unitCode && row.publishedVariantCount > 0);
   check("R9-06.unitMetadataRead", Boolean(unitProduct) && Number(unitProduct.quantityDecimalPlaces) >= 0, JSON.stringify(unitProduct));
@@ -199,7 +199,7 @@ async function main() {
     check("R9-02.toastAutoClose3s", (await page.locator(".Toastify__toast").count()) === 0, "toast gone");
 
     // Inventory blank reason then correction (seed 199 -> 50 -> restore 199).
-    await page.goto(`${FRONT}/fa/admin/offers/${seedId}`, { waitUntil: "load" });
+    await page.goto(`${FRONT}/admin/offers/${seedId}`, { waitUntil: "load" });
     await page.waitForSelector("[data-testid=offer-workspace]", { timeout: 30000 });
     const originalInventory = (await api(`${HOST}/v1/admin/offers/${seedId}`, { headers: adminHeaders })).body.inventoryLocations[0];
     await page.click("[data-testid=offer-tab-button-inventory]");
@@ -257,7 +257,7 @@ async function main() {
     check("R9-10.twoPositionsRestored", Number(restoredTwo[0].onHand) === Number(beforeTwo[0].onHand) && Number(restoredTwo[1].onHand) === Number(beforeTwo[1].onHand), JSON.stringify(restoredTwo.map((row) => row.onHand)));
 
     // Dirty cancel uses MessageBox and clears the discardable draft.
-    await page.goto(`${FRONT}/fa/admin/offers/${seedId}`, { waitUntil: "load" });
+    await page.goto(`${FRONT}/admin/offers/${seedId}`, { waitUntil: "load" });
     await page.waitForSelector("[data-testid=offer-workspace]", { timeout: 30000 });
     await page.fill("[data-testid=offer-seller-sku]", `TB296-R9-DIRTY-${Date.now()}`);
     await page.click("[data-testid=offer-cancel]");
@@ -267,7 +267,7 @@ async function main() {
     check("R9-08.dirtyCancelKeepsForm", (await page.locator("[data-testid=offer-workspace]").count()) === 1, "still on form");
 
     // Actual third-locale route.
-    await page.goto(`${FRONT}/fa/admin/offers/${seedId}?locale=ru-RU`, { waitUntil: "load" });
+    await page.goto(`${FRONT}/ru/admin/offers/${seedId}`, { waitUntil: "load" });
     await page.waitForSelector("[data-testid=offer-workspace]", { timeout: 30000 });
     await page.waitForTimeout(1200);
     const ruRoot = page.locator("[data-testid=offer-workspace]");
@@ -282,7 +282,7 @@ async function main() {
     const listContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: "fa-IR" });
     await listContext.addInitScript(({ adminActor }) => localStorage.setItem("tooba.adminActorUserId", adminActor), { adminActor });
     const listPage = await listContext.newPage();
-    await listPage.goto(`${FRONT}/fa/admin/offers?locale=ru-RU`, { waitUntil: "load" });
+    await listPage.goto(`${FRONT}/ru/admin/offers`, { waitUntil: "load" });
     await listPage.waitForSelector("[data-app-grid-shell]", { timeout: 30000 });
     await listPage.waitForTimeout(1200);
     check("R9-07.listThirdLocale", /Предложения продавцов/.test(await listPage.locator("[data-testid=admin-offers]").innerText()), (await listPage.locator("[data-testid=admin-offers]").innerText()).slice(0, 80));

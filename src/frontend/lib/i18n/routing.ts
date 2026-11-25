@@ -1,4 +1,4 @@
-/**
+﻿/**
  * مسیرهای عمومی locale-prefixed — منبع واحد حقیقت برای prefix و SEO.
  */
 import {
@@ -76,7 +76,7 @@ export function isStorefrontLandingPath(pathname: string): boolean {
 
 /** استخراج locale از prefix URL؛ null اگر prefix نداشته باشد. */
 export function parseLocalePrefix(pathname: string): { locale: Locale; pathname: string } | null {
-  const match = pathname.match(/^\/(fa|en)(\/.*)?$/);
+  const match = pathname.match(/^\/(fa|en|ru)(\/.*)?$/);
   if (!match) return null;
   const locale = match[1] as Locale;
   const rest = match[2] ?? "/";

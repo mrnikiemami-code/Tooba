@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
+import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
+import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
@@ -19,14 +20,16 @@ import {
   writeAdminOfferPrice,
 } from "../../admin-offer-api";
 import { adminOfferIntent, clearAdminOfferIntent } from "../../offer-create-intent";
+import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
 
 const PAGE_SIZE = 10;
 
 export default function AdminCreateOfferPage() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const localeResolution = useOfferLocaleOverride("admin");
-  const offerLocale = localeResolution.locale;
+  const registry = useRegistryLocale();
+  const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
     () => ({
@@ -78,45 +81,53 @@ export default function AdminCreateOfferPage() {
         findAdminActiveOffer(sellerPartyId, catalogVariantId),
       loadShippingTypes: () => loadAdminShippingTypes(),
       createAndSaveDraft: async (input) => {
-        const created = await createAdminOffer({
-          sellerPartyId: input.sellerPartyId ?? "",
-          catalogVariantId: input.catalogVariantId,
-          sellerSku: input.sellerSku,
-          requestId: adminOfferIntent(`admin:${input.sellerPartyId}:${input.catalogVariantId}`),
-        });
-        if (!created.ok) return { ok: false, errorCode: created.errorCode, denied: created.denied };
-        const offerId = created.detail.offerId;
+        const scope = `admin:${input.sellerPartyId}:${input.catalogVariantId}`;
+        let requestId: string;
         try {
-          if (input.amount != null) {
-            const price = await writeAdminOfferPrice(offerId, { amount: input.amount, currency: input.currency });
-            if (!price.ok) return { ok: false, errorCode: price.errorCode, createdOfferId: offerId, partial: true };
-          }
-          const conditionsChanged = input.returnPolicyChoice !== "Default"
-            || input.customReturnWindowDays != null
-            || input.minimumOrderQuantity != null
-            || input.maximumOrderQuantity != null;
-          if (conditionsChanged) {
-            const patch = await patchAdminOffer(offerId, {
-              sellerSku: input.sellerSku,
-              status: "Draft",
-              returnPolicyChoice: input.returnPolicyChoice,
-              customReturnWindowDays: input.customReturnWindowDays,
-              minimumOrderQuantity: input.minimumOrderQuantity,
-              maximumOrderQuantity: input.maximumOrderQuantity,
-            });
-            if (!patch.ok) return { ok: false, errorCode: patch.errorCode, createdOfferId: offerId, partial: true };
-          }
-          if (input.responsibility) {
-            const fulfillment = await assignAdminOfferFulfillment(offerId, { responsibility: input.responsibility, shippingTypeId: input.shippingTypeId });
-            if (!fulfillment.ok) return { ok: false, errorCode: fulfillment.errorCode, createdOfferId: offerId, partial: true };
-          }
-          const reread = await loadAdminOfferDetail(offerId);
-          if (!reread.ok) return { ok: false, errorCode: reread.errorCode, createdOfferId: offerId, partial: true };
-          clearAdminOfferIntent(`admin:${input.sellerPartyId}:${input.catalogVariantId}`);
-          return { ok: true, offerId };
+          requestId = adminOfferIntent(scope);
         } catch {
-          return { ok: false, errorCode: "host-unreachable", createdOfferId: offerId, partial: true };
+          return { ok: false, errorCode: "offer.create.intent_not_durable" };
         }
+        return createAndApplyOffer({
+          create: async () => {
+            const created = await createAdminOffer({
+              sellerPartyId: input.sellerPartyId ?? "",
+              catalogVariantId: input.catalogVariantId,
+              sellerSku: input.sellerSku,
+              requestId,
+            });
+            return created.ok
+              ? { ok: true, offerId: created.detail.offerId }
+              : { ok: false, errorCode: created.errorCode, denied: created.denied };
+          },
+          load: async (offerId) => {
+            const result = await loadAdminOfferDetail(offerId);
+            return result.ok ? { ok: true, detail: result.detail } : { ok: false, errorCode: result.errorCode };
+          },
+          savePrice: async (offerId, amount, currency) => {
+            const result = await writeAdminOfferPrice(offerId, { amount, currency });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
+          saveConditions: async (offerId, value) => {
+            const result = await patchAdminOffer(offerId, {
+              sellerSku: value.sellerSku,
+              status: "Draft",
+              returnPolicyChoice: value.returnPolicyChoice,
+              customReturnWindowDays: value.customReturnWindowDays,
+              minimumOrderQuantity: value.minimumOrderQuantity,
+              maximumOrderQuantity: value.maximumOrderQuantity,
+            });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
+          saveFulfillment: async (offerId, value) => {
+            const result = await assignAdminOfferFulfillment(offerId, {
+              responsibility: value.responsibility,
+              shippingTypeId: value.shippingTypeId,
+            });
+            return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
+          },
+          onCommitted: () => clearAdminOfferIntent(scope),
+        }, input);
       },
       createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
@@ -143,7 +154,7 @@ export default function AdminCreateOfferPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} localeDefinition={localeResolution.locale} messages={localeResolution.workspaceMessages} />
+      <OfferWorkspace adapter={adapter} localeDefinition={offerLocale} messages={workspaceMessages} />
     </main>
   );
 }

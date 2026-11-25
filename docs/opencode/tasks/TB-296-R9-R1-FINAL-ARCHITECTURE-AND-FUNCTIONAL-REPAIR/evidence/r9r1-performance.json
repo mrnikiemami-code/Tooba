@@ -1,0 +1,11 @@
+{
+  "formLoadMs": 1028,
+  "pickerMs": 71,
+  "source": "fa/admin/offers/new",
+  "r8Comparable": {
+    "formLoadMs": 1598,
+    "pickerMs": 103
+  },
+  "workspaceLocBefore": 1161,
+  "workspaceLocAfter": 785
+}

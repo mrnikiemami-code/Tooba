@@ -2,7 +2,8 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useOfferLocaleOverride } from "../../../../lib/offer-workspace/offer-locale";
+import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
+import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
 import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
@@ -20,8 +21,9 @@ export default function AdminOfferDetailPage() {
   const params = useParams<{ offerId: string }>();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const localeResolution = useOfferLocaleOverride("admin");
-  const offerLocale = localeResolution.locale;
+  const registry = useRegistryLocale();
+  const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
   const offerId = params?.offerId ?? "";
 
   const adapter = useMemo<OfferWorkspaceAdapter>(
@@ -62,7 +64,7 @@ export default function AdminOfferDetailPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} localeDefinition={localeResolution.locale} messages={localeResolution.workspaceMessages} />
+      <OfferWorkspace adapter={adapter} localeDefinition={offerLocale} messages={workspaceMessages} />
     </main>
   );
 }

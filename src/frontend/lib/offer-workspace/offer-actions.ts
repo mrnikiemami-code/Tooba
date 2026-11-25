@@ -1,0 +1,356 @@
+﻿import type { MutableRefObject } from "react";
+import { changedInventoryRows, detailVersionChanged, parseDecimal, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
+import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
+import type {
+  OfferCommercialPatch,
+  OfferFulfillmentResponsibility,
+  OfferProductOption,
+  OfferSellerOption,
+  OfferTabId,
+  OfferVariantOption,
+  OfferWorkspaceAdapter,
+  OfferWorkspaceDetail,
+} from "./types.ts";
+
+export interface OfferActionsContext {
+  adapter: OfferWorkspaceAdapter;
+  t: OfferWorkspaceMessages;
+  isEdit: boolean;
+  detail: OfferWorkspaceDetail | null;
+  draft: OfferWorkspaceDraft;
+  selectedSeller: OfferSellerOption | null;
+  selectedProduct: OfferProductOption | null;
+  selectedVariant: OfferVariantOption | null;
+  createReady: boolean;
+  identityReady: boolean;
+  activeConflict: { offerId: string } | null;
+  saving: boolean;
+  saveRef: MutableRefObject<boolean>;
+  saveNeedsReload: boolean;
+  saveReloading: boolean;
+  priceChanged: boolean;
+  commercialChanged: boolean;
+  stockChanged: boolean;
+  shippingChanged: boolean;
+  responsibility: OfferFulfillmentResponsibility | null;
+  shippingTypeId: string;
+  setDraft: (updater: (current: OfferWorkspaceDraft) => OfferWorkspaceDraft) => void;
+  setDetail: (detail: OfferWorkspaceDetail) => void;
+  setSaving: (value: boolean) => void;
+  setSaveError: (value: string | null) => void;
+  setSaveNotice: (value: string | null) => void;
+  setSaveNeedsReload: (value: boolean) => void;
+  setSaveRetryable: (value: boolean) => void;
+  setSaveReloading: (value: boolean) => void;
+  setTabError: (value: { tab: OfferTabId; code: string } | null) => void;
+  setActiveTab: (tab: OfferTabId) => void;
+  setActiveConflict: (value: { offerId: string } | null) => void;
+  setShippingSaving: (value: boolean) => void;
+  setShippingError: (value: string | null) => void;
+  setShippingNotice: (value: string | null) => void;
+  setShowCreateErrors: (value: boolean) => void;
+  showBlocking: (kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) => void;
+  applyLoadedDetail: (detail: OfferWorkspaceDetail) => void;
+}
+
+export function createOfferActions(ctx: OfferActionsContext) {
+  function applyServerDetail(next: OfferWorkspaceDetail) {
+    ctx.setDetail(next);
+  }
+
+  function applySavedDetail(next: OfferWorkspaceDetail, domain: "commercial" | "price") {
+    ctx.setDetail(next);
+    ctx.setDraft((current) => {
+      if (domain === "commercial") {
+        return {
+          ...current,
+          sellerSku: next.sellerSku ?? "",
+          status: next.status,
+          returnPolicyChoice: next.returnPolicyChoice,
+          customReturnWindowDays: next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
+          minimumOrderQuantity: next.minimumOrderQuantity != null ? String(next.minimumOrderQuantity) : "",
+          maximumOrderQuantity: next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
+        };
+      }
+      return { ...current, amount: next.amount != null ? String(next.amount) : "", currency: next.currency };
+    });
+  }
+
+  function applySavedInventory(next: OfferWorkspaceDetail, stockItemId: string) {
+    ctx.setDetail(next);
+    ctx.setDraft((current) => {
+      const saved = next.inventoryLocations.find((row) => row.stockItemId === stockItemId);
+      return { ...current, inventoryOnHand: { ...current.inventoryOnHand, [stockItemId]: saved ? String(saved.onHand) : current.inventoryOnHand[stockItemId] ?? "" } };
+    });
+  }
+
+  function finishSaveFailure(tab: OfferTabId, result: { errorCode: string; denied?: boolean }, savedAny: boolean) {
+    const transient = result.errorCode === "host-unreachable";
+    ctx.setActiveTab(tab);
+    ctx.setTabError({ tab, code: result.errorCode || "save" });
+    ctx.setSaveNeedsReload(transient);
+    ctx.setSaveRetryable(!transient);
+    const text = transient ? ctx.t.saveUnknown : result.denied ? ctx.t.denied : offerErrorText(ctx.t, result.errorCode);
+    ctx.showBlocking(transient ? "reload" : "error", savedAny ? ctx.t.partialTitle : ctx.t.saveErrorTitle, savedAny ? `${text} ${ctx.t.partialSaved}` : text);
+    if (savedAny) {
+      ctx.setSaveNotice(ctx.t.partialSaved);
+      ctx.setSaveRetryable(true);
+    }
+  }
+
+  async function reloadAfterUnknown() {
+    if (!ctx.adapter.loadDetail || ctx.saveReloading) return;
+    ctx.setSaveReloading(true);
+    try {
+      const result = await ctx.adapter.loadDetail();
+      if (!result.ok) {
+        ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+        return;
+      }
+      applyServerDetail(result.detail);
+      ctx.setSaveNeedsReload(false);
+      ctx.setSaveError(null);
+      ctx.setSaveNotice(ctx.t.reloaded);
+    } catch {
+      ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+    } finally {
+      ctx.setSaveReloading(false);
+    }
+  }
+
+  async function runSave() {
+    if (!ctx.detail || ctx.saving || ctx.saveRef.current) return;
+    if (ctx.saveNeedsReload) {
+      ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
+      return;
+    }
+    const errors = validateDraft(ctx.detail, ctx.draft);
+    if (errors.length > 0) {
+      const first = errors[0]!;
+      ctx.setTabError({ tab: first.tab, code: first.code });
+      ctx.setActiveTab(first.tab);
+      ctx.setSaveError(offerErrorText(ctx.t, first.code));
+      ctx.setSaveRetryable(true);
+      return;
+    }
+    if (ctx.priceChanged && ctx.draft.amount.trim().length === 0) {
+      ctx.setTabError({ tab: "pricing", code: "offer.price.required" });
+      ctx.setActiveTab("pricing");
+      ctx.setSaveError(ctx.t.priceRequired);
+      ctx.setSaveRetryable(true);
+      return;
+    }
+    if (!ctx.commercialChanged && !ctx.priceChanged && !ctx.stockChanged && !ctx.shippingChanged) {
+      ctx.setSaveNotice(ctx.t.noChanges);
+      ctx.setSaveError(null);
+      ctx.setTabError(null);
+      return;
+    }
+
+    ctx.saveRef.current = true;
+    ctx.setSaving(true);
+    ctx.setSaveError(null);
+    ctx.setSaveNotice(null);
+    ctx.setTabError(null);
+    ctx.setShippingError(null);
+    ctx.setSaveNeedsReload(false);
+    ctx.setSaveRetryable(true);
+    let savedAny = false;
+    const expectedAmount = parseDecimal(ctx.draft.amount);
+    const expectedInventory = new Map<string, number | null>();
+    if (ctx.stockChanged) {
+      for (const row of ctx.detail.inventoryLocations) expectedInventory.set(row.stockItemId, parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]));
+    }
+
+    try {
+      if (ctx.adapter.loadDetail) {
+        const latest = await ctx.adapter.loadDetail();
+        if (!latest.ok) {
+          ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+          ctx.setSaveNeedsReload(true);
+          ctx.setSaveRetryable(false);
+          return;
+        }
+        if (detailVersionChanged(ctx.detail, latest.detail)) {
+          applyServerDetail(latest.detail);
+          ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
+          ctx.setSaveNeedsReload(true);
+          ctx.setSaveRetryable(false);
+          return;
+        }
+      }
+
+      if (ctx.commercialChanged) {
+        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft));
+        if (!result.ok) return finishSaveFailure("conditions", result, savedAny);
+        applySavedDetail(result.detail, "commercial");
+        savedAny = true;
+      }
+
+      if (ctx.priceChanged) {
+        if (expectedAmount == null) {
+          ctx.setActiveTab("pricing");
+          ctx.setSaveError(ctx.t.validationAmount);
+          ctx.setSaveRetryable(true);
+          return;
+        }
+        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency || "IRR" });
+        if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
+        applySavedDetail(result.detail, "price");
+        savedAny = true;
+      }
+
+      if (ctx.stockChanged) {
+        const changedRows = changedInventoryRows(ctx.detail, ctx.draft);
+        for (const row of changedRows) {
+          const result = await ctx.adapter.saveInventory({
+            stockItemId: row.stockItemId,
+            onHand: parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
+            reason: ctx.draft.inventoryReason.trim(),
+          });
+          if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
+          applySavedInventory(result.detail, row.stockItemId);
+          savedAny = true;
+        }
+        ctx.setDraft((current) => ({ ...current, inventoryReason: "" }));
+      }
+
+      if (ctx.shippingChanged && ctx.adapter.saveFulfillment) {
+        ctx.setShippingSaving(true);
+        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null });
+        ctx.setShippingSaving(false);
+        if (!result.ok) return finishSaveFailure("shipping", result, savedAny);
+        const verification = ctx.adapter.loadDetail ? await ctx.adapter.loadDetail() : null;
+        if (!verification || !verification.ok || verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)) {
+          ctx.setShippingError(ctx.t.perTabError);
+          return finishSaveFailure("shipping", { errorCode: "seller.shipping.response_mismatch" }, savedAny);
+        }
+        ctx.applyLoadedDetail(verification.detail);
+        ctx.setShippingNotice(ctx.t.shippingSaved);
+        savedAny = true;
+      }
+
+      if (ctx.adapter.loadDetail) {
+        const verification = await ctx.adapter.loadDetail();
+        if (!verification.ok) {
+          ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+          ctx.setSaveNeedsReload(true);
+          ctx.setSaveRetryable(false);
+          return;
+        }
+        const mismatch =
+          (ctx.commercialChanged && verification.detail.sellerSku !== ctx.draft.sellerSku.trim())
+          || (ctx.priceChanged && verification.detail.amount !== expectedAmount)
+          || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
+          || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
+            const expected = expectedInventory.get(row.stockItemId);
+            if (expected == null) return false;
+            const actual = verification.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId);
+            return !actual || actual.onHand !== expected;
+          }));
+        if (mismatch) {
+          applyServerDetail(verification.detail);
+          ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+          ctx.setSaveNeedsReload(true);
+          ctx.setSaveRetryable(false);
+          return;
+        }
+        ctx.applyLoadedDetail(verification.detail);
+      }
+
+      if (ctx.shippingChanged) ctx.setShippingNotice(ctx.t.shippingSaved);
+      ctx.setSaveNotice(ctx.t.saved);
+      ctx.setSaveError(null);
+      ctx.setTabError(null);
+    } catch {
+      ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
+      ctx.setSaveNeedsReload(true);
+      ctx.setSaveRetryable(false);
+    } finally {
+      ctx.saveRef.current = false;
+      ctx.setSaving(false);
+    }
+  }
+
+  async function runCreate() {
+    if (ctx.saving || ctx.saveRef.current) return;
+    if (ctx.activeConflict) {
+      ctx.showBlocking("duplicate", ctx.t.duplicateActiveTitle, ctx.t.duplicateActive);
+      return;
+    }
+    if (!ctx.createReady || (ctx.adapter.role === "admin" && !ctx.selectedSeller) || !ctx.selectedVariant) {
+      ctx.setShowCreateErrors(true);
+      ctx.setSaveRetryable(true);
+      return;
+    }
+    ctx.saveRef.current = true;
+    ctx.setSaving(true);
+    ctx.setSaveError(null);
+    ctx.setSaveNotice(null);
+    ctx.setSaveNeedsReload(false);
+    ctx.setSaveRetryable(true);
+    try {
+      const localDetail = ctx.detail ?? (ctx.selectedProduct && ctx.selectedVariant ? {} as OfferWorkspaceDetail : null);
+      const createInput = {
+        sellerPartyId: ctx.selectedSeller?.sellerPartyId,
+        catalogVariantId: ctx.selectedVariant.catalogVariantId,
+        sellerSku: ctx.draft.sellerSku.trim() || null,
+        amount: ctx.priceChanged && localDetail ? parseDecimal(ctx.draft.amount) : null,
+        currency: ctx.draft.currency || "IRR",
+        returnPolicyChoice: ctx.draft.returnPolicyChoice,
+        customReturnWindowDays: ctx.draft.returnPolicyChoice === "Custom" ? parseDecimal(ctx.draft.customReturnWindowDays) : null,
+        minimumOrderQuantity: parseDecimal(ctx.draft.minimumOrderQuantity),
+        maximumOrderQuantity: parseDecimal(ctx.draft.maximumOrderQuantity),
+        responsibility: ctx.adapter.role === "admin" ? ctx.responsibility : null,
+        shippingTypeId: ctx.adapter.role === "admin" ? ctx.shippingTypeId || null : null,
+      };
+      const result = ctx.adapter.createAndSaveDraft
+        ? await ctx.adapter.createAndSaveDraft(createInput)
+        : await ctx.adapter.createDraft({ sellerPartyId: createInput.sellerPartyId, catalogVariantId: createInput.catalogVariantId, sellerSku: createInput.sellerSku });
+      if (!result.ok) {
+        if ("createdOfferId" in result && result.createdOfferId) {
+          ctx.showBlocking("error", ctx.t.partialTitle, `${offerErrorText(ctx.t, result.errorCode ?? "save")} ${ctx.t.partialSaved}`, String(result.createdOfferId));
+          return;
+        }
+        if (result.errorCode === "offer.listing.duplicate_active" && ctx.adapter.findActiveOffer) {
+          const sellerId = ctx.adapter.role === "seller" ? ctx.adapter.fixedSeller?.sellerPartyId : ctx.selectedSeller?.sellerPartyId;
+          const existing = sellerId ? await ctx.adapter.findActiveOffer(sellerId, ctx.selectedVariant.catalogVariantId) : null;
+          if (existing) ctx.setActiveConflict(existing);
+          else ctx.showBlocking("error", ctx.t.duplicateActiveTitle, ctx.t.duplicateActive);
+          ctx.setSaveRetryable(false);
+          return;
+        }
+        if (result.errorCode === "host-unreachable") {
+          ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.createUnknown);
+          ctx.setSaveRetryable(false);
+          ctx.setSaveNeedsReload(true);
+          return;
+        }
+        ctx.showBlocking("error", ctx.t.saveErrorTitle, result.denied ? ctx.t.denied : offerErrorText(ctx.t, result.errorCode));
+        ctx.setSaveRetryable(!result.denied);
+        return;
+      }
+      ctx.adapter.onCreated(result.offerId);
+    } catch {
+      ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.createUnknown);
+      ctx.setSaveRetryable(false);
+      ctx.setSaveNeedsReload(true);
+    } finally {
+      ctx.saveRef.current = false;
+      ctx.setSaving(false);
+    }
+  }
+
+  return { runSave, runCreate, reloadAfterUnknown };
+}
+
+function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): OfferCommercialPatch {
+  return {
+    sellerSku: draft.sellerSku.trim() || null,
+    status: draft.status,
+    returnPolicyChoice: draft.returnPolicyChoice,
+    customReturnWindowDays: draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null,
+    minimumOrderQuantity: parseDecimal(draft.minimumOrderQuantity),
+    maximumOrderQuantity: parseDecimal(draft.maximumOrderQuantity),
+  };
+}

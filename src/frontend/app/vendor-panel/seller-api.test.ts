@@ -1,11 +1,10 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import {
   DEV_ACTOR_HEADER,
   formatMoney,
   formatOfferStatus,
   formatPaymentState,
-  mapSellerCatalogVariants,
   mapSellerDashboard,
   mapSellerOfferDetail,
   mapSellerOfferList,
@@ -15,6 +14,7 @@ import {
   mapSellerSettings,
   SELLER_PARTY_HEADER,
 } from "./seller-api.ts";
+import { mapSellerCatalogVariants } from "./seller-offer-api.ts";
 
 test("seller offer list mapper keeps amount off Product price field", () => {
   const rows = mapSellerOfferList([

@@ -95,3 +95,11 @@ export const offerListMessagesRu: OfferListMessages = {
   ...offerListMessages.en,
   ...listOverrides,
 };
+
+export function offerWorkspaceMessagesForRegistry(language: string) {
+  return language === "ru" ? offerWorkspaceMessagesRu : undefined;
+}
+
+export function offerListMessagesForRegistry(language: string) {
+  return language === "ru" ? offerListMessagesRu : undefined;
+}

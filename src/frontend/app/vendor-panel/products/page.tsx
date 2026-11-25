@@ -13,7 +13,8 @@ import {
   type HostReadSource,
   type SellerOfferListRow,
 } from "../seller-api";
-import { useOfferLocaleOverride } from "../../../lib/offer-workspace/offer-locale";
+import { useRegistryLocale } from "../../../lib/i18n/registry-locale";
+import { offerListMessagesForRegistry } from "../../../lib/offer-workspace/messages-ru";
 import {
   channelLabel,
   createOfferFormatters,
@@ -150,10 +151,10 @@ function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOffe
 }
 
 export default function VendorProductsPage() {
-  const localeResolution = useOfferLocaleOverride("seller");
-  const offerLocale = localeResolution.locale;
+  const registry = useRegistryLocale();
+  const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
   const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
-  const t = useMemo(() => offerListMessagesFor(offerLocale.language, localeResolution.listMessages), [offerLocale.language, localeResolution.listMessages]);
+  const t = useMemo(() => offerListMessagesFor(offerLocale.language, offerListMessagesForRegistry(offerLocale.language)), [offerLocale.language]);
   const columns = useMemo(() => buildColumns(t, format), [t, format]);
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [total, setTotal] = useState(0);

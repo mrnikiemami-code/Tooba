@@ -172,18 +172,18 @@ export interface SellerReviewsPage {
   sellerResponseSupported: boolean;
 }
 
-function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
+export function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
   return record[camel] ?? record[pascal];
 }
 
-function asString(value: unknown, fallback = ""): string {
+export function asString(value: unknown, fallback = ""): string {
   if (value == null) {
     return fallback;
   }
   return String(value);
 }
 
-function asNumber(value: unknown, fallback = 0): number {
+export function asNumber(value: unknown, fallback = 0): number {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -195,11 +195,11 @@ function asBoolean(value: unknown, fallback = false): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
-function asNullableString(value: unknown): string | null {
+export function asNullableString(value: unknown): string | null {
   return value == null ? null : asString(value);
 }
 
-function asNullableNumber(value: unknown): number | null {
+export function asNullableNumber(value: unknown): number | null {
   if (value == null) {
     return null;
   }
@@ -311,7 +311,7 @@ export function writeActorUserId(actorUserId: string): void {
   }
 }
 
-function sellerHeaders(sellerPartyId: string, actorUserId: string | null, extra?: Record<string, string>): Record<string, string> {
+export function sellerHeaders(sellerPartyId: string, actorUserId: string | null, extra?: Record<string, string>): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/json",
     "Accept-Language": typeof document !== "undefined" ? document.documentElement.lang || "fa" : "fa",
@@ -324,7 +324,7 @@ function sellerHeaders(sellerPartyId: string, actorUserId: string | null, extra?
   return headers;
 }
 
-function isDeniedStatus(status: number): boolean {
+export function isDeniedStatus(status: number): boolean {
   return status === 401 || status === 403;
 }
 
@@ -564,11 +564,11 @@ export function mapSellerOrderDetail(payload: unknown): SellerOrderDetail | null
   };
 }
 
-async function readJson(response: Response): Promise<unknown> {
+export async function readJson(response: Response): Promise<unknown> {
   return response.json();
 }
 
-function currentActor(): string | null {
+export function currentActor(): string | null {
   return readActorUserId();
 }
 
@@ -647,30 +647,6 @@ export async function loadSellerOffersPage(
 /**
  * جزئیات Offer را فقط برای همان فروشنده می‌خواند.
  */
-export async function loadSellerOfferDetail(
-  sellerPartyId: string,
-  offerId: string,
-): Promise<{ source: HostReadSource; detail: SellerOfferDetail | null; message?: string; denied?: boolean }> {
-  try {
-    const response = await fetch(`/v1/seller/offers/${offerId}`, {
-      headers: sellerHeaders(sellerPartyId, currentActor()),
-    });
-    if (isDeniedStatus(response.status) || response.status === 404) {
-      return { source: "error", detail: null, message: "seller.offer.missing", denied: true };
-    }
-    if (!response.ok) {
-      return { source: "error", detail: null, message: "seller-offer-http-" + String(response.status) };
-    }
-    const detail = mapSellerOfferDetail(await readJson(response));
-    return detail ? { source: "host", detail } : { source: "error", detail: null, message: "seller-offer-invalid" };
-  } catch {
-    return { source: "error", detail: null, message: "host-unreachable" };
-  }
-}
-
-/**
- * سیاست رزرو مؤثر Offer را فقط‌خواندنی برمی‌گرداند؛ فروشنده مجوز mutation ندارد.
- */
 export async function loadSellerReservationPolicy(
   sellerPartyId: string,
   offerId: string,
@@ -691,221 +667,6 @@ export async function loadSellerReservationPolicy(
 
 /**
  * SKU یا وضعیت Offer را با مرز سرور به‌روز می‌کند.
- */
-export async function patchSellerOffer(
-  sellerPartyId: string,
-  offerId: string,
-  patch: {
-    sellerSku?: string | null;
-    status?: string | null;
-    returnPolicyChoice?: string | null;
-    customReturnWindowDays?: number | null;
-    minimumOrderQuantity?: number | null;
-    maximumOrderQuantity?: number | null;
-    clearOrderQuantityLimits?: boolean;
-  },
-): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
-  try {
-    const response = await fetch(`/v1/seller/offers/${offerId}`, {
-      method: "PATCH",
-      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        sellerSku: patch.sellerSku,
-        status: patch.status,
-        returnPolicyChoice: patch.returnPolicyChoice,
-        customReturnWindowDays: patch.customReturnWindowDays,
-        minimumOrderQuantity: patch.minimumOrderQuantity,
-        maximumOrderQuantity: patch.maximumOrderQuantity,
-        clearOrderQuantityLimits: patch.clearOrderQuantityLimits,
-      }),
-    });
-    if (isDeniedStatus(response.status)) {
-      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
-    }
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
-      return { ok: false, errorCode: body?.errorCode ?? "seller.offer.patch-failed" };
-    }
-    const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId) {
-      return { ok: false, errorCode: "seller.offer.response_mismatch" };
-    }
-    if (patch.sellerSku !== undefined && (detail.sellerSku ?? "") !== patch.sellerSku) {
-      return { ok: false, errorCode: "seller.offer.response_mismatch" };
-    }
-    if (patch.status !== undefined && detail.status !== patch.status) {
-      return { ok: false, errorCode: "seller.offer.response_mismatch" };
-    }
-    if (patch.clearOrderQuantityLimits && (detail.minimumOrderQuantity != null || detail.maximumOrderQuantity != null)) {
-      return { ok: false, errorCode: "seller.offer.response_mismatch" };
-    }
-    return { ok: true, detail };
-  } catch {
-    return { ok: false, errorCode: "host-unreachable" };
-  }
-}
-
-/** گزینهٔ گونهٔ Catalog برای ایجاد Offer؛ Catalog فقط‌خواندنی است. */
-export interface SellerCatalogVariantOption {
-  catalogVariantId: string;
-  productId: string;
-  productTitle: string;
-  catalogCode: string | null;
-  productStatus: string;
-}
-
-export function mapSellerCatalogVariants(payload: unknown): SellerCatalogVariantOption[] {
-  const items = Array.isArray(payload) ? payload : [];
-  return items
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
-    .map((item) => ({
-      catalogVariantId: asString(readProp(item, "catalogVariantId", "CatalogVariantId")),
-      productId: asString(readProp(item, "productId", "ProductId")),
-      productTitle: asString(readProp(item, "productTitle", "ProductTitle"), "بدون عنوان"),
-      catalogCode: asNullableString(readProp(item, "catalogCode", "CatalogCode")),
-      productStatus: asString(readProp(item, "productStatus", "ProductStatus")),
-    }))
-    .filter((row) => row.catalogVariantId.length > 0);
-}
-
-/** فهرست گونه‌های Catalog منتشرشده برای انتخاب Offer. */
-export async function loadSellerCatalogVariants(
-  sellerPartyId: string,
-  search = "",
-  page = 1,
-  pageSize = 20,
-): Promise<{ source: HostReadSource; rows: SellerCatalogVariantOption[]; totalCount: number; page: number; pageSize: number; hasMore: boolean; message?: string; denied?: boolean }> {
-  try {
-    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-    if (search.trim()) params.set("search", search.trim());
-    const response = await fetch(`/v1/seller/catalog-variants?${params.toString()}`, {
-      headers: sellerHeaders(sellerPartyId, currentActor()),
-    });
-    if (isDeniedStatus(response.status)) {
-      return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "seller.authorization.denied", denied: true };
-    }
-    if (!response.ok) {
-      return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "seller-catalog-variants-http-" + String(response.status) };
-    }
-    const payload = (await readJson(response)) as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number; hasMore?: boolean };
-    return {
-      source: "host",
-      rows: mapSellerCatalogVariants(payload.items ?? []),
-      totalCount: Number(payload.totalCount ?? 0),
-      page: Number(payload.page ?? page),
-      pageSize: Number(payload.pageSize ?? pageSize),
-      hasMore: Boolean(payload.hasMore),
-    };
-  } catch {
-    return { source: "error", rows: [], totalCount: 0, page, pageSize, hasMore: false, message: "host-unreachable" };
-  }
-}
-
-/** ایجاد Offer فقط برای Party فروشندهٔ احرازشده. */
-export async function createSellerOffer(
-  sellerPartyId: string,
-  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; requestId?: string | null },
-): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
-  try {
-    const response = await fetch("/v1/seller/offers", {
-      method: "POST",
-      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        catalogVariantId: input.catalogVariantId,
-        sellerSku: input.sellerSku,
-        status: input.status,
-        requestId: input.requestId,
-      }),
-    });
-    if (isDeniedStatus(response.status)) {
-      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
-    }
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
-      return { ok: false, errorCode: body?.errorCode ?? "seller.offer.create-failed" };
-    }
-    const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail || detail.sellerPartyId !== sellerPartyId || detail.catalogVariantId !== input.catalogVariantId) {
-      return { ok: false, errorCode: "seller.offer.response_mismatch" };
-    }
-    return { ok: true, detail };
-  } catch {
-    return { ok: false, errorCode: "host-unreachable" };
-  }
-}
-
-/** نوشتن مبلغ بدون مالیات روی Offer خود فروشنده از طریق Pricing. */
-export async function writeSellerOfferPrice(
-  sellerPartyId: string,
-  offerId: string,
-  input: { amount: number; currency?: string | null; market?: string | null },
-): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
-  try {
-    const response = await fetch(`/v1/seller/offers/${offerId}/price`, {
-      method: "PUT",
-      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        amount: input.amount,
-        currency: input.currency ?? undefined,
-        market: input.market ?? undefined,
-      }),
-    });
-    if (isDeniedStatus(response.status) || response.status === 404) {
-      return { ok: false, errorCode: "seller.offer.missing", denied: true };
-    }
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
-      return { ok: false, errorCode: body?.errorCode ?? "seller.price.write-failed" };
-    }
-    const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || detail.amount !== input.amount) {
-      return { ok: false, errorCode: "seller.price.response_mismatch" };
-    }
-    return { ok: true, detail };
-  } catch {
-    return { ok: false, errorCode: "host-unreachable" };
-  }
-}
-
-/** تنظیم موجودی روی‌دست Offer خود فروشنده از طریق Inventory. */
-export async function writeSellerOfferInventory(
-  sellerPartyId: string,
-  offerId: string,
-  input: { onHand: number; reason?: string | null; stockItemId?: string | null },
-): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
-  try {
-    const response = await fetch(`/v1/seller/offers/${offerId}/inventory`, {
-      method: "PUT",
-      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        onHand: input.onHand,
-        reason: input.reason ?? undefined,
-        stockItemId: input.stockItemId ?? undefined,
-      }),
-    });
-    if (isDeniedStatus(response.status) || response.status === 404) {
-      return { ok: false, errorCode: "seller.offer.missing", denied: true };
-    }
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
-      return { ok: false, errorCode: body?.errorCode ?? "seller.inventory.write-failed" };
-    }
-    const detail = mapSellerOfferDetail(await readJson(response));
-    const target = input.stockItemId
-      ? detail?.inventoryLocations.find((row) => row.stockItemId === input.stockItemId)
-      : undefined;
-    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId
-        || (input.stockItemId ? !target || target.onHand !== input.onHand : detail.onHand !== input.onHand)) {
-      return { ok: false, errorCode: "seller.inventory.response_mismatch" };
-    }
-    return { ok: true, detail };
-  } catch {
-    return { ok: false, errorCode: "host-unreachable" };
-  }
-}
-
-/**
- * فهرست سفارش‌های فروشنده را می‌خواند.
  */
 export async function loadSellerOrders(
   sellerPartyId: string,
@@ -1353,135 +1114,3 @@ export async function saveSellerSettings(
 
 
 
-export interface SellerCatalogProductOption {
-  productId: string;
-  title: string;
-  brandName: string | null;
-  primaryMediaAssetId: string | null;
-  publishedVariantCount: number;
-  unitCode: string | null;
-  unitName: string | null;
-  quantityDecimalPlaces: number;
-  quantityStep: number | null;
-  roundingMode: string | null;
-}
-
-export interface SellerCatalogProductPage {
-  rows: SellerCatalogProductOption[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-}
-
-export interface SellerCatalogVariantLabelOption {
-  catalogVariantId: string;
-  productId: string;
-  displayLabel: string;
-  axisLabels: Array<{ name: string; value: string }>;
-  catalogCode: string | null;
-  status: string;
-}
-
-export async function searchSellerCatalogProducts(
-  sellerPartyId: string,
-  search = "",
-  page = 1,
-  pageSize = 20,
-  locale = "fa-IR",
-): Promise<SellerCatalogProductPage> {
-  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), locale });
-  if (search.trim()) params.set("search", search.trim());
-  try {
-    const response = await fetch(`/v1/seller/catalog-products?${params.toString()}`, {
-      headers: sellerHeaders(sellerPartyId, currentActor()),
-    });
-    if (!response.ok) return { rows: [], totalCount: 0, page, pageSize, hasMore: false };
-    const payload = (await readJson(response)) as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number; hasMore?: boolean };
-    const rows = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw): SellerCatalogProductOption[] => {
-      const item = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-      if (!item) return [];
-      const productId = asString(readProp(item, "productId", "ProductId"));
-      if (!productId) return [];
-      return [{
-        productId,
-        title: asString(readProp(item, "title", "Title"), "بدون عنوان"),
-        brandName: asNullableString(readProp(item, "brandName", "BrandName")),
-        primaryMediaAssetId: asNullableString(readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId")),
-        publishedVariantCount: asNumber(readProp(item, "publishedVariantCount", "PublishedVariantCount")),
-        unitCode: asNullableString(readProp(item, "unitCode", "UnitCode")),
-        unitName: asNullableString(readProp(item, "unitName", "UnitName")),
-        quantityDecimalPlaces: asNumber(readProp(item, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
-        quantityStep: readProp(item, "quantityStep", "QuantityStep") == null ? null : asNumber(readProp(item, "quantityStep", "QuantityStep")),
-        roundingMode: asNullableString(readProp(item, "roundingMode", "RoundingMode")),
-      }];
-    });
-    return {
-      rows,
-      totalCount: Number(payload.totalCount ?? 0),
-      page: Number(payload.page ?? page),
-      pageSize: Number(payload.pageSize ?? pageSize),
-      hasMore: Boolean(payload.hasMore),
-    };
-  } catch {
-    return { rows: [], totalCount: 0, page, pageSize, hasMore: false };
-  }
-}
-
-export async function loadSellerProductVariants(
-  sellerPartyId: string,
-  productId: string,
-  locale = "fa-IR",
-): Promise<SellerCatalogVariantLabelOption[]> {
-  try {
-    const params = new URLSearchParams({ locale });
-    const response = await fetch(`/v1/seller/catalog-products/${productId}/variants?${params.toString()}`, {
-      headers: sellerHeaders(sellerPartyId, currentActor()),
-    });
-    if (!response.ok) return [];
-    const payload = await readJson(response);
-    const items = Array.isArray(payload) ? payload : [];
-    return items.flatMap((raw): SellerCatalogVariantLabelOption[] => {
-      const item = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-      if (!item) return [];
-      const catalogVariantId = asString(readProp(item, "catalogVariantId", "CatalogVariantId"));
-      if (!catalogVariantId) return [];
-      const axisRaw = readProp(item, "axisLabels", "AxisLabels");
-      const axisLabels = Array.isArray(axisRaw)
-        ? axisRaw.flatMap((axis) => {
-            const row = axis && typeof axis === "object" ? (axis as Record<string, unknown>) : null;
-            if (!row) return [];
-            return [{ name: asString(readProp(row, "name", "Name")), value: asString(readProp(row, "value", "Value")) }];
-          })
-        : [];
-      return [{
-        catalogVariantId,
-        productId: asString(readProp(item, "productId", "ProductId")),
-        displayLabel: asString(readProp(item, "displayLabel", "DisplayLabel")),
-        axisLabels,
-        catalogCode: asNullableString(readProp(item, "catalogCode", "CatalogCode")),
-        status: asString(readProp(item, "status", "Status")),
-      }];
-    });
-  } catch {
-    return [];
-  }
-}
-
-export async function findSellerActiveOffer(
-  sellerPartyId: string,
-  catalogVariantId: string,
-): Promise<{ offerId: string } | null> {
-  const params = new URLSearchParams({ catalogVariantId });
-  try {
-    const response = await fetch(`/v1/seller/offers/active-listing?${params.toString()}`, {
-      headers: sellerHeaders(sellerPartyId, currentActor()),
-    });
-    if (!response.ok) return null;
-    const item = await readJson(response);
-    const offerId = item && typeof item === "object" ? asString(readProp(item as Record<string, unknown>, "offerId", "OfferId")) : "";
-    return offerId ? { offerId } : null;
-  } catch {
-    return null;
-  }
-}

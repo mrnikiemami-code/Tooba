@@ -20,8 +20,8 @@ public static class LocalePublicEndpoints
         ApiResponseFactory api,
         CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new ListLanguagesAdminQuery(), cancellationToken);
+        var result = await sender.Send(new ListActiveLanguagesQuery(), cancellationToken);
         if (result.IsFailure) return api.From(result);
-        return Results.Json(result.Value.Where(row => row.Active).ToList());
+        return Results.Json(result.Value);
     }
 }
