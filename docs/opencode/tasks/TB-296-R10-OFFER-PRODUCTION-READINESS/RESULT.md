@@ -5,8 +5,9 @@ STATUS: PASS_WITH_LIMITATIONS / READY_FOR_ARCHITECT_REVIEW (owner UAT external)
 BASE: 295d8241d277f4320f90ee9e5e75e907dfa5905f
 BRANCH: opencode/iso-agents-002
 START: 2026-11-26 00:14:01.559 +03:30
-END: pending final commit
-DURATION: pending
+IMPLEMENTATION_COMMIT: 3cc0b31421fc735a2769c6f2af1a30c7c58a5441
+END: 2026-11-26 02:25:45.000 +03:30
+DURATION: 02:11:43
 
 ## Delivered
 - R10-01 channel authority from StoreCommerce.SalesChannel across query/create/duplicate, explicit DTO/command/reread; UI channel control; Direct rejected under Marketplace config.
