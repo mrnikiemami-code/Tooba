@@ -74,6 +74,7 @@ Runtime facts:
 | Host | http://127.0.0.1:5088 (PID 14424 at capture) |
 | Health | `ready`; SingleStore, inmemory auth, messaging Healthy |
 | Next build | `tRnq3kk5nCDutJy-rfGat` |
+| Pushed commit | `0111d89b45cb932c4c3449d8b4512b8379e383e4` on `origin/opencode/iso-agents-002` |
 | Playwright verify | 58 checks / 0 errors / PASS |
 | Verify JSON | `evidence/r8-runtime/verify-r8.json` |
 | Verify SHA-256 | `F9EF553695398DEDECE6925548C72C5A53179E526A7C1E11D7403E1C971A30B1` |

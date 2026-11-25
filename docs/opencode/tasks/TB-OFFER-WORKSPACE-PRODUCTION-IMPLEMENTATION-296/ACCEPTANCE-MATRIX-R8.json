@@ -389,8 +389,8 @@
     "typecheck": "PASS",
     "lint": "PASS (pre-existing unrelated warnings only)",
     "runtime": "PASS on FE3000/Host5088",
-    "commit": "PENDING",
-    "push": "PENDING",
+    "commit": "0111d89b45cb932c4c3449d8b4512b8379e383e4",
+    "push": "origin/opencode/iso-agents-002",
     "stopForArchitect": true
   }
 }

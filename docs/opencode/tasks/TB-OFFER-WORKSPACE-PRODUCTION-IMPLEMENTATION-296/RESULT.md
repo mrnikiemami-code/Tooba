@@ -1,4 +1,4 @@
-# RESULT — TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296
+﻿# RESULT — TB-OFFER-WORKSPACE-PRODUCTION-IMPLEMENTATION-296
 
 STATUS: PASS (worker; STOP_FOR_ARCHITECT). Implementable slices complete and verified; gated capabilities documented and not fabricated.
 Worker PASS ≠ Architect ACCEPT ≠ owner acceptance.
@@ -119,7 +119,8 @@ STOP_FOR_ARCHITECT
 STATUS: PASS (within issued R8 scope; owner visual acceptance of other tabs remains external)
 
 BASE: `037bd1a7f10056f0aea942eb4db5cc569242703e`
-BRANCH: `opencode/iso-agents-002`
+BRANCH: `opencode/iso-agents-002` (pushed)
+CODE: `0111d89b45cb932c4c3449d8b4512b8379e383e4`
 
 ## Delivered
 
