@@ -172,3 +172,6 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.3.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
 
 **This file is the canonical OpenCode architect procedure. The Cursor procedure remains separate.**
+
+## Mandatory senior architect quality gate (owner directive 2026-11-25)
+Apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and independent review. All eight applicable AQ checks require source and guard evidence. Functional PASS never waives architectural violations. Preserve immutable task inputs, authorization and §0A; no automatic next task.
