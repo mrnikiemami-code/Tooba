@@ -24,3 +24,6 @@ Scope: `src/frontend/**`. This skill implements, but NEVER overrides, `docs/arch
 - For Home/PDP/shared storefront visual changes, ALWAYS follow `docs/visual-baselines/CRITICAL-STOREFRONT-VISUAL-REVIEW.md` and run `npm run test:critical-storefront`; visual acceptance is separate.
 - Report exact touched files, owner/boundary, contract/visual delta, tests actually run, remaining debt and STOP decision.
 - No automatic AMSC waves, mass folder moves, global baseline changes, or certification claims merely because code compiles.
+
+## Mandatory approved design fidelity
+Read and follow `docs/architecture/NEXTJS-DESIGN-FIDELITY.md` for new or revised UI designs and visual integration. Require approved runnable Next.js/TSX, reuse its source, and independently verify fidelity; no HTML-only new design acceptance or visual reconstruction. Existing approved designs and already-issued repairs remain valid; do not retroactively restart TB-296-R8 or automatically launch the pilot. New design approval gates apply to the affected design scope only; safe authorized independent repair work continues under delivery method §0A.
