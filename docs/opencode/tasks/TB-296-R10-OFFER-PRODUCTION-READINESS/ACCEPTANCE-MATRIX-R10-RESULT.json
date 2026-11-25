@@ -1,0 +1,44 @@
+﻿{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "base": "295d8241d277f4320f90ee9e5e75e907dfa5905f",
+  "status": "BLOCKED",
+  "requirements": {
+    "R10-01": "BLOCKED — no owning allowed-channel authority by edition/role/seller exists; no fake policy or fixed Marketplace change applied.",
+    "R10-02": "PARTIAL — R9 pre-create supported tabs and shared create/apply retained; full inventory pre-create and complete history gated.",
+    "R10-03": "BLOCKED — no Inventory-owned eligible-warehouse/idempotent position provisioning contract exists; no fake StockItemId.",
+    "R10-04": "PARTIAL — shared create/apply and exact-value reread retained; channel/positions not fully integrated.",
+    "R10-05": "BLOCKED — no owning-module RowVersion/ConcurrencyToken/CAS; migration authorization not provided; no live migration applied.",
+    "R10-06": "BLOCKED — no authorized Offer/Pricing/Inventory/Fulfillment history projection contract; no fabricated records.",
+    "R10-07": "PASS — Catalog unit precision/step/rounding and client/server validation retained.",
+    "R10-08": "PASS_WITH_LIMITATION — price/currency/fulfillment authority preserved; Stage3/funding/multi-currency remain gated.",
+    "R10-09": "PARTIAL — public Localization DTO/query and shared registry route in place; shared Locale type/global shell still fa/en and configured ru prefix is concrete.",
+    "R10-10": "PARTIAL — workspace 1161→785, shared actions/create use case, seller transport split; admin-offer-api/intent flat boundary still legacy.",
+    "R10-11": "PASS_WITH_LIMITATION — public CQRS DTO/thin endpoint, no Host business diff; full R10 owning endpoints blocked by R10-01/03/05/06.",
+    "R10-12": "PASS — shared Toast/MessageBox, inline validation, R8 layout retained from R9 evidence.",
+    "R10-13": "NOT_RUN — R10 42-case performance/regression matrix not executable to completion; R9-R1 performance 1028/71 retained.",
+    "R10-14": "FAIL/BLOCKED — full 42-case independent matrix not executed because material owning-domain requirements are blocked."
+  },
+  "executedEvidence": {
+    "typecheck": "PASS",
+    "lint": "PASS (pre-existing warnings)",
+    "build": "PASS",
+    "offerBackend": "97/97",
+    "hostLocalizationCatalog": "9/9",
+    "mount": "26/26",
+    "api": "16/16",
+    "modelI18nRouting": "26/26",
+    "runtimeR9Behavior": "32/32",
+    "verifySha256": "596B85738AB4A403E66D450E3BD6D4D568110BAF5805DD1DD2FAAFA1AB07D8F4",
+    "cleanupSha256": "932561400F096C616955AE5309A1D9ECA1D46476DDAF06A1E8360FFD108A138D",
+    "publicLanguages": "dedicated public DTO verified",
+    "frontendArchitecture": "27 pre-existing unrelated baseline debts; no task offer size regression"
+  },
+  "blockers": [
+    "R10-01 channel authority requires an owner-approved edition/role/seller channel policy.",
+    "R10-03 Inventory eligible-location/provisioning contract is absent.",
+    "R10-05 atomic concurrency requires owning-module version/CAS design and migration authorization.",
+    "R10-06 history read projection/event recording contract is absent.",
+    "R10-09 full dynamic registry locale requires shared Locale type/provider expansion beyond Offer scope.",
+    "R10-14 mandatory matrix cannot be complete while the above are blocked."
+  ]
+}

@@ -76,7 +76,7 @@ export function isStorefrontLandingPath(pathname: string): boolean {
 
 /** استخراج locale از prefix URL؛ null اگر prefix نداشته باشد. */
 export function parseLocalePrefix(pathname: string): { locale: Locale; pathname: string } | null {
-  const match = pathname.match(/^\/(fa|en|ru)(\/.*)?$/);
+  const match = pathname.match(/^\/(fa|en)(\/.*)?$/);
   if (!match) return null;
   const locale = match[1] as Locale;
   const rest = match[2] ?? "/";
@@ -100,6 +100,14 @@ export function localePath(locale: Locale, internalPath: string): string {
 }
 
 /** حذف prefix locale از URL عمومی. */
+export function parseRegistryPanelPrefix(pathname: string): { prefix: string; pathname: string } | null {
+  const match = pathname.match(/^\/([a-z]{2})\/(admin|vendor-panel)(\/.*)?$/);
+  if (!match) return null;
+  const rest = match[3] ?? "/";
+  return { prefix: match[1]!, pathname: `/${match[2]}${rest === "" ? "" : rest}` };
+}
+
+/** حذف prefix locale از مسیر داخلی. */
 export function stripLocalePrefix(pathname: string): string {
   const parsed = parseLocalePrefix(pathname);
   return parsed?.pathname ?? pathname;

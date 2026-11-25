@@ -3,6 +3,7 @@
   isPublicStorefrontPath,
   parseInvalidLocalePrefix,
   parseLocalePrefix,
+  parseRegistryPanelPrefix,
   resolvePreferredLocale,
 } from "./routing.ts";
 import type { Locale } from "./locale.ts";
@@ -10,7 +11,7 @@ import type { Locale } from "./locale.ts";
 export type LocaleMiddlewarePlan =
   | { type: "pass" }
   | { type: "not-found" }
-  | { type: "rewrite"; locale: Locale; internalPath: string }
+  | { type: "rewrite"; locale: string; internalPath: string }
   | { type: "redirect"; location: string };
 
 /**
@@ -22,6 +23,11 @@ export function planLocaleMiddleware(
   cookieValue: string | undefined,
   rewrittenLocaleHeader: string | null,
 ): LocaleMiddlewarePlan {
+  const registryPrefix = parseRegistryPanelPrefix(pathname);
+  if (registryPrefix) {
+    return { type: "rewrite", locale: registryPrefix.prefix, internalPath: registryPrefix.pathname };
+  }
+
   const prefixedEarly = parseLocalePrefix(pathname);
   if (prefixedEarly) {
     return { type: "rewrite", locale: prefixedEarly.locale, internalPath: prefixedEarly.pathname };
@@ -41,7 +47,7 @@ export function planLocaleMiddleware(
   }
 
   if (isPublicStorefrontPath(pathname)) {
-    if (rewrittenLocaleHeader === "fa" || rewrittenLocaleHeader === "en" || rewrittenLocaleHeader === "ru") {
+    if (rewrittenLocaleHeader === "fa" || rewrittenLocaleHeader === "en" || rewrittenLocaleHeader) {
       return { type: "pass" };
     }
 
