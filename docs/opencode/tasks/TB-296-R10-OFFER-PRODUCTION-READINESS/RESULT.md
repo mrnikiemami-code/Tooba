@@ -5,8 +5,9 @@ STATUS: BLOCKED (worker; not production-ready, not full PASS)
 BASE: 295d8241d277f4320f90ee9e5e75e907dfa5905f
 BRANCH: opencode/iso-agents-002
 START: 2026-11-26 00:14:01.559 +03:30
-END: pending final commit
-DURATION: pending
+IMPLEMENTATION_COMMIT: 521b3c1954ca490db0a54deb982b8a39759ba78d
+END: 2026-11-26 00:29:22.000 +03:30
+DURATION: 00:15:20
 
 ## Implemented safe slices
 - Preserved R8 layout and all R9/R9-R1 behavior.

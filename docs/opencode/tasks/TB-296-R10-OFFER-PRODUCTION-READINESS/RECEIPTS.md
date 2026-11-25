@@ -3,7 +3,10 @@
 ## Identity
 - Base: 295d8241d277f4320f90ee9e5e75e907dfa5905f
 - Status: BLOCKED
+- Implementation commit: 521b3c1954ca490db0a54deb982b8a39759ba78d
 - Start: 2026-11-26 00:14:01.559 +03:30
+- End: 2026-11-26 00:29:22.000 +03:30
+- Duration: 00:15:20
 - FE: http://127.0.0.1:3000
 - Host: http://127.0.0.1:5088
 - Health: ready, SingleStore, inmemory authorization, messaging Healthy
