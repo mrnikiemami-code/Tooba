@@ -1,4 +1,4 @@
-{
+﻿{
   "taskId": "TB-296-R7-VISUAL-AND-UX-PARITY",
   "baseCommit": "1817fe551e95782f19851f13a046295cd8a210b4",
   "designAuthority": {
@@ -17,8 +17,8 @@
     { "route": "/vendor-panel/products/[offerId]", "status": "PASS", "evidence": "seller-owned offer 457e375f... rendered; price/inventory persisted and re-read; shipping read-only; attributes collapsible" }
   ],
   "lists": {
-    "admin": { "status": "PASS", "rows": 10, "productX": 903, "actionsX": 49, "order": "product > seller > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-runtime/verify-r7.json; evidence/r7-final-shots/admin-list-1440.png" },
-    "seller": { "status": "PASS", "rows": 10, "productX": 903, "actionsX": 49, "order": "product > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-final-shots/seller-list-1440.png" },
+    "admin": { "status": "PASS", "rows": 10, "productX": 923, "actionsX": 49, "order": "product > seller > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-runtime/verify-r7.json; evidence/r7-final-shots/admin-list-1440.png" },
+    "seller": { "status": "PASS", "rows": 10, "productX": 923, "actionsX": 49, "order": "product > sku > channel > price > available > status > last-updated > actions", "evidence": "evidence/r7-final-shots/seller-list-1440.png" },
     "rules": {
       "ordersStandardLayout": "PASS",
       "createActionLeft": "PASS",

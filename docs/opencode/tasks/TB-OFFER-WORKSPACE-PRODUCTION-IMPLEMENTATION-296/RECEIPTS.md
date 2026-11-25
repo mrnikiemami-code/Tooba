@@ -54,7 +54,7 @@ Per-offer discount definition (Promotion), offer history read projection, per-of
 | OpenSpec strict | valid | `evidence/r7-openspec-validate.log` |
 
 Runtime facts:
-- Lists: product x=903 rightmost after selection; actions x=49 leftmost; rows 10/10; order chain product→seller→sku→channel→price→available→status→date→actions all pass.
+- Lists: product x=923 rightmost after selection; actions x=49 leftmost; rows 10/10; order chain product→seller→sku→channel→price→available→status→date→actions all pass.
 - Geometry: tabs 44; controls 37 desktop / 44 mobile; card radius 9px; header 160/193/224 vs artifact 148/202/198 at 1440/768/360.
 - Persistence: admin price 1234567, unique SKU, returns Custom/9, qty 2..6, fulfillment responsibility/type re-read; seller 457e price 3704749/onHand 198 persisted then restored 3704748/199.
 - Security: cross-seller offer read 404; seller has no shipping write.
