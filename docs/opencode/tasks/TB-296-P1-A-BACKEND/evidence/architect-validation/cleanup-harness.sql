@@ -1,0 +1,11 @@
+﻿begin;
+delete from inventory.reservation_consumptions where reservation_id in (select reservation_id from inventory.reservations where stock_item_id in ('686f9186-7780-451c-b14b-7a9e92902480','190960e1-efdf-4da4-af87-58ae9f6f40d0'));
+delete from inventory.reservations where stock_item_id in ('686f9186-7780-451c-b14b-7a9e92902480','190960e1-efdf-4da4-af87-58ae9f6f40d0');
+delete from inventory.offer_inventory_changes where offer_id='0330dfcc-e860-4dc0-a24d-ba86d6a23dcd';
+delete from inventory.offer_allocations where offer_id='0330dfcc-e860-4dc0-a24d-ba86d6a23dcd';
+delete from inventory.outbox_messages where payload::text like '%0330dfcc-e860-4dc0-a24d-ba86d6a23dcd%';
+delete from inventory.stock_positions where offer_id='0330dfcc-e860-4dc0-a24d-ba86d6a23dcd';
+delete from offer.outbox_messages where payload::text like '%0330dfcc-e860-4dc0-a24d-ba86d6a23dcd%';
+delete from offer.offers where offer_id='0330dfcc-e860-4dc0-a24d-ba86d6a23dcd';
+delete from inventory.locations where code like 'P1A-HARNESS-MKT%';
+commit;
