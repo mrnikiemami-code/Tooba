@@ -56,6 +56,8 @@ public sealed class OfferErrorCatalogContributor : IErrorCatalogContributor
             "Fulfillment shipping type identity is invalid."),
         D(OfferErrorCodes.FulfillmentTypeUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Fulfillment shipping type is not available in the active catalog."),
+        D(OfferErrorCodes.FulfillmentChangeProtected, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Fulfillment responsibility cannot change while existing commitments or allocation are protected."),
         D(OfferErrorCodes.FulfillmentBodyMalformed, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Fulfillment assignment body is malformed."),
     ];

@@ -51,6 +51,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<ISellerOfferInventoryGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IInventoryProvisioningGateway, InventoryProvisioningDirectory>();
+        services.AddScoped<IOfferFulfillmentChangeGate, OfferFulfillmentChangeGate>();
         services.AddScoped<ISellerOfferAllocationGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IOfferInventoryHistoryReader>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddScoped<IFulfillmentInventoryLifecyclePort>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());

@@ -2,6 +2,8 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Inventory.Contracts.Seller;
+using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Application.Offers.History;
 using Tooba.Offer.Application.Offers.Mappings;
@@ -46,7 +48,9 @@ internal sealed class AssignOfferFulfillmentHandler(
     IShippingTypeReader shippingTypes,
     IClock clock,
     IIdGenerator ids,
-    IOfferHistoryWriter history)
+    IOfferHistoryWriter history,
+    IOfferFulfillmentChangeGate inventoryGate,
+    IOrderOfferCommitmentReader orderCommitments)
     : IRequestHandler<AssignOfferFulfillmentCommand, Result<OfferReference>>
 {
     public async Task<Result<OfferReference>> Handle(
@@ -82,10 +86,25 @@ internal sealed class AssignOfferFulfillmentHandler(
             }
         }
 
+        var requestedResponsibility = request.Responsibility is null
+            ? (DomainResponsibility?)null : (DomainResponsibility)(int)request.Responsibility.Value;
+        var changesResponsibility = requestedResponsibility != offer.FulfillmentResponsibility;
+
+        // Inventory serializes this check with new holds and explicit allocation writes.
+        // Order is the authority for durable obligations even when a hold was already consumed.
+        await using var lease = changesResponsibility
+            ? await inventoryGate.TryAcquireAsync(offer.OfferId, cancellationToken)
+            : null;
+        if (changesResponsibility && (lease is null
+            || await orderCommitments.HasOrderCommitmentAsync(offer.OfferId, cancellationToken)))
+        {
+            return Result.Failure<OfferReference>(new SemanticError(OfferErrorCodes.FulfillmentChangeProtected));
+        }
+
         var previous = OfferHistorySummaries.Fulfillment(
             offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId);
         var assignment = offer.AssignFulfillment(
-            request.Responsibility is null ? null : (DomainResponsibility)(int)request.Responsibility.Value,
+            requestedResponsibility,
             request.ShippingTypeId,
             clock.UtcNow);
         if (assignment.IsFailure)

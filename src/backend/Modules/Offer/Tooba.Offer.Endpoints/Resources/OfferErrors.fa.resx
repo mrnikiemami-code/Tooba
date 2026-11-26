@@ -84,6 +84,7 @@
   <data name="offer.fulfillment.body_malformed" xml:space="preserve">
     <value>بدنهٔ انتساب انجام ارسال نامعتبر است.</value>
   </data>
+  <data name="offer.fulfillment.change_protected" xml:space="preserve"><value>تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.</value></data>
 </root>
 
 

@@ -208,6 +208,11 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         var knownPosition = await _db.Positions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StockItemId == stockItemId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
+        var now = _clock.UtcNow;
+        await using var allocationTransaction = _db.Database.CurrentTransaction is null && System.Transactions.Transaction.Current is null
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        await LockOfferAllocationAsync(knownPosition.OfferId, cancellationToken);
         var location = await _db.Locations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.LocationId == knownPosition.LocationId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
@@ -227,11 +232,6 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
                     || location.SellerPartyId != offer.SellerPartyId)))
             throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
 
-        var now = _clock.UtcNow;
-        await using var allocationTransaction = _db.Database.CurrentTransaction is null
-            ? await _db.Database.BeginTransactionAsync(cancellationToken)
-            : null;
-        await LockOfferAllocationAsync(knownPosition.OfferId, cancellationToken);
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
             var prior = await _db.Reservations.AsNoTracking()

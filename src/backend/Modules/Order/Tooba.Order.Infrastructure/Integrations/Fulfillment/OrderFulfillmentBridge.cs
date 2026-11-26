@@ -8,12 +8,16 @@ namespace Tooba.Order.Infrastructure.Integrations.Fulfillment;
 /// <summary>
 /// snapshot handoff سفارش برای Fulfillment بدون cross-DbContext.
 /// </summary>
-public sealed class OrderFulfillmentBridge : IOrderFulfillmentReader
+public sealed class OrderFulfillmentBridge : IOrderFulfillmentReader, IOrderOfferCommitmentReader
 {
     private readonly OrderDbContext _db;
 
     /// <summary>پل handoff را به schema order وصل می‌کند.</summary>
     public OrderFulfillmentBridge(OrderDbContext db) => _db = db;
+
+    /// <inheritdoc />
+    public Task<bool> HasOrderCommitmentAsync(Guid offerId, CancellationToken cancellationToken) =>
+        _db.Lines.AsNoTracking().AnyAsync(x => x.OfferId == offerId, cancellationToken);
 
     /// <inheritdoc />
     public async Task<OrderFulfillmentHandoffSnapshot?> GetHandoffAsync(

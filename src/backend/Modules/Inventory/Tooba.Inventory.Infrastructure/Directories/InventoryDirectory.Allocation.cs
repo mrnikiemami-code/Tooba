@@ -46,6 +46,11 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         await LockOfferAllocationAsync(request.OfferId, cancellationToken);
+        // A responsibility change may have committed while this request was waiting for the lock.
+        var currentOffer = await FindOfferAsync(request.OfferId, cancellationToken);
+        if (currentOffer is null || currentOffer.SellerPartyId != request.SellerPartyId
+            || currentOffer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Platform)
+            return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.LocationNotEligible));
         var replay = await _db.OfferInventoryChanges.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
         if (replay is not null)

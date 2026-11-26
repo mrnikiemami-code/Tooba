@@ -72,6 +72,9 @@ public static class OfferErrorCodes
     /// <summary>The referenced Fulfillment shipping type does not exist in the real active taxonomy.</summary>
     public const string FulfillmentTypeUnavailable = "offer.fulfillment.type_unavailable";
 
+    /// <summary>The fulfillment responsibility cannot safely change while existing obligations or allocation are protected.</summary>
+    public const string FulfillmentChangeProtected = "offer.fulfillment.change_protected";
+
     /// <summary>The fulfillment assignment body is empty, malformed or has an unsupported shape.</summary>
     public const string FulfillmentBodyMalformed = "offer.fulfillment.body_malformed";
 }

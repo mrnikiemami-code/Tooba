@@ -112,6 +112,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjectionPort, OrderPaymentBridge>();
         services.AddScoped<IOrderFulfillmentReader, OrderFulfillmentBridge>();
+        services.AddScoped<IOrderOfferCommitmentReader, OrderFulfillmentBridge>();
         services.AddScoped<ISellerOrderAuthReader, SellerOrderAuthBridge>();
         services.AddScoped<ICustomerCheckoutOwnershipReader, CustomerCheckoutOwnershipBridge>();
         services.AddScoped<IOrderGridEnrichmentReader, OrderGridEnrichmentBridge>();
