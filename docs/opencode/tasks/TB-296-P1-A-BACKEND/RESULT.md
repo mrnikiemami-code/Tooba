@@ -1,6 +1,6 @@
 ﻿# TB-296-P1-A backend result
 
-Readiness: READY_FOR_INTEGRATION (backend candidate; not parent/owner PASS)
+Readiness: READY_FOR_INTEGRATION (backend candidate; not parent/owner PASS)`r`nCandidate source: ecf6151c1988d9c4736ed49d3e3c214cfd265cb3
 Base: 55de59bf8f7fd0db394794017d988fc831cc6de8
 
 ## Implemented
