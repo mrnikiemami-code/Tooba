@@ -1,4 +1,7 @@
 using System.Globalization;
+using Tooba.Fulfillment.Contracts.Shipping;
+using Tooba.Order.Contracts.Fulfillment;
+using Tooba.Offer.Application.Offers.Commands.AssignOfferFulfillment;
 using System.Reflection;
 using Tooba.Pricing.Contracts.Seller;
 using Tooba.Inventory.Contracts.Seller;
@@ -241,6 +244,108 @@ public sealed class OfferHistoryTests
         }
     }
 
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    public async Task Responsibility_change_requires_both_owner_proofs(
+        bool inventoryAllows, bool orderExists, bool expectedSuccess)
+    {
+        var offer = OfferFor(SellerId);
+        Assert.True(offer.AssignFulfillment(Tooba.Offer.Domain.ValueObjects.FulfillmentResponsibility.Seller,
+            null, Now).IsSuccess);
+        var store = new FakeStore(offer);
+        var gate = new FakeFulfillmentChangeGate(inventoryAllows);
+        var orders = new FakeOrderCommitmentReader(orderExists);
+        var writer = new RecordingAssignmentHistory();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddToobaCqrsFoundation(typeof(AssignOfferFulfillmentCommand).Assembly);
+        services.AddSingleton<IOfferStore>(store);
+        services.AddSingleton<IShippingTypeReader, EmptyShippingTypes>();
+        services.AddSingleton<IClock>(new AssignmentClock());
+        services.AddSingleton<IIdGenerator, AssignmentIds>();
+        services.AddSingleton<IOfferHistoryWriter>(writer);
+        services.AddSingleton<IOfferFulfillmentChangeGate>(gate);
+        services.AddSingleton<IOrderOfferCommitmentReader>(orders);
+        using var provider = services.BuildServiceProvider();
+        var sender = provider.GetRequiredService<ISender>();
+
+        var result = await sender.Send(new AssignOfferFulfillmentCommand(OfferId,
+            OfferFulfillmentResponsibility.Platform, null, Now.ToString("O"), SellerId));
+
+        Assert.Equal(expectedSuccess, result.IsSuccess);
+        Assert.Equal(1, gate.Calls);
+        Assert.Equal(inventoryAllows ? 1 : 0, orders.Calls);
+        Assert.Equal(inventoryAllows, gate.Lease.Disposed);
+        Assert.Equal(expectedSuccess ? 1 : 0, store.SaveCalls);
+        Assert.Equal(expectedSuccess ? 1 : 0, writer.Calls);
+        Assert.Equal(expectedSuccess ? Tooba.Offer.Domain.ValueObjects.FulfillmentResponsibility.Platform
+            : Tooba.Offer.Domain.ValueObjects.FulfillmentResponsibility.Seller, offer.FulfillmentResponsibility);
+        if (!expectedSuccess)
+            Assert.Equal(OfferErrorCodes.FulfillmentChangeProtected, result.FirstError.Code);
+    }
+
+    private sealed class FakeFulfillmentChangeGate(bool allows) : IOfferFulfillmentChangeGate
+    {
+        public int Calls { get; private set; }
+        public FakeLease Lease { get; } = new();
+        public Task<IAsyncDisposable?> TryAcquireAsync(Guid offerId, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult<IAsyncDisposable?>(allows ? Lease : null);
+        }
+    }
+
+    private sealed class FakeLease : IAsyncDisposable
+    {
+        public bool Disposed { get; private set; }
+        public ValueTask DisposeAsync()
+        {
+            Disposed = true;
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class FakeOrderCommitmentReader(bool exists) : IOrderOfferCommitmentReader
+    {
+        public int Calls { get; private set; }
+        public Task<bool> HasOrderCommitmentAsync(Guid offerId, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(exists);
+        }
+    }
+
+    private sealed class EmptyShippingTypes : IShippingTypeReader
+    {
+        public Task<IReadOnlyList<ShippingTypeSnapshot>> ListActiveAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ShippingTypeSnapshot>>([]);
+        public Task<IReadOnlyList<ShippingTypeSnapshot>> GetByIdsAsync(
+            IReadOnlyCollection<Guid> shippingTypeIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ShippingTypeSnapshot>>([]);
+    }
+
+    private sealed class AssignmentClock : IClock
+    {
+        public DateTimeOffset UtcNow => Now.AddMinutes(1);
+    }
+
+    private sealed class AssignmentIds : IIdGenerator
+    {
+        public Guid NewId() => Guid.NewGuid();
+    }
+
+    private sealed class RecordingAssignmentHistory : IOfferHistoryWriter
+    {
+        public int Calls { get; private set; }
+        public Task AppendAsync(OfferHistoryEntry entry, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.CompletedTask;
+        }
+    }
+
     private static DbContextOptions<OfferDbContext> InMemoryOptions()
     {
         var root = new InMemoryDatabaseRoot();
@@ -330,7 +435,12 @@ public sealed class OfferHistoryTests
         public Task<SellerOffer?> PersistNewAsync(SellerOffer value, CancellationToken cancellationToken) =>
             Task.FromResult<SellerOffer?>(null);
 
-        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public int SaveCalls { get; private set; }
+        public Task SaveChangesAsync(CancellationToken cancellationToken)
+        {
+            SaveCalls++;
+            return Task.CompletedTask;
+        }
 
         public Task<bool> ExistsActiveListingAsync(
             Guid sellerPartyId,

@@ -60,6 +60,11 @@ public sealed partial class InventoryDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         await LockOfferAllocationAsync(request.OfferId, cancellationToken);
+        // Do not authorize a physical write with an ownership snapshot read before the lock.
+        var currentOffer = await FindOfferAsync(request.OfferId, cancellationToken);
+        if (currentOffer is null || currentOffer.SellerPartyId != request.SellerPartyId
+            || currentOffer.FulfillmentResponsibility != offer.FulfillmentResponsibility)
+            return Result.Failure(new SemanticError(InventoryErrorCodes.LocationNotEligible));
         // Serialize workspace intents on the target position, before checking the durable replay.
         await _db.Database.ExecuteSqlAsync(
             $"SELECT 1 FROM inventory.stock_positions WHERE stock_item_id = {stockItemId} FOR UPDATE",
