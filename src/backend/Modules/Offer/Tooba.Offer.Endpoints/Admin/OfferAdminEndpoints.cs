@@ -189,7 +189,7 @@ public static class OfferAdminEndpoints
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         return api.From(await sender.Send(new SetOfferAllocationCommand(
-            offerId, owner.Value, body.Quantity, body.ExpectedRevision, actorUserId, body.OperationId ?? Guid.Empty), token));
+            offerId, owner.Value, body.Quantity, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token));
     }
 
     private static async Task<IResult> InventoryAsync(

@@ -5,6 +5,7 @@ using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
+using Tooba.Offer.Domain.ValueObjects;
 
 namespace Tooba.Offer.Application.Offers.Commands.EnsureOfferInventoryPosition;
 
@@ -33,13 +34,17 @@ internal sealed class EnsureOfferInventoryPositionCommandHandler(
             return OfferReadModelComposer.NotFound<ProvisionedStockPosition>();
         }
 
+        if (request.SellerPartyId is not null && offer.FulfillmentResponsibility == FulfillmentResponsibility.Platform)
+            return Result.Failure<ProvisionedStockPosition>(new SemanticError(InventoryErrorCodes.LocationNotEligible));
+
         try
         {
             var position = await provisioning.EnsurePositionAsync(
                 offer.OfferId,
                 offer.CatalogVariantId,
                 request.LocationId,
-                request.SellerPartyId,
+                offer.FulfillmentResponsibility == FulfillmentResponsibility.Seller
+                    ? offer.SellerPartyId : request.SellerPartyId,
                 cancellationToken);
             return Result.Success(position);
         }

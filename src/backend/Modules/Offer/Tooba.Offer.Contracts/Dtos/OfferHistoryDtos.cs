@@ -8,7 +8,10 @@ public sealed record OfferHistoryItem(
     Guid? ActorUserId,
     string Summary,
     string? OldValue,
-    string? NewValue);
+    string? NewValue,
+    Guid? EventId = null,
+    Guid? TargetId = null,
+    Guid? LocationId = null);
 
 /// <summary>Bounded page of recorded Offer changes ordered by occurrence descending.</summary>
 public sealed record OfferHistoryPage(

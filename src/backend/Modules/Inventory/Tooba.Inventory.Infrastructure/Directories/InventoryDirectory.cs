@@ -269,6 +269,12 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
     public async Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await using var releaseTransaction = _db.Database.CurrentTransaction is null
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        await _db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM inventory.reservations WHERE reservation_id = {reservationId} FOR UPDATE",
+            cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
         if (reservation.Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
@@ -279,20 +285,6 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         var allocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == knownPosition.OfferId, cancellationToken);
         var now = _clock.UtcNow;
-        await using var releaseTransaction = allocation is null
-            ? null
-            : await _db.Database.BeginTransactionAsync(cancellationToken);
-
-        var released = await _db.Positions
-            .Where(x => x.StockItemId == reservation.StockItemId && x.Reserved >= reservation.Quantity)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(x => x.Reserved, x => x.Reserved - reservation.Quantity)
-                    .SetProperty(x => x.UpdatedAt, now),
-                cancellationToken);
-        if (released != 1)
-            throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
-
         if (allocation is not null)
         {
             var releaseRevision = _ids.NewId();
@@ -307,6 +299,17 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             if (allocationReleased != 1)
                 throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
         }
+
+        var released = await _db.Positions
+            .Where(x => x.StockItemId == reservation.StockItemId && x.Reserved >= reservation.Quantity)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.Reserved, x => x.Reserved - reservation.Quantity)
+                    .SetProperty(x => x.UpdatedAt, now),
+                cancellationToken);
+        if (released != 1)
+            throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
+
 
         reservation.MoveTo(StockReservationStatus.Released, now);
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
@@ -407,21 +410,6 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         var consumeAllocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == consumePosition.OfferId, cancellationToken);
 
-        var consumed = await _db.Positions
-            .Where(x => x.StockItemId == reservation.StockItemId
-                        && x.Reserved >= reservation.Quantity
-                        && x.OnHand >= reservation.Quantity)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(x => x.OnHand, x => x.OnHand - reservation.Quantity)
-                    .SetProperty(x => x.Reserved, x => x.Reserved - reservation.Quantity)
-                    .SetProperty(x => x.UpdatedAt, now),
-                cancellationToken);
-        if (consumed != 1)
-        {
-            throw new ContractOperationException(InventoryErrorCodes.ReservationConsumeMismatch);
-        }
-
         if (consumeAllocation is not null)
         {
             var consumeRevision = _ids.NewId();
@@ -437,6 +425,21 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
                     cancellationToken);
             if (allocationConsumed != 1)
                 throw new ContractOperationException(InventoryErrorCodes.ReservationConsumeMismatch);
+        }
+
+        var consumed = await _db.Positions
+            .Where(x => x.StockItemId == reservation.StockItemId
+                        && x.Reserved >= reservation.Quantity
+                        && x.OnHand >= reservation.Quantity)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.OnHand, x => x.OnHand - reservation.Quantity)
+                    .SetProperty(x => x.Reserved, x => x.Reserved - reservation.Quantity)
+                    .SetProperty(x => x.UpdatedAt, now),
+                cancellationToken);
+        if (consumed != 1)
+        {
+            throw new ContractOperationException(InventoryErrorCodes.ReservationConsumeMismatch);
         }
 
         _db.ReservationConsumptions.Add(new ReservationConsumptionRecord

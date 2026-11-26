@@ -193,7 +193,7 @@ public static class OfferSellerEndpoints
     {
         var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferAllocationCommand(
-            offerId, sellerId, body.Quantity, body.ExpectedRevision, actorUserId, body.OperationId ?? Guid.Empty), token);
+            offerId, sellerId, body.Quantity, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
         return api.From(result);
     }
 

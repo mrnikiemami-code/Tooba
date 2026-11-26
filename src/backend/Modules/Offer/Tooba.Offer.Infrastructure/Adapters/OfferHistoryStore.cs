@@ -22,7 +22,7 @@ public sealed class OfferHistoryStore(OfferDbContext db) : IOfferHistoryWriter, 
         await db.OfferHistoryEntries.AsNoTracking().Where(x => x.OfferId == offerId)
             .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.OfferHistoryEntryId)
             .Select(x => new OfferHistoryItem(
-                x.OfferId, x.OccurredAt, x.ChangeKind, x.ActorUserId, x.Summary, x.OldValue, x.NewValue))
+                x.OfferId, x.OccurredAt, x.ChangeKind, x.ActorUserId, x.Summary, x.OldValue, x.NewValue, x.OfferHistoryEntryId))
             .ToListAsync(cancellationToken);
 
     /// <inheritdoc />
@@ -55,5 +55,6 @@ public sealed class OfferHistoryStore(OfferDbContext db) : IOfferHistoryWriter, 
         entry.ActorUserId,
         entry.Summary,
         entry.OldValue,
-        entry.NewValue);
+        entry.NewValue,
+        entry.OfferHistoryEntryId);
 }

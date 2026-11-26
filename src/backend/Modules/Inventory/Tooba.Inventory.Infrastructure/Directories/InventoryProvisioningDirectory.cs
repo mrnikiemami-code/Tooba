@@ -40,7 +40,8 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         await _db.Locations.AsNoTracking()
             .Where(x => x.Status == InventoryLocationStatus.Active
                 && (sellerPartyId == null
-                    || (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)))
+                    ? x.OwnerKind != InventoryLocationOwnerKind.Seller && x.SellerPartyId == null
+                    : (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)))
             .OrderBy(x => x.Code)
             .Select(x => new InventoryEligibleLocation(x.LocationId, x.Code, x.Name))
             .ToListAsync(cancellationToken)
@@ -62,7 +63,8 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         var locationIsActive = await _db.Locations.AsNoTracking()
             .AnyAsync(x => x.LocationId == locationId && x.Status == InventoryLocationStatus.Active
                 && (sellerPartyId == null
-                    || (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)), cancellationToken)
+                    ? x.OwnerKind != InventoryLocationOwnerKind.Seller && x.SellerPartyId == null
+                    : (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)), cancellationToken)
             .ConfigureAwait(false);
         if (!locationIsActive)
         {

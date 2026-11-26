@@ -161,7 +161,7 @@ public sealed record SellerOfferInventoryWriteRequest(
     Guid? OperationId = null);
 
 /// <summary>Body for explicit platform-fulfilled offered quantity.</summary>
-public sealed record SellerOfferAllocationWriteRequest(decimal Quantity, string? ExpectedRevision = null, Guid? OperationId = null);
+public sealed record SellerOfferAllocationWriteRequest(decimal Quantity, string? ExpectedVersion = null, Guid? OperationId = null);
 
 /// <summary>
 /// Body for idempotently provisioning an empty stock position at one active location.

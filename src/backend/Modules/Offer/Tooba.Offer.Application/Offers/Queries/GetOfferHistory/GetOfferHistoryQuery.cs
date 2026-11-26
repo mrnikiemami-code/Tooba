@@ -43,7 +43,7 @@ internal sealed class GetOfferHistoryHandler(
                 fact.ActorUserId,
                 "Offer price changed",
                 fact.OldAmount is null ? null : $"amount={fact.OldAmount};currency={fact.Currency}",
-                $"amount={fact.NewAmount};currency={fact.Currency}"));
+                $"amount={fact.NewAmount};currency={fact.Currency}", fact.FactId, fact.PriceId));
         }
         foreach (var fact in await inventoryHistory.ListAsync(request.OfferId, cancellationToken))
         {
@@ -53,7 +53,7 @@ internal sealed class GetOfferHistoryHandler(
                     fact.OfferId, fact.OccurredAt, "AllocationChanged", fact.ActorUserId,
                     "Offer offered quantity changed",
                     fact.OldAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    fact.NewAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                    fact.NewAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture), fact.FactId, fact.OfferId));
             }
             else
             {
@@ -61,18 +61,18 @@ internal sealed class GetOfferHistoryHandler(
                     fact.OfferId, fact.OccurredAt, "InventoryChanged", fact.ActorUserId,
                     "Offer inventory changed",
                     fact.OldOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    fact.NewOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                    fact.NewOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture), fact.FactId, fact.StockItemId, fact.LocationId));
             }
         }
 
         var ordered = items
             .OrderByDescending(x => x.OccurredAt)
             .ThenBy(x => x.Kind, StringComparer.Ordinal)
-            .ThenBy(x => x.Summary, StringComparer.Ordinal)
+            .ThenBy(x => x.EventId)
             .ToArray();
         var safePage = Math.Max(1, request.Page);
         var safePageSize = Math.Clamp(request.PageSize, 1, 100);
-        var pageItems = ordered.Skip((safePage - 1) * safePageSize).Take(safePageSize).ToArray();
+        var pageItems = ordered.Skip((int)Math.Min((long)(safePage - 1) * safePageSize, int.MaxValue)).Take(safePageSize).ToArray();
         return Result.Success(new OfferHistoryPage(pageItems, ordered.Length, safePage, safePageSize));
     }
 }
