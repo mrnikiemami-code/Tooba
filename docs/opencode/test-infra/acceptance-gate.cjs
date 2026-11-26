@@ -42,6 +42,12 @@ function verify(matrix, plan, run, loadBytes) {
     for (const aid of p.assertionIds || []) {
       const f = facts.get(aid);
       need(f && f.pass === true && Object.hasOwn(f,"expected") && Object.hasOwn(f,"observed"),"missing/failed fact " + id + "/" + aid);
+      if (f) {
+        try { assert.deepEqual(f.observed,f.expected); } catch { errors.push("oracle equality mismatch " + id + "/" + aid); }
+        if (p.expectedFacts && Object.hasOwn(p.expectedFacts,aid)) {
+          try { assert.deepEqual(f.expected,p.expectedFacts[aid]); } catch { errors.push("planned expectation mismatch " + id + "/" + aid); }
+        }
+      }
     }
     need(facts.size === (p.assertionIds || []).length,"unexpected assertion " + id);
     need(a.status === "PASS" && a.executed === true,"not executed/pass " + id);
@@ -84,7 +90,12 @@ function selfTest() {
     assert.ok(check(v).length>0,name);
   }
   assert.ok(check(run,plan,Buffer.from("{}")).length>0,"changed evidence bytes");
-  console.log("PASS: positive fixture + 10 negative controls");
+  const wrong=JSON.parse(JSON.stringify(run));
+  wrong.tests[0].assertions[0].observed=20;
+  const wrongBytes=Buffer.from(JSON.stringify({testId:"T-1",scenarioSha256:scenario,sourceCommit:s,assertions:wrong.tests[0].assertions}));
+  wrong.tests[0].evidenceSha256=hash(wrongBytes);
+  assert.ok(check(wrong,plan,wrongBytes).length>0,"self-consistent wrong fact");
+  console.log("PASS: positive fixture + 11 negative controls");
 }
 if (process.argv[2] === "--self-test") selfTest();
 else if (process.argv.length === 6) {
