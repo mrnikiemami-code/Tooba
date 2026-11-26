@@ -17,3 +17,5 @@ Read and apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and indepe
 
 ## Owner-approved DEV authority and stop gate (v1.4.0)
 Read `docs/opencode/DEV-HOST-TEST-POLICY.md` and delivery method §0B. Confirmed existing DEV migrations, test deletion/reset and same Host restart are already authorized within task scope; no fresh Host/DB/Testcontainers or repeat permission. A missing authorized contract or failed initial test is implementation work. Isolate actual undecided policy, continue independent work, and document exhausted safe slices before terminal BLOCKED. No architecture/security/acceptance waiver.
+
+Architect gate: no ACCEPT or consolidated repair without the independent source-grounded ARCHITECT-REVIEW.md receipt defined in ARCHITECT-QUALITY-GATE.md. Worker AQ report is not independent evidence.
