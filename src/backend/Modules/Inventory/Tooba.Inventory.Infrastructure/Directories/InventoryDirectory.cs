@@ -35,6 +35,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
     private readonly IModuleCallTracer _tracer;
+    private readonly ICurrentCommerceContext? _commerce;
 
     /// <summary>
     /// دایرکتوری را به schema Inventory و درز Offer/Catalog وصل می‌کند نه به join بین‌schema.
@@ -46,7 +47,8 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         ICatalogVariantLookup catalog,
         IClock clock,
         IIdGenerator ids,
-        IModuleCallTracer tracer)
+        IModuleCallTracer tracer,
+        ICurrentCommerceContext? commerce = null)
     {
         _db = db;
         _guard = guard;
@@ -58,6 +60,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         _ids = ids;
         ArgumentNullException.ThrowIfNull(tracer);
         _tracer = tracer;
+        _commerce = commerce;
     }
 
     /// <inheritdoc />
@@ -171,29 +174,50 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (!string.IsNullOrWhiteSpace(idempotencyKey))
-        {
-            var prior = await _db.Reservations.AsNoTracking()
-                .SingleOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey.Trim(), cancellationToken);
-            if (prior is { Status: StockReservationStatus.Held })
-            {
-                var known = await _db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == prior.StockItemId, cancellationToken);
-                return new ReservationReceipt(prior.ReservationId, prior.StockItemId, known.OfferId, prior.Quantity, prior.Status, prior.ExpiresAt);
-            }
-        }
-
         if (quantity <= 0)
             throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
         var knownPosition = await _db.Positions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StockItemId == stockItemId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
+        var location = await _db.Locations.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.LocationId == knownPosition.LocationId, cancellationToken)
+            ?? throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
+        if (location.Status != InventoryLocationStatus.Active)
+            throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
+        var offer = await FindOfferAsync(knownPosition.OfferId, cancellationToken);
+        var marketplace = _commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace;
+        var needsAllocation = location.OwnerKind == InventoryLocationOwnerKind.Marketplace
+            || (marketplace && offer?.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform);
+        if (marketplace && (offer is null
+            || (offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
+                ? location.OwnerKind != InventoryLocationOwnerKind.Marketplace
+                : offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Seller
+                    || location.OwnerKind != InventoryLocationOwnerKind.Seller
+                    || location.SellerPartyId != offer.SellerPartyId)))
+            throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
+
+        var now = _clock.UtcNow;
+        await using var allocationTransaction = _db.Database.CurrentTransaction is null
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        await LockOfferAllocationAsync(knownPosition.OfferId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            var prior = await _db.Reservations.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey.Trim(), cancellationToken);
+            if (prior is not null)
+            {
+                if (prior.Status != StockReservationStatus.Held || prior.StockItemId != stockItemId
+                    || prior.Quantity != quantity || prior.ExternalReference != (string.IsNullOrWhiteSpace(externalReference) ? null : externalReference.Trim()))
+                    throw new ContractOperationException(InventoryErrorCodes.ReservationConflict);
+                return new ReservationReceipt(prior.ReservationId, stockItemId, knownPosition.OfferId,
+                    prior.Quantity, prior.Status, prior.ExpiresAt);
+            }
+        }
         var allocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == knownPosition.OfferId, cancellationToken);
-        var now = _clock.UtcNow;
-
-        await using var allocationTransaction = allocation is null
-            ? null
-            : await _db.Database.BeginTransactionAsync(cancellationToken);
+        if (needsAllocation && allocation is null)
+            throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
         if (allocation is not null)
         {
             var allocationRevision = _ids.NewId();
@@ -282,6 +306,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
 
         var knownPosition = await _db.Positions.AsNoTracking()
             .SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
+        await LockOfferAllocationAsync(knownPosition.OfferId, cancellationToken);
         var allocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == knownPosition.OfferId, cancellationToken);
         var now = _clock.UtcNow;
@@ -407,6 +432,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
 
         var consumePosition = await _db.Positions.AsNoTracking()
             .SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
+        await LockOfferAllocationAsync(consumePosition.OfferId, cancellationToken);
         var consumeAllocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == consumePosition.OfferId, cancellationToken);
 

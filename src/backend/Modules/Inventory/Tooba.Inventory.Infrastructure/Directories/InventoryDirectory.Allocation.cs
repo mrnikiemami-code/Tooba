@@ -30,18 +30,27 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
         if (offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Platform)
             return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.LocationNotEligible));
 
-        var physical = await _db.Positions.AsNoTracking()
-            .Where(x => x.OfferId == request.OfferId)
-            .SumAsync(x => (decimal?)x.OnHand, cancellationToken) ?? 0m;
-        var operationId = request.OperationId == Guid.Empty ? _ids.NewId() : request.OperationId;
+        if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
+            return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.AllocationRevisionConflict));
+        if (_commerce?.Current?.Edition.Edition == ToobaEdition.SingleStore)
+            return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.LocationNotEligible));
+        var variant = await FindVariantAsync(offer.CatalogVariantId, cancellationToken);
+        if (variant is null)
+            return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.CatalogVariantMissing));
+        if (decimal.Round(request.Quantity, Math.Clamp(variant.QuantityDecimalPlaces, 0, 28)) != request.Quantity
+            || (variant.QuantityStep is decimal step && step > 0 && request.Quantity % step != 0))
+            return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.QuantityInvalid));
+        var operationId = request.OperationId;
         var now = _clock.UtcNow;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        await LockOfferAllocationAsync(request.OfferId, cancellationToken);
         var replay = await _db.OfferInventoryChanges.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
         if (replay is not null)
         {
-            if (replay.OfferId != request.OfferId || replay.NewAllocation != request.Quantity)
+            if (replay.OfferId != request.OfferId || replay.Kind != "AllocationChanged"
+                || replay.NewAllocation != request.Quantity || replay.ActorUserId != request.ActorUserId)
                 return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.AllocationRevisionConflict));
             var currentReplay = await _db.OfferAllocations.AsNoTracking()
                 .SingleAsync(x => x.OfferId == request.OfferId, cancellationToken);
@@ -55,6 +64,11 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
                 ? request.ExpectedRevision != "absent"
                 : !string.Equals(existing.Revision.ToString("N"), request.ExpectedRevision, StringComparison.Ordinal)))
             return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.AllocationRevisionConflict));
+        var physical = await (from position in _db.Positions.AsNoTracking()
+            join location in _db.Locations.AsNoTracking() on position.LocationId equals location.LocationId
+            where position.OfferId == request.OfferId && location.Status == InventoryLocationStatus.Active
+                && location.OwnerKind == InventoryLocationOwnerKind.Marketplace && location.SellerPartyId == null
+            select (decimal?)position.OnHand).SumAsync(cancellationToken) ?? 0m;
         var activeHeld = await (from reservation in _db.Reservations.AsNoTracking()
             join position in _db.Positions.AsNoTracking() on reservation.StockItemId equals position.StockItemId
             where position.OfferId == request.OfferId && reservation.Status == StockReservationStatus.Held
@@ -114,6 +128,13 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
                 x.Kind, x.OperationId, x.ActorUserId, x.OccurredAt, x.OldOnHand, x.NewOnHand,
                 x.OldAllocation, x.NewAllocation, x.Reason))
             .ToListAsync(cancellationToken);
+
+    // Same transaction-scoped lock for first allocation, reservation and workspace physical mutation.
+    private Task<int> LockOfferAllocationAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        var lockKey = $"inventory.offer-allocation:{offerId:N}";
+        return _db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
+    }
 
     private static OfferAllocationReceipt ToAllocationReceipt(OfferAllocation row, Guid operationId, Guid? actor) =>
         new(row.OfferId, row.Quantity, row.Held, Math.Max(0, row.Quantity - row.Held),

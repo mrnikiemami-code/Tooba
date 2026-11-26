@@ -38,7 +38,7 @@ internal sealed class SetOfferAllocationCommandHandler(
             request.Quantity,
             request.ExpectedRevision,
             request.ActorUserId,
-            request.OperationId == Guid.Empty ? ids.NewId() : request.OperationId), cancellationToken);
+            request.OperationId), cancellationToken);
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 

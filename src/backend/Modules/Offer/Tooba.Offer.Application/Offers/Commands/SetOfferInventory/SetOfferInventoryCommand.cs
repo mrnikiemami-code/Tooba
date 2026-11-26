@@ -43,7 +43,7 @@ internal sealed class SetOfferInventoryCommandHandler(
             request.StockItemId,
             request.ExpectedVersion,
             request.ActorUserId,
-            request.OperationId == Guid.Empty ? ids.NewId() : request.OperationId,
+            request.OperationId,
             request.AdminPhysicalAdjustment), cancellationToken);
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);

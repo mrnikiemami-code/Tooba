@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Inventory.Contracts.Seller;
+using Tooba.BuildingBlocks;
+using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Offer.Contracts.Dtos;
 
 namespace Tooba.Inventory.Infrastructure.Directories;
 
@@ -14,37 +17,8 @@ public sealed partial class InventoryDirectory
 {
     private async Task<InventoryAvailability?> GetAvailabilityCoreAsync(Guid offerId, CancellationToken cancellationToken)
     {
-        var rows = await (
-            from position in _db.Positions.AsNoTracking()
-            join location in _db.Locations.AsNoTracking() on position.LocationId equals location.LocationId
-            where position.OfferId == offerId
-            select new { position, location }).ToListAsync(cancellationToken);
-        if (rows.Count == 0)
-        {
-            return null;
-        }
-
-        var allocation = await _db.OfferAllocations.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OfferId == offerId, cancellationToken);
-        var locations = rows.Select(row => new LocationAvailability(
-            row.position.StockItemId,
-            row.location.LocationId,
-            row.location.Code,
-            row.location.Name,
-            row.position.OnHand,
-            row.position.Reserved,
-            row.position.OnHand - row.position.Reserved,
-            row.position.UpdatedAt.ToString("O"))).ToList();
-        var physicalAvailable = locations.Sum(x => x.Available);
-        return new InventoryAvailability(
-            offerId,
-            rows[0].position.CatalogVariantId,
-            locations.Sum(x => x.OnHand),
-            locations.Sum(x => x.Reserved),
-            allocation is null
-                ? physicalAvailable
-                : Math.Max(0, Math.Min(physicalAvailable, allocation.Quantity - allocation.Held)),
-            locations);
+        var values = await GetAvailabilityBatchCoreAsync([offerId], cancellationToken);
+        return values.GetValueOrDefault(offerId);
     }
 
     async Task<IReadOnlyDictionary<Guid, OfferInventorySummary>> ISellerOfferInventoryGateway.GetAvailabilityAsync(
@@ -60,14 +34,11 @@ public sealed partial class InventoryDirectory
             x =>
             {
                 allocations.TryGetValue(x.Key, out var allocation);
-                var physicalAvailable = x.Value.Locations.Sum(location => location.Available);
                 return new OfferInventorySummary(
                     x.Key,
                     x.Value.OnHand,
                     x.Value.Reserved,
-                    allocation is null
-                        ? Math.Max(0, physicalAvailable)
-                        : Math.Max(0, Math.Min(physicalAvailable, allocation.Quantity - allocation.Held)),
+                    x.Value.Available,
                     x.Value.Locations.Select(location => new SellerInventoryPosition(
                         location.StockItemId,
                         location.LocationId,
@@ -98,12 +69,23 @@ public sealed partial class InventoryDirectory
             join location in _db.Locations.AsNoTracking() on position.LocationId equals location.LocationId
             where distinct.Contains(position.OfferId)
             select new { position, location }).ToListAsync(cancellationToken);
+        var allocations = await _db.OfferAllocations.AsNoTracking()
+            .Where(x => distinct.Contains(x.OfferId))
+            .ToDictionaryAsync(x => x.OfferId, cancellationToken);
+        var marketplace = _commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace;
+        var offers = marketplace ? await _offers.FindOffersBatchAsync(distinct, cancellationToken) : null;
         return rows
             .GroupBy(x => x.position.OfferId)
             .ToDictionary(
                 group => group.Key,
                 group =>
                 {
+                    var offer = offers?.GetValueOrDefault(group.Key);
+                    var needsAllocation = group.Any(row => row.location.OwnerKind == InventoryLocationOwnerKind.Marketplace)
+                        || (marketplace && offer?.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform);
+                    allocations.TryGetValue(group.Key, out var allocation);
+                    var cap = allocation is not null ? Math.Max(0, allocation.Quantity - allocation.Held)
+                        : needsAllocation ? 0m : decimal.MaxValue;
                     var locations = group.Select(row => new LocationAvailability(
                         row.position.StockItemId,
                         row.location.LocationId,
@@ -111,14 +93,20 @@ public sealed partial class InventoryDirectory
                         row.location.Name,
                         row.position.OnHand,
                         row.position.Reserved,
-                        row.position.OnHand - row.position.Reserved,
+                        row.location.Status != InventoryLocationStatus.Active || (marketplace && (offer is null
+                            || (offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
+                                ? row.location.OwnerKind != InventoryLocationOwnerKind.Marketplace
+                                : offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Seller
+                                    || row.location.OwnerKind != InventoryLocationOwnerKind.Seller
+                                    || row.location.SellerPartyId != offer.SellerPartyId)))
+                            ? 0m : Math.Min(cap, row.position.OnHand - row.position.Reserved),
                         row.position.UpdatedAt.ToString("O"))).ToList();
                     return new InventoryAvailability(
                         group.Key,
                         group.First().position.CatalogVariantId,
                         locations.Sum(x => x.OnHand),
                         locations.Sum(x => x.Reserved),
-                        locations.Sum(x => x.Available),
+                        Math.Min(cap, locations.Sum(x => x.Available)),
                         locations);
                 });
     }
