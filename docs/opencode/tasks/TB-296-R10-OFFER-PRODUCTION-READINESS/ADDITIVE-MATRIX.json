@@ -1,0 +1,107 @@
+{
+  "taskId": "TB-296-R10-PHASE1-ADDITIVE",
+  "base": "ae52ec64e418ade5df381648da5a43ca05f1f444",
+  "status": "ISSUED_REQUIREMENTS_NOT_RUN",
+  "tests": [
+    {
+      "testId": "OWN-01",
+      "reqId": "OWN-01",
+      "caseType": "compound",
+      "given": "Seller A/B have active distinct locations plus inactive and unknown owner",
+      "action": "list, provision, adjust own then attempt foreign/inactive/unknown through direct API",
+      "expected": "only own eligible IDs; own mutation persists; foreign/inactive/unknown denied; SQL positions and quantities unchanged on denial",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-02",
+      "reqId": "OWN-02",
+      "caseType": "compound",
+      "given": "platform warehouse received 100 for A, separate B stock",
+      "action": "seller reads, attempts provision/physical edit, authorized admin receive",
+      "expected": "A sees own stock only; no B data; seller writes denied and SQL unchanged; admin receipt persists exactly",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-03",
+      "reqId": "OWN-03",
+      "caseType": "compound",
+      "given": "seller and platform assignments plus SingleStore trusted tenant",
+      "action": "attempt self-assign platform and change platform shipping; authorized admin assignment and seller own shipping",
+      "expected": "unauthorized assignment and platform policy denied; own allowed policy succeeds; SingleStore maps to store and no marketplace controls",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-04",
+      "reqId": "OWN-04",
+      "caseType": "compound",
+      "given": "platform stock=100, allocation=20, held=0",
+      "action": "read UI/API; attempt hold 21; attempt allocation >100; set zero",
+      "expected": "available 20 initially; denied hold leaves physical/held/alloc unchanged; excessive allocation denied; zero stops new sale",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-05",
+      "reqId": "OWN-05",
+      "caseType": "compound",
+      "given": "platform physical=100, allocation=20",
+      "action": "hold 5, release; hold 5, consume, replay consumption",
+      "expected": "available 15 then 20; consume physical 95, remaining allocation 15, held 0, available 15; replay no additional mutation",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-06",
+      "reqId": "OWN-06",
+      "caseType": "compound",
+      "given": "two eligible platform positions of same Offer with total allocation 20",
+      "action": "race holds of 15 each; reduce allocation below held",
+      "expected": "only one hold succeeds; final held=15, available=5; match successful request identity; losing request no row or quantity changes; reduction denied",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-07",
+      "reqId": "OWN-07",
+      "caseType": "compound",
+      "given": "platform received allocation and existing protected paid order",
+      "action": "damage, return, replenishment, existing paid-order recovery/replacement via current contracts",
+      "expected": "no silent allocation increase; no negative availability; preserve approved protected commitment and existing recovery semantics; exact SQL before/after",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-08",
+      "reqId": "OWN-08",
+      "caseType": "compound",
+      "given": "two sessions with actual owner revisions and different payloads",
+      "action": "attempt missing/stale revisions and simultaneous price/stock/allocation writes",
+      "expected": "typed denial for missing/stale; actual winner equals successful payload; losing writes and history/outbox absent; independent owner revisions",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-09",
+      "reqId": "OWN-09",
+      "caseType": "compound",
+      "given": "owner write and controlled projection failure",
+      "action": "inject failure before owner commit and after commit before projection, retry/replay",
+      "expected": "before commit no state/event change; after commit durable owner facts persist; retry projects one logical history item with exact actor/time/old/new/identity; no false zero-write failure",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    },
+    {
+      "testId": "OWN-10",
+      "reqId": "OWN-10",
+      "caseType": "compound",
+      "given": "real admin/seller routes, configured distinct third prefix, invalid and disabled language, viewport 360/768/1440",
+      "action": "navigate, create/edit, switch locale with unsaved values, inspect role capabilities and API headers",
+      "expected": "DB metadata matches shell/grid/controls/header direction/calendar; invalid/disabled canonical handling; draft preserved; platform physical read-only, allocation editable; R8 layout and no overflow",
+      "forbiddenEffects": "No unauthorized changes, duplicate commitments, fabricated evidence, cross-owner disclosure or weakened guards. Prove relevant before/after through independent GET/SQL.",
+      "oracle": "Execute each scenario and every stated clause, preserve request identities, observed facts and raw evidence. Source inspection is additional, not substitute for actual persistence."
+    }
+  ]
+}
