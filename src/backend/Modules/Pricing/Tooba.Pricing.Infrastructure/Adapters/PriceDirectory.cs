@@ -182,6 +182,18 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             await transaction.RollbackAsync(cancellationToken);
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
         }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            var raced = await _db.PriceChanges.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
+            if (raced is not null && raced.OfferId == request.OfferId && raced.NewAmount == request.Amount
+                && string.Equals(raced.Currency, currency, StringComparison.Ordinal))
+            {
+                return Result.Success(ToReceipt(raced));
+            }
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+        }
 
         return Result.Success(ToReceipt(fact));
     }
