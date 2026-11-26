@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Catalog.Contracts;
 using Tooba.Catalog.Contracts.Ports;
@@ -110,6 +111,7 @@ public sealed class OfferHandlerTests
         services.AddSingleton(catalog);
         services.AddSingleton(party);
         services.AddSingleton<ICurrentEdition>(new FixedEdition(edition));
+        services.AddSingleton<ICurrentStoreCommerceContext>(new FixedStoreCommerce(edition switch { ToobaEdition.SingleStore => "Direct", ToobaEdition.Marketplace => "Marketplace", _ => null }));
         services.AddSingleton<ICatalogOfferReadGateway, FakeCatalogReads>();
         services.AddSingleton<IPriceLookupGateway, FakePrices>();
         services.AddSingleton<ISellerOfferInventoryGateway, FakeInventory>();
@@ -194,6 +196,11 @@ public sealed class OfferHandlerTests
             Entries.Add(entry);
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class FixedStoreCommerce(string channel) : ICurrentStoreCommerceContext
+    {
+        public StoreCommerceContext? Current { get; } = new(null, null, channel);
     }
 
     private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition

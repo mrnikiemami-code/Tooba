@@ -1,0 +1,96 @@
+{
+  "startedAt": "2026-11-26T04:02:13.365Z",
+  "checks": {
+    "R10-REPAIR.seedIdentity": {
+      "ok": true,
+      "detail": "457e375f-ceec-4b66-b81e-3829c4e15893"
+    },
+    "R10-REPAIR.channelRejectedExactly": {
+      "ok": true,
+      "detail": "400"
+    },
+    "R10-REPAIR.channelRejectedZeroWrites": {
+      "ok": true,
+      "detail": "{\"beforeCount\":0,\"afterCount\":0}"
+    },
+    "R10-REPAIR.sequentialStaleRejected": {
+      "ok": true,
+      "detail": "200/409"
+    },
+    "R10-REPAIR.sequentialStalePreserved": {
+      "ok": true,
+      "detail": "876544"
+    },
+    "R10-REPAIR.concurrentOneWinner": {
+      "ok": true,
+      "detail": "[200,409]"
+    },
+    "R10-REPAIR.concurrentWinnerValue": {
+      "ok": true,
+      "detail": "876553"
+    },
+    "R10-REPAIR.historyActorRecorded": {
+      "ok": true,
+      "detail": "{\"status\":200,\"actor\":\"01a036c2-970e-7000-8eb7-94bf5cc2d8db\"}"
+    },
+    "R10-REPAIR.priceRestored": {
+      "ok": true,
+      "detail": "876543"
+    },
+    "R10-REPAIR.invalidLocationRejected": {
+      "ok": true,
+      "detail": "404"
+    },
+    "R10-REPAIR.invalidLocationZeroPosition": {
+      "ok": true,
+      "detail": "{\"beforePositions\":1,\"afterPositions\":1}"
+    },
+    "R10-REPAIR.invalidLimitsRejected": {
+      "ok": true,
+      "detail": "400"
+    },
+    "R10-REPAIR.invalidLimitsPreserved": {
+      "ok": true,
+      "detail": "{\"min\":2,\"max\":20}"
+    },
+    "R10-REPAIR.crossOwnerHistoryDenied": {
+      "ok": true,
+      "detail": "404"
+    },
+    "R10-REPAIR.workspaceSize": {
+      "ok": true,
+      "detail": "798"
+    },
+    "R10-REPAIR.noFlatAdminOfferApi": {
+      "ok": true,
+      "detail": "feature folder"
+    },
+    "R10-REPAIR.noLocalizedNumberInventory": {
+      "ok": true,
+      "detail": "numeric input"
+    },
+    "R10-REPAIR.inventoryOwnerFilterSource": {
+      "ok": true,
+      "detail": "owner scope migration"
+    },
+    "R10-REPAIR.channelNamedOnlySource": {
+      "ok": true,
+      "detail": "named values only"
+    },
+    "R10-REPAIR.expectedVersionSource": {
+      "ok": true,
+      "detail": "version guard"
+    },
+    "R10-REPAIR.historyActorSource": {
+      "ok": true,
+      "detail": "actor/version"
+    },
+    "R10-REPAIR.locationReadsAvailable": {
+      "ok": true,
+      "detail": "{\"admin\":200,\"seller\":200}"
+    }
+  },
+  "errors": [],
+  "finishedAt": "2026-11-26T04:02:13.672Z",
+  "ok": true
+}

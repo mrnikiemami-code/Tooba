@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.Offer.Infrastructure.Adapters.Tracing;
 using Tooba.BuildingBlocks.Observability.Correlation;
 using Tooba.BuildingBlocks.Observability.Tracing;
@@ -87,6 +88,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IClock>(_ => new FixedClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
         services.AddSingleton<IIdGenerator>(_ => new FixedIds(Guid.Parse("11111111-1111-4111-8111-111111111111")));
         services.AddSingleton<ICurrentEdition>(new FixedEdition(ToobaEdition.Marketplace));
+        services.AddSingleton<ICurrentStoreCommerceContext>(new FixedStoreCommerce());
         services.AddSingleton<IOfferStore, MemoryOfferStore>();
         services.AddSingleton<IOfferHistoryWriter, NoopHistoryWriter>();
         services.AddOfferModuleCallTracing();
@@ -216,6 +218,11 @@ public sealed class OfferTraceTopologyTests
     {
         public Task AppendAsync(OfferHistoryEntry entry, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+    }
+
+    private sealed class FixedStoreCommerce : ICurrentStoreCommerceContext
+    {
+        public StoreCommerceContext? Current { get; } = new(null, null, "Marketplace");
     }
 
     private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition

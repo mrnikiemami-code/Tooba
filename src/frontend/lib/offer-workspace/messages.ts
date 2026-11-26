@@ -147,6 +147,12 @@ export interface OfferWorkspaceMessages {
   historyTitle: string;
   historyDesc: string;
   historyEmpty: string;
+  historyActor: string;
+  historyKindCreated: string;
+  historyKindCommercial: string;
+  historyKindPrice: string;
+  historyKindInventory: string;
+  historyKindFulfillment: string;
   perTabError: string;
   dirtyTab: string;
   denied: string;
@@ -351,6 +357,12 @@ const fa: OfferWorkspaceMessages = {
   buyableReasonNoStock: "موجودی قابل فروش صفر است",
   buyableReasonInactive: "آفر فعال نیست",
   historyTitle: "تاریخچه",
+  historyActor: "کاربر",
+  historyKindCreated: "ایجاد",
+  historyKindCommercial: "تغییر تجاری",
+  historyKindPrice: "تغییر قیمت",
+  historyKindInventory: "تغییر موجودی",
+  historyKindFulfillment: "تغییر انجام ارسال",
   historyDesc: "تغییرات واقعی این آفر به ترتیب زمان.",
   historyEmpty: "تاریخچه‌ای برای این آفر در دسترس نیست.",
   perTabError: "ذخیره این بخش ناموفق بود.",
@@ -558,6 +570,12 @@ const en: OfferWorkspaceMessages = {
   buyableReasonNoStock: "Available units are zero",
   buyableReasonInactive: "The offer is not active",
   historyTitle: "History",
+  historyActor: "Actor",
+  historyKindCreated: "Created",
+  historyKindCommercial: "Commercial change",
+  historyKindPrice: "Price change",
+  historyKindInventory: "Inventory change",
+  historyKindFulfillment: "Fulfillment change",
   historyDesc: "Real changes to this offer in time order.",
   historyEmpty: "No history is available for this offer.",
   perTabError: "This section failed to save.",

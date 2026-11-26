@@ -185,7 +185,7 @@ export default function VendorProductsPage() {
     queryAdapter,
     savedViewStore,
     exportFilenameBase: "seller-offers",
-    locale: offerLocale.language === "en" ? "en" : "fa",
+    locale: offerLocale.language === "fa" ? "fa" : "en",
   });
 
   function refresh() {

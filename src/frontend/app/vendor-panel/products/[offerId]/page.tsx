@@ -16,7 +16,7 @@ import {
   patchSellerOffer,
   writeSellerOfferInventory,
   writeSellerOfferPrice,
-} from "../../seller-offer-api";
+} from "../seller-offer-api";
 import { SellerProductAttributesPanel } from "../../../admin/catalog-attribute-ui";
 import { ReservationPolicyEditor, draftFromView, type ReservationPolicyDraft } from "../../../admin/reservation-policy-editor.tsx";
 import type { ReservationPolicyEditorView } from "../../../admin/reservation-policy-api";
@@ -84,9 +84,9 @@ export default function VendorProductDetailPage() {
         }));
       },
       createDraft: async () => ({ ok: false, errorCode: "offer.workspace.edit_mode" }),
-      saveCommercial: (patch) => patchSellerOffer(sellerPartyId, offerId, patch),
-      savePrice: (input) => writeSellerOfferPrice(sellerPartyId, offerId, input),
-      saveInventory: (input) => writeSellerOfferInventory(sellerPartyId, offerId, input),
+      saveCommercial: (patch, version) => patchSellerOffer(sellerPartyId, offerId, patch, version),
+      savePrice: (input, version) => writeSellerOfferPrice(sellerPartyId, offerId, input, version),
+      saveInventory: (input, version) => writeSellerOfferInventory(sellerPartyId, offerId, input, version),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/vendor-panel/products")),
     };

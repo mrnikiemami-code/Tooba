@@ -18,7 +18,9 @@ public sealed record SetOfferPriceCommand(
     Guid SellerPartyId,
     decimal Amount,
     string? Currency,
-    string? Market) : IRequest<Result<SellerOfferDetailPage>>;
+    string? Market,
+    string? ExpectedVersion = null,
+    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class SetOfferPriceCommandHandler(
     IOfferStore store,
@@ -37,6 +39,9 @@ internal sealed class SetOfferPriceCommandHandler(
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
+        var versionError = OfferVersionGuard.Check(offer.UpdatedAt, request.ExpectedVersion);
+        if (versionError is not null)
+            return Result.Failure<SellerOfferDetailPage>(versionError);
 
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
@@ -60,6 +65,7 @@ internal sealed class SetOfferPriceCommandHandler(
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 
+        offer.UpdatedAt = clock.UtcNow;
         var current = await priceLookup.ResolvePriceAsync(resolution, cancellationToken);
         var oldValue = previous is null
             ? null
@@ -75,7 +81,8 @@ internal sealed class SetOfferPriceCommandHandler(
                 OfferHistorySummaries.PriceChanged,
                 "Offer price changed",
                 oldValue,
-                newValue),
+                newValue,
+                request.ActorUserId),
             cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
 

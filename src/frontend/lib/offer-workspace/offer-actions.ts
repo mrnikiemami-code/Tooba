@@ -1,5 +1,5 @@
 ﻿import type { MutableRefObject } from "react";
-import { changedInventoryRows, detailVersionChanged, parseDecimal, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
+import { changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
@@ -183,7 +183,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       }
 
       if (ctx.commercialChanged) {
-        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft));
+        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft), ctx.detail?.lastUpdatedAt ?? undefined);
         if (!result.ok) return finishSaveFailure("conditions", result, savedAny);
         applySavedDetail(result.detail, "commercial");
         savedAny = true;
@@ -196,7 +196,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(true);
           return;
         }
-        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency || "IRR" });
+        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency || "IRR" }, ctx.detail?.lastUpdatedAt ?? undefined);
         if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
         applySavedDetail(result.detail, "price");
         savedAny = true;
@@ -204,13 +204,15 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
       if (ctx.stockChanged) {
         const changedRows = changedInventoryRows(ctx.detail, ctx.draft);
+        let inventoryVersion = ctx.detail?.lastUpdatedAt;
         for (const row of changedRows) {
           const result = await ctx.adapter.saveInventory({
             stockItemId: row.stockItemId,
             onHand: parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
             reason: ctx.draft.inventoryReason.trim(),
-          });
+          }, inventoryVersion ?? undefined);
           if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
+          inventoryVersion = result.detail.lastUpdatedAt;
           applySavedInventory(result.detail, row.stockItemId);
           savedAny = true;
         }
@@ -219,7 +221,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
       if (ctx.shippingChanged && ctx.adapter.saveFulfillment) {
         ctx.setShippingSaving(true);
-        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null });
+        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, ctx.detail?.lastUpdatedAt ?? undefined);
         ctx.setShippingSaving(false);
         if (!result.ok) return finishSaveFailure("shipping", result, savedAny);
         const verification = ctx.adapter.loadDetail ? await ctx.adapter.loadDetail() : null;
@@ -240,8 +242,23 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(false);
           return;
         }
+        const expectedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
+        const expectedMax = ctx.draft.maximumOrderQuantity.trim() ? parseDecimal(ctx.draft.maximumOrderQuantity) : null;
+        const expectedDays = ctx.draft.customReturnWindowDays.trim() ? Number.parseInt(ctx.draft.customReturnWindowDays, 10) : null;
+        const commercialMismatch = ctx.commercialChanged && (
+          verification.detail.sellerSku !== ctx.draft.sellerSku.trim()
+          || verification.detail.status !== ctx.draft.status
+          || verification.detail.currency !== ctx.draft.currency
+          || verification.detail.returnPolicyChoice !== ctx.draft.returnPolicyChoice
+          || (verification.detail.customReturnWindowDays ?? null) !== expectedDays
+          || (verification.detail.minimumOrderQuantity ?? null) !== expectedMin
+          || (verification.detail.maximumOrderQuantity ?? null) !== expectedMax);
         const mismatch =
-          (ctx.commercialChanged && verification.detail.sellerSku !== ctx.draft.sellerSku.trim())
+          verification.detail.offerId !== ctx.detail.offerId
+          || verification.detail.sellerPartyId !== ctx.detail.sellerPartyId
+          || verification.detail.catalogVariantId !== ctx.detail.catalogVariantId
+          || verification.detail.channel !== ctx.detail.channel
+          || commercialMismatch
           || (ctx.priceChanged && verification.detail.amount !== expectedAmount)
           || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
@@ -285,6 +302,27 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setSaveRetryable(true);
       return;
     }
+    const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
+    if (ctx.priceChanged && (parsedAmount == null || parsedAmount < 0)) {
+      ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.validationAmount); return;
+    }
+    const parsedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
+    const parsedMax = ctx.draft.maximumOrderQuantity.trim() ? parseDecimal(ctx.draft.maximumOrderQuantity) : null;
+    if ((ctx.draft.minimumOrderQuantity.trim() && parsedMin == null) || (ctx.draft.maximumOrderQuantity.trim() && parsedMax == null)) {
+      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationQty); return;
+    }
+    const dp = ctx.selectedProduct?.quantityDecimalPlaces ?? 0;
+    const step = ctx.selectedProduct?.quantityStep ?? null;
+    if ((parsedMin != null && !quantityAligned(parsedMin, dp, step)) || (parsedMax != null && !quantityAligned(parsedMax, dp, step))) {
+      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationStep); return;
+    }
+    const inventoryInputs = ctx.localInventory.filter((row) => row.onHand.trim().length > 0).map((row) => ({ ...row, parsed: parseDecimal(row.onHand) }));
+    if (inventoryInputs.some((row) => row.parsed == null || (row.parsed > 0 && !quantityAligned(row.parsed, dp, step)))) {
+      ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationStep); return;
+    }
+    if (inventoryInputs.length > 0 && !ctx.draft.inventoryReason.trim()) {
+      ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationReason); return;
+    }
     ctx.saveRef.current = true;
     ctx.setSaving(true);
     ctx.setSaveError(null);
@@ -292,14 +330,14 @@ export function createOfferActions(ctx: OfferActionsContext) {
     ctx.setSaveNeedsReload(false);
     ctx.setSaveRetryable(true);
     try {
-      const localDetail = ctx.detail ?? (ctx.selectedProduct && ctx.selectedVariant ? {} as OfferWorkspaceDetail : null);
+      const localDetail = ctx.detail;
       const createInput = {
         sellerPartyId: ctx.selectedSeller?.sellerPartyId,
         catalogVariantId: ctx.selectedVariant.catalogVariantId,
         sellerSku: ctx.draft.sellerSku.trim() || null,
         channel: ctx.selectedChannel,
-        inventory: ctx.localInventory.filter((row) => row.onHand.trim().length > 0).map((row) => ({ ...row, reason: ctx.draft.inventoryReason.trim() || row.reason })),
-        amount: ctx.priceChanged && localDetail ? parseDecimal(ctx.draft.amount) : null,
+        inventory: inventoryInputs.map((row) => ({ locationId: row.locationId, onHand: row.parsed!, reason: ctx.draft.inventoryReason.trim() })),
+        amount: parsedAmount,
         currency: ctx.draft.currency || "IRR",
         returnPolicyChoice: ctx.draft.returnPolicyChoice,
         customReturnWindowDays: ctx.draft.returnPolicyChoice === "Custom" ? parseDecimal(ctx.draft.customReturnWindowDays) : null,

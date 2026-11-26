@@ -1,12 +1,12 @@
-﻿import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
-import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
-import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../lib/admin/admin-result.ts";
+﻿import type { GridServerQuery } from "../../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../../design-system/app-data-grid/admin-grid-query-client.ts";
+import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
 import type {
   OfferInventoryLocation,
   OfferShippingTypeOption,
   OfferWorkspaceDetail,
-} from "../../lib/offer-workspace/types";
-import { prepareAdminDevActor } from "./admin-api";
+} from "../../../lib/offer-workspace/types";
+import { prepareAdminDevActor } from "../admin-api";
 
 function actorId(): string {
   if (typeof window === "undefined") return "";
@@ -208,6 +208,10 @@ export async function createAdminOffer(input: {
   catalogVariantId: string;
   sellerSku?: string | null;
   channel?: string | null;
+  returnPolicyChoice?: string | null;
+  customReturnWindowDays?: number | null;
+  minimumOrderQuantity?: number | null;
+  maximumOrderQuantity?: number | null;
   requestId: string;
 }): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
@@ -220,6 +224,10 @@ export async function createAdminOffer(input: {
         catalogVariantId: input.catalogVariantId,
         sellerSku: input.sellerSku,
         channel: input.channel ?? undefined,
+        returnPolicyChoice: input.returnPolicyChoice ?? undefined,
+        customReturnWindowDays: input.customReturnWindowDays ?? undefined,
+        minimumOrderQuantity: input.minimumOrderQuantity ?? undefined,
+        maximumOrderQuantity: input.maximumOrderQuantity ?? undefined,
         status: "Draft",
         requestId: input.requestId,
       }),
@@ -255,6 +263,7 @@ export async function patchAdminOffer(
     maximumOrderQuantity?: number | null;
     clearOrderQuantityLimits?: boolean;
   },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     await prepareAdminDevActor();
@@ -269,6 +278,7 @@ export async function patchAdminOffer(
         minimumOrderQuantity: patch.minimumOrderQuantity,
         maximumOrderQuantity: patch.maximumOrderQuantity,
         clearOrderQuantityLimits: patch.clearOrderQuantityLimits,
+        expectedVersion,
       }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
@@ -287,6 +297,7 @@ export async function patchAdminOffer(
 export async function writeAdminOfferPrice(
   offerId: string,
   input: { amount: number; currency?: string; market?: string },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     await prepareAdminDevActor();
@@ -294,7 +305,7 @@ export async function writeAdminOfferPrice(
     const response = await fetch(`/v1/admin/offers/${offerId}/price`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ amount: input.amount, currency, market: input.market ?? "IR" }),
+      body: JSON.stringify({ amount: input.amount, currency, market: input.market ?? "IR", expectedVersion }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
@@ -314,13 +325,14 @@ export async function writeAdminOfferPrice(
 export async function writeAdminOfferInventory(
   offerId: string,
   input: { onHand: number; reason: string; stockItemId: string },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     await prepareAdminDevActor();
     const response = await fetch(`/v1/admin/offers/${offerId}/inventory`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId }),
+      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId, expectedVersion }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
@@ -341,6 +353,7 @@ export async function writeAdminOfferInventory(
 export async function assignAdminOfferFulfillment(
   offerId: string,
   input: { responsibility: "Seller" | "Platform" | null; shippingTypeId: string | null },
+  expectedVersion?: string,
 ): Promise<{ ok: true } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     await prepareAdminDevActor();
@@ -350,6 +363,7 @@ export async function assignAdminOfferFulfillment(
       body: JSON.stringify({
         responsibility: input.responsibility,
         shippingTypeId: input.shippingTypeId,
+        expectedVersion,
       }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
@@ -550,7 +564,7 @@ export async function loadAdminOfferHistory(offerId: string, page = 1, pageSize 
   await prepareAdminDevActor();
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   const response = await fetch(`/v1/admin/offers/${offerId}/history?${params.toString()}`, { headers: headers() });
-  if (!response.ok) return { items: [], totalCount: 0, page, pageSize };
+  if (!response.ok) throw new Error("offer.history.load_failed");
   const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
   const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
     const item = record(raw); if (!item) return [];

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Results;
@@ -94,7 +94,7 @@ public sealed class OfferInventoryProvisioningHandlerTests
         gateway.Locations.Add(new InventoryEligibleLocation(LocationId, "MAIN", "Main warehouse"));
         var sender = BuildSender(OfferFor(SellerId), gateway);
 
-        var result = await sender.Send(new ListEligibleInventoryLocationsQuery());
+        var result = await sender.Send(new ListEligibleInventoryLocationsQuery(SellerId));
 
         Assert.True(result.IsSuccess);
         var location = Assert.Single(result.Value);
@@ -190,13 +190,14 @@ public sealed class OfferInventoryProvisioningHandlerTests
 
         public string? ThrowOnEnsure { get; init; }
 
-        public Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(CancellationToken cancellationToken) =>
+        public Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(Guid? sellerPartyId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<InventoryEligibleLocation>>(Locations);
 
         public Task<ProvisionedStockPosition> EnsurePositionAsync(
             Guid offerId,
             Guid catalogVariantId,
             Guid locationId,
+            Guid? sellerPartyId,
             CancellationToken cancellationToken)
         {
             EnsureCalls++;

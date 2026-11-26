@@ -27,6 +27,17 @@ export function DiscountsTab({ t }: { t: OfferWorkspaceMessages }) {
   );
 }
 
+function historyKind(t: OfferWorkspaceMessages, kind: string): string {
+  switch (kind) {
+    case "Created": return t.historyKindCreated;
+    case "CommercialChanged": return t.historyKindCommercial;
+    case "PriceChanged": return t.historyKindPrice;
+    case "InventoryChanged": return t.historyKindInventory;
+    case "FulfillmentChanged": return t.historyKindFulfillment;
+    default: return kind;
+  }
+}
+
 export function HistoryTab({ t, format, data, loading, error, onPrev, onNext }: { t: OfferWorkspaceMessages; format: OfferFormatters; data: OfferHistoryPage | null; loading: boolean; error: string | null; onPrev: () => void; onNext: () => void }) {
   const items = data?.items ?? [];
   return (
@@ -49,9 +60,9 @@ export function HistoryTab({ t, format, data, loading, error, onPrev, onNext }: 
             <div className={styles.stack} data-testid="offer-history-list">
               {items.map((item) => (
                 <div key={`${item.offerId}-${item.occurredAt}-${item.kind}`} className={styles.historyRow}>
-                  <div className={styles.historyKind}>{item.kind}</div>
+                  <div className={styles.historyKind}>{historyKind(t, item.kind)}</div>
                   <div className={styles.historySummary}>{item.summary}</div>
-                  <div className={styles.historyMeta}>{format.dateTime(item.occurredAt)}</div>
+                  <div className={styles.historyMeta}>{format.dateTime(item.occurredAt)}{item.actorUserId ? ` · ${t.historyActor}: ${item.actorUserId}` : ""}</div>
                   {(item.oldValue || item.newValue) ? <div className={styles.historyDelta} dir="ltr">{item.oldValue ?? "—"} → {item.newValue ?? "—"}</div> : null}
                 </div>
               ))}

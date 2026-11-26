@@ -57,7 +57,7 @@ public sealed record ProvisionedStockPosition(
 public interface IInventoryProvisioningGateway
 {
     /// <summary>Lists active storage locations ordered by code; never creates a location.</summary>
-    Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(Guid? sellerPartyId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Ensures exactly one stock position exists for the offer at the given active location and returns it.
@@ -67,5 +67,6 @@ public interface IInventoryProvisioningGateway
         Guid offerId,
         Guid catalogVariantId,
         Guid locationId,
+        Guid? sellerPartyId,
         CancellationToken cancellationToken);
 }

@@ -5,7 +5,7 @@ using Tooba.Inventory.Contracts.Seller;
 namespace Tooba.Offer.Application.Offers.Queries.ListEligibleInventoryLocations;
 
 /// <summary>Reads the Inventory-owned active storage locations eligible for an offer stock position.</summary>
-public sealed record ListEligibleInventoryLocationsQuery
+public sealed record ListEligibleInventoryLocationsQuery(Guid? SellerPartyId = null)
     : IRequest<Result<IReadOnlyList<InventoryEligibleLocation>>>;
 
 internal sealed class ListEligibleInventoryLocationsHandler(IInventoryProvisioningGateway provisioning)
@@ -15,7 +15,7 @@ internal sealed class ListEligibleInventoryLocationsHandler(IInventoryProvisioni
         ListEligibleInventoryLocationsQuery request,
         CancellationToken cancellationToken)
     {
-        var locations = await provisioning.ListEligibleLocationsAsync(cancellationToken);
+        var locations = await provisioning.ListEligibleLocationsAsync(request.SellerPartyId, cancellationToken);
         return Result.Success(locations);
     }
 }

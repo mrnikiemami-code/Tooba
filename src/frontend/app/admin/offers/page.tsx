@@ -7,7 +7,7 @@ import { AppDataGrid, useLegacyAdminGridDirectProps } from "../../../design-syst
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridColumnDef } from "../../../design-system/data-grid";
 import { ADMIN_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../saved-view-store";
-import { queryAdminOffersGrid, type AdminOfferRow } from "../admin-offer-api";
+import { queryAdminOffersGrid, type AdminOfferRow } from "./admin-offer-api";
 import { useRegistryLocale } from "../../../lib/i18n/registry-locale";
 import { offerListMessagesForRegistry } from "../../../lib/offer-workspace/messages-ru";
 import {
@@ -180,7 +180,7 @@ export default function AdminOffersPage() {
     queryAdapter: adapter,
     savedViewStore,
     exportFilenameBase: "admin-offers",
-    locale: offerLocale.language === "en" ? "en" : "fa",
+    locale: offerLocale.language === "fa" ? "fa" : "en",
   });
 
   return (

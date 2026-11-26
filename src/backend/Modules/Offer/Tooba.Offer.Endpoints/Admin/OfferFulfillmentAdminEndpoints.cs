@@ -128,7 +128,8 @@ public sealed class OfferFulfillmentAdminAuthorizer(
 public sealed record OfferFulfillmentAssignmentBody(
     bool ResponsibilitySupplied,
     OfferFulfillmentResponsibility? Responsibility,
-    Guid? ShippingTypeId);
+    Guid? ShippingTypeId,
+    string? ExpectedVersion = null);
 
 /// <summary>خوانندهٔ بدنهٔ انتساب؛ بدشکلی به کد پایدار canonical نگاشت می‌شود.</summary>
 public static class OfferFulfillmentBodyReader
@@ -164,6 +165,7 @@ public static class OfferFulfillmentBodyReader
             var supplied = false;
             OfferFulfillmentResponsibility? responsibility = null;
             Guid? shippingTypeId = null;
+            string? expectedVersion = null;
 
             foreach (var property in root.EnumerateObject())
             {
@@ -176,9 +178,15 @@ public static class OfferFulfillmentBodyReader
                 {
                     shippingTypeId = ReadOptionalGuid(property.Value);
                 }
+                else if (string.Equals(property.Name, "expectedVersion", StringComparison.OrdinalIgnoreCase))
+                {
+                    expectedVersion = property.Value.ValueKind == JsonValueKind.String
+                        ? property.Value.GetString()
+                        : throw Malformed();
+                }
             }
 
-            return new OfferFulfillmentAssignmentBody(supplied, responsibility, shippingTypeId);
+            return new OfferFulfillmentAssignmentBody(supplied, responsibility, shippingTypeId, expectedVersion);
         }
     }
 
@@ -240,7 +248,7 @@ public static class OfferFulfillmentAdminEndpoints
         HttpContext context,
         CancellationToken cancellationToken)
     {
-        await authorizer.RequireManageAsync(context, cancellationToken);
+        var actorUserId = await authorizer.RequireManageAsync(context, cancellationToken);
 
         var body = await OfferFulfillmentBodyReader.ReadAsync(context.Request, cancellationToken);
         if (!body.ResponsibilitySupplied)
@@ -251,7 +259,7 @@ public static class OfferFulfillmentAdminEndpoints
         }
 
         var result = await sender.Send(
-            new AssignOfferFulfillmentCommand(offerId, body.Responsibility, body.ShippingTypeId),
+            new AssignOfferFulfillmentCommand(offerId, body.Responsibility, body.ShippingTypeId, body.ExpectedVersion, actorUserId),
             cancellationToken);
         return api.From(result);
     }

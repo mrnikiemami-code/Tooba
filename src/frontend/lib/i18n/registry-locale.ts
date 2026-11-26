@@ -6,6 +6,8 @@ import { LOCALE_COOKIE_NAME, type TextDirection } from "./locale.ts";
 
 export interface RegistryLocaleDefinition {
   code: string;
+  urlPrefix: string;
+  active: boolean;
   culture: string;
   language: string;
   direction: TextDirection;
@@ -20,8 +22,8 @@ export interface RegistryLocaleState {
 
 function appLocaleDefinition(locale: "fa" | "en"): RegistryLocaleDefinition {
   return locale === "en"
-    ? { code: "en-US", culture: "en-US", language: "en", direction: "ltr", calendar: "gregorian", isDefault: false }
-    : { code: "fa-IR", culture: "fa-IR", language: "fa", direction: "rtl", calendar: "jalali", isDefault: true };
+    ? { code: "en-US", urlPrefix: "en", active: true, culture: "en-US", language: "en", direction: "ltr", calendar: "gregorian", isDefault: false }
+    : { code: "fa-IR", urlPrefix: "fa", active: true, culture: "fa-IR", language: "fa", direction: "rtl", calendar: "jalali", isDefault: true };
 }
 
 function cookieLocale(): string | null {
@@ -53,6 +55,8 @@ export async function loadActiveRegistryLanguages(): Promise<RegistryLocaleDefin
       const calendarRaw = String(row.calendarDisplay ?? "Gregorian").toLowerCase();
       return [{
         code,
+        urlPrefix: String(row.urlPrefix ?? "").trim(),
+        active: Boolean(row.isActive ?? row.active ?? false),
         culture,
         language: (culture || code).split("-")[0] ?? code,
         direction: String(row.direction ?? "rtl") === "ltr" ? "ltr" : "rtl",
@@ -77,10 +81,11 @@ export function useRegistryLocale(): RegistryLocaleState {
     void loadActiveRegistryLanguages().then((rows) => {
       if (!active) return;
       const needle = (requested ?? "").toLowerCase();
-      const exact = rows.find((item) =>
-        item.code.toLowerCase() === needle
-        || item.code.toLowerCase().split("-")[0] === needle);
-      const row = exact ?? rows.find((item) => item.isDefault);
+      const exact = rows.find((item) => item.active && (
+        item.urlPrefix.toLowerCase() === needle
+        || item.code.toLowerCase() === needle
+        || item.code.toLowerCase().split("-")[0] === needle));
+      const row = exact ?? rows.find((item) => item.active && item.isDefault) ?? rows.find((item) => item.active);
       setResolved(row ?? null);
       setLoaded(true);
     });

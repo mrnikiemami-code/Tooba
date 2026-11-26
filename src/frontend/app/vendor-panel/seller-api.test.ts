@@ -14,7 +14,7 @@ import {
   mapSellerSettings,
   SELLER_PARTY_HEADER,
 } from "./seller-api.ts";
-import { mapSellerCatalogVariants } from "./seller-offer-api.ts";
+import { mapSellerCatalogVariants } from "./products/seller-offer-api.ts";
 
 test("seller offer list mapper keeps amount off Product price field", () => {
   const rows = mapSellerOfferList([

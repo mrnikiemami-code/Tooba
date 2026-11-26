@@ -90,7 +90,7 @@ public static class OfferAdminEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        await authorizer.RequireCreateAsync(context, token);
+        var actorUserId = await authorizer.RequireCreateAsync(context, token);
         var channel = OfferChannelRequestResolver.ResolveRequired(body.Channel, storeCommerce.Current?.SalesChannel);
         var result = await sender.Send(new CreateOfferCommand(
             body.CatalogVariantId,
@@ -98,7 +98,12 @@ public static class OfferAdminEndpoints
             channel,
             body.SellerSku,
             body.Status,
-            RequestId: body.RequestId), token);
+            body.ReturnPolicyChoice,
+            body.CustomReturnWindowDays,
+            body.MinimumOrderQuantity,
+            body.MaximumOrderQuantity,
+            RequestId: body.RequestId,
+            ActorUserId: actorUserId), token);
         if (result.IsFailure) return api.From(result);
         return api.Created($"/v1/admin/offers/{result.Value.OfferId}", result);
     }
@@ -141,13 +146,13 @@ public static class OfferAdminEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        await authorizer.RequireEditAsync(context, token);
+        var actorUserId = await authorizer.RequireEditAsync(context, token);
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, owner.Value, body.SellerSku, body.Status, body.ReturnPolicyChoice,
             body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
-            body.ClearOrderQuantityLimits), token);
+            body.ClearOrderQuantityLimits, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 
@@ -160,11 +165,11 @@ public static class OfferAdminEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        await authorizer.RequireEditAsync(context, token);
+        var actorUserId = await authorizer.RequireEditAsync(context, token);
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, owner.Value, body.Amount, body.Currency, body.Market), token);
+            offerId, owner.Value, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 
@@ -177,11 +182,11 @@ public static class OfferAdminEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        await authorizer.RequireEditAsync(context, token);
+        var actorUserId = await authorizer.RequireEditAsync(context, token);
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new SetOfferInventoryCommand(
-            offerId, owner.Value, body.OnHand, body.Reason, body.StockItemId), token);
+            offerId, owner.Value, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 

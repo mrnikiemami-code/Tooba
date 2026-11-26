@@ -1,5 +1,5 @@
-﻿import type { HostReadSource, SellerOfferDetail } from "./seller-api.ts";
-import { sellerHeaders, readJson, currentActor, isDeniedStatus, readProp, asString, asNullableString, asNumber, asNullableNumber, mapSellerOfferDetail } from "./seller-api.ts";
+﻿import type { HostReadSource, SellerOfferDetail } from "../seller-api.ts";
+import { sellerHeaders, readJson, currentActor, isDeniedStatus, readProp, asString, asNullableString, asNumber, asNullableNumber, mapSellerOfferDetail } from "../seller-api.ts";
 
 export async function loadSellerOfferDetail(
   sellerPartyId: string,
@@ -37,6 +37,7 @@ export async function patchSellerOffer(
     maximumOrderQuantity?: number | null;
     clearOrderQuantityLimits?: boolean;
   },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}`, {
@@ -50,6 +51,7 @@ export async function patchSellerOffer(
         minimumOrderQuantity: patch.minimumOrderQuantity,
         maximumOrderQuantity: patch.maximumOrderQuantity,
         clearOrderQuantityLimits: patch.clearOrderQuantityLimits,
+        expectedVersion,
       }),
     });
     if (isDeniedStatus(response.status)) {
@@ -137,7 +139,7 @@ export async function loadSellerCatalogVariants(
 /** ایجاد Offer فقط برای Party فروشندهٔ احرازشده. */
 export async function createSellerOffer(
   sellerPartyId: string,
-  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; channel?: string | null; requestId?: string | null },
+  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null; channel?: string | null; returnPolicyChoice?: string | null; customReturnWindowDays?: number | null; minimumOrderQuantity?: number | null; maximumOrderQuantity?: number | null; requestId?: string | null },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch("/v1/seller/offers", {
@@ -147,6 +149,10 @@ export async function createSellerOffer(
         catalogVariantId: input.catalogVariantId,
         sellerSku: input.sellerSku,
         channel: input.channel ?? undefined,
+        returnPolicyChoice: input.returnPolicyChoice ?? undefined,
+        customReturnWindowDays: input.customReturnWindowDays ?? undefined,
+        minimumOrderQuantity: input.minimumOrderQuantity ?? undefined,
+        maximumOrderQuantity: input.maximumOrderQuantity ?? undefined,
         status: input.status,
         requestId: input.requestId,
       }),
@@ -173,6 +179,7 @@ export async function writeSellerOfferPrice(
   sellerPartyId: string,
   offerId: string,
   input: { amount: number; currency?: string | null; market?: string | null },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}/price`, {
@@ -182,6 +189,7 @@ export async function writeSellerOfferPrice(
         amount: input.amount,
         currency: input.currency ?? undefined,
         market: input.market ?? undefined,
+        expectedVersion,
       }),
     });
     if (isDeniedStatus(response.status) || response.status === 404) {
@@ -206,6 +214,7 @@ export async function writeSellerOfferInventory(
   sellerPartyId: string,
   offerId: string,
   input: { onHand: number; reason?: string | null; stockItemId?: string | null },
+  expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}/inventory`, {
@@ -215,6 +224,7 @@ export async function writeSellerOfferInventory(
         onHand: input.onHand,
         reason: input.reason ?? undefined,
         stockItemId: input.stockItemId ?? undefined,
+        expectedVersion,
       }),
     });
     if (isDeniedStatus(response.status) || response.status === 404) {
@@ -418,7 +428,7 @@ export async function ensureSellerInventoryPosition(sellerPartyId: string, offer
 export async function loadSellerOfferHistory(sellerPartyId: string, offerId: string, page = 1, pageSize = 20) {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   const response = await fetch(`/v1/seller/offers/${offerId}/history?${params.toString()}`, { headers: sellerHeaders(sellerPartyId, currentActor()) });
-  if (!response.ok) return { items: [], totalCount: 0, page, pageSize };
+  if (!response.ok) throw new Error("offer.history.load_failed");
   const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
   const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
     if (!raw || typeof raw !== "object") return [];

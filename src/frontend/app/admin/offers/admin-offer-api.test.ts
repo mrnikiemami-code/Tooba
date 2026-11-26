@@ -8,7 +8,7 @@ import {
   patchAdminOffer,
   writeAdminOfferInventory,
   writeAdminOfferPrice,
-} from "../admin-offer-api.ts";
+} from "./admin-offer-api.ts";
 
 type Captured = { url: string; method: string; body: unknown };
 

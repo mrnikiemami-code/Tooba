@@ -87,7 +87,8 @@ public sealed record SellerOfferPatchRequest(
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
     decimal? MaximumOrderQuantity = null,
-    bool ClearOrderQuantityLimits = false);
+    bool ClearOrderQuantityLimits = false,
+    string? ExpectedVersion = null);
 
 /// <summary>
 /// فرمان ایجاد Offer روی گونهٔ Catalog؛ Party فروشنده فقط از زمینهٔ احراز می‌آید نه از بدنه.
@@ -98,6 +99,8 @@ public sealed record SellerOfferCreateRequest(
     string? Status,
     string? ReturnPolicyChoice = null,
     int? CustomReturnWindowDays = null,
+    decimal? MinimumOrderQuantity = null,
+    decimal? MaximumOrderQuantity = null,
     string? RequestId = null,
     string? Channel = null);
 
@@ -110,6 +113,10 @@ public sealed record AdminOfferCreateRequest(
     Guid CatalogVariantId,
     string? SellerSku,
     string? Status,
+    string? ReturnPolicyChoice = null,
+    int? CustomReturnWindowDays = null,
+    decimal? MinimumOrderQuantity = null,
+    decimal? MaximumOrderQuantity = null,
     string? RequestId = null,
     string? Channel = null);
 
@@ -119,7 +126,8 @@ public sealed record AdminOfferCreateRequest(
 public sealed record SellerOfferPriceWriteRequest(
     decimal Amount,
     string? Currency,
-    string? Market);
+    string? Market,
+    string? ExpectedVersion = null);
 
 /// <summary>
 /// فرمان تنظیم موجودی روی‌دست Offer از طریق Inventory؛ Product.Stock نیست.
@@ -127,7 +135,8 @@ public sealed record SellerOfferPriceWriteRequest(
 public sealed record SellerOfferInventoryWriteRequest(
     decimal OnHand,
     string? Reason,
-    Guid? StockItemId = null);
+    Guid? StockItemId = null,
+    string? ExpectedVersion = null);
 
 /// <summary>
 /// Body for idempotently provisioning an empty stock position at one active location.

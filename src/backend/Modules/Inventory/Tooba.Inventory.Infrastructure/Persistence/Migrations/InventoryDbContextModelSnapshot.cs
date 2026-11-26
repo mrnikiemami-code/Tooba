@@ -45,6 +45,10 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("name");
 
+                    b.Property<Guid?>("SellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)

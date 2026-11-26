@@ -19,6 +19,7 @@ export function useOfferHistory(
     let active = true;
     setLoading(true);
     setError(null);
+    setData(null);
     void adapter.loadHistory(page, 20).then((result) => {
       if (active) setData(result);
     }).catch(() => {

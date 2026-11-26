@@ -22,8 +22,8 @@ import {
   searchAdminCatalogProducts,
   writeAdminOfferInventory,
   writeAdminOfferPrice,
-} from "../../admin-offer-api";
-import { adminOfferIntent, clearAdminOfferIntent } from "../../offer-create-intent";
+} from "../admin-offer-api";
+import { adminOfferIntent, clearAdminOfferIntent } from "../offer-create-intent";
 import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
 
 const PAGE_SIZE = 10;
@@ -101,6 +101,10 @@ export default function AdminCreateOfferPage() {
               catalogVariantId: input.catalogVariantId,
               sellerSku: input.sellerSku,
               channel: input.channel,
+              returnPolicyChoice: input.returnPolicyChoice,
+              customReturnWindowDays: input.customReturnWindowDays,
+              minimumOrderQuantity: input.minimumOrderQuantity,
+              maximumOrderQuantity: input.maximumOrderQuantity,
               requestId,
             });
             return created.ok

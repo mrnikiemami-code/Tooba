@@ -16,7 +16,9 @@ public sealed record SetOfferInventoryCommand(
     Guid SellerPartyId,
     decimal OnHand,
     string? Reason,
-    Guid? StockItemId = null) : IRequest<Result<SellerOfferDetailPage>>;
+    Guid? StockItemId = null,
+    string? ExpectedVersion = null,
+    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class SetOfferInventoryCommandHandler(
     IOfferStore store,
@@ -34,6 +36,9 @@ internal sealed class SetOfferInventoryCommandHandler(
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
+        var versionError = OfferVersionGuard.Check(offer.UpdatedAt, request.ExpectedVersion);
+        if (versionError is not null)
+            return Result.Failure<SellerOfferDetailPage>(versionError);
 
         var before = await inventory.GetAvailabilityAsync([request.OfferId], cancellationToken);
         var write = await inventory.SetInventoryAsync(new SetSellerOfferInventory(
@@ -45,6 +50,7 @@ internal sealed class SetOfferInventoryCommandHandler(
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 
+        offer.UpdatedAt = clock.UtcNow;
         var after = await inventory.GetAvailabilityAsync([request.OfferId], cancellationToken);
         before.TryGetValue(request.OfferId, out var oldSummary);
         after.TryGetValue(request.OfferId, out var newSummary);
@@ -66,7 +72,8 @@ internal sealed class SetOfferInventoryCommandHandler(
                 OfferHistorySummaries.InventoryChanged,
                 "Offer inventory changed",
                 oldValue,
-                newValue),
+                newValue,
+                request.ActorUserId),
             cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
 

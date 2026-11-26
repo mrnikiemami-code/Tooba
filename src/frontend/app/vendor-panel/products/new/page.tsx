@@ -21,8 +21,8 @@ import {
   searchSellerCatalogProducts,
   writeSellerOfferInventory,
   writeSellerOfferPrice,
-} from "../../seller-offer-api";
-import { clearOfferIntent, readOrCreateOfferIntent } from "../../offer-create-intent";
+} from "../seller-offer-api";
+import { clearOfferIntent, readOrCreateOfferIntent } from "../offer-create-intent";
 import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
 
 const PAGE_SIZE = 10;

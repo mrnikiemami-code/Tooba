@@ -106,11 +106,11 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireCreateAsync(context, token);
+        var (actorUserId, sellerId) = await authorizer.RequireCreateAsync(context, token);
         var channel = OfferChannelRequestResolver.ResolveRequired(body.Channel, storeCommerce.Current?.SalesChannel);
         var result = await sender.Send(new CreateOfferCommand(
             body.CatalogVariantId, sellerId, channel, body.SellerSku,
-            body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays, RequestId: body.RequestId), token);
+            body.Status, body.ReturnPolicyChoice, body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity, RequestId: body.RequestId, ActorUserId: actorUserId), token);
         if (result.IsFailure)
             return api.From(result);
         return api.Created($"/v1/seller/offers/{result.Value.OfferId}", result);
@@ -156,11 +156,11 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
+        var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
             body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
-            body.ClearOrderQuantityLimits), token);
+            body.ClearOrderQuantityLimits, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 
@@ -173,9 +173,9 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
+        var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, sellerId, body.Amount, body.Currency, body.Market), token);
+            offerId, sellerId, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 
@@ -188,9 +188,9 @@ public static class OfferSellerEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
+        var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferInventoryCommand(
-            offerId, sellerId, body.OnHand, body.Reason, body.StockItemId), token);
+            offerId, sellerId, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId), token);
         return api.From(result);
     }
 }

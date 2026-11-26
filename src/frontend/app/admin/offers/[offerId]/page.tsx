@@ -16,7 +16,7 @@ import {
   patchAdminOffer,
   writeAdminOfferInventory,
   writeAdminOfferPrice,
-} from "../../admin-offer-api";
+} from "../admin-offer-api";
 
 export default function AdminOfferDetailPage() {
   const params = useParams<{ offerId: string }>();
@@ -53,10 +53,10 @@ export default function AdminOfferDetailPage() {
         }));
       },
       createDraft: async () => ({ ok: false, errorCode: "offer.workspace.edit_mode" }),
-      saveCommercial: (patch) => patchAdminOffer(offerId, patch),
-      savePrice: (input) => writeAdminOfferPrice(offerId, input),
-      saveInventory: (input) => writeAdminOfferInventory(offerId, input),
-      saveFulfillment: (input) => assignAdminOfferFulfillment(offerId, input),
+      saveCommercial: (patch, version) => patchAdminOffer(offerId, patch, version),
+      savePrice: (input, version) => writeAdminOfferPrice(offerId, input, version),
+      saveInventory: (input, version) => writeAdminOfferInventory(offerId, input, version),
+      saveFulfillment: (input, version) => assignAdminOfferFulfillment(offerId, input, version),
       loadShippingTypes: () => loadAdminShippingTypes(),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/admin/offers")),

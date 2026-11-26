@@ -26,6 +26,9 @@ public sealed class InventoryLocation : IHasDomainEvents
     /// </summary>
     public string Name { get; init; } = string.Empty;
 
+    /// <summary>Optional owning seller; null means a store-owned shared location.</summary>
+    public Guid? SellerPartyId { get; init; }
+
     /// <summary>
     /// وضعیت محل.
     /// </summary>

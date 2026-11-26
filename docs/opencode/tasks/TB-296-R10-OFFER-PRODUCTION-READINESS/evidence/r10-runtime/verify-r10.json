@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-11-25T22:54:01.697Z",
+  "startedAt": "2026-11-26T04:01:17.393Z",
   "checks": {
     "R9-02.sharedToastAutoClose3000": {
       "ok": true,
@@ -43,7 +43,7 @@
     },
     "R10-03.createProvisionedInventory": {
       "ok": true,
-      "detail": "[{\"stockItemId\":\"01a214ea-8d00-7000-ab1e-256399779ef8\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"locationCode\":\"WH-ACC-ACC-DEMO\",\"locationName\":\"انبار دمو ACC\",\"onHand\":3,\"reserved\":0,\"available\":3}]"
+      "detail": "[{\"stockItemId\":\"01a21603-db15-7000-86bf-78ad8f34a02b\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"locationCode\":\"WH-ACC-ACC-DEMO\",\"locationName\":\"انبار دمو ACC\",\"onHand\":3,\"reserved\":0,\"available\":3}]"
     },
     "R10-04.createOneDraftApplied": {
       "ok": true,
@@ -127,7 +127,7 @@
     },
     "R9-05.sellerCreateApplied": {
       "ok": true,
-      "detail": "{\"amount\":654321,\"sku\":\"TB296-R9-SELLER-1795647297041\"}"
+      "detail": "{\"amount\":654321,\"sku\":\"TB296-R9-SELLER-1795665732721\"}"
     },
     "R9-12.crossOwnerNegative": {
       "ok": true,
@@ -147,11 +147,11 @@
     },
     "R10-03.idempotentProvision": {
       "ok": true,
-      "detail": "{\"a\":{\"stockItemId\":\"01a214ea-8d00-7000-ab1e-256399779ef8\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"offerId\":\"4fb7cb59-df2c-8e6b-5ac6-55f4afe2d3a5\",\"onHand\":3,\"reserved\":0},\"b\":{\"stockItemId\":\"01a214ea-8d00-7000-ab1e-256399779ef8\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"offerId\":\"4fb7cb59-df2c-8e6b-5ac6-55f4afe2d3a5\",\"onHand\":3,\"reserved\":0}}"
+      "detail": "{\"a\":{\"stockItemId\":\"01a21603-db15-7000-86bf-78ad8f34a02b\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"offerId\":\"23d08543-b8ed-4b3e-5c8d-5df3f2d8b649\",\"onHand\":3,\"reserved\":0},\"b\":{\"stockItemId\":\"01a21603-db15-7000-86bf-78ad8f34a02b\",\"locationId\":\"01a04402-79ef-7000-bac7-522a8dcab501\",\"offerId\":\"23d08543-b8ed-4b3e-5c8d-5df3f2d8b649\",\"onHand\":3,\"reserved\":0}}"
     },
     "R10-06.historyPagination": {
       "ok": true,
-      "detail": "{\"items\":[{\"offerId\":\"4fb7cb59-df2c-8e6b-5ac6-55f4afe2d3a5\",\"occurredAt\":\"2026-11-25T22:54:06.509261+00:00\",\"kind\":\"PriceChanged\",\"summary\":\"Offer price changed\",\"oldValue\":\"amount=876543;currency=IRR\",\"newValue\":\"amount=876544;currency=IRR\"}],\"totalCount\":5,\"page\":1,\"pageSize\":1}"
+      "detail": "{\"items\":[{\"offerId\":\"23d08543-b8ed-4b3e-5c8d-5df3f2d8b649\",\"occurredAt\":\"2026-11-26T04:01:22.157971+00:00\",\"kind\":\"PriceChanged\",\"actorUserId\":\"01a036c2-970e-7000-8eb7-94bf5cc2d8db\",\"summary\":\"Offer price changed\",\"oldValue\":\"amount=876543;currency=IRR\",\"newValue\":\"amount=876544;currency=IRR\"}],\"totalCount\":4,\"page\":1,\"pageSize\":1}"
     },
     "R10-08.sellerFulfillmentDenied": {
       "ok": true,
@@ -163,7 +163,7 @@
     },
     "R10-13.performanceComparable": {
       "ok": true,
-      "detail": "1024"
+      "detail": "1086"
     },
     "R9-12.noUnexpectedConsoleErrors": {
       "ok": true,
@@ -172,13 +172,13 @@
   },
   "errors": [],
   "metrics": {
-    "formLoadMs": 1024,
-    "pagePerformanceMs": 38219
+    "formLoadMs": 1086,
+    "pagePerformanceMs": 38225
   },
   "ids": {
-    "r9OfferId": "4fb7cb59-df2c-8e6b-5ac6-55f4afe2d3a5",
-    "sellerOfferId": "c8c1767b-2dd3-ebaa-6226-0cf61317e31a"
+    "r9OfferId": "23d08543-b8ed-4b3e-5c8d-5df3f2d8b649",
+    "sellerOfferId": "0a6e3fa0-c4ae-7c3f-06df-023312b2b1bc"
   },
-  "finishedAt": "2026-11-25T22:54:57.359Z",
+  "finishedAt": "2026-11-26T04:02:13.108Z",
   "ok": true
 }

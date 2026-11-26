@@ -35,9 +35,11 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(
+        Guid? sellerPartyId,
         CancellationToken cancellationToken) =>
         await _db.Locations.AsNoTracking()
-            .Where(x => x.Status == InventoryLocationStatus.Active)
+            .Where(x => x.Status == InventoryLocationStatus.Active
+                && (x.SellerPartyId == null || x.SellerPartyId == sellerPartyId))
             .OrderBy(x => x.Code)
             .Select(x => new InventoryEligibleLocation(x.LocationId, x.Code, x.Name))
             .ToListAsync(cancellationToken)
@@ -48,6 +50,7 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         Guid offerId,
         Guid catalogVariantId,
         Guid locationId,
+        Guid? sellerPartyId,
         CancellationToken cancellationToken)
     {
         if (offerId == Guid.Empty || catalogVariantId == Guid.Empty || locationId == Guid.Empty)
@@ -56,7 +59,8 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         }
 
         var locationIsActive = await _db.Locations.AsNoTracking()
-            .AnyAsync(x => x.LocationId == locationId && x.Status == InventoryLocationStatus.Active, cancellationToken)
+            .AnyAsync(x => x.LocationId == locationId && x.Status == InventoryLocationStatus.Active
+                && (x.SellerPartyId == null || x.SellerPartyId == sellerPartyId), cancellationToken)
             .ConfigureAwait(false);
         if (!locationIsActive)
         {

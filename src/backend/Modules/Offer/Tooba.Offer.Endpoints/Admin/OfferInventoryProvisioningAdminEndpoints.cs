@@ -68,8 +68,8 @@ public static class OfferInventoryProvisioningAdminEndpoints
         HttpContext context,
         CancellationToken token)
     {
-        await authorizer.RequireEditAsync(context, token);
-        return api.From(await sender.Send(new ListEligibleInventoryLocationsQuery(), token));
+        var (_, sellerId) = await authorizer.RequireEditAsync(context, token);
+        return api.From(await sender.Send(new ListEligibleInventoryLocationsQuery(sellerId), token));
     }
 
     private static async Task<IResult> EnsurePositionForSellerAsync(

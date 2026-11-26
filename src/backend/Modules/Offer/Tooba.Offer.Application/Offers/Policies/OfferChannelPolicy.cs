@@ -13,9 +13,10 @@ public static class OfferChannelPolicy
     public static IReadOnlyList<SalesChannel> Allowed(string? configuredChannel)
     {
         if (string.IsNullOrWhiteSpace(configuredChannel)) return [];
-        return Enum.TryParse<SalesChannel>(configuredChannel.Trim(), ignoreCase: true, out var channel)
-            ? [channel]
-            : [];
+        var value = configuredChannel.Trim();
+        if (!Enum.GetNames<SalesChannel>().Any(name => string.Equals(name, value, StringComparison.OrdinalIgnoreCase)))
+            return [];
+        return Enum.Parse<SalesChannel>(value, ignoreCase: true) is var channel ? [channel] : [];
     }
 
     /// <summary>True only when the configured store channel equals the requested channel.</summary>

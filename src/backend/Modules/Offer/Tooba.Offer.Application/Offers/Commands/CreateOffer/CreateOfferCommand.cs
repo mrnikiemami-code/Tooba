@@ -31,7 +31,8 @@ public sealed record CreateOfferCommand(
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
     decimal? MaximumOrderQuantity = null,
-    string? RequestId = null) : IRequest<Result<SellerOfferDetailPage>>;
+    string? RequestId = null,
+    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class CreateOfferHandler(
     IOfferStore store,
@@ -129,7 +130,8 @@ internal sealed class CreateOfferHandler(
                 OfferHistorySummaries.Created,
                 "Offer created",
                 null,
-                OfferHistorySummaries.StatusChannel(offer)),
+                OfferHistorySummaries.StatusChannel(offer),
+                request.ActorUserId),
             cancellationToken);
 
         var persisted = await store.PersistNewAsync(offer, cancellationToken);

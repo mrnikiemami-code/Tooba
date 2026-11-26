@@ -37,7 +37,9 @@ namespace Tooba.Offer.Application.Offers.Commands.AssignOfferFulfillment;
 public sealed record AssignOfferFulfillmentCommand(
     Guid OfferId,
     OfferFulfillmentResponsibility? Responsibility,
-    Guid? ShippingTypeId) : IRequest<Result<OfferReference>>;
+    Guid? ShippingTypeId,
+    string? ExpectedVersion = null,
+    Guid? ActorUserId = null) : IRequest<Result<OfferReference>>;
 
 internal sealed class AssignOfferFulfillmentHandler(
     IOfferStore store,
@@ -60,6 +62,12 @@ internal sealed class AssignOfferFulfillmentHandler(
         if (offer is null)
         {
             return OfferReadModelComposer.NotFound<OfferReference>();
+        }
+
+        var versionError = OfferVersionGuard.Check(offer.UpdatedAt, request.ExpectedVersion);
+        if (versionError is not null)
+        {
+            return Result.Failure<OfferReference>(versionError);
         }
 
         // A requested type must exist and be ACTIVE in the real catalog; an infrastructure failure is not
@@ -94,7 +102,8 @@ internal sealed class AssignOfferFulfillmentHandler(
                 "Offer fulfillment changed",
                 previous,
                 OfferHistorySummaries.Fulfillment(
-                    offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId)),
+                    offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId),
+                request.ActorUserId),
             cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
         return Result.Success(offer.ToReference());

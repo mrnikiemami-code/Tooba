@@ -207,19 +207,19 @@ export interface OfferWorkspaceAdapter {
     maximumOrderQuantity: number | null;
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;
-    inventory: OfferLocalInventoryDraft[];
+    inventory: Array<{ locationId: string; onHand: number; reason: string }>;
   }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
-  saveCommercial: (patch: OfferCommercialPatch) => Promise<OfferMutationResult>;
-  savePrice: (input: { amount: number; currency: string }) => Promise<OfferMutationResult>;
+  saveCommercial: (patch: OfferCommercialPatch, expectedVersion?: string) => Promise<OfferMutationResult>;
+  savePrice: (input: { amount: number; currency: string }, expectedVersion?: string) => Promise<OfferMutationResult>;
   saveInventory: (input: {
     stockItemId: string;
     onHand: number;
     reason: string;
-  }) => Promise<OfferMutationResult>;
+  }, expectedVersion?: string) => Promise<OfferMutationResult>;
   saveFulfillment?: (input: {
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;
-  }) => Promise<OfferSimpleResult>;
+  }, expectedVersion?: string) => Promise<OfferSimpleResult>;
   loadShippingTypes?: () => Promise<OfferShippingTypeOption[]>;
   onCreated: (offerId: string) => void;
   onCancel: () => void;

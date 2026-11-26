@@ -48,15 +48,7 @@ import type {
   OfferWorkspaceDetail,
 } from "./types";
 
-const TAB_ORDER: OfferTabId[] = [
-  "identity",
-  "pricing",
-  "discounts",
-  "inventory",
-  "shipping",
-  "conditions",
-  "history",
-];
+const TAB_ORDER: OfferTabId[] = ["identity", "pricing", "discounts", "inventory", "shipping", "conditions", "history"];
 
 export interface OfferWorkspaceProps {
   adapter: OfferWorkspaceAdapter;
@@ -72,6 +64,8 @@ type PersistedOfferWorkspace = {
   selectedVariant?: OfferVariantOption | null;
   responsibility?: OfferFulfillmentResponsibility | null;
   shippingTypeId?: string;
+  selectedChannel?: string;
+  localInventory?: OfferLocalInventoryDraft[];
   baseLastUpdatedAt?: string | null;
 };
 
@@ -135,8 +129,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         : window.localStorage.getItem("tooba.sellerActorUserId") ?? "anonymous";
     const tenant = typeof window === "undefined" ? "ssr" : window.localStorage.getItem("tooba.tenantId") ?? "default";
     const owner = detail?.sellerPartyId ?? selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "owner";
-    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${adapter.offerId ?? "new"}`;
-  }, [adapter.role, adapter.mode, adapter.offerId, adapter.fixedSeller?.sellerPartyId, detail?.sellerPartyId, selectedSeller?.sellerPartyId]);
+    const variant = detail?.catalogVariantId ?? selectedVariant?.catalogVariantId ?? "variant";
+    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${variant}:${selectedChannel}:${adapter.offerId ?? "new"}`;
+  }, [adapter.role, adapter.mode, adapter.offerId, adapter.fixedSeller?.sellerPartyId, detail?.sellerPartyId, detail?.catalogVariantId, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, selectedChannel]);
   const restoredRef = useRef(false);
   const [saveRetryable, setSaveRetryable] = useState(true);
   const [saveReloading, setSaveReloading] = useState(false);
@@ -308,6 +303,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (stored.selectedVariant) setSelectedVariant(stored.selectedVariant);
       if (stored.responsibility !== undefined) setResponsibility(stored.responsibility);
       if (stored.shippingTypeId !== undefined) setShippingTypeId(stored.shippingTypeId);
+      if (stored.selectedChannel !== undefined) setSelectedChannel(stored.selectedChannel);
+      if (stored.localInventory !== undefined) setLocalInventory(stored.localInventory);
       setSaveNotice(t.draftRestored);
     }
     restoredRef.current = true;
@@ -323,12 +320,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         selectedVariant,
         responsibility,
         shippingTypeId,
+        selectedChannel,
+        localInventory,
         baseLastUpdatedAt: detail?.lastUpdatedAt ?? null,
       }));
     } catch {
       // Session storage is an optional recovery aid, never a domain write.
     }
-  }, [anyDirty, detail?.lastUpdatedAt, draft, isEdit, persistKey, responsibility, selectedProduct, selectedSeller, selectedVariant, shippingTypeId]);
+  }, [anyDirty, detail?.lastUpdatedAt, draft, isEdit, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId]);
   function clearPersistedDraft() {
     try {
       window.sessionStorage.removeItem(persistKey);

@@ -72,6 +72,7 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.Code).HasMaxLength(32);
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SellerPartyId).HasColumnName("seller_party_id");
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => x.Code).IsUnique();
         });

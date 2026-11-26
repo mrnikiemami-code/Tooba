@@ -39,6 +39,7 @@ internal sealed class EnsureOfferInventoryPositionCommandHandler(
                 offer.OfferId,
                 offer.CatalogVariantId,
                 request.LocationId,
+                request.SellerPartyId,
                 cancellationToken);
             return Result.Success(position);
         }

@@ -23,7 +23,9 @@ public sealed record UpdateOfferCommand(
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
     decimal? MaximumOrderQuantity = null,
-    bool ClearOrderQuantityLimits = false) : IRequest<Result<SellerOfferDetailPage>>;
+    bool ClearOrderQuantityLimits = false,
+    string? ExpectedVersion = null,
+    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class UpdateOfferHandler(
     IOfferStore store,
@@ -39,6 +41,9 @@ internal sealed class UpdateOfferHandler(
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
+        var versionError = OfferVersionGuard.Check(offer.UpdatedAt, request.ExpectedVersion);
+        if (versionError is not null)
+            return Result.Failure<SellerOfferDetailPage>(versionError);
         var previousCommercial = OfferHistorySummaries.Commercial(offer);
         if (request.SellerSku is not null)
         {
@@ -102,7 +107,8 @@ internal sealed class UpdateOfferHandler(
                 OfferHistorySummaries.CommercialChanged,
                 "Offer commercial fields changed",
                 previousCommercial,
-                OfferHistorySummaries.Commercial(offer)),
+                OfferHistorySummaries.Commercial(offer),
+                request.ActorUserId),
             cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
         return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
