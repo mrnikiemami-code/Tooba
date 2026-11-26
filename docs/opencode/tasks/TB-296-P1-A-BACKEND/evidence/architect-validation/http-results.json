@@ -1,0 +1,285 @@
+{
+  "checkedAt": "2026-11-26T18:29:18.181Z",
+  "offer": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+  "stock": "01a21919-2a8d-7000-9262-06f15f54b608",
+  "checks": {
+    "adminDetail": {
+      "status": 200,
+      "amount": 1200,
+      "offerRevision": "2026-11-26T18:26:07.3941340+00:00",
+      "priceRevision": "01a21919f73970009bd8dc8be3ef107c:63931314261904007",
+      "capabilities": {
+        "canEditPhysicalInventory": true,
+        "canEditOfferedQuantity": false,
+        "canAssignFulfillment": true,
+        "canEditShippingPolicy": true
+      },
+      "positions": [
+        {
+          "stockItemId": "01a21919-2a8d-7000-9262-06f15f54b608",
+          "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+          "locationCode": "WH-DEMO-THR",
+          "locationName": "انبار نمایشی تهران",
+          "onHand": 110,
+          "reserved": 0,
+          "available": 110,
+          "revision": "2026-11-26T18:24:07.2074480+00:00"
+        }
+      ]
+    },
+    "sellerDetail": {
+      "status": 200,
+      "capabilities": {
+        "canEditPhysicalInventory": false,
+        "canEditOfferedQuantity": false,
+        "canAssignFulfillment": false,
+        "canEditShippingPolicy": false
+      },
+      "reservation": "Platform"
+    },
+    "sellerPlatformPhysical": {
+      "status": 403,
+      "body": {
+        "type": "about:blank",
+        "title": "این محل برای این مالک مجاز نیست.",
+        "status": 403,
+        "instance": "/v1/seller/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/inventory",
+        "errorCode": "inventory.location.not_eligible",
+        "traceId": "02b37f3149071391ae15cff089a622ce",
+        "correlationId": "9561e883090f4532aa9351635f78bc09",
+        "requestId": "0HNQBT7K34QKL:00000003"
+      }
+    },
+    "missingPhysicalRevision": {
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "نسخهٔ موقعیت موجودی قدیمی است.",
+        "status": 409,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/inventory",
+        "errorCode": "inventory.position.revision_conflict",
+        "traceId": "c108834c29e2601b5c25ae69c9c8f9fe",
+        "correlationId": "817e6580b9d74064b3e3ea5df2f85a0f",
+        "requestId": "0HNQBT7K34QKM:00000003"
+      }
+    },
+    "randomLocation": {
+      "status": 404,
+      "body": {
+        "type": "about:blank",
+        "title": "محل نگهداری پیدا نشد یا غیرفعال است.",
+        "status": 404,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/inventory/positions",
+        "errorCode": "inventory.location.not_found",
+        "traceId": "0cceea90cc9284134b6630dd0dd9e1c1",
+        "correlationId": "099bfbd918fd45809701476620d2bad8",
+        "requestId": "0HNQBT7K34QKL:00000004"
+      }
+    },
+    "inactiveLocation": {
+      "status": 404,
+      "body": {
+        "type": "about:blank",
+        "title": "محل نگهداری پیدا نشد یا غیرفعال است.",
+        "status": 404,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/inventory/positions",
+        "errorCode": "inventory.location.not_found",
+        "traceId": "d920ab1f96a5f726bd9f80d2381e6005",
+        "correlationId": "6bd5bca476274ab891abfe5c5e007a5b",
+        "requestId": "0HNQBT7K34QKM:00000004"
+      }
+    },
+    "foreignSellerLocation": {
+      "status": 403,
+      "body": {
+        "type": "about:blank",
+        "title": "این محل برای این مالک مجاز نیست.",
+        "status": 403,
+        "instance": "/v1/seller/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/inventory/positions",
+        "errorCode": "inventory.location.not_eligible",
+        "traceId": "c558f93ff7aeea8792f0da24552bcb92",
+        "correlationId": "2e2306fd88f946fb9617434768f8ed56",
+        "requestId": "0HNQBT7K34QKL:00000005"
+      }
+    },
+    "allocationInSingleStore": {
+      "status": 403,
+      "body": {
+        "type": "about:blank",
+        "title": "این محل برای این مالک مجاز نیست.",
+        "status": 403,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/offered-quantity",
+        "errorCode": "inventory.location.not_eligible",
+        "traceId": "22a86834906e5d9c2ea2ac091c001f43",
+        "correlationId": "ca9543780bbe4a56a33372e66d26adb2",
+        "requestId": "0HNQBT7K34QKM:00000005"
+      }
+    },
+    "stalePrice": {
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "Conflict",
+        "status": 409,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/price",
+        "errorCode": "concurrency.conflict",
+        "traceId": "7ae9300c55e0e89ad35425d4542bb44d",
+        "correlationId": "ea655d0458244d2e88c4472dc36cecb2",
+        "requestId": "0HNQBT7K34QKL:00000006"
+      }
+    },
+    "missingPrice": {
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "Conflict",
+        "status": 409,
+        "instance": "/v1/admin/offers/28cfd5fe-1c07-47e4-edee-ea66909038ae/price",
+        "errorCode": "concurrency.conflict",
+        "traceId": "433cc2fa7c0c976a6c99d7eb52a2513e",
+        "correlationId": "77dd38fbff674971aa826ff3d4173e8c",
+        "requestId": "0HNQBT7K34QKM:00000006"
+      }
+    },
+    "duplicateActive": {
+      "status": 409,
+      "errorCode": "offer.listing.duplicate_active"
+    },
+    "history": {
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "totalCounts": [
+        7,
+        7,
+        7,
+        7
+      ],
+      "uniqueEventIds": 7,
+      "count": 7,
+      "items": [
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:26:07.39425+00:00",
+          "kind": "CommercialChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer commercial fields changed",
+          "oldValue": "sku=P1A-A-1795717356197;status=Draft;return=Default;returnDays=null;min=null;max=null",
+          "newValue": "sku=P1A-A-1795717356197;status=Active;return=Default;returnDays=null;min=null;max=null",
+          "eventId": "01a2191b-93a2-7000-855f-9605bff1b2af"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:24:21.904007+00:00",
+          "kind": "PriceChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer price changed",
+          "oldValue": "amount=1000.0000;currency=IRR",
+          "newValue": "amount=1200.0000;currency=IRR",
+          "eventId": "01a21919-f792-7000-8290-36602fb13225",
+          "targetId": "01a21919-f739-7000-9bd8-dc8be3ef107c"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:24:21.815212+00:00",
+          "kind": "PriceChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer price changed",
+          "newValue": "amount=1000.0000;currency=IRR",
+          "eventId": "01a21919-f73a-7000-961b-92189c25d9d7",
+          "targetId": "01a21919-f739-7000-9bd8-dc8be3ef107c"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:24:07.207448+00:00",
+          "kind": "InventoryChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer inventory changed",
+          "oldValue": "100.000000",
+          "newValue": "110.000000",
+          "eventId": "01a21919-be2c-7000-8f2f-ac1aef022c34",
+          "targetId": "01a21919-2a8d-7000-9262-06f15f54b608",
+          "locationId": "01a03826-97cb-7000-9b33-5dba87e73980"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:23:37.206958+00:00",
+          "kind": "InventoryChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer inventory changed",
+          "oldValue": "0.000000",
+          "newValue": "100.000000",
+          "eventId": "01a21919-490d-7000-b04f-ce3548197699",
+          "targetId": "01a21919-2a8d-7000-9262-06f15f54b608",
+          "locationId": "01a03826-97cb-7000-9b33-5dba87e73980"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:22:42.634455+00:00",
+          "kind": "FulfillmentChanged",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer fulfillment changed",
+          "oldValue": "responsibility=null;type=null",
+          "newValue": "responsibility=Platform;type=null",
+          "eventId": "01a21918-73ca-7000-ad34-1ed308f98e18"
+        },
+        {
+          "offerId": "28cfd5fe-1c07-47e4-edee-ea66909038ae",
+          "occurredAt": "2026-11-26T18:22:36.255466+00:00",
+          "kind": "Created",
+          "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+          "summary": "Offer created",
+          "newValue": "status=Draft;channel=Marketplace",
+          "eventId": "01a21918-5adf-7000-8cd5-a136b31c1d36"
+        }
+      ]
+    },
+    "locations": {
+      "adminStatus": 200,
+      "adminCodes": [
+        "WH-ACC-ACC-DEMO",
+        "WH-ACC-BOOK",
+        "WH-ACC-MOB",
+        "WH-DEMO-MSH",
+        "WH-DEMO-THR",
+        "WH-ISF",
+        "WH-KSH",
+        "WH-SCHEMA-MOBILE",
+        "WH-THR"
+      ],
+      "sellerStatus": 200,
+      "sellerCodes": [
+        "WH-ACC-ACC-DEMO",
+        "WH-ACC-BOOK",
+        "WH-ACC-MOB",
+        "WH-DEMO-MSH",
+        "WH-DEMO-THR",
+        "WH-ISF",
+        "WH-KSH",
+        "WH-SCHEMA-MOBILE",
+        "WH-THR"
+      ]
+    }
+  },
+  "ok": {
+    "adminDetail": "2026-11-26T18:24:07.2074480+00:00",
+    "sellerCapabilities": true,
+    "sellerPlatformPhysicalDenied": true,
+    "missingPhysicalDenied": true,
+    "randomLocationDenied": true,
+    "inactiveLocationDenied": true,
+    "foreignSellerLocationDenied": true,
+    "allocationSingleStoreDenied": true,
+    "stalePriceDenied": true,
+    "missingPriceDenied": true,
+    "duplicateActiveDenied": true,
+    "stableHistory": true,
+    "historyIdentity": true,
+    "locationsReturned": true
+  },
+  "passed": 14,
+  "failed": []
+}

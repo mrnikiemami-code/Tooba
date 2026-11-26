@@ -1,0 +1,13 @@
+﻿begin;
+delete from offer.offer_history where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from offer.outbox_messages where payload::text like '%28cfd5fe-1c07-47e4-edee-ea66909038ae%' or payload::text like '%56967565-0011-89b7-08a7-9cc2fe7d0ffe%';
+delete from pricing.offer_price_changes where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from pricing.outbox_messages where payload::text like '%28cfd5fe-1c07-47e4-edee-ea66909038ae%' or payload::text like '%56967565-0011-89b7-08a7-9cc2fe7d0ffe%';
+delete from pricing.prices where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from inventory.offer_inventory_changes where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from inventory.offer_allocations where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from inventory.outbox_messages where payload::text like '%28cfd5fe-1c07-47e4-edee-ea66909038ae%' or payload::text like '%56967565-0011-89b7-08a7-9cc2fe7d0ffe%';
+delete from inventory.stock_positions where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from offer.offers where offer_id in ('28cfd5fe-1c07-47e4-edee-ea66909038ae','56967565-0011-89b7-08a7-9cc2fe7d0ffe');
+delete from inventory.locations where location_id in ('b76d2aa5-3235-4140-8cdc-47bd43235c9d','b1daf574-99d0-4316-b006-d65598c4b143','23bd5a9a-4e90-49ab-a9b8-2a4c17e5542c','d1ea1db4-c2e8-43f3-8e8f-925a788a41ae');
+commit;
