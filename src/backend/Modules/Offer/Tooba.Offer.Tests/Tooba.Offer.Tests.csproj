@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Tooba.Offer.Endpoints\Tooba.Offer.Endpoints.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Contracts\Tooba.Inventory.Contracts.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Contracts\Tooba.Order.Contracts.csproj" />
     <ProjectReference Include="..\..\Pricing\Tooba.Pricing.Contracts\Tooba.Pricing.Contracts.csproj" />
   </ItemGroup>
 </Project>
