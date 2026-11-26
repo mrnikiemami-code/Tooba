@@ -1,0 +1,11 @@
+﻿begin;
+delete from inventory.reservation_consumptions where reservation_id in (select reservation_id from inventory.reservations where stock_item_id='01a21995-ccb9-7000-82ae-9edef7ee572e');
+delete from inventory.reservations where stock_item_id='01a21995-ccb9-7000-82ae-9edef7ee572e';
+delete from inventory.offer_inventory_changes where offer_id='12cb386b-16b5-7aa4-d275-521cc88185c3';
+delete from inventory.offer_allocations where offer_id='12cb386b-16b5-7aa4-d275-521cc88185c3';
+delete from inventory.outbox_messages where payload::text like '%12cb386b-16b5-7aa4-d275-521cc88185c3%';
+delete from inventory.stock_positions where offer_id='12cb386b-16b5-7aa4-d275-521cc88185c3';
+delete from offer.offer_history where offer_id='12cb386b-16b5-7aa4-d275-521cc88185c3';
+delete from offer.outbox_messages where payload::text like '%12cb386b-16b5-7aa4-d275-521cc88185c3%';
+delete from offer.offers where offer_id='12cb386b-16b5-7aa4-d275-521cc88185c3';
+commit;
