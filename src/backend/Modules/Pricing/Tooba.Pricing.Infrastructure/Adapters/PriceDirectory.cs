@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Tooba.StoreContext.Contracts.Current;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
@@ -38,6 +40,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     private readonly IClock _clock;
     private readonly IIdGenerator _ids;
     private readonly IModuleCallTracer _tracer;
+    private readonly ICurrentStoreCommerceContext? _storeCommerce;
 
     /// <summary>Binds the directory to the Pricing schema and the Offer lookup contract.</summary>
     public PriceDirectory(
@@ -46,7 +49,8 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         IOfferLookupGateway offers,
         IClock? clock = null,
         IIdGenerator? ids = null,
-        IModuleCallTracer? tracer = null)
+        IModuleCallTracer? tracer = null,
+        ICurrentStoreCommerceContext? storeCommerce = null)
     {
         _db = db;
         _guard = guard;
@@ -54,6 +58,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         _clock = clock ?? new SystemUtcClock();
         _ids = ids ?? new UuidV7IdGenerator();
         _tracer = tracer ?? new ModuleCallTracer();
+        _storeCommerce = storeCommerce;
     }
 
     /// <inheritdoc />
@@ -92,8 +97,13 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(OfferErrorCodes.NotFound));
 
-        var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
-        var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
+        var market = string.IsNullOrWhiteSpace(request.Market) ? _storeCommerce?.Current?.Market : request.Market.Trim();
+        var currency = string.IsNullOrWhiteSpace(request.Currency) ? _storeCommerce?.Current?.DefaultCurrency : request.Currency.Trim();
+        if (_storeCommerce is not null && (string.IsNullOrWhiteSpace(_storeCommerce.Current?.Market)
+            || string.IsNullOrWhiteSpace(_storeCommerce.Current?.DefaultCurrency)
+            || !string.Equals(market, _storeCommerce.Current.Market, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(currency, _storeCommerce.Current.DefaultCurrency, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
         if (!MarketCode.TryParse(market, out var marketCode, out var marketError))
             return Result.Failure<SellerPriceWriteReceipt>(marketError!);
         if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
@@ -101,32 +111,26 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         market = marketCode.Value;
         currency = currencyCode.Value;
         var channel = ToPriceChannel(offer.Channel);
-        var operationId = request.OperationId == Guid.Empty ? _ids.NewId() : request.OperationId;
+        if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+        var operationId = request.OperationId;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var lockKey = $"pricing.offer-base:{request.OfferId:N}";
+        await _db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
         var replay = await _db.PriceChanges.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
         if (replay is not null)
         {
             if (replay.OfferId != request.OfferId || replay.NewAmount != request.Amount
-                || !string.Equals(replay.Currency, currency, StringComparison.Ordinal))
+                || replay.ActorUserId != request.ActorUserId
+                || !string.Equals(replay.Currency, currency, StringComparison.Ordinal)
+                || !await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == replay.PriceId
+                    && p.Market == market && p.Channel == channel, cancellationToken))
             {
                 return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
             }
             return Result.Success(ToReceipt(replay));
-        }
-
-        var latest = await _db.PriceChanges.AsNoTracking()
-            .Where(x => x.OfferId == request.OfferId)
-            .OrderByDescending(x => x.OccurredAt)
-            .ThenByDescending(x => x.FactId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(request.ExpectedRevision)
-            || (request.ExpectedRevision == "absent"
-                ? latest is not null
-                : latest is null || !string.Equals(latest.Revision, request.ExpectedRevision, StringComparison.Ordinal)))
-        {
-            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
         }
 
         var existing = await _db.Prices
@@ -135,7 +139,12 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
                         && x.QualifierKind == PriceQualifierKind.Base)
             .OrderByDescending(x => x.PriceId)
             .FirstOrDefaultAsync(cancellationToken);
+        var actualRevision = existing is null ? "absent" : PriceRevision(existing);
+        if (!string.Equals(request.ExpectedRevision, actualRevision, StringComparison.Ordinal))
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
         var now = _clock.UtcNow;
+        if (existing is not null && now.UtcTicks / 10 <= existing.UpdatedAt.UtcTicks / 10)
+            now = existing.UpdatedAt.AddTicks(10);
         AuthoredPrice price;
         decimal? oldAmount;
         if (existing is null || existing.Status == PriceStatus.Retired)
@@ -169,7 +178,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             OldAmount = oldAmount,
             NewAmount = request.Amount,
             Currency = currency,
-            Revision = _ids.NewId().ToString("N"),
+            Revision = PriceRevision(price),
         };
         _db.PriceChanges.Add(fact);
         try
@@ -182,13 +191,17 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             await transaction.RollbackAsync(cancellationToken);
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "ix_offer_price_changes_operation_id" })
         {
             await transaction.RollbackAsync(cancellationToken);
             var raced = await _db.PriceChanges.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
             if (raced is not null && raced.OfferId == request.OfferId && raced.NewAmount == request.Amount
-                && string.Equals(raced.Currency, currency, StringComparison.Ordinal))
+                && raced.ActorUserId == request.ActorUserId
+                && string.Equals(raced.Currency, currency, StringComparison.Ordinal)
+                && await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == raced.PriceId
+                    && p.Market == market && p.Channel == channel, cancellationToken))
             {
                 return Result.Success(ToReceipt(raced));
             }
@@ -210,14 +223,25 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     /// <inheritdoc />
     public async Task<SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken)
     {
-        var fact = await _db.PriceChanges.AsNoTracking()
-            .Where(x => x.OfferId == offerId)
-            .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.FactId)
-            .FirstOrDefaultAsync(cancellationToken);
-        return fact is null
-            ? null
-            : new SellerPriceRevision(fact.Revision, fact.PriceId, fact.NewAmount, fact.Currency, fact.OccurredAt);
+        var context = _storeCommerce?.Current;
+        if (string.IsNullOrWhiteSpace(context?.Market) || string.IsNullOrWhiteSpace(context.DefaultCurrency))
+            return null;
+        var offer = await FindOfferAsync(offerId, cancellationToken);
+        if (offer is null)
+            return null;
+        var channel = ToPriceChannel(offer.Channel);
+        var market = context.Market.Trim().ToUpperInvariant();
+        var currency = context.DefaultCurrency.Trim().ToUpperInvariant();
+        var price = await _db.Prices.AsNoTracking()
+            .Where(x => x.OfferId == offerId && x.Market == market && x.Channel == channel
+                && x.Currency == currency && x.QualifierKind == PriceQualifierKind.Base)
+            .OrderByDescending(x => x.PriceId).FirstOrDefaultAsync(cancellationToken);
+        return price is null ? null
+            : new SellerPriceRevision(PriceRevision(price), price.PriceId, price.Amount, price.Currency, price.UpdatedAt);
     }
+
+    private static string PriceRevision(AuthoredPrice price) =>
+        FormattableString.Invariant($"{price.PriceId:N}:{price.UpdatedAt.UtcTicks / 10}");
 
     private static SellerPriceWriteReceipt ToReceipt(PriceChangeFact fact) =>
         new(fact.PriceId, fact.OfferId, fact.Revision, fact.OperationId, fact.ActorUserId,

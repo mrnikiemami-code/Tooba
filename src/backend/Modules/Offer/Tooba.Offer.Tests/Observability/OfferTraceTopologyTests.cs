@@ -50,6 +50,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IPartyLookup, FakeParty>();
         services.AddSingleton<IReturnPolicyResolver>(_ => new ReturnPolicyResolver(new ReturnPolicyOptions()));
         services.AddSingleton<IClock>(_ => new FixedClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
+        services.AddSingleton<ICurrentStoreCommerceContext>(new FixedStoreCommerce());
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
         services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
@@ -232,7 +233,7 @@ public sealed class OfferTraceTopologyTests
 
     private sealed class FixedStoreCommerce : ICurrentStoreCommerceContext
     {
-        public StoreCommerceContext? Current { get; } = new(null, null, "Marketplace");
+        public StoreCommerceContext? Current { get; } = new("IR", "IRR", "Marketplace");
     }
 
     private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition

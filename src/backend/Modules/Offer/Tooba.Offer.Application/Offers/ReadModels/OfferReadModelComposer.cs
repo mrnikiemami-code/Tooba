@@ -17,6 +17,7 @@ using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
 using Tooba.Pricing.Contracts.Seller;
+using Tooba.StoreContext.Contracts.Current;
 
 namespace Tooba.Offer.Application.Offers.ReadModels;
 
@@ -29,10 +30,11 @@ public sealed class OfferReadModelComposer(
     IReturnPolicyResolver returnPolicies,
     IOfferFulfillmentAssignmentLookup fulfillmentAssignments,
     IOfferPriceHistoryReader priceHistory,
-    IClock clock)
+    IClock clock,
+    ICurrentStoreCommerceContext? storeCommerce = null)
 {
-    private const string DefaultMarket = "IR";
-    private const string DefaultCurrency = "IRR";
+    private string? Market => storeCommerce?.Current?.Market;
+    private string? Currency => storeCommerce?.Current?.DefaultCurrency;
 
     /// <summary>Builds enriched list items for the supplied Offer aggregates.</summary>
     public async Task<IReadOnlyList<SellerOfferListItem>> ListAsync(
@@ -44,8 +46,16 @@ public sealed class OfferReadModelComposer(
         var offerIds = offers.Select(x => x.OfferId).ToArray();
         var catalogRows = await catalog.GetOfferPresentationsAsync(
             offers.Select(x => x.CatalogVariantId).Distinct().ToArray(), cancellationToken, locale);
-        var prices = await pricing.ResolvePricesBatchAsync(
-            offerIds, DefaultMarket, SalesChannel.Marketplace, DefaultCurrency, clock.UtcNow, cancellationToken);
+        var prices = new Dictionary<Guid, PriceQuote>();
+        if (!string.IsNullOrWhiteSpace(Market) && !string.IsNullOrWhiteSpace(Currency))
+        {
+            foreach (var channel in offers.GroupBy(x => x.Channel))
+            {
+                var batch = await pricing.ResolvePricesBatchAsync(channel.Select(x => x.OfferId).ToArray(),
+                    Market!, (SalesChannel)(int)channel.Key, Currency!, clock.UtcNow, cancellationToken);
+                foreach (var pair in batch) prices[pair.Key] = pair.Value;
+            }
+        }
         var stocks = await inventory.GetAvailabilityAsync(offerIds, cancellationToken);
         var sellerNames = await parties.GetDisplayNamesAsync(
             offers.Select(x => x.SellerPartyId).Distinct().ToArray(), cancellationToken);
@@ -57,7 +67,7 @@ public sealed class OfferReadModelComposer(
             return new SellerOfferListItem(
                 offer.OfferId, offer.CatalogVariantId, product?.ProductId,
                 product?.ProductTitle ?? string.Empty, offer.SellerSku, offer.Status.ToString(), offer.Channel.ToString(),
-                price?.Amount, price?.Currency ?? DefaultCurrency, stock?.Available ?? 0, offer.UpdatedAt,
+                price?.Amount, price?.Currency ?? Currency ?? string.Empty, stock?.Available ?? 0, offer.UpdatedAt,
                 sellerNames.GetValueOrDefault(offer.SellerPartyId),
                 product?.VariantCode,
                 product?.PrimaryMediaAssetId,
@@ -71,9 +81,10 @@ public sealed class OfferReadModelComposer(
     {
         var catalogRows = await catalog.GetOfferPresentationsAsync([offer.CatalogVariantId], cancellationToken, locale);
         catalogRows.TryGetValue(offer.CatalogVariantId, out var product);
-        var price = await pricing.ResolvePriceAsync(new PriceResolutionQuery(
-            offer.OfferId, DefaultMarket, (SalesChannel)(int)offer.Channel, DefaultCurrency,
-            clock.UtcNow, null, null, null), cancellationToken);
+        var price = !string.IsNullOrWhiteSpace(Market) && !string.IsNullOrWhiteSpace(Currency)
+            ? await pricing.ResolvePriceAsync(new PriceResolutionQuery(offer.OfferId, Market!,
+                (SalesChannel)(int)offer.Channel, Currency!, clock.UtcNow, null, null, null), cancellationToken)
+            : null;
         var stocks = await inventory.GetAvailabilityAsync([offer.OfferId], cancellationToken);
         stocks.TryGetValue(offer.OfferId, out var stock);
         var seller = await parties.FindByIdAsync(offer.SellerPartyId, cancellationToken);
@@ -85,7 +96,7 @@ public sealed class OfferReadModelComposer(
             offer.OfferId, offer.SellerPartyId, seller?.DisplayName ?? string.Empty,
             offer.CatalogVariantId, product?.ProductId, product?.ProductTitle ?? string.Empty,
             product?.BrandName, offer.SellerSku, offer.Status.ToString(), offer.Channel.ToString(),
-            price?.Amount, price?.Currency ?? DefaultCurrency, stock?.OnHand ?? 0, stock?.Reserved ?? 0,
+            price?.Amount, price?.Currency ?? Currency ?? string.Empty, stock?.OnHand ?? 0, stock?.Reserved ?? 0,
             stock?.Available ?? 0, true, offer.ReturnPolicyChoice, offer.CustomReturnWindowDays,
             options.DefaultReturnWindowDays, options.SellerCanOverrideReturnPolicy,
             options.MinReturnWindowDays, options.MaxReturnWindowDays, options.AllowNonReturnableOffers,

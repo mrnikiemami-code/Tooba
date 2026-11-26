@@ -201,7 +201,7 @@ public sealed class OfferHandlerTests
 
     private sealed class FixedStoreCommerce(string channel) : ICurrentStoreCommerceContext
     {
-        public StoreCommerceContext? Current { get; } = new(null, null, channel);
+        public StoreCommerceContext? Current { get; } = new("IR", "IRR", channel);
     }
 
     private sealed class FakePriceHistory : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
