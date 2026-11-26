@@ -181,6 +181,7 @@ export default function AdminOffersPage() {
     savedViewStore,
     exportFilenameBase: "admin-offers",
     locale: offerLocale.language === "fa" ? "fa" : "en",
+    direction: offerLocale.direction,
   });
 
   return (

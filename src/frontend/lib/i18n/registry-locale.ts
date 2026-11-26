@@ -1,8 +1,10 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { useLocale } from "./locale-context.tsx";
-import { LOCALE_COOKIE_NAME, type TextDirection } from "./locale.ts";
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, type TextDirection } from "./locale.ts";
+import { parseRegistryPanelPrefix } from "./routing.ts";
 
 export interface RegistryLocaleDefinition {
   code: string;
@@ -18,17 +20,18 @@ export interface RegistryLocaleDefinition {
 export interface RegistryLocaleState {
   locale: RegistryLocaleDefinition;
   loaded: boolean;
+  requestedPrefix: string | null;
 }
 
-function appLocaleDefinition(locale: "fa" | "en"): RegistryLocaleDefinition {
+const RegistryLocaleContext = createContext<RegistryLocaleState | null>(null);
+
+function fallback(locale: "fa" | "en" = DEFAULT_LOCALE): RegistryLocaleDefinition {
   return locale === "en"
     ? { code: "en-US", urlPrefix: "en", active: true, culture: "en-US", language: "en", direction: "ltr", calendar: "gregorian", isDefault: false }
     : { code: "fa-IR", urlPrefix: "fa", active: true, culture: "fa-IR", language: "fa", direction: "rtl", calendar: "jalali", isDefault: true };
 }
 
-function cookieLocale(): string | null {
-  const prefix = typeof document === "undefined" ? null : window.location.pathname.match(/^\/([a-z]{2})(?:\/|$)/)?.[1];
-  if (prefix) return prefix;
+function cookieValue(): string | null {
   if (typeof document === "undefined") return null;
   const value = document.cookie
     .split(";")
@@ -69,31 +72,55 @@ export async function loadActiveRegistryLanguages(): Promise<RegistryLocaleDefin
   }
 }
 
-/** Shared registry-backed locale for offer-owned surfaces; locale comes from the project cookie, not a feature query parameter. */
-export function useRegistryLocale(): RegistryLocaleState {
-  const app = appLocaleDefinition(useLocale());
-  const requested = typeof document === "undefined" ? null : cookieLocale();
-  const [resolved, setResolved] = useState<RegistryLocaleDefinition | null>(null);
+function resolve(rows: RegistryLocaleDefinition[], requested: string | null): RegistryLocaleDefinition {
+  const needle = (requested ?? "").toLowerCase();
+  const exact = rows.find((item) => item.active && (
+    item.urlPrefix.toLowerCase() === needle
+    || item.code.toLowerCase() === needle
+    || item.code.toLowerCase().split("-")[0] === needle));
+  return exact ?? rows.find((item) => item.active && item.isDefault) ?? rows.find((item) => item.active) ?? fallback();
+}
+
+/** Single shared registry authority for panels, grids, feedback, headers and shell. */
+export function RegistryLocaleProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const panelPrefix = parseRegistryPanelPrefix(pathname ?? "")?.prefix ?? null;
+  const [rows, setRows] = useState<RegistryLocaleDefinition[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
-    void loadActiveRegistryLanguages().then((rows) => {
+    void loadActiveRegistryLanguages().then((next) => {
       if (!active) return;
-      const needle = (requested ?? "").toLowerCase();
-      const exact = rows.find((item) => item.active && (
-        item.urlPrefix.toLowerCase() === needle
-        || item.code.toLowerCase() === needle
-        || item.code.toLowerCase().split("-")[0] === needle));
-      const row = exact ?? rows.find((item) => item.active && item.isDefault) ?? rows.find((item) => item.active);
-      setResolved(row ?? null);
+      setRows(next);
       setLoaded(true);
     });
     return () => { active = false; };
-  }, [requested]);
+  }, []);
 
-  return useMemo(
-    () => ({ locale: resolved ?? app, loaded }),
-    [app, loaded, resolved],
-  );
+  const value = useMemo<RegistryLocaleState>(() => {
+    const requested = panelPrefix ?? cookieValue();
+    const locale = resolve(rows, requested);
+    return { locale, loaded, requestedPrefix: requested };
+  }, [loaded, panelPrefix, rows]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    document.documentElement.lang = value.locale.culture || value.locale.language;
+    document.documentElement.dir = value.locale.direction;
+  }, [loaded, value.locale]);
+
+  return createElement(RegistryLocaleContext.Provider, { value }, children);
+}
+
+export function useRegistryLocale(): RegistryLocaleState {
+  const context = useContext(RegistryLocaleContext);
+  const app = useLocale();
+  const pathname = usePathname();
+  const fallbackState = useMemo<RegistryLocaleState>(() => ({
+    locale: fallback(app),
+    loaded: false,
+    requestedPrefix: parseRegistryPanelPrefix(pathname ?? "")?.prefix ?? cookieValue(),
+  }), [app, pathname]);
+  return context ?? fallbackState;
 }

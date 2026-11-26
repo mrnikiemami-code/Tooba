@@ -206,6 +206,7 @@ export interface OfferWorkspaceMessages {
   validationBelowReserved: string;
   validationReason: string;
   validationQty: string;
+  fulfillmentProtected: string;
   validationStep: string;
   validationQtyOrder: string;
   validationReturnWindow: string;
@@ -420,6 +421,7 @@ const fa: OfferWorkspaceMessages = {
   validationBelowReserved: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
   validationReason: "دلیل اصلاح الزامی است.",
   validationQty: "مقدار خرید نامعتبر است.",
+  fulfillmentProtected: "تغییر مسئولیت ارسال تا زمانی که تعهدات یا مقدار عرضه وجود دارد مجاز نیست.",
   validationStep: "مقدار با گام و دقت واحد محصول هم‌تراز نیست.",
   validationQtyOrder: "حداقل مقدار خرید نباید از حداکثر بیشتر باشد.",
   validationReturnWindow: "مهلت اختصاصی نامعتبر است.",
@@ -635,6 +637,7 @@ const en: OfferWorkspaceMessages = {
   validationBelowReserved: "On-hand must not be below reserved.",
   validationReason: "Adjustment reason is required.",
   validationQty: "Invalid purchase quantity.",
+  fulfillmentProtected: "Shipping responsibility cannot change while commitments or offered quantity exist.",
   validationStep: "Quantity does not match the product unit step and precision.",
   validationQtyOrder: "Minimum quantity must not exceed maximum.",
   validationReturnWindow: "Invalid custom window.",
@@ -674,6 +677,8 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
       return t.validationReturnWindow;
     case "offer.return.window_out_of_range":
       return t.validationReturnRange;
+    case "offer.fulfillment.change_protected":
+      return t.fulfillmentProtected;
     case "concurrency.conflict":
       return t.concurrentChange;
     case "offer.buyable.no_price":

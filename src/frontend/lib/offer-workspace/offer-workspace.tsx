@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ImageOff, Lock } from "lucide-react";
@@ -14,6 +14,7 @@ import {
   detailVersionChanged,
   draftFromDetail,
   inventoryDirty,
+  offeredQuantityDirty,
   parseDecimal,
   priceDirty,
   statusLabel,
@@ -47,16 +48,13 @@ import type {
   OfferWorkspaceAdapter,
   OfferWorkspaceDetail,
 } from "./types";
-
 const TAB_ORDER: OfferTabId[] = ["identity", "pricing", "discounts", "inventory", "shipping", "conditions", "history"];
-
 export interface OfferWorkspaceProps {
   adapter: OfferWorkspaceAdapter;
   renderExtras?: (tab: OfferTabId, detail: OfferWorkspaceDetail) => ReactNode;
   localeDefinition?: OfferLocaleDefinition;
   messages?: Partial<OfferWorkspaceMessages>;
 }
-
 type PersistedOfferWorkspace = {
   draft?: Partial<OfferWorkspaceDraft>;
   selectedSeller?: OfferSellerOption | null;
@@ -68,7 +66,6 @@ type PersistedOfferWorkspace = {
   localInventory?: OfferLocalInventoryDraft[];
   baseLastUpdatedAt?: string | null;
 };
-
 export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messages }: OfferWorkspaceProps) {
   const appLocale = useLocale();
   const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
@@ -195,6 +192,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const commercialChanged = dirtyDetail ? commercialDirty(dirtyDetail, draft) : false;
   const priceChanged = dirtyDetail ? priceDirty(dirtyDetail, draft) : false;
   const stockChanged = detail ? inventoryDirty(detail, draft) : false;
+  const offeredChanged = detail ? offeredQuantityDirty(detail, draft) : false;
   const shippingChanged = Boolean(
     dirtyDetail &&
       adapter.saveFulfillment &&
@@ -214,7 +212,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     || (localDetail ? priceDirty(localDetail, draft) || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
   );
   const anyDirty = isEdit
-    ? commercialChanged || priceChanged || stockChanged || shippingChanged
+    ? commercialChanged || priceChanged || stockChanged || offeredChanged || shippingChanged
     : createDirty;
   useEffect(() => {
     if (!anyDirty) return;
@@ -362,7 +360,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     identity: commercialChanged,
     pricing: priceChanged,
     discounts: false,
-    inventory: stockChanged,
+    inventory: stockChanged || offeredChanged,
     shipping: shippingChanged,
     conditions: commercialChanged,
     history: false,
@@ -376,7 +374,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const actions = createOfferActions({
     adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory,
     createReady, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
-    priceChanged, commercialChanged, stockChanged, shippingChanged, responsibility, shippingTypeId,
+    priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
     setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
     setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
@@ -462,7 +460,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                   <strong>{isEdit ? t.titleEdit : t.titleCreate}</strong>
                   {detail?.lastUpdatedAt ? <><span className={styles.dotSep} /><span>{t.lastSaved} {format.dateTime(detail.lastUpdatedAt)}</span></> : null}
                   {anyDirty ? <span className={`${styles.pill} ${styles.pillWarn}`} data-testid="offer-workspace-dirty">{t.unsaved}</span> : null}
-
                 </div>
                 <h1 className={styles.headName} data-testid="offer-workspace-title">{title}</h1>
                 <div className={styles.headSub}>
@@ -717,7 +714,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             detail={localDetail}
             onHand={draft.inventoryOnHand}
             reason={draft.inventoryReason}
-            dirty={stockChanged}
+            dirty={stockChanged || offeredChanged}
+            offeredQuantity={draft.offeredQuantity}
+            onOfferedQuantityChange={(value) => patchDraft({ offeredQuantity: value })}
             onOnHandChange={(stockItemId, value) => patchDraft({ inventoryOnHand: { ...draft.inventoryOnHand, [stockItemId]: value } })}
             onReasonChange={(value) => patchDraft({ inventoryReason: value })}
             localLocations={inventoryLocations}
@@ -788,6 +787,7 @@ function emptyDraft(): OfferWorkspaceDraft {
     currency: "IRR",
     inventoryOnHand: {},
     inventoryReason: "",
+    offeredQuantity: "",
     returnPolicyChoice: "Default",
     customReturnWindowDays: "",
     minimumOrderQuantity: "",

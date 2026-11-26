@@ -15,6 +15,7 @@ import {
   loadSellerProductVariants,
   patchSellerOffer,
   writeSellerOfferInventory,
+  writeSellerOfferedQuantity,
   writeSellerOfferPrice,
 } from "../seller-offer-api";
 import { SellerProductAttributesPanel } from "../../../admin/catalog-attribute-ui";

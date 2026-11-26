@@ -46,6 +46,13 @@ export function buildLocalDetail(
     fulfillmentResponsibility: null,
     fulfillmentShippingTypeId: null,
     lastUpdatedAt: null,
+    offerRevision: null,
+    priceRevision: null,
+    offeredQuantity: null,
+    allocationHeld: null,
+    allocationRevision: null,
+    revisions: null,
+    capabilities: null,
   };
 }
 

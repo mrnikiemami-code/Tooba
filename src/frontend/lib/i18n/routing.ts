@@ -101,7 +101,7 @@ export function localePath(locale: Locale, internalPath: string): string {
 
 /** حذف prefix locale از URL عمومی. */
 export function parseRegistryPanelPrefix(pathname: string): { prefix: string; pathname: string } | null {
-  const match = pathname.match(/^\/([a-z]{2})\/(admin|vendor-panel)(\/.*)?$/);
+  const match = pathname.match(/^\/([a-zA-Z0-9-]+)\/(admin|vendor-panel)(\/.*)?$/);
   if (!match) return null;
   const rest = match[3] ?? "/";
   return { prefix: match[1]!, pathname: `/${match[2]}${rest === "" ? "" : rest}` };

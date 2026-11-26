@@ -210,6 +210,25 @@ export async function writeSellerOfferPrice(
 }
 
 /** تنظیم موجودی روی‌دست Offer خود فروشنده از طریق Inventory. */
+export async function writeSellerOfferedQuantity(
+  sellerPartyId: string,
+  offerId: string,
+  quantity: number,
+  expectedVersion: string,
+  operationId: string,
+): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/offers/${offerId}/offered-quantity`, {
+      method: "PUT",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({ quantity, expectedVersion, operationId }),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) return { ok: false, errorCode: "seller.offer.missing", denied: true };
+    if (!response.ok) { const body = await response.json().catch(() => null) as { errorCode?: string } | null; return { ok: false, errorCode: body?.errorCode ?? "seller.offered-quantity.write-failed" }; }
+    const detail = mapSellerOfferDetail(await readJson(response));
+    return detail && detail.offerId === offerId && detail.sellerPartyId === sellerPartyId && detail.offeredQuantity === quantity ? { ok: true, detail } : { ok: false, errorCode: "seller.offered-quantity.response_mismatch" };
+  } catch { return { ok: false, errorCode: "host-unreachable" }; }
+}
 export async function writeSellerOfferInventory(
   sellerPartyId: string,
   offerId: string,

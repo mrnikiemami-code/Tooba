@@ -1,0 +1,62 @@
+﻿[
+    {
+        "path":  "docs/opencode/tasks/TB-296-P1-B-FRONTEND/CURRENT-GOAL.md",
+        "sha256":  "9032b09818c38d6f616bb357c580bf33e5481c65aaba732e4f3da66fda8392bc",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-P1-B-FRONTEND/TASK.md",
+        "sha256":  "22e6c9c017ffdf6a884110481efa24cb0252bf9a7a2a3f19847f231969cb21d4",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-P1-B-FRONTEND/ARCHITECT-ENTRY-ADDENDUM.md",
+        "sha256":  "9f819e7e4cb504f66cba4faffa6fa8ffaeb448b84313e019a5ac6e286e2588a8",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-P1-B-FRONTEND/ARCHITECT-PREIMPLEMENTATION-REVIEW.md",
+        "sha256":  "fea44f89cfed33bcaf0ea1e8a51f0471bc68330984672d09777b1459eb4ffdb7",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-PHASE-TEST-SCHEDULING.md",
+        "sha256":  "c24061af7c79483fbd7c53f76a5bcfb5309ae496df065d78acb71e7c5248b2f7",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/DEV-HOST-TEST-POLICY.md",
+        "sha256":  "9db42af74a0ae6f25402ede9129192f704d02d6b66487a6466217982425490c9",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/01-architecture.md",
+        "sha256":  "c687b0ca53a5794ab7963b176f477e6b6b7be8d3330169848c63844e0d0b1793",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/02-security-permissions.md",
+        "sha256":  "fa0661aef48e078bbbace75bfaaae39a51a724ff93a88347058a3e6590293f72",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/03-openspec.md",
+        "sha256":  "e6a682f432137c12998a75eb09c0c3f5f41a7f36f120996b9f3b237399e047d4",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/04-opencode-acceptance.md",
+        "sha256":  "748ac42d0c13409f2114b427dca6a8f82aa4fd0e9f0af96efd7a7a72b39bc05c",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/05-task-layer.md",
+        "sha256":  "35e4cf866130c54281007b41eedeb08c6aeaa4ee73ce46240d4abbc867759500",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/07-frontend-layer.md",
+        "sha256":  "df6c5dc51b0a65295dd05cfc13ecc80c42e324be02d95d5cb3e0b3cd88d97a84",
+        "read":  true
+    }
+]

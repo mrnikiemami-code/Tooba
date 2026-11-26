@@ -673,3 +673,22 @@ test("partial create keeps the created Draft recoverable through MessageBox", as
   assert.equal(navigated, "");
   await tree.unmount();
 });
+
+test("platform fulfillment shows offered quantity and locks physical/warehouse controls", async () => {
+  const detail = baseDetail({
+    fulfillmentResponsibility: "Platform",
+    offeredQuantity: 20,
+    allocationHeld: 5,
+    allocationRevision: "alloc-rev",
+    revisions: { offer: "offer-rev", price: "price-rev", offeredQuantity: "alloc-rev" },
+    capabilities: { canEditPhysicalInventory: false, canEditOfferedQuantity: true, canAssignFulfillment: false, canEditShippingPolicy: false },
+  });
+  const tree = await mountEdit({}, detail);
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-tab-button-inventory]"));
+  const offered = q(tree.container, "[data-testid=offer-offered-quantity-input]") as HTMLInputElement;
+  assert.equal(offered.value, "20");
+  const physical = q(tree.container, "[data-testid=offer-inventory-input]") as HTMLInputElement;
+  assert.equal(physical.disabled, true);
+  await tree.unmount();
+});

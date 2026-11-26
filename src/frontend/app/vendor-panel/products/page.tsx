@@ -186,6 +186,7 @@ export default function VendorProductsPage() {
     savedViewStore,
     exportFilenameBase: "seller-offers",
     locale: offerLocale.language === "fa" ? "fa" : "en",
+    direction: offerLocale.direction,
   });
 
   function refresh() {

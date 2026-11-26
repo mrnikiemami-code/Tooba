@@ -6,7 +6,7 @@ import type {
   OfferShippingTypeOption,
   OfferWorkspaceDetail,
 } from "../../../lib/offer-workspace/types";
-import { prepareAdminDevActor } from "../admin-api";
+import { prepareAdminDevActor } from "../admin-api.ts";
 
 function actorId(): string {
   if (typeof window === "undefined") return "";
@@ -60,7 +60,7 @@ export function mapAdminOfferRow(value: unknown): AdminOfferRow | null {
     sellerSku: prop(item, "sellerSku", "SellerSku") == null ? null : text(prop(item, "sellerSku", "SellerSku")),
     status: text(prop(item, "status", "Status")),
     amount: nullableNumber(prop(item, "amount", "Amount")),
-    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    currency: text(prop(item, "currency", "Currency")),
     availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
     lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
     sellerDisplayName: prop(item, "sellerDisplayName", "SellerDisplayName") == null ? null : text(prop(item, "sellerDisplayName", "SellerDisplayName")),
@@ -136,10 +136,26 @@ function mapInventoryLocations(value: unknown): OfferInventoryLocation[] {
       onHand: number(prop(row, "onHand", "OnHand")),
       reserved: number(prop(row, "reserved", "Reserved")),
       available: number(prop(row, "available", "Available")),
+      revision: prop(row, "revision", "Revision") == null ? null : text(prop(row, "revision", "Revision")),
     }))
     .filter((row) => row.stockItemId.length > 0);
 }
 
+function mapRevisions(item: Record<string, unknown>) {
+  const raw = record(prop(item, "revisions", "Revisions"));
+  if (!raw) return null;
+  return { offer: text(prop(raw, "offer", "Offer")), price: text(prop(raw, "price", "Price")), offeredQuantity: text(prop(raw, "offeredQuantity", "OfferedQuantity")) };
+}
+function mapCapabilities(item: Record<string, unknown>) {
+  const raw = record(prop(item, "capabilities", "Capabilities"));
+  if (!raw) return null;
+  return {
+    canEditPhysicalInventory: prop(raw, "canEditPhysicalInventory", "CanEditPhysicalInventory") === true,
+    canEditOfferedQuantity: prop(raw, "canEditOfferedQuantity", "CanEditOfferedQuantity") === true,
+    canAssignFulfillment: prop(raw, "canAssignFulfillment", "CanAssignFulfillment") === true,
+    canEditShippingPolicy: prop(raw, "canEditShippingPolicy", "CanEditShippingPolicy") === true,
+  };
+}
 export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
   const item = record(value);
   if (!item) return null;
@@ -157,7 +173,7 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     status: text(prop(item, "status", "Status")),
     channel: text(prop(item, "channel", "Channel"), "Marketplace"),
     amount: nullableNumber(prop(item, "amount", "Amount")),
-    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    currency: text(prop(item, "currency", "Currency")),
     onHand: number(prop(item, "onHand", "OnHand")),
     reserved: number(prop(item, "reserved", "Reserved")),
     availableUnits: number(prop(item, "availableUnits", "AvailableUnits")),
@@ -187,6 +203,14 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     })(),
     fulfillmentShippingTypeId: prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId") == null ? null : text(prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId")),
     lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
+    offerRevision: prop(item, "offerRevision", "OfferRevision") == null ? null : text(prop(item, "offerRevision", "OfferRevision")),
+    priceRevision: prop(item, "priceRevision", "PriceRevision") == null ? null : text(prop(item, "priceRevision", "PriceRevision")),
+    offeredQuantity: nullableNumber(prop(item, "offeredQuantity", "OfferedQuantity")),
+    allocationHeld: nullableNumber(prop(item, "allocationHeld", "AllocationHeld")),
+    allocationRevision: prop(item, "allocationRevision", "AllocationRevision") == null ? null : text(prop(item, "allocationRevision", "AllocationRevision")),
+    revisions: mapRevisions(item),
+    capabilities: mapCapabilities(item),
+
   };
 }
 
@@ -320,6 +344,26 @@ export async function writeAdminOfferPrice(
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
+}
+
+export async function writeAdminOfferedQuantity(
+  offerId: string,
+  quantity: number,
+  expectedVersion: string,
+  operationId: string,
+): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch(`/v1/admin/offers/${offerId}/offered-quantity`, {
+      method: "PUT",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ quantity, expectedVersion, operationId }),
+    });
+    if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    if (!response.ok) { const body = await response.json().catch(() => null) as { errorCode?: string } | null; return { ok: false, errorCode: body?.errorCode ?? "admin.offered-quantity.write-failed" }; }
+    const detail = mapAdminOfferDetail(await response.json());
+    return detail && detail.offerId === offerId && detail.offeredQuantity === quantity ? { ok: true, detail } : { ok: false, errorCode: "admin.offered-quantity.response_mismatch" };
+  } catch { return { ok: false, errorCode: "host-unreachable" }; }
 }
 
 export async function writeAdminOfferInventory(

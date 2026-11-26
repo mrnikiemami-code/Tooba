@@ -26,6 +26,7 @@ export interface OfferInventoryLocation {
   onHand: number;
   reserved: number;
   available: number;
+  revision: string | null;
 }
 
 /** Normalized detail used by both admin and seller workspace routes. */
@@ -68,6 +69,18 @@ export interface OfferWorkspaceDetail {
   fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
   fulfillmentShippingTypeId: string | null;
   lastUpdatedAt: string | null;
+  offerRevision: string | null;
+  priceRevision: string | null;
+  offeredQuantity: number | null;
+  allocationHeld: number | null;
+  allocationRevision: string | null;
+  revisions: { offer: string; price: string; offeredQuantity: string } | null;
+  capabilities: {
+    canEditPhysicalInventory: boolean;
+    canEditOfferedQuantity: boolean;
+    canAssignFulfillment: boolean;
+    canEditShippingPolicy: boolean;
+  } | null;
 }
 
 export interface OfferSellerOption {
@@ -217,6 +230,7 @@ export interface OfferWorkspaceAdapter {
     onHand: number;
     reason: string;
   }, expectedVersion?: string) => Promise<OfferMutationResult>;
+  saveOfferedQuantity?: (quantity: number, expectedVersion: string, operationId: string) => Promise<OfferMutationResult>;
   saveFulfillment?: (input: {
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;

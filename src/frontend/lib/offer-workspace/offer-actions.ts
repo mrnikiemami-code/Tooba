@@ -1,5 +1,5 @@
 ﻿import type { MutableRefObject } from "react";
-import { changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
+import { changedInventoryRows, detailVersionChanged, offeredQuantityDirty, parseDecimal, quantityAligned, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
@@ -33,6 +33,7 @@ export interface OfferActionsContext {
   priceChanged: boolean;
   commercialChanged: boolean;
   stockChanged: boolean;
+  offeredChanged: boolean;
   shippingChanged: boolean;
   responsibility: OfferFulfillmentResponsibility | null;
   shippingTypeId: string;
@@ -142,7 +143,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setSaveRetryable(true);
       return;
     }
-    if (!ctx.commercialChanged && !ctx.priceChanged && !ctx.stockChanged && !ctx.shippingChanged) {
+    if (!ctx.commercialChanged && !ctx.priceChanged && !ctx.stockChanged && !ctx.offeredChanged && !ctx.shippingChanged) {
       ctx.setSaveNotice(ctx.t.noChanges);
       ctx.setSaveError(null);
       ctx.setTabError(null);
@@ -183,7 +184,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       }
 
       if (ctx.commercialChanged) {
-        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft), ctx.detail?.lastUpdatedAt ?? undefined);
+        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft), ctx.detail?.offerRevision ?? ctx.detail?.revisions?.offer ?? undefined);
         if (!result.ok) return finishSaveFailure("conditions", result, savedAny);
         applySavedDetail(result.detail, "commercial");
         savedAny = true;
@@ -196,23 +197,38 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(true);
           return;
         }
-        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency || "IRR" }, ctx.detail?.lastUpdatedAt ?? undefined);
+        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency }, ctx.detail?.priceRevision ?? ctx.detail?.revisions?.price ?? "absent");
         if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
         applySavedDetail(result.detail, "price");
         savedAny = true;
       }
 
+      if (ctx.offeredChanged) {
+        const quantity = parseDecimal(ctx.draft.offeredQuantity);
+        if (quantity == null || quantity < 0 || !ctx.adapter.saveOfferedQuantity) {
+          ctx.setActiveTab("inventory");
+          ctx.setSaveError(ctx.t.validationQty);
+          ctx.setSaveRetryable(true);
+          return;
+        }
+        const result = await ctx.adapter.saveOfferedQuantity(quantity, ctx.detail?.revisions?.offeredQuantity ?? ctx.detail?.allocationRevision ?? "absent", crypto.randomUUID());
+        if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
+        ctx.setDetail(result.detail);
+        ctx.setDraft((current) => ({ ...current, offeredQuantity: result.detail.offeredQuantity != null ? String(result.detail.offeredQuantity) : "" }));
+        savedAny = true;
+      }
+
       if (ctx.stockChanged) {
         const changedRows = changedInventoryRows(ctx.detail, ctx.draft);
-        let inventoryVersion = ctx.detail?.lastUpdatedAt;
+        const inventoryRevisions = new Map(ctx.detail.inventoryLocations.map((row) => [row.stockItemId, row.revision]));
         for (const row of changedRows) {
           const result = await ctx.adapter.saveInventory({
             stockItemId: row.stockItemId,
             onHand: parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
             reason: ctx.draft.inventoryReason.trim(),
-          }, inventoryVersion ?? undefined);
+          }, inventoryRevisions.get(row.stockItemId) ?? row.revision ?? "absent");
           if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
-          inventoryVersion = result.detail.lastUpdatedAt;
+          inventoryRevisions.set(row.stockItemId, result.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId)?.revision ?? null);
           applySavedInventory(result.detail, row.stockItemId);
           savedAny = true;
         }
@@ -221,7 +237,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
       if (ctx.shippingChanged && ctx.adapter.saveFulfillment) {
         ctx.setShippingSaving(true);
-        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, ctx.detail?.lastUpdatedAt ?? undefined);
+        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, ctx.detail?.offerRevision ?? ctx.detail?.revisions?.offer ?? undefined);
         ctx.setShippingSaving(false);
         if (!result.ok) return finishSaveFailure("shipping", result, savedAny);
         const verification = ctx.adapter.loadDetail ? await ctx.adapter.loadDetail() : null;
@@ -259,6 +275,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           || verification.detail.catalogVariantId !== ctx.detail.catalogVariantId
           || verification.detail.channel !== ctx.detail.channel
           || commercialMismatch
+          || (ctx.offeredChanged && verification.detail.offeredQuantity !== parseDecimal(ctx.draft.offeredQuantity))
           || (ctx.priceChanged && verification.detail.amount !== expectedAmount)
           || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
@@ -338,7 +355,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         channel: ctx.selectedChannel,
         inventory: inventoryInputs.map((row) => ({ locationId: row.locationId, onHand: row.parsed!, reason: ctx.draft.inventoryReason.trim() })),
         amount: parsedAmount,
-        currency: ctx.draft.currency || "IRR",
+        currency: ctx.draft.currency,
         returnPolicyChoice: ctx.draft.returnPolicyChoice,
         customReturnWindowDays: ctx.draft.returnPolicyChoice === "Custom" ? parseDecimal(ctx.draft.customReturnWindowDays) : null,
         minimumOrderQuantity: parseDecimal(ctx.draft.minimumOrderQuantity),

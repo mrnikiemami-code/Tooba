@@ -15,6 +15,8 @@ export interface InventoryTabProps {
   onHand: Record<string, string>;
   reason: string;
   dirty: boolean;
+  offeredQuantity?: string;
+  onOfferedQuantityChange?: (value: string) => void;
   onOnHandChange: (stockItemId: string, value: string) => void;
   onReasonChange: (value: string) => void;
   localLocations?: OfferInventoryLocationOption[];
@@ -100,6 +102,13 @@ export function InventoryTab(props: InventoryTabProps) {
             <Tile label={t.inventoryAvailable} value={format.number(totalAvailable)} testId="offer-inventory-total-available" />
           </div>
 
+          {detail.capabilities?.canEditOfferedQuantity ? (
+            <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+              <span className={styles.fieldLabel}>{t.inventoryAvailable}</span>
+              <input className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`} value={props.offeredQuantity ?? ""} onChange={(event) => props.onOfferedQuantityChange?.(event.target.value)} inputMode="decimal" dir="ltr" data-testid="offer-offered-quantity-input" />
+              <span className={styles.fieldHint}>{t.inventoryReservedReadOnly}</span>
+            </label>
+          ) : null}
           <div style={{ marginTop: 14 }}>
             {noPositions ? (
               <div className={styles.empty} data-testid="offer-inventory-empty">
@@ -134,6 +143,7 @@ export function InventoryTab(props: InventoryTabProps) {
                               style={{ maxWidth: 128 }}
                               value={props.onHand[row.stockItemId] ?? ""}
                               onChange={(event) => props.onOnHandChange(row.stockItemId, event.target.value)}
+                              disabled={detail.capabilities?.canEditPhysicalInventory === false}
                               inputMode="decimal"
                               dir="ltr"
                               aria-invalid={invalid}

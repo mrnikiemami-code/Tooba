@@ -10,6 +10,7 @@ export interface OfferWorkspaceDraft {
   currency: string;
   inventoryOnHand: Record<string, string>;
   inventoryReason: string;
+  offeredQuantity: string;
   returnPolicyChoice: string;
   customReturnWindowDays: string;
   minimumOrderQuantity: string;
@@ -39,11 +40,12 @@ export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDra
   return {
     sellerSku: detail.sellerSku ?? "",
     amount: detail.amount != null ? String(detail.amount) : "",
-    currency: detail.currency || "IRR",
+    currency: detail.currency,
     inventoryOnHand: Object.fromEntries(
       detail.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)]),
     ),
     inventoryReason: "",
+    offeredQuantity: detail.offeredQuantity != null ? String(detail.offeredQuantity) : "",
     returnPolicyChoice: detail.returnPolicyChoice || "Default",
     customReturnWindowDays:
       detail.customReturnWindowDays != null ? String(detail.customReturnWindowDays) : "",
@@ -72,6 +74,11 @@ export function commercialDirty(detail: OfferWorkspaceDetail, draft: OfferWorksp
     min !== detail.minimumOrderQuantity ||
     max !== detail.maximumOrderQuantity
   );
+}
+
+export function offeredQuantityDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
+  if (!detail.capabilities?.canEditOfferedQuantity) return false;
+  return parseDecimal(draft.offeredQuantity) !== detail.offeredQuantity;
 }
 
 export function inventoryDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {

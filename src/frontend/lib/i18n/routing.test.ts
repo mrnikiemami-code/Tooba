@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildLocaleAlternates,
@@ -8,6 +8,7 @@ import {
   localePath,
   parseInvalidLocalePrefix,
   parseLocalePrefix,
+  parseRegistryPanelPrefix,
   stripLocalePrefix,
 } from "./routing.ts";
 
@@ -21,6 +22,12 @@ test("parseLocalePrefix extracts locale and internal path", () => {
   assert.deepEqual(parseLocalePrefix("/fa/products"), { locale: "fa", pathname: "/products" });
   assert.deepEqual(parseLocalePrefix("/en"), { locale: "en", pathname: "/" });
   assert.equal(parseLocalePrefix("/products"), null);
+});
+
+test("registry panel prefix supports configured multi-character prefixes", () => {
+  assert.deepEqual(parseRegistryPanelPrefix("/ru/admin/offers"), { prefix: "ru", pathname: "/admin/offers" });
+  assert.deepEqual(parseRegistryPanelPrefix("/en-US/vendor-panel/products"), { prefix: "en-US", pathname: "/vendor-panel/products" });
+  assert.equal(parseRegistryPanelPrefix("/admin/offers"), null);
 });
 
 test("stripLocalePrefix removes prefix", () => {

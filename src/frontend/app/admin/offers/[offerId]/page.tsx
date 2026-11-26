@@ -15,6 +15,7 @@ import {
   loadAdminShippingTypes,
   patchAdminOffer,
   writeAdminOfferInventory,
+  writeAdminOfferedQuantity,
   writeAdminOfferPrice,
 } from "../admin-offer-api";
 
@@ -57,6 +58,7 @@ export default function AdminOfferDetailPage() {
       savePrice: (input, version) => writeAdminOfferPrice(offerId, input, version),
       saveInventory: (input, version) => writeAdminOfferInventory(offerId, input, version),
       saveFulfillment: (input, version) => assignAdminOfferFulfillment(offerId, input, version),
+      saveOfferedQuantity: (quantity, version, operationId) => writeAdminOfferedQuantity(offerId, quantity, version, operationId),
       loadShippingTypes: () => loadAdminShippingTypes(),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/admin/offers")),

@@ -90,6 +90,18 @@ export interface SellerOfferDetail {
   fulfillmentResponsibility: "Seller" | "Platform" | null;
   fulfillmentShippingTypeId: string | null;
   lastUpdatedAt: string | null;
+  offerRevision: string | null;
+  priceRevision: string | null;
+  offeredQuantity: number | null;
+  allocationHeld: number | null;
+  allocationRevision: string | null;
+  revisions: { offer: string; price: string; offeredQuantity: string } | null;
+  capabilities: {
+    canEditPhysicalInventory: boolean;
+    canEditOfferedQuantity: boolean;
+    canAssignFulfillment: boolean;
+    canEditShippingPolicy: boolean;
+  } | null;
 }
 
 export interface SellerInventoryLocation {
@@ -100,6 +112,7 @@ export interface SellerInventoryLocation {
   onHand: number;
   reserved: number;
   available: number;
+  revision: string | null;
 }
 
 export interface SellerOrderListRow {
@@ -396,7 +409,7 @@ export function mapSellerOfferList(payload: unknown): SellerOfferListRow[] {
         status: asString(readProp(item, "status", "Status")),
         channel: asString(readProp(item, "channel", "Channel"), "Marketplace"),
         amount: asNullableNumber(readProp(item, "amount", "Amount")),
-        currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+        currency: asString(readProp(item, "currency", "Currency")),
         availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
         lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
         sellerDisplayName: asNullableString(readProp(item, "sellerDisplayName", "SellerDisplayName")),
@@ -412,6 +425,23 @@ export function mapSellerOfferList(payload: unknown): SellerOfferListRow[] {
 /**
  * جزئیات Offer فروشنده با زمینهٔ فقط‌خواندنی Catalog.
  */
+function mapSellerRevisions(item: Record<string, unknown>) {
+  const raw = readProp(item, "revisions", "Revisions");
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  return { offer: asString(readProp(r, "offer", "Offer")), price: asString(readProp(r, "price", "Price")), offeredQuantity: asString(readProp(r, "offeredQuantity", "OfferedQuantity")) };
+}
+function mapSellerCapabilities(item: Record<string, unknown>) {
+  const raw = readProp(item, "capabilities", "Capabilities");
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  return {
+    canEditPhysicalInventory: readProp(r, "canEditPhysicalInventory", "CanEditPhysicalInventory") === true,
+    canEditOfferedQuantity: readProp(r, "canEditOfferedQuantity", "CanEditOfferedQuantity") === true,
+    canAssignFulfillment: readProp(r, "canAssignFulfillment", "CanAssignFulfillment") === true,
+    canEditShippingPolicy: readProp(r, "canEditShippingPolicy", "CanEditShippingPolicy") === true,
+  };
+}
 export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null {
   if (!payload || typeof payload !== "object") {
     return null;
@@ -433,7 +463,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     status: asString(readProp(item, "status", "Status")),
     channel: asString(readProp(item, "channel", "Channel")),
     amount: asNullableNumber(readProp(item, "amount", "Amount")),
-    currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+    currency: asString(readProp(item, "currency", "Currency")),
     onHand: asNumber(readProp(item, "onHand", "OnHand")),
     reserved: asNumber(readProp(item, "reserved", "Reserved")),
     availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
@@ -472,6 +502,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
               onHand: asNumber(readProp(row, "onHand", "OnHand")),
               reserved: asNumber(readProp(row, "reserved", "Reserved")),
               available: asNumber(readProp(row, "available", "Available")),
+              revision: asNullableString(readProp(row, "revision", "Revision")),
             }))
             .filter((row) => row.stockItemId.length > 0)
         : [];
@@ -487,6 +518,13 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
       readProp(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId"),
     ),
     lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
+    offerRevision: asNullableString(readProp(item, "offerRevision", "OfferRevision")),
+    priceRevision: asNullableString(readProp(item, "priceRevision", "PriceRevision")),
+    offeredQuantity: asNullableNumber(readProp(item, "offeredQuantity", "OfferedQuantity")),
+    allocationHeld: asNullableNumber(readProp(item, "allocationHeld", "AllocationHeld")),
+    allocationRevision: asNullableString(readProp(item, "allocationRevision", "AllocationRevision")),
+    revisions: mapSellerRevisions(item),
+    capabilities: mapSellerCapabilities(item),
   };
 }
 
@@ -507,7 +545,7 @@ export function mapSellerOrderList(payload: unknown): SellerOrderListRow[] {
         recipientName: asString(readProp(item, "recipientName", "RecipientName")),
         lineCount: asNumber(readProp(item, "lineCount", "LineCount")),
         payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
-        currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+        currency: asString(readProp(item, "currency", "Currency")),
         paymentState: asString(readProp(item, "paymentState", "PaymentState")),
         status: asString(readProp(item, "status", "Status")),
       };
@@ -552,7 +590,7 @@ export function mapSellerOrderDetail(payload: unknown): SellerOrderDetail | null
     taxAmount: asNumber(readProp(item, "taxAmount", "TaxAmount")),
     discountAmount: asNumber(readProp(item, "discountAmount", "DiscountAmount")),
     payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
-    currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+    currency: asString(readProp(item, "currency", "Currency")),
     recipientName: asString(readProp(item, "recipientName", "RecipientName")),
     contactMobile: asString(readProp(item, "contactMobile", "ContactMobile")),
     provinceName: asString(readProp(item, "provinceName", "ProvinceName")),
