@@ -2,7 +2,7 @@
 
 STATUS: REPAIR_PARTIAL / NOT_READY_FOR_ACCEPTANCE
 Source base: 92b4ad74761cfb93112fae3ab8403284f4926962
-Source repair commit: ee0cfc68aa81f217c1378c0c52bed86a2232b0e9
+Source repair commit: 7fba9c0fa
 Review: docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-REVIEW.md
 
 ## Repaired and verified

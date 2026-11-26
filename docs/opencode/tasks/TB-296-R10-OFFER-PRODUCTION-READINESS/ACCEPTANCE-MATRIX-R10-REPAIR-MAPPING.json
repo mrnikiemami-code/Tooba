@@ -1,6 +1,6 @@
 ﻿{
     "taskId":  "TB-296-R10-OFFER-PRODUCTION-READINESS",
-    "sourceHead":  "ee0cfc68aa81f217c1378c0c52bed86a2232b0e9",
+    "sourceHead":  "7fba9c0fa",
     "executedAt":  "2026-11-26T04:02:19.178Z",
     "runtime":  {
                     "checks":  42,
