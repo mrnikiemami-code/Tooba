@@ -1,698 +1,785 @@
-{
-  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
-  "sourceHead": null,
-  "executedAt": "2026-11-26T04:02:19.178Z",
-  "runtime": {
-    "checks": 42,
-    "ok": true
-  },
-  "repair": {
-    "checks": 22,
-    "ok": true
-  },
-  "tests": [
-    {
-      "testId": "R10-01-P",
-      "reqId": "R10-01",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-01.channelSelect",
-          "ok": true
-        },
-        {
-          "check": "R10-01.allowedChannels",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-01-N",
-      "reqId": "R10-01",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.channelRejectedExactly",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.channelRejectedZeroWrites",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-01-B",
-      "reqId": "R10-01",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-01.duplicateScopedChannel",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.channelNamedOnlySource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-02-P",
-      "reqId": "R10-02",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-02.preCreateTabs",
-          "ok": true
-        },
-        {
-          "check": "R10-04.createOneDraftApplied",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-02-N",
-      "reqId": "R10-02",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-03.blankReasonRejected",
-          "ok": true
-        },
-        {
-          "check": "R10-02.noAutoCreate",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-02-B",
-      "reqId": "R10-02",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-04.createOneDraftApplied",
-          "ok": true
-        },
-        {
-          "check": "R10-03.idempotentProvision",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-03-P",
-      "reqId": "R10-03",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-03.createProvisionedInventory",
-          "ok": true
-        },
-        {
-          "check": "R10-03.idempotentProvision",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-03-N",
-      "reqId": "R10-03",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.invalidLocationRejected",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.invalidLocationZeroPosition",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-03-B",
-      "reqId": "R10-03",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.inventoryOwnerFilterSource",
-          "ok": true
-        },
-        {
-          "check": "R10-03.idempotentProvision",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-04-P",
-      "reqId": "R10-04",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-04.createOneDraftApplied",
-          "ok": true
-        },
-        {
-          "check": "R10-01.duplicateScopedChannel",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-04-N",
-      "reqId": "R10-04",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-12.crossOwnerNegative",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.crossOwnerHistoryDenied",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-04-B",
-      "reqId": "R10-04",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-10.retryRemainderOnly",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-05-P",
-      "reqId": "R10-05",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.concurrentOneWinner",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.concurrentWinnerValue",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-05-N",
-      "reqId": "R10-05",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.sequentialStaleRejected",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.sequentialStalePreserved",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-05-B",
-      "reqId": "R10-05",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.concurrentOneWinner",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.expectedVersionSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-06-P",
-      "reqId": "R10-06",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-06.historyPagination",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.historyActorRecorded",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-06-N",
-      "reqId": "R10-06",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.crossOwnerHistoryDenied",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.historyActorSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-06-B",
-      "reqId": "R10-06",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-06.historyPagination",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-07-P",
-      "reqId": "R10-07",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-06.unitMetadataRead",
-          "ok": true
-        },
-        {
-          "check": "R10-04.createOneDraftApplied",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-07-N",
-      "reqId": "R10-07",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.invalidLimitsRejected",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.invalidLimitsPreserved",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-07-B",
-      "reqId": "R10-07",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-04.createOneDraftApplied",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.invalidLimitsPreserved",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-08-P",
-      "reqId": "R10-08",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.sequentialStalePreserved",
-          "ok": true
-        },
-        {
-          "check": "R10-06.historyPagination",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-08-N",
-      "reqId": "R10-08",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-08.sellerFulfillmentDenied",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-08-B",
-      "reqId": "R10-08",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.sequentialStaleRejected",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.expectedVersionSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-09-P",
-      "reqId": "R10-09",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-07.actualThirdLocaleRoute",
-          "ok": true
-        },
-        {
-          "check": "R9-07.publicLanguageRegistry",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-09-N",
-      "reqId": "R10-09",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-07.publicLanguageRegistry",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-09-B",
-      "reqId": "R10-09",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-07.listThirdLocale",
-          "ok": true
-        },
-        {
-          "check": "R9-07.actualThirdLocaleRoute",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-10-P",
-      "reqId": "R10-10",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.workspaceSize",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.noFlatAdminOfferApi",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-10-N",
-      "reqId": "R10-10",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.noLocalizedNumberInventory",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-10-B",
-      "reqId": "R10-10",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.noFlatAdminOfferApi",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.workspaceSize",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-11-P",
-      "reqId": "R10-11",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.channelNamedOnlySource",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.expectedVersionSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-11-N",
-      "reqId": "R10-11",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.inventoryOwnerFilterSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-11-B",
-      "reqId": "R10-11",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.historyActorSource",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.expectedVersionSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-12-P",
-      "reqId": "R10-12",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-02.noPersistentSuccessBanner",
-          "ok": true
-        },
-        {
-          "check": "R9-02.toastAutoClose3s",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-12-N",
-      "reqId": "R10-12",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-10.secondWriteFailedMessage",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-12-B",
-      "reqId": "R10-12",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-08.dirtyExitMessageBox",
-          "ok": true
-        },
-        {
-          "check": "R9-08.dirtyCancelKeepsForm",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-13-P",
-      "reqId": "R10-13",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-13.performanceComparable",
-          "ok": true
-        },
-        {
-          "check": "R9-12.listOverflow.1440",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-13-N",
-      "reqId": "R10-13",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-12.ordersProductsRegression",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-13-B",
-      "reqId": "R10-13",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R9-12.listOverflow.360",
-          "ok": true
-        },
-        {
-          "check": "R9-12.listOverflow.768",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-14-P",
-      "reqId": "R10-14",
-      "caseType": "positive",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.channelRejectedZeroWrites",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.historyActorRecorded",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-14-N",
-      "reqId": "R10-14",
-      "caseType": "negative",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.sequentialStalePreserved",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.concurrentOneWinner",
-          "ok": true
-        }
-      ],
-      "missing": []
-    },
-    {
-      "testId": "R10-14-B",
-      "reqId": "R10-14",
-      "caseType": "boundary",
-      "status": "PASS",
-      "evidence": [
-        {
-          "check": "R10-REPAIR.expectedVersionSource",
-          "ok": true
-        },
-        {
-          "check": "R10-REPAIR.inventoryOwnerFilterSource",
-          "ok": true
-        }
-      ],
-      "missing": []
-    }
-  ],
-  "failures": []
+﻿{
+    "taskId":  "TB-296-R10-OFFER-PRODUCTION-READINESS",
+    "sourceHead":  "ee0cfc68aa81f217c1378c0c52bed86a2232b0e9",
+    "executedAt":  "2026-11-26T04:02:19.178Z",
+    "runtime":  {
+                    "checks":  42,
+                    "ok":  true
+                },
+    "repair":  {
+                   "checks":  22,
+                   "ok":  true
+               },
+    "tests":  [
+                  {
+                      "testId":  "R10-01-P",
+                      "reqId":  "R10-01",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-01.channelSelect",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-01.allowedChannels",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-01-N",
+                      "reqId":  "R10-01",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.channelRejectedExactly",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.channelRejectedZeroWrites",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-01-B",
+                      "reqId":  "R10-01",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-01.duplicateScopedChannel",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.channelNamedOnlySource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-02-P",
+                      "reqId":  "R10-02",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-02.preCreateTabs",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-04.createOneDraftApplied",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-02-N",
+                      "reqId":  "R10-02",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-03.blankReasonRejected",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-02.noAutoCreate",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-02-B",
+                      "reqId":  "R10-02",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-04.createOneDraftApplied",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-03.idempotentProvision",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-03-P",
+                      "reqId":  "R10-03",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-03.createProvisionedInventory",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-03.idempotentProvision",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-03-N",
+                      "reqId":  "R10-03",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.invalidLocationRejected",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.invalidLocationZeroPosition",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-03-B",
+                      "reqId":  "R10-03",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.inventoryOwnerFilterSource",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-03.idempotentProvision",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-04-P",
+                      "reqId":  "R10-04",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-04.createOneDraftApplied",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-01.duplicateScopedChannel",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-04-N",
+                      "reqId":  "R10-04",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-12.crossOwnerNegative",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.crossOwnerHistoryDenied",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-04-B",
+                      "reqId":  "R10-04",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-10.retryRemainderOnly",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-05-P",
+                      "reqId":  "R10-05",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.concurrentOneWinner",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.concurrentWinnerValue",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-05-N",
+                      "reqId":  "R10-05",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.sequentialStaleRejected",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.sequentialStalePreserved",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-05-B",
+                      "reqId":  "R10-05",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.concurrentOneWinner",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.expectedVersionSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-06-P",
+                      "reqId":  "R10-06",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-06.historyPagination",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.historyActorRecorded",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-06-N",
+                      "reqId":  "R10-06",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.crossOwnerHistoryDenied",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.historyActorSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-06-B",
+                      "reqId":  "R10-06",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-06.historyPagination",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-07-P",
+                      "reqId":  "R10-07",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-06.unitMetadataRead",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-04.createOneDraftApplied",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-07-N",
+                      "reqId":  "R10-07",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.invalidLimitsRejected",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.invalidLimitsPreserved",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-07-B",
+                      "reqId":  "R10-07",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-04.createOneDraftApplied",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.invalidLimitsPreserved",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-08-P",
+                      "reqId":  "R10-08",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.sequentialStalePreserved",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-06.historyPagination",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-08-N",
+                      "reqId":  "R10-08",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-08.sellerFulfillmentDenied",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-08-B",
+                      "reqId":  "R10-08",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.sequentialStaleRejected",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.expectedVersionSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-09-P",
+                      "reqId":  "R10-09",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-07.actualThirdLocaleRoute",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-07.publicLanguageRegistry",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-09-N",
+                      "reqId":  "R10-09",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-07.publicLanguageRegistry",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-09-B",
+                      "reqId":  "R10-09",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-07.listThirdLocale",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-07.actualThirdLocaleRoute",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-10-P",
+                      "reqId":  "R10-10",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.workspaceSize",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.noFlatAdminOfferApi",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-10-N",
+                      "reqId":  "R10-10",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.noLocalizedNumberInventory",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-10-B",
+                      "reqId":  "R10-10",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.noFlatAdminOfferApi",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.workspaceSize",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-11-P",
+                      "reqId":  "R10-11",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.channelNamedOnlySource",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.expectedVersionSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-11-N",
+                      "reqId":  "R10-11",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.inventoryOwnerFilterSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-11-B",
+                      "reqId":  "R10-11",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.historyActorSource",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.expectedVersionSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-12-P",
+                      "reqId":  "R10-12",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-02.noPersistentSuccessBanner",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-02.toastAutoClose3s",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-12-N",
+                      "reqId":  "R10-12",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-10.secondWriteFailedMessage",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-12-B",
+                      "reqId":  "R10-12",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-08.dirtyExitMessageBox",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-08.dirtyCancelKeepsForm",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-13-P",
+                      "reqId":  "R10-13",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-13.performanceComparable",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-12.listOverflow.1440",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-13-N",
+                      "reqId":  "R10-13",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-12.ordersProductsRegression",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-13-B",
+                      "reqId":  "R10-13",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R9-12.listOverflow.360",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R9-12.listOverflow.768",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-14-P",
+                      "reqId":  "R10-14",
+                      "caseType":  "positive",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.channelRejectedZeroWrites",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.historyActorRecorded",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-14-N",
+                      "reqId":  "R10-14",
+                      "caseType":  "negative",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.sequentialStalePreserved",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.concurrentOneWinner",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  },
+                  {
+                      "testId":  "R10-14-B",
+                      "reqId":  "R10-14",
+                      "caseType":  "boundary",
+                      "status":  "PASS",
+                      "evidence":  [
+                                       {
+                                           "check":  "R10-REPAIR.expectedVersionSource",
+                                           "ok":  true
+                                       },
+                                       {
+                                           "check":  "R10-REPAIR.inventoryOwnerFilterSource",
+                                           "ok":  true
+                                       }
+                                   ],
+                      "missing":  [
+
+                                  ]
+                  }
+              ],
+    "failures":  [
+
+                 ],
+    "repairStatus":  "REPAIR_PARTIAL"
 }
