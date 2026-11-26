@@ -154,9 +154,14 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
             { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active } =>
                 location.OwnerKind == InventoryLocationOwnerKind.Store && location.SellerPartyId is null,
             { Edition.Edition: ToobaEdition.Marketplace, Tenant: null } =>
-                offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
-                    ? location.OwnerKind == InventoryLocationOwnerKind.Marketplace && location.SellerPartyId is null
-                    : location.OwnerKind == InventoryLocationOwnerKind.Seller && location.SellerPartyId == offer.SellerPartyId,
+                offer.FulfillmentResponsibility switch
+                {
+                    OfferFulfillmentResponsibility.Platform =>
+                        location.OwnerKind == InventoryLocationOwnerKind.Marketplace && location.SellerPartyId is null,
+                    OfferFulfillmentResponsibility.Seller =>
+                        location.OwnerKind == InventoryLocationOwnerKind.Seller && location.SellerPartyId == offer.SellerPartyId,
+                    _ => false,
+                },
             _ => false,
         };
 

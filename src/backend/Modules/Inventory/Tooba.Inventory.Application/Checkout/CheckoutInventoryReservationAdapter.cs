@@ -35,6 +35,7 @@ public sealed class CheckoutInventoryReservationAdapter : ICheckoutInventoryRese
             request.Lines.Select(x => x.OfferId).Distinct().ToArray(),
             cancellationToken);
         var acquired = new List<Guid>();
+        var reused = new HashSet<Guid>();
         var lines = new List<CheckoutInventoryLineReservation>();
         try
         {
@@ -43,10 +44,15 @@ public sealed class CheckoutInventoryReservationAdapter : ICheckoutInventoryRese
                 if (cartLine.ExistingReservationId is { } existingId)
                 {
                     var existing = await _inventory.FindReservationAsync(existingId, cancellationToken);
+                    if (existing is not null && existing.OfferId != cartLine.OfferId)
+                        throw new ContractOperationException(InventoryErrorCodes.ReservationConflict);
                     if (existing is { Status: StockReservationStatus.Held }
                         && existing.Quantity >= cartLine.Quantity
                         && (existing.ExpiresAt is null || existing.ExpiresAt > request.Now))
                     {
+                        // A single hold is never evidence for two independent checkout lines.
+                        if (!reused.Add(existingId))
+                            throw new ContractOperationException(InventoryErrorCodes.ReservationConflict);
                         lines.Add(new CheckoutInventoryLineReservation(cartLine.CartLineId, existingId));
                         continue;
                     }

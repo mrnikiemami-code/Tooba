@@ -81,24 +81,23 @@ public sealed partial class InventoryDirectory
                 group =>
                 {
                     var offer = offers?.GetValueOrDefault(group.Key);
-                    var needsAllocation = group.Any(row => row.location.OwnerKind == InventoryLocationOwnerKind.Marketplace)
+                    // Exclude unauthorized owner rows from the projection itself, not just from sellable quantity.
+                    // Otherwise their warehouse labels, physical and reserved amounts leak into Offer detail.
+                    var eligible = group.Where(row => _commerce is null
+                        || (offer is not null && IsLocationEligible(row.location, offer))).ToArray();
+                    var needsAllocation = eligible.Any(row => row.location.OwnerKind == InventoryLocationOwnerKind.Marketplace)
                         || (marketplace && offer?.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform);
                     allocations.TryGetValue(group.Key, out var allocation);
                     var cap = allocation is not null ? Math.Max(0, allocation.Quantity - allocation.Held)
                         : needsAllocation ? 0m : decimal.MaxValue;
-                    var locations = group.Select(row => new LocationAvailability(
+                    var locations = eligible.Select(row => new LocationAvailability(
                         row.position.StockItemId,
                         row.location.LocationId,
                         row.location.Code,
                         row.location.Name,
                         row.position.OnHand,
                         row.position.Reserved,
-                        row.location.Status != InventoryLocationStatus.Active || (_commerce is not null && (offer is null || !IsLocationEligible(row.location, offer))) || (marketplace && (offer is null
-                            || (offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
-                                ? row.location.OwnerKind != InventoryLocationOwnerKind.Marketplace
-                                : offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Seller
-                                    || row.location.OwnerKind != InventoryLocationOwnerKind.Seller
-                                    || row.location.SellerPartyId != offer.SellerPartyId)))
+                        row.location.Status != InventoryLocationStatus.Active
                             ? 0m : Math.Min(cap, row.position.OnHand - row.position.Reserved),
                         row.position.UpdatedAt.ToString("O"))).ToList();
                     return new InventoryAvailability(
