@@ -25,7 +25,8 @@ public sealed record UpdateOfferCommand(
     decimal? MaximumOrderQuantity = null,
     bool ClearOrderQuantityLimits = false,
     string? ExpectedVersion = null,
-    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
+    Guid? ActorUserId = null,
+    bool AdminSurface = false) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class UpdateOfferHandler(
     IOfferStore store,
@@ -111,6 +112,6 @@ internal sealed class UpdateOfferHandler(
                 request.ActorUserId),
             cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, adminSurface: request.AdminSurface));
     }
 }

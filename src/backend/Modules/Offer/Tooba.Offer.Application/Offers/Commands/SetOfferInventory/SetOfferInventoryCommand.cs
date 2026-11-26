@@ -48,6 +48,6 @@ internal sealed class SetOfferInventoryCommandHandler(
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, adminSurface: request.AdminPhysicalAdjustment));
     }
 }

@@ -106,7 +106,7 @@ public static class OfferAdminEndpoints
             body.MinimumOrderQuantity,
             body.MaximumOrderQuantity,
             RequestId: body.RequestId,
-            ActorUserId: actorUserId), token);
+            ActorUserId: actorUserId, AdminSurface: true), token);
         if (result.IsFailure) return api.From(result);
         return api.Created($"/v1/admin/offers/{result.Value.OfferId}", result);
     }
@@ -155,7 +155,7 @@ public static class OfferAdminEndpoints
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, owner.Value, body.SellerSku, body.Status, body.ReturnPolicyChoice,
             body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
-            body.ClearOrderQuantityLimits, body.ExpectedVersion, actorUserId), token);
+            body.ClearOrderQuantityLimits, body.ExpectedVersion ?? string.Empty, actorUserId, true), token);
         return api.From(result);
     }
 
@@ -172,7 +172,7 @@ public static class OfferAdminEndpoints
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, owner.Value, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
+            offerId, owner.Value, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, true), token);
         return api.From(result);
     }
 
@@ -189,7 +189,7 @@ public static class OfferAdminEndpoints
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         return api.From(await sender.Send(new SetOfferAllocationCommand(
-            offerId, owner.Value, body.Quantity, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token));
+            offerId, owner.Value, body.Quantity, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, true), token));
     }
 
     private static async Task<IResult> InventoryAsync(

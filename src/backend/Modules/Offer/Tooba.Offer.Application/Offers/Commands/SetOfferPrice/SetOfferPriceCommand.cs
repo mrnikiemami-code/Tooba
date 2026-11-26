@@ -19,7 +19,8 @@ public sealed record SetOfferPriceCommand(
     string? Market,
     string? ExpectedVersion = null,
     Guid? ActorUserId = null,
-    Guid OperationId = default) : IRequest<Result<SellerOfferDetailPage>>;
+    Guid OperationId = default,
+    bool AdminSurface = false) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class SetOfferPriceCommandHandler(
     IOfferStore store,
@@ -48,6 +49,6 @@ internal sealed class SetOfferPriceCommandHandler(
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, adminSurface: request.AdminSurface));
     }
 }

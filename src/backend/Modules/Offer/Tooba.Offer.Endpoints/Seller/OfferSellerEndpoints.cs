@@ -163,7 +163,7 @@ public static class OfferSellerEndpoints
         var result = await sender.Send(new UpdateOfferCommand(
             offerId, sellerId, body.SellerSku, body.Status, body.ReturnPolicyChoice,
             body.CustomReturnWindowDays, body.MinimumOrderQuantity, body.MaximumOrderQuantity,
-            body.ClearOrderQuantityLimits, body.ExpectedVersion, actorUserId), token);
+            body.ClearOrderQuantityLimits, body.ExpectedVersion ?? string.Empty, actorUserId), token);
         return api.From(result);
     }
 

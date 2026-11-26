@@ -259,7 +259,7 @@ public static class OfferFulfillmentAdminEndpoints
         }
 
         var result = await sender.Send(
-            new AssignOfferFulfillmentCommand(offerId, body.Responsibility, body.ShippingTypeId, body.ExpectedVersion, actorUserId),
+            new AssignOfferFulfillmentCommand(offerId, body.Responsibility, body.ShippingTypeId, body.ExpectedVersion ?? string.Empty, actorUserId),
             cancellationToken);
         return api.From(result);
     }

@@ -32,7 +32,8 @@ public sealed record CreateOfferCommand(
     decimal? MinimumOrderQuantity = null,
     decimal? MaximumOrderQuantity = null,
     string? RequestId = null,
-    Guid? ActorUserId = null) : IRequest<Result<SellerOfferDetailPage>>;
+    Guid? ActorUserId = null,
+    bool AdminSurface = false) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class CreateOfferHandler(
     IOfferStore store,
@@ -76,7 +77,7 @@ internal sealed class CreateOfferHandler(
                 {
                     return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
                 }
-                return Result.Success(await readModels.DetailAsync(existing, cancellationToken));
+                return Result.Success(await readModels.DetailAsync(existing, cancellationToken, adminSurface: request.AdminSurface));
             }
         }
         if (await store.ExistsActiveListingAsync(request.SellerPartyId, request.CatalogVariantId, channel, cancellationToken))
@@ -143,9 +144,9 @@ internal sealed class CreateOfferHandler(
             {
                 return Result.Failure<SellerOfferDetailPage>(new SemanticError(OfferErrorCodes.CreateIntentConflict));
             }
-            return Result.Success(await readModels.DetailAsync(persisted, cancellationToken));
+            return Result.Success(await readModels.DetailAsync(persisted, cancellationToken, adminSurface: request.AdminSurface));
         }
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, adminSurface: request.AdminSurface));
     }
 
     private static Guid DeterministicOfferId(Guid sellerPartyId, Guid catalogVariantId, string requestId)

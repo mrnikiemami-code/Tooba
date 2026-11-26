@@ -84,7 +84,8 @@ public sealed record SellerOfferDetailPage(
     string? AllocationRevision = null,
     string? OfferRevision = null,
     OfferRevisions? Revisions = null,
-    OfferCapabilities? Capabilities = null);
+    OfferCapabilities? Capabilities = null,
+    Guid? PriceId = null);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(

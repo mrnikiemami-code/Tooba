@@ -12,7 +12,7 @@ public sealed class OfferVersionGuardTests
     public void Missing_version_is_backward_compatible()
     {
         Assert.Null(OfferVersionGuard.Check(Version, null));
-        Assert.Null(OfferVersionGuard.Check(Version, " "));
+        Assert.Equal(FoundationErrorCodes.ConcurrencyConflict, OfferVersionGuard.Check(Version, " ")?.Code);
     }
 
     [Fact]

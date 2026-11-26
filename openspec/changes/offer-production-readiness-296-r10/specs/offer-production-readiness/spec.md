@@ -296,3 +296,27 @@ The R10 workspace and its applicable owning contracts SHALL satisfy the followin
 - **THEN** baseline restored, no unrelated writes
 - **AND** No unauthorized writes, fabricated results, weakened guards or violation of the named requirement; negative cases must prove unchanged relevant state.
 
+
+
+### Requirement: Owner-approved warehouse and offered quantity policy
+Inventory SHALL enforce explicit warehouse ownership and the seller's remaining offered quantity; Offer SHALL retain unique seller/variant/authorized-channel identity and approved fulfillment assignment.
+
+#### Scenario: Platform-owned physical inventory
+- **GIVEN** an authorized marketplace offer has 100 received units
+- **WHEN** the seller offers 20 and five are consumed
+- **THEN** the remaining offered quantity is 15 and physical stock is 95; returns and receipts do not silently raise allocation
+
+#### Scenario: No cross-owner warehouse operation
+- **GIVEN** seller A and seller B have distinct warehouses and marketplace fulfillment is approved only by the marketplace
+- **WHEN** seller A attempts a foreign or platform warehouse mutation or platform shipping edit
+- **THEN** the operation is denied with no writes; the seller may set only their own offered quantity under platform fulfillment
+
+#### Scenario: Authorized channel uniqueness
+- **GIVEN** a seller and variant have an offer in one authorized channel
+- **WHEN** a duplicate is attempted in that channel or a distinct system-authorized channel is used
+- **THEN** the duplicate is rejected and independently authorized channels may have independent offers and inventory
+
+#### Scenario: Atomic allocation and revisions
+- **GIVEN** concurrent new-sale holds, changes or release of an existing reservation
+- **WHEN** the owner applies a write
+- **THEN** the real owner revision, physical and offered limits and durable facts govern the outcome; existing commitments are preserved

@@ -31,7 +31,8 @@ public sealed class OfferReadModelComposer(
     IOfferFulfillmentAssignmentLookup fulfillmentAssignments,
     IOfferPriceHistoryReader priceHistory,
     IClock clock,
-    ICurrentStoreCommerceContext? storeCommerce = null)
+    ICurrentStoreCommerceContext? storeCommerce = null,
+    ICurrentCommerceContext? commerce = null)
 {
     private string? Market => storeCommerce?.Current?.Market;
     private string? Currency => storeCommerce?.Current?.DefaultCurrency;
@@ -121,7 +122,7 @@ public sealed class OfferReadModelComposer(
             product?.UnitQuantityStep,
             product?.UnitRoundingMode,
             priceRevision?.Revision ?? "absent",
-            priceRevision?.PriceId,
+            null,
             stock?.OfferedQuantity,
             stock?.AllocationHeld,
             stock?.AllocationRevision,
@@ -129,9 +130,11 @@ public sealed class OfferReadModelComposer(
             new OfferRevisions(offer.UpdatedAt.ToString("O"), priceRevision?.Revision ?? "absent", stock?.AllocationRevision ?? "absent"),
             new OfferCapabilities(
                 adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller,
-                fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform,
+                commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace
+                    && fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform,
                 adminSurface,
-                adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller));
+                adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller),
+            price?.PriceId);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>
