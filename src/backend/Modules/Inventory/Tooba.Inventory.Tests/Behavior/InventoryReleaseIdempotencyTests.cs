@@ -49,7 +49,8 @@ public sealed class InventoryReleaseIdempotencyTests
             "Tooba.Inventory.Infrastructure",
             "Directories",
             "InventoryDirectory.cs");
-        var text = File.ReadAllText(path);
+        var text = File.ReadAllText(path)
+            + File.ReadAllText(Path.Combine(Path.GetDirectoryName(path)!, "InventoryDirectory.Reservations.cs"));
         var start = text.IndexOf("public async Task ReleaseAsync(Guid reservationId", StringComparison.Ordinal);
         var end = text.IndexOf("public async Task ConsumeAsync", start, StringComparison.Ordinal);
         var body = text[start..end];

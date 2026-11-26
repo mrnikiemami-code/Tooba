@@ -112,7 +112,8 @@ public sealed class OfferInventoryProvisioningHandlerTests
 
         Assert.Contains("x.Status == InventoryLocationStatus.Active", source, StringComparison.Ordinal);
         Assert.Contains(".OrderBy(x => x.Code)", source, StringComparison.Ordinal);
-        Assert.Contains("x.LocationId == locationId && x.Status == InventoryLocationStatus.Active", source, StringComparison.Ordinal);
+        Assert.Contains("await EligibleLocations(sellerPartyId)", source, StringComparison.Ordinal);
+        Assert.Contains(".AnyAsync(x => x.LocationId == locationId", source, StringComparison.Ordinal);
         Assert.Contains("StockPosition.Open(", source, StringComparison.Ordinal);
         Assert.Contains("ix_stock_positions_offer_id_location_id", source, StringComparison.Ordinal);
     }

@@ -145,7 +145,9 @@ public sealed class InventoryArchitectureGuardTests
         Assert.DoesNotContain("catch (Exception)", adapter, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(
-            InventoryRoot(), "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.cs"));
+            InventoryRoot(), "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.cs"))
+            + File.ReadAllText(Path.Combine(
+                InventoryRoot(), "Tooba.Inventory.Infrastructure", "Directories", "InventoryDirectory.Reservations.cs"));
         var start = directory.IndexOf("public async Task ReleaseAsync(Guid reservationId", StringComparison.Ordinal);
         Assert.True(start >= 0);
         var end = directory.IndexOf("public async Task ConsumeAsync", start, StringComparison.Ordinal);

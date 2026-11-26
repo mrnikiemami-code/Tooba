@@ -36,7 +36,8 @@ public sealed class OfferBackendOwnerWireGuardTests
     [Fact]
     public void Allocation_reservation_is_shared_by_offer_and_uses_owner_sql()
     {
-        var directory = Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs");
+        var directory = Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.cs")
+            + Read("src/backend/Modules/Inventory/Tooba.Inventory.Infrastructure/Directories/InventoryDirectory.Reservations.cs");
         Assert.Contains("x.Quantity - x.Held >= quantity", directory, StringComparison.Ordinal);
         Assert.Contains("SetProperty(x => x.Held, x => x.Held + quantity)", directory, StringComparison.Ordinal);
         Assert.Contains("SetProperty(x => x.Quantity, x => x.Quantity - reservation.Quantity)", directory, StringComparison.Ordinal);

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Tooba.BuildingBlocks.Localization;
@@ -465,7 +465,7 @@ public sealed class PricingModuleAmsc001W3R3CertGuardTests
             .Where(n => !n.EndsWith("Designer.cs", StringComparison.Ordinal)
                         && !n.EndsWith("ModelSnapshot.cs", StringComparison.Ordinal))
             .OrderBy(n => n, StringComparer.Ordinal).ToArray();
-        Assert.Equal(new[] { "20260823085546_InitialPricing.cs" }, migrations);
+        Assert.Equal(new[] { "20260823085546_InitialPricing.cs", "20261126170000_R10PriceChangeFacts.cs" }, migrations);
     }
 
     [Fact]

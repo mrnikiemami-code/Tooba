@@ -1,0 +1,18 @@
+﻿begin;
+delete from cart.cart_lines where cart_id='01a21939-4c9a-7000-b992-3e038243e61b';
+delete from cart.outbox_messages where payload::text like '%01a21939-4c9a-7000-b992-3e038243e61b%';
+delete from cart.carts where cart_id='01a21939-4c9a-7000-b992-3e038243e61b';
+delete from inventory.reservation_consumptions where reservation_id in (select reservation_id from inventory.reservations where idempotency_key='p1a-hold-idem-1');
+delete from inventory.reservations where idempotency_key='p1a-hold-idem-1';
+delete from offer.offer_history where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from offer.outbox_messages where payload::text like '%0a37a4ca-41f4-4d33-8f99-b17d5436cc4d%' or payload::text like '%eabc3604-c438-42eb-8ac0-8fdd83e94206%' or payload::text like '%f34dfc72-646d-42e9-96cc-d0c7daf663cb%';
+delete from pricing.offer_price_changes where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from pricing.outbox_messages where payload::text like '%0a37a4ca-41f4-4d33-8f99-b17d5436cc4d%' or payload::text like '%eabc3604-c438-42eb-8ac0-8fdd83e94206%' or payload::text like '%f34dfc72-646d-42e9-96cc-d0c7daf663cb%';
+delete from pricing.prices where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from inventory.offer_inventory_changes where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from inventory.offer_allocations where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from inventory.outbox_messages where payload::text like '%0a37a4ca-41f4-4d33-8f99-b17d5436cc4d%' or payload::text like '%eabc3604-c438-42eb-8ac0-8fdd83e94206%' or payload::text like '%f34dfc72-646d-42e9-96cc-d0c7daf663cb%';
+delete from inventory.stock_positions where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from offer.offers where offer_id in ('0a37a4ca-41f4-4d33-8f99-b17d5436cc4d','eabc3604-c438-42eb-8ac0-8fdd83e94206','f34dfc72-646d-42e9-96cc-d0c7daf663cb');
+delete from inventory.locations where code like 'P1A-MKT-%';
+commit;
