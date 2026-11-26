@@ -152,6 +152,8 @@ export interface OfferWorkspaceMessages {
   historyKindCommercial: string;
   historyKindPrice: string;
   historyKindInventory: string;
+  historyKindAllocation: string;
+  historyKindUnknown: string;
   historyKindFulfillment: string;
   perTabError: string;
   dirtyTab: string;
@@ -362,6 +364,8 @@ const fa: OfferWorkspaceMessages = {
   historyKindCommercial: "تغییر تجاری",
   historyKindPrice: "تغییر قیمت",
   historyKindInventory: "تغییر موجودی",
+  historyKindAllocation: "تغییر مقدار عرضه",
+  historyKindUnknown: "تغییر ثبت‌شده",
   historyKindFulfillment: "تغییر انجام ارسال",
   historyDesc: "تغییرات واقعی این آفر به ترتیب زمان.",
   historyEmpty: "تاریخچه‌ای برای این آفر در دسترس نیست.",
@@ -575,6 +579,8 @@ const en: OfferWorkspaceMessages = {
   historyKindCommercial: "Commercial change",
   historyKindPrice: "Price change",
   historyKindInventory: "Inventory change",
+  historyKindAllocation: "Offered quantity change",
+  historyKindUnknown: "Recorded change",
   historyKindFulfillment: "Fulfillment change",
   historyDesc: "Real changes to this offer in time order.",
   historyEmpty: "No history is available for this offer.",

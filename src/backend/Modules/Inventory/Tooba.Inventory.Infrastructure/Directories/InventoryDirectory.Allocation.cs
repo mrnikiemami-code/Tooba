@@ -43,6 +43,7 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
         var operationId = request.OperationId;
         var now = _clock.UtcNow;
 
+        await _guard.EnsureCanMutateAsync(cancellationToken);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         await LockOfferAllocationAsync(request.OfferId, cancellationToken);
         var replay = await _db.OfferInventoryChanges.AsNoTracking()

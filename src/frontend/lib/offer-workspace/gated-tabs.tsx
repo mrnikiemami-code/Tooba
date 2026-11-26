@@ -33,8 +33,9 @@ function historyKind(t: OfferWorkspaceMessages, kind: string): string {
     case "CommercialChanged": return t.historyKindCommercial;
     case "PriceChanged": return t.historyKindPrice;
     case "InventoryChanged": return t.historyKindInventory;
+    case "AllocationChanged": return t.historyKindAllocation;
     case "FulfillmentChanged": return t.historyKindFulfillment;
-    default: return kind;
+    default: return t.historyKindUnknown;
   }
 }
 
@@ -59,9 +60,8 @@ export function HistoryTab({ t, format, data, loading, error, onPrev, onNext }: 
           {items.length > 0 ? (
             <div className={styles.stack} data-testid="offer-history-list">
               {items.map((item) => (
-                <div key={`${item.offerId}-${item.occurredAt}-${item.kind}`} className={styles.historyRow}>
+                <div key={item.eventId ?? `${item.offerId}-${item.occurredAt}-${item.kind}`} className={styles.historyRow}>
                   <div className={styles.historyKind}>{historyKind(t, item.kind)}</div>
-                  <div className={styles.historySummary}>{item.summary}</div>
                   <div className={styles.historyMeta}>{format.dateTime(item.occurredAt)}{item.actorUserId ? ` · ${t.historyActor}: ${item.actorUserId}` : ""}</div>
                   {(item.oldValue || item.newValue) ? <div className={styles.historyDelta} dir="ltr">{item.oldValue ?? "—"} → {item.newValue ?? "—"}</div> : null}
                 </div>

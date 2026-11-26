@@ -61,6 +61,7 @@ public sealed partial class InventoryDirectory
 
         reservation.MoveTo(StockReservationStatus.Released, now);
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
+        await _db.Entry(position).ReloadAsync(cancellationToken);
         position.RecordReleased(reservation.ReservationId, reservation.Quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
         await _db.SaveChangesAsync(cancellationToken);
@@ -222,6 +223,7 @@ public sealed partial class InventoryDirectory
 
         reservation.MoveTo(StockReservationStatus.Consumed, now);
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
+        await _db.Entry(position).ReloadAsync(cancellationToken);
         position.RecordConsumed(reservation.ReservationId, reservation.Quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
 

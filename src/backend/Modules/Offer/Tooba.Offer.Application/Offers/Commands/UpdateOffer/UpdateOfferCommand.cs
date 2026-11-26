@@ -106,7 +106,7 @@ internal sealed class UpdateOfferHandler(
                 offer.OfferId,
                 clock.UtcNow,
                 OfferHistorySummaries.CommercialChanged,
-                "Offer commercial fields changed",
+                OfferHistorySummaries.CommercialChanged,
                 previousCommercial,
                 OfferHistorySummaries.Commercial(offer),
                 request.ActorUserId),

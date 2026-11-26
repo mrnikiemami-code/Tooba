@@ -73,7 +73,7 @@ public sealed partial class InventoryDirectory
             .Where(x => distinct.Contains(x.OfferId))
             .ToDictionaryAsync(x => x.OfferId, cancellationToken);
         var marketplace = _commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace;
-        var offers = marketplace ? await _offers.FindOffersBatchAsync(distinct, cancellationToken) : null;
+        var offers = _commerce is not null ? await _offers.FindOffersBatchAsync(distinct, cancellationToken) : null;
         return rows
             .GroupBy(x => x.position.OfferId)
             .ToDictionary(
@@ -93,7 +93,7 @@ public sealed partial class InventoryDirectory
                         row.location.Name,
                         row.position.OnHand,
                         row.position.Reserved,
-                        row.location.Status != InventoryLocationStatus.Active || (marketplace && (offer is null
+                        row.location.Status != InventoryLocationStatus.Active || (_commerce is not null && (offer is null || !IsLocationEligible(row.location, offer))) || (marketplace && (offer is null
                             || (offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
                                 ? row.location.OwnerKind != InventoryLocationOwnerKind.Marketplace
                                 : offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Seller

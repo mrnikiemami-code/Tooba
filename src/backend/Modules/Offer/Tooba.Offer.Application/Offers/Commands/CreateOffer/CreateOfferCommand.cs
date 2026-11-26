@@ -129,7 +129,7 @@ internal sealed class CreateOfferHandler(
                 offer.OfferId,
                 offer.CreatedAt,
                 OfferHistorySummaries.Created,
-                "Offer created",
+                OfferHistorySummaries.Created,
                 null,
                 OfferHistorySummaries.StatusChannel(offer),
                 request.ActorUserId),

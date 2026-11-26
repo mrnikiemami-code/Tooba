@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Globalization;
+using MediatR;
 using Tooba.BuildingBlocks.Results;
 using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Offers.Ports;
@@ -41,9 +42,9 @@ internal sealed class GetOfferHistoryHandler(
                 fact.OccurredAt,
                 "PriceChanged",
                 fact.ActorUserId,
-                "Offer price changed",
-                fact.OldAmount is null ? null : $"amount={fact.OldAmount};currency={fact.Currency}",
-                $"amount={fact.NewAmount};currency={fact.Currency}", fact.FactId, fact.PriceId));
+                "PriceChanged",
+                fact.OldAmount is null ? null : FormattableString.Invariant($"amount={fact.OldAmount};currency={fact.Currency}"),
+                FormattableString.Invariant($"amount={fact.NewAmount};currency={fact.Currency}"), fact.FactId, fact.PriceId));
         }
         foreach (var fact in await inventoryHistory.ListAsync(request.OfferId, cancellationToken))
         {
@@ -51,17 +52,17 @@ internal sealed class GetOfferHistoryHandler(
             {
                 items.Add(new OfferHistoryItem(
                     fact.OfferId, fact.OccurredAt, "AllocationChanged", fact.ActorUserId,
-                    "Offer offered quantity changed",
-                    fact.OldAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    fact.NewAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture), fact.FactId, fact.OfferId));
+                    "AllocationChanged",
+                    fact.OldAllocation?.ToString(CultureInfo.InvariantCulture),
+                    fact.NewAllocation?.ToString(CultureInfo.InvariantCulture), fact.FactId, fact.OfferId));
             }
             else
             {
                 items.Add(new OfferHistoryItem(
                     fact.OfferId, fact.OccurredAt, "InventoryChanged", fact.ActorUserId,
-                    "Offer inventory changed",
-                    fact.OldOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    fact.NewOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture), fact.FactId, fact.StockItemId, fact.LocationId));
+                    "InventoryChanged",
+                    fact.OldOnHand?.ToString(CultureInfo.InvariantCulture),
+                    fact.NewOnHand?.ToString(CultureInfo.InvariantCulture), fact.FactId, fact.StockItemId, fact.LocationId));
             }
         }
 

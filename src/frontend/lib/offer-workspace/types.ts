@@ -120,6 +120,7 @@ export interface OfferLocalInventoryDraft {
 }
 
 export interface OfferHistoryItem {
+  eventId?: string | null;
   offerId: string;
   occurredAt: string;
   kind: string;

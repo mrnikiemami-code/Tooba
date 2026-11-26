@@ -44,6 +44,13 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   dirtyExitCancel: "Вернуться к форме",
   buyDisplay: "Покупаемость (индикатор)",
   buyabilityHint: "Индикатор основан на статусе, цене и запасе; окончательная проверка — в корзине.",
+  historyKindCreated: "Создание",
+  historyKindCommercial: "Коммерческие изменения",
+  historyKindPrice: "Изменение цены",
+  historyKindInventory: "Изменение запасов",
+  historyKindAllocation: "Изменение предлагаемого количества",
+  historyKindFulfillment: "Изменение доставки",
+  historyKindUnknown: "Зарегистрированное изменение",
   tabs: {
     ...offerWorkspaceMessages.en.tabs,
     identity: "Идентификация",

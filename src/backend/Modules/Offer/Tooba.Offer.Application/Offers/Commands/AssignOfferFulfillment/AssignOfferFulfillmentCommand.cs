@@ -99,7 +99,7 @@ internal sealed class AssignOfferFulfillmentHandler(
                 offer.OfferId,
                 clock.UtcNow,
                 OfferHistorySummaries.FulfillmentChanged,
-                "Offer fulfillment changed",
+                OfferHistorySummaries.FulfillmentChanged,
                 previous,
                 OfferHistorySummaries.Fulfillment(
                     offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId),

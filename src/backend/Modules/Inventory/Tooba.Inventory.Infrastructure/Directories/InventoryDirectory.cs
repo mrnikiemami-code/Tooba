@@ -215,6 +215,8 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
         var offer = await FindOfferAsync(knownPosition.OfferId, cancellationToken);
         var marketplace = _commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace;
+        if (_commerce is not null && (offer is null || !IsLocationEligible(location, offer)))
+            throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
         var needsAllocation = location.OwnerKind == InventoryLocationOwnerKind.Marketplace
             || (marketplace && offer?.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform);
         if (marketplace && (offer is null
