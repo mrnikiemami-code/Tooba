@@ -24,6 +24,9 @@ public sealed class StockReservation
     /// </summary>
     public decimal Quantity { get; private set; }
 
+    /// <summary>Null means a legacy reservation whose previous allocation accounting is retained.</summary>
+    public StockReservationPurpose? Purpose { get; init; }
+
     /// <summary>
     /// وضعیت چرخهٔ رزرو.
     /// </summary>
@@ -64,7 +67,8 @@ public sealed class StockReservation
         string? externalReference,
         string? idempotencyKey,
         DateTimeOffset now,
-        DateTimeOffset? expiresAt)
+        DateTimeOffset? expiresAt,
+        StockReservationPurpose purpose = StockReservationPurpose.NewSale)
     {
         if (reservationId == Guid.Empty || stockItemId == Guid.Empty)
         {
@@ -86,6 +90,7 @@ public sealed class StockReservation
             ReservationId = reservationId,
             StockItemId = stockItemId,
             Quantity = quantity,
+            Purpose = purpose,
             Status = StockReservationStatus.Held,
             ExternalReference = string.IsNullOrWhiteSpace(externalReference) ? null : externalReference.Trim(),
             IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim(),

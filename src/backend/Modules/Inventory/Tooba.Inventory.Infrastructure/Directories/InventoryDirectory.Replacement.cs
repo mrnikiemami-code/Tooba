@@ -81,7 +81,7 @@ public sealed partial class InventoryDirectory : IDamagedReplacementInventoryPor
             throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
         }
 
-        var receipt = await ReserveAsync(
+        var receipt = await ReserveCoreAsync(
             candidates[0],
             request.Quantity,
             request.ExternalReference,
@@ -90,6 +90,7 @@ public sealed partial class InventoryDirectory : IDamagedReplacementInventoryPor
             // from its first durable commit, so a crash before the Fulfillment link cannot leave active-order stock
             // expirable and no default/caller TTL can reintroduce one for this purpose.
             expiresAt: null,
+            purpose: StockReservationPurpose.DamagedReplacement,
             cancellationToken);
 
         return new DamagedReplacementReservationResult(

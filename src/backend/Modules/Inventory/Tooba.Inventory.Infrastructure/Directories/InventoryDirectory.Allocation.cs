@@ -72,6 +72,7 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
         var activeHeld = await (from reservation in _db.Reservations.AsNoTracking()
             join position in _db.Positions.AsNoTracking() on reservation.StockItemId equals position.StockItemId
             where position.OfferId == request.OfferId && reservation.Status == StockReservationStatus.Held
+                && (reservation.Purpose == null || reservation.Purpose == StockReservationPurpose.NewSale)
             select reservation.Quantity).SumAsync(cancellationToken);
         var held = existing?.Held ?? activeHeld;
         if (request.Quantity < held)

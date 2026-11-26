@@ -146,6 +146,11 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("idempotency_key");
 
+                    b.Property<string>("Purpose")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("purpose");
+
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(18,6)")
                         .HasColumnName("quantity");

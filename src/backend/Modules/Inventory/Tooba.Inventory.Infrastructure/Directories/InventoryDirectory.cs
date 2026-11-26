@@ -183,12 +183,23 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
     }
 
     /// <inheritdoc />
-    public async Task<ReservationReceipt> ReserveAsync(
+    public Task<ReservationReceipt> ReserveAsync(
         Guid stockItemId,
         decimal quantity,
         string? externalReference,
         string? idempotencyKey,
         DateTimeOffset? expiresAt,
+        CancellationToken cancellationToken) =>
+        ReserveCoreAsync(stockItemId, quantity, externalReference, idempotencyKey, expiresAt,
+            StockReservationPurpose.NewSale, cancellationToken);
+
+    private async Task<ReservationReceipt> ReserveCoreAsync(
+        Guid stockItemId,
+        decimal quantity,
+        string? externalReference,
+        string? idempotencyKey,
+        DateTimeOffset? expiresAt,
+        StockReservationPurpose purpose,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -226,6 +237,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             if (prior is not null)
             {
                 if (prior.Status != StockReservationStatus.Held || prior.StockItemId != stockItemId
+                    || (prior.Purpose ?? StockReservationPurpose.NewSale) != purpose
                     || prior.Quantity != quantity || prior.ExternalReference != (string.IsNullOrWhiteSpace(externalReference) ? null : externalReference.Trim()))
                     throw new ContractOperationException(InventoryErrorCodes.ReservationConflict);
                 return new ReservationReceipt(prior.ReservationId, stockItemId, knownPosition.OfferId,
@@ -234,9 +246,9 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         }
         var allocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == knownPosition.OfferId, cancellationToken);
-        if (needsAllocation && allocation is null)
+        if (purpose == StockReservationPurpose.NewSale && needsAllocation && allocation is null)
             throw new ContractOperationException(InventoryErrorCodes.SupplyUnavailable);
-        if (allocation is not null)
+        if (allocation is not null && purpose == StockReservationPurpose.NewSale)
         {
             var allocationRevision = _ids.NewId();
             var allocationReserved = await _db.OfferAllocations
@@ -265,7 +277,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
 
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
         await _db.Entry(position).ReloadAsync(cancellationToken);
-        var hold = StockReservation.Hold(_ids.NewId(), stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt);
+        var hold = StockReservation.Hold(_ids.NewId(), stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt, purpose);
         _db.Reservations.Add(hold);
         position.RecordReserved(hold.ReservationId, quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
@@ -330,7 +342,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         var allocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == knownPosition.OfferId, cancellationToken);
         var now = _clock.UtcNow;
-        if (allocation is not null)
+        if (allocation is not null && (reservation.Purpose is null or StockReservationPurpose.NewSale))
         {
             var releaseRevision = _ids.NewId();
             var allocationReleased = await _db.OfferAllocations
@@ -456,7 +468,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         var consumeAllocation = await _db.OfferAllocations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.OfferId == consumePosition.OfferId, cancellationToken);
 
-        if (consumeAllocation is not null)
+        if (consumeAllocation is not null && (reservation.Purpose is null or StockReservationPurpose.NewSale))
         {
             var consumeRevision = _ids.NewId();
             var allocationConsumed = await _db.OfferAllocations
@@ -471,6 +483,26 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
                     cancellationToken);
             if (allocationConsumed != 1)
                 throw new ContractOperationException(InventoryErrorCodes.ReservationConsumeMismatch);
+        }
+
+        if (consumeAllocation is not null && reservation.Purpose == StockReservationPurpose.PaidOrderRecovery)
+        {
+            // An unpaid/new sale cannot enter this path. An existing paid obligation may use physical
+            // stock even if the remaining quota is zero. Debit only unheld commercial quota, never
+            // steal another customer's reserved allocation. A replacement never debits a second sale.
+            var debit = Math.Min(reservation.Quantity, Math.Max(0m, consumeAllocation.Quantity - consumeAllocation.Held));
+            if (debit > 0)
+            {
+                var recoveryRevision = _ids.NewId();
+                var updated = await _db.OfferAllocations
+                    .Where(x => x.OfferId == consumePosition.OfferId && x.Quantity - x.Held >= debit)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(x => x.Quantity, x => x.Quantity - debit)
+                        .SetProperty(x => x.Revision, recoveryRevision)
+                        .SetProperty(x => x.UpdatedAt, now), cancellationToken);
+                if (updated != 1)
+                    throw new ContractOperationException(InventoryErrorCodes.ReservationConsumeMismatch);
+            }
         }
 
         var consumed = await _db.Positions

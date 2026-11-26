@@ -133,7 +133,7 @@ public sealed partial class InventoryDirectory
                     continue;
                 }
 
-                var stockItemId = await ResolveStockItemIdAsync(input, cancellationToken)
+                var stockItemId = await ResolveStockItemIdAsync(input, requireDurable, cancellationToken)
                     ?? throw new ContractOperationException(InventoryErrorCodes.ManualReviewUnavailable);
                 DateTimeOffset? expiresAt = IsTimedHold(request.Mode)
                     ? request.ReviewExpiresAt
@@ -141,12 +141,13 @@ public sealed partial class InventoryDirectory
                 // idempotency_key column is varchar(128); keep this compact.
                 var idempotencyKey =
                     $"os-{(int)request.Mode}-{input.OrderLineId:N}-{request.CheckoutId:N}-{_clock.UtcNow.UtcTicks}";
-                var receipt = await ReserveAsync(
+                var receipt = await ReserveCoreAsync(
                     stockItemId,
                     input.RemainingQuantity,
                     $"order-supply-{input.OrderLineId:N}",
                     idempotencyKey,
                     expiresAt,
+                    requireDurable ? StockReservationPurpose.PaidOrderRecovery : StockReservationPurpose.NewSale,
                     cancellationToken);
                 acquired.Add(receipt.ReservationId);
                 if (requireDurable)
@@ -214,6 +215,7 @@ public sealed partial class InventoryDirectory
             }
 
             var heldValid = existing is { Status: StockReservationStatus.Held }
+                && existing.OfferId == line.OfferId
                 && existing.Quantity >= line.RemainingQuantity
                 && (existing.ExpiresAt is null || existing.ExpiresAt > _clock.UtcNow);
 
@@ -231,7 +233,7 @@ public sealed partial class InventoryDirectory
                 continue;
             }
 
-            var available = await ResolveAvailableAsync(line, cancellationToken);
+            var available = await ResolveAvailableAsync(line, requireDurable, cancellationToken);
             if (available >= line.RemainingQuantity)
             {
                 results.Add(new OrderSupplyLineShortage(
@@ -282,37 +284,38 @@ public sealed partial class InventoryDirectory
         return (OrderSupplyStatusKind.PartiallyUnavailable, results);
     }
 
-    private async Task<decimal> ResolveAvailableAsync(OrderSupplyLineInput line, CancellationToken cancellationToken)
+    private async Task<decimal> ResolveAvailableAsync(OrderSupplyLineInput line, bool requireDurable, CancellationToken cancellationToken)
     {
-        if (line.CurrentReservationId is { } rid)
-        {
-            var existing = await FindReservationAsync(rid, cancellationToken);
-            if (existing is not null)
-            {
-                var position = await _db.Positions.AsNoTracking()
-                    .SingleOrDefaultAsync(x => x.StockItemId == existing.StockItemId, cancellationToken);
-                if (position is not null)
-                {
-                    return Math.Max(0, position.OnHand - position.Reserved);
-                }
-            }
-        }
-
+        var stockItemId = await ResolveStockItemIdAsync(line, requireDurable, cancellationToken);
+        if (stockItemId is not Guid id) return 0m;
+        var position = await _db.Positions.AsNoTracking().SingleOrDefaultAsync(x => x.StockItemId == id, cancellationToken);
+        if (position is null) return 0m;
+        var physical = Math.Max(0m, position.OnHand - position.Reserved);
+        if (requireDurable) return physical;
         var availability = await GetAvailabilityAsync(line.OfferId, cancellationToken);
-        return availability?.Available ?? 0m;
+        return Math.Min(physical, availability?.Available ?? 0m);
     }
 
-    private async Task<Guid?> ResolveStockItemIdAsync(OrderSupplyLineInput line, CancellationToken cancellationToken)
+    private async Task<Guid?> ResolveStockItemIdAsync(OrderSupplyLineInput line, bool requireDurable, CancellationToken cancellationToken)
     {
         if (line.CurrentReservationId is { } rid)
         {
             var existing = await FindReservationAsync(rid, cancellationToken);
             if (existing is not null)
-            {
-                return existing.StockItemId;
-            }
+                return existing.OfferId == line.OfferId ? existing.StockItemId : null;
         }
-
+        if (requireDurable)
+        {
+            var offer = await FindOfferAsync(line.OfferId, cancellationToken);
+            if (offer is null) return null;
+            var candidates = await (from position in _db.Positions.AsNoTracking()
+                join location in _db.Locations.AsNoTracking() on position.LocationId equals location.LocationId
+                where position.OfferId == line.OfferId && location.Status == InventoryLocationStatus.Active
+                select new { position, location }).ToListAsync(cancellationToken);
+            return candidates.Where(x => _commerce is null || IsLocationEligible(x.location, offer))
+                .OrderByDescending(x => x.position.OnHand - x.position.Reserved)
+                .Select(x => (Guid?)x.position.StockItemId).FirstOrDefault();
+        }
         var availability = await GetAvailabilityAsync(line.OfferId, cancellationToken);
         return availability?.Locations.OrderByDescending(x => x.Available).FirstOrDefault()?.StockItemId;
     }

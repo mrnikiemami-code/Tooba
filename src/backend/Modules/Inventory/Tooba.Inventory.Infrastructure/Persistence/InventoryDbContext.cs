@@ -104,6 +104,7 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.ReservationId).ValueGeneratedNever();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.ExternalReference).HasMaxLength(128);
+            entity.Property(x => x.Purpose).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique().HasFilter("idempotency_key IS NOT NULL");

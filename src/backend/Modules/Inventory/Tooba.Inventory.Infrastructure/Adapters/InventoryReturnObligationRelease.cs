@@ -135,7 +135,8 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
         {
             var target = await _db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
             await InventoryDirectory.LockOfferAllocationAsync(_db, target.OfferId, cancellationToken);
-            if (await _db.OfferAllocations.AsNoTracking().AnyAsync(x => x.OfferId == target.OfferId, cancellationToken))
+            if ((reservation.Purpose is null or StockReservationPurpose.NewSale)
+                && await _db.OfferAllocations.AsNoTracking().AnyAsync(x => x.OfferId == target.OfferId, cancellationToken))
             {
                 if (_ids is null) throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
                 var revision = _ids.NewId();
