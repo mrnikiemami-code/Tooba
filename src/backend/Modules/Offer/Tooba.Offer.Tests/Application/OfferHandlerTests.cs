@@ -116,6 +116,7 @@ public sealed class OfferHandlerTests
         services.AddSingleton<IPriceLookupGateway, FakePrices>();
         services.AddSingleton<ISellerOfferInventoryGateway, FakeInventory>();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
         services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         services.AddSingleton<IClock>(new FixedClock(Now));
         services.AddSingleton<IIdGenerator>(new FixedIds(OfferId));
@@ -201,6 +202,14 @@ public sealed class OfferHandlerTests
     private sealed class FixedStoreCommerce(string channel) : ICurrentStoreCommerceContext
     {
         public StoreCommerceContext? Current { get; } = new(null, null, channel);
+    }
+
+    private sealed class FakePriceHistory : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
+    {
+        public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>([]);
+        public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
     }
 
     private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition

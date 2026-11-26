@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
 using Tooba.BuildingBlocks.Results;
+using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Ports;
@@ -29,7 +30,7 @@ public sealed class OpenPricingUseCaseGuard : IPricingUseCaseGuard
 /// <summary>
 /// Authored-price writer and reader. Offer is reached only through <see cref="IOfferLookupGateway"/>.
 /// </summary>
-public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISellerOfferPricingGateway, IPriceQueryGateway
+public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISellerOfferPricingGateway, IPriceQueryGateway, IOfferPriceHistoryReader
 {
     private readonly PricingDbContext _db;
     private readonly IPricingUseCaseGuard _guard;
@@ -79,68 +80,136 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     }
 
     /// <inheritdoc />
-    public async Task<Result> SetPriceAsync(SetSellerOfferPrice request, CancellationToken cancellationToken)
+    public async Task<Result<SellerPriceWriteReceipt>> SetPriceAsync(
+        SetSellerOfferPrice request,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.Amount < 0)
-        {
-            return Result.Failure(new SemanticError(PricingErrorCodes.AmountInvalid));
-        }
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.AmountInvalid));
 
         var offer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
-        {
-            return Result.Failure(new SemanticError(OfferErrorCodes.NotFound));
-        }
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(OfferErrorCodes.NotFound));
 
         var market = string.IsNullOrWhiteSpace(request.Market) ? "IR" : request.Market.Trim();
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "IRR" : request.Currency.Trim();
         if (!MarketCode.TryParse(market, out var marketCode, out var marketError))
-        {
-            return Result.Failure(marketError!);
-        }
-
+            return Result.Failure<SellerPriceWriteReceipt>(marketError!);
         if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
-        {
-            return Result.Failure(currencyError!);
-        }
-
+            return Result.Failure<SellerPriceWriteReceipt>(currencyError!);
         market = marketCode.Value;
         currency = currencyCode.Value;
         var channel = ToPriceChannel(offer.Channel);
-        var existing = await _db.Prices.AsNoTracking()
+        var operationId = request.OperationId == Guid.Empty ? _ids.NewId() : request.OperationId;
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var replay = await _db.PriceChanges.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
+        if (replay is not null)
+        {
+            if (replay.OfferId != request.OfferId || replay.NewAmount != request.Amount
+                || !string.Equals(replay.Currency, currency, StringComparison.Ordinal))
+            {
+                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+            }
+            return Result.Success(ToReceipt(replay));
+        }
+
+        var latest = await _db.PriceChanges.AsNoTracking()
+            .Where(x => x.OfferId == request.OfferId)
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenByDescending(x => x.FactId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.ExpectedRevision)
+            || (request.ExpectedRevision == "absent"
+                ? latest is not null
+                : latest is null || !string.Equals(latest.Revision, request.ExpectedRevision, StringComparison.Ordinal)))
+        {
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+        }
+
+        var existing = await _db.Prices
             .Where(x => x.OfferId == request.OfferId && x.Market == market
                         && x.Channel == channel && x.Currency == currency
                         && x.QualifierKind == PriceQualifierKind.Base)
             .OrderByDescending(x => x.PriceId)
             .FirstOrDefaultAsync(cancellationToken);
+        var now = _clock.UtcNow;
+        AuthoredPrice price;
+        decimal? oldAmount;
         if (existing is null || existing.Status == PriceStatus.Retired)
         {
             if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, Guid.Empty, cancellationToken))
-            {
-                return Result.Failure(new SemanticError(PricingErrorCodes.Overlap));
-            }
-
-            var created = await CreatePriceAsync(
-                request.OfferId, market, offer.Channel, request.Amount, currency,
-                _clock.UtcNow.AddYears(-1), null, cancellationToken);
-            await ActivateAsync(created.PriceId, cancellationToken);
-            return Result.Success();
+                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.Overlap));
+            price = AuthoredPrice.Create(_ids.NewId(), request.OfferId, market, channel,
+                request.Amount, currency, now.AddYears(-1), null, now);
+            price.Activate(now);
+            _db.Prices.Add(price);
+            oldAmount = null;
         }
-
-        await ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
-        if (existing.Status != PriceStatus.Active)
+        else
         {
-            if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, existing.PriceId, cancellationToken))
-            {
-                return Result.Failure(new SemanticError(PricingErrorCodes.Overlap));
-            }
-
-            await ActivateAsync(existing.PriceId, cancellationToken);
+            price = existing;
+            oldAmount = price.Amount;
+            await EnsureNoOverlapAsync(price, price.PriceId, cancellationToken);
+            price.ChangeAmount(request.Amount, currency, now);
+            if (price.Status != PriceStatus.Active)
+                price.Activate(now);
         }
 
-        return Result.Success();
+        var fact = new PriceChangeFact
+        {
+            FactId = _ids.NewId(),
+            OfferId = request.OfferId,
+            PriceId = price.PriceId,
+            OperationId = operationId,
+            ActorUserId = request.ActorUserId,
+            OccurredAt = now,
+            OldAmount = oldAmount,
+            NewAmount = request.Amount,
+            Currency = currency,
+            Revision = _ids.NewId().ToString("N"),
+        };
+        _db.PriceChanges.Add(fact);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+        }
+
+        return Result.Success(ToReceipt(fact));
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+        await _db.PriceChanges.AsNoTracking()
+            .Where(x => x.OfferId == offerId)
+            .OrderBy(x => x.OccurredAt).ThenBy(x => x.FactId)
+            .Select(x => new SellerPriceChangeFact(x.FactId, x.OfferId, x.PriceId, x.OperationId,
+                x.ActorUserId, x.OccurredAt, x.OldAmount, x.NewAmount, x.Currency, x.Revision))
+            .ToListAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        var fact = await _db.PriceChanges.AsNoTracking()
+            .Where(x => x.OfferId == offerId)
+            .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.FactId)
+            .FirstOrDefaultAsync(cancellationToken);
+        return fact is null
+            ? null
+            : new SellerPriceRevision(fact.Revision, fact.PriceId, fact.NewAmount, fact.Currency, fact.OccurredAt);
+    }
+
+    private static SellerPriceWriteReceipt ToReceipt(PriceChangeFact fact) =>
+        new(fact.PriceId, fact.OfferId, fact.Revision, fact.OperationId, fact.ActorUserId,
+            fact.OccurredAt, fact.OldAmount, fact.NewAmount, fact.Currency);
 
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync(

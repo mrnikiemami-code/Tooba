@@ -228,11 +228,33 @@ public sealed class OfferHistoryTests
         services.AddToobaCqrsFoundation(typeof(GetOfferHistoryQuery).Assembly);
         services.AddSingleton(store);
         services.AddSingleton(reader);
+        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
+        services.AddSingleton<Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader>(new FakeInventoryHistory());
         return services.BuildServiceProvider().GetRequiredService<ISender>();
+    }
+
+    private sealed class FakePriceHistory : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
+    {
+        public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>([]);
+        public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
+    }
+
+    private sealed class FakeInventoryHistory : Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader
+    {
+        public Task<IReadOnlyList<Tooba.Inventory.Contracts.Seller.OfferInventoryChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Inventory.Contracts.Seller.OfferInventoryChangeFact>>([]);
     }
 
     private sealed class FakeReader : IOfferHistoryReader
     {
+        public Task<IReadOnlyList<OfferHistoryItem>> ListAsync(Guid offerId, CancellationToken cancellationToken)
+        {
+            Calls++;
+            LastOfferId = offerId;
+            return Task.FromResult<IReadOnlyList<OfferHistoryItem>>([]);
+        }
         public int Calls { get; private set; }
 
         public Guid? LastOfferId { get; private set; }

@@ -8,6 +8,7 @@ using Tooba.BuildingBlocks.Localization;
 using Tooba.StoreContext.Contracts.Current;
 using Tooba.Offer.Application.Offers.Commands.CreateOffer;
 using Tooba.Offer.Application.Offers.Commands.SetOfferInventory;
+using Tooba.Offer.Application.Offers.Commands.SetOfferAllocation;
 using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
 using Tooba.Offer.Application.Offers.Queries.FindActiveOffer;
@@ -41,6 +42,8 @@ public static class OfferSellerEndpoints
         group.MapPatch("/offers/{offerId:guid}", PatchOfferAsync);
         group.MapMethods("/offers/{offerId:guid}/price", ["POST", "PUT"], WriteOfferPriceAsync);
         group.MapMethods("/offers/{offerId:guid}/inventory", ["POST", "PUT"], WriteOfferInventoryAsync);
+        group.MapMethods("/offers/{offerId:guid}/allocation", ["POST", "PUT"], WriteOfferAllocationAsync);
+        group.MapMethods("/offers/{offerId:guid}/offered-quantity", ["POST", "PUT"], WriteOfferAllocationAsync);
     }
 
     private static async Task<IResult> ListOffersAsync(
@@ -175,7 +178,22 @@ public static class OfferSellerEndpoints
     {
         var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, sellerId, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId), token);
+            offerId, sellerId, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
+        return api.From(result);
+    }
+
+    private static async Task<IResult> WriteOfferAllocationAsync(
+        Guid offerId,
+        SellerOfferAllocationWriteRequest body,
+        ISender sender,
+        IOfferSellerAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
+        var result = await sender.Send(new SetOfferAllocationCommand(
+            offerId, sellerId, body.Quantity, body.ExpectedRevision, actorUserId, body.OperationId ?? Guid.Empty), token);
         return api.From(result);
     }
 
@@ -190,7 +208,7 @@ public static class OfferSellerEndpoints
     {
         var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
         var result = await sender.Send(new SetOfferInventoryCommand(
-            offerId, sellerId, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId), token);
+            offerId, sellerId, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, false), token);
         return api.From(result);
     }
 }

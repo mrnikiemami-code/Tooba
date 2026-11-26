@@ -1,4 +1,4 @@
-namespace Tooba.Inventory.Contracts.Errors;
+﻿namespace Tooba.Inventory.Contracts.Errors;
 
 /// <summary>
 /// Stable semantic error codes owned by Inventory. Values are the machine codes emitted by the
@@ -15,6 +15,13 @@ public static class InventoryErrorCodes
         LocationCodeInvalid,
         LocationNameRequired,
         LocationNotFound,
+        LocationOwnerRequired,
+        LocationOwnerInvalid,
+        LocationNotEligible,
+        AllocationBelowHeld,
+        AllocationExceedsPhysical,
+        AllocationRevisionConflict,
+        PositionRevisionConflict,
         PositionIdsRequired,
         PositionQuantityInvalid,
         PositionNotFound,
@@ -64,6 +71,27 @@ public static class InventoryErrorCodes
 
     /// <summary>The requested storage location does not exist or is not active.</summary>
     public const string LocationNotFound = "inventory.location.not_found";
+
+    /// <summary>A seller-owned location requires a concrete seller party.</summary>
+    public const string LocationOwnerRequired = "inventory.location.owner_required";
+
+    /// <summary>Owner kind and seller identity contradict each other.</summary>
+    public const string LocationOwnerInvalid = "inventory.location.owner_invalid";
+
+    /// <summary>The caller does not own the selected location.</summary>
+    public const string LocationNotEligible = "inventory.location.not_eligible";
+
+    /// <summary>Requested allocation is below protected held units.</summary>
+    public const string AllocationBelowHeld = "inventory.allocation.below_held";
+
+    /// <summary>Requested allocation exceeds eligible physical stock.</summary>
+    public const string AllocationExceedsPhysical = "inventory.allocation.exceeds_physical";
+
+    /// <summary>The caller allocation revision is stale or missing.</summary>
+    public const string AllocationRevisionConflict = "inventory.allocation.revision_conflict";
+
+    /// <summary>The caller physical-position revision is stale or missing.</summary>
+    public const string PositionRevisionConflict = "inventory.position.revision_conflict";
 
     /// <summary>Stock position identifiers are required.</summary>
     public const string PositionIdsRequired = "inventory.position.ids_required";

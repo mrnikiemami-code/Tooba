@@ -1,0 +1,10 @@
+﻿{"taskId":"TB-296-P1-A-BACKEND","base":"55de59bf8f7fd0db394794017d988fc831cc6de8","items":[
+{"id":"PREFLIGHT","status":"VERIFIED","note":"read receipt, frozen wire, additive matrix"},
+{"id":"F02-OWNER","status":"VERIFIED","note":"owner kind, no null wildcard, no default warehouse"},
+{"id":"F03-PRICE-REV-FACTS","status":"VERIFIED","note":"expected price revision, operation replay, Pricing fact"},
+{"id":"F03-INVENTORY-REV-FACTS","status":"VERIFIED","note":"position revision, allocation revision, Inventory facts"},
+{"id":"ALLOCATION","status":"VERIFIED","note":"offer-wide cap, reserve/release/consume atomic"},
+{"id":"OFFER-WIRE","status":"VERIFIED","note":"revisions/capabilities/offered-quantity route/history merge"},
+{"id":"TESTS-GUARDS","status":"VERIFIED","note":"Host build; Offer 133, Pricing 13, Inventory 53; OpenSpec strict"},
+{"id":"PROVIDER","status":"PENDING_C","note":"C owns connected provider and final 42+10 gate"},
+{"id":"COMMIT","status":"PENDING","next":"commit/push backend candidate and evidence"}]}

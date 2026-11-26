@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -37,6 +37,7 @@ public static class OfferInventoryProvisioningAdminEndpoints
     }
 
     private static async Task<IResult> ListLocationsForAdminAsync(
+        Guid? sellerPartyId,
         ISender sender,
         IOfferAdminAuthorizer authorizer,
         ApiResponseFactory api,
@@ -44,7 +45,7 @@ public static class OfferInventoryProvisioningAdminEndpoints
         CancellationToken token)
     {
         await authorizer.RequireViewAsync(context, token);
-        return api.From(await sender.Send(new ListEligibleInventoryLocationsQuery(), token));
+        return api.From(await sender.Send(new ListEligibleInventoryLocationsQuery(sellerPartyId), token));
     }
 
     private static async Task<IResult> EnsurePositionForAdminAsync(

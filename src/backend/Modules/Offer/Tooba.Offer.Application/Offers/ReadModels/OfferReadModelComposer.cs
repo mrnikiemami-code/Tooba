@@ -16,6 +16,7 @@ using Tooba.BuildingBlocks.Results;
 using Tooba.Party.Contracts.Ports;
 using Tooba.Pricing.Contracts;
 using Tooba.Pricing.Contracts.Ports;
+using Tooba.Pricing.Contracts.Seller;
 
 namespace Tooba.Offer.Application.Offers.ReadModels;
 
@@ -27,6 +28,7 @@ public sealed class OfferReadModelComposer(
     IPartyLookup parties,
     IReturnPolicyResolver returnPolicies,
     IOfferFulfillmentAssignmentLookup fulfillmentAssignments,
+    IOfferPriceHistoryReader priceHistory,
     IClock clock)
 {
     private const string DefaultMarket = "IR";
@@ -65,7 +67,7 @@ public sealed class OfferReadModelComposer(
     }
 
     /// <summary>Builds the enriched detail model for one Offer aggregate.</summary>
-    public async Task<SellerOfferDetailPage> DetailAsync(SellerOffer offer, CancellationToken cancellationToken, string? locale = null)
+    public async Task<SellerOfferDetailPage> DetailAsync(SellerOffer offer, CancellationToken cancellationToken, string? locale = null, bool adminSurface = false)
     {
         var catalogRows = await catalog.GetOfferPresentationsAsync([offer.CatalogVariantId], cancellationToken, locale);
         catalogRows.TryGetValue(offer.CatalogVariantId, out var product);
@@ -78,6 +80,7 @@ public sealed class OfferReadModelComposer(
         var options = returnPolicies.Options;
         var assignments = await fulfillmentAssignments.GetAssignmentsAsync([offer.OfferId], cancellationToken);
         assignments.TryGetValue(offer.OfferId, out var fulfillment);
+        var priceRevision = await priceHistory.GetRevisionAsync(offer.OfferId, cancellationToken);
         return new SellerOfferDetailPage(
             offer.OfferId, offer.SellerPartyId, seller?.DisplayName ?? string.Empty,
             offer.CatalogVariantId, product?.ProductId, product?.ProductTitle ?? string.Empty,
@@ -95,7 +98,8 @@ public sealed class OfferReadModelComposer(
                 location.LocationName,
                 location.OnHand,
                 location.Reserved,
-                location.Available)).ToList(),
+                location.Available,
+                location.Revision)).ToList(),
             product?.VariantCode,
             product?.PrimaryMediaAssetId,
             fulfillment?.Responsibility,
@@ -104,7 +108,19 @@ public sealed class OfferReadModelComposer(
             product?.VariantLabel,
             product?.UnitQuantityDecimalPlaces ?? 0,
             product?.UnitQuantityStep,
-            product?.UnitRoundingMode);
+            product?.UnitRoundingMode,
+            priceRevision?.Revision ?? "absent",
+            priceRevision?.PriceId,
+            stock?.OfferedQuantity,
+            stock?.AllocationHeld,
+            stock?.AllocationRevision,
+            offer.UpdatedAt.ToString("O"),
+            new OfferRevisions(offer.UpdatedAt.ToString("O"), priceRevision?.Revision ?? "absent", stock?.AllocationRevision ?? "absent"),
+            new OfferCapabilities(
+                adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller,
+                fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform,
+                adminSurface,
+                adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller));
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

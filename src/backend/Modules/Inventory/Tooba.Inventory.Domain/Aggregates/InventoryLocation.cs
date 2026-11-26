@@ -26,7 +26,10 @@ public sealed class InventoryLocation : IHasDomainEvents
     /// </summary>
     public string Name { get; init; } = string.Empty;
 
-    /// <summary>Optional owning seller; null means a store-owned shared location.</summary>
+    /// <summary>Explicit owner kind; unknown/null is never treated as shared access.</summary>
+    public InventoryLocationOwnerKind OwnerKind { get; init; } = InventoryLocationOwnerKind.Store;
+
+    /// <summary>Owning seller only when <see cref="OwnerKind"/> is Seller.</summary>
     public Guid? SellerPartyId { get; init; }
 
     /// <summary>
@@ -53,7 +56,13 @@ public sealed class InventoryLocation : IHasDomainEvents
     /// <summary>
     /// محل فعال می‌سازد. موجودی Offer را صفر نمی‌کند.
     /// </summary>
-    public static InventoryLocation Create(Guid locationId, string code, string name, DateTimeOffset now)
+    public static InventoryLocation Create(Guid locationId, string code, string name, DateTimeOffset now) =>
+        Create(locationId, code, name, now, InventoryLocationOwnerKind.Store, null);
+
+    /// <summary>Creates a location with an explicit owner; unknown/shared fallback is forbidden.</summary>
+    public static InventoryLocation Create(
+        Guid locationId, string code, string name, DateTimeOffset now,
+        InventoryLocationOwnerKind ownerKind, Guid? sellerPartyId)
     {
         if (locationId == Guid.Empty)
         {
@@ -70,9 +79,21 @@ public sealed class InventoryLocation : IHasDomainEvents
             throw new ContractOperationException(InventoryErrorCodes.LocationNameRequired);
         }
 
+        if (ownerKind == InventoryLocationOwnerKind.Seller && (sellerPartyId is null || sellerPartyId == Guid.Empty))
+        {
+            throw new ContractOperationException(InventoryErrorCodes.LocationOwnerRequired);
+        }
+
+        if (ownerKind != InventoryLocationOwnerKind.Seller && sellerPartyId is not null)
+        {
+            throw new ContractOperationException(InventoryErrorCodes.LocationOwnerInvalid);
+        }
+
         return new InventoryLocation
         {
             LocationId = locationId,
+            OwnerKind = ownerKind,
+            SellerPartyId = sellerPartyId,
             Code = code.Trim().ToUpperInvariant(),
             Name = name.Trim(),
             Status = InventoryLocationStatus.Active,

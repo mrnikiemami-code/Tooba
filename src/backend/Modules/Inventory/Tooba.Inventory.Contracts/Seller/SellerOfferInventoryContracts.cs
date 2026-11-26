@@ -8,7 +8,10 @@ public sealed record OfferInventorySummary(
     decimal OnHand,
     decimal Reserved,
     decimal Available,
-    IReadOnlyList<SellerInventoryPosition>? Locations = null);
+    IReadOnlyList<SellerInventoryPosition>? Locations = null,
+    decimal? OfferedQuantity = null,
+    decimal? AllocationHeld = null,
+    string? AllocationRevision = null);
 
 /// <summary>A named stock position belonging to the offer.</summary>
 public sealed record SellerInventoryPosition(
@@ -18,7 +21,8 @@ public sealed record SellerInventoryPosition(
     string LocationName,
     decimal OnHand,
     decimal Reserved,
-    decimal Available);
+    decimal Available,
+    string? Revision = null);
 
 /// <summary>Inventory-owned seller stock write request.</summary>
 public sealed record SetSellerOfferInventory(
@@ -26,7 +30,11 @@ public sealed record SetSellerOfferInventory(
     Guid SellerPartyId,
     decimal OnHand,
     string? Reason,
-    Guid? StockItemId = null);
+    Guid? StockItemId = null,
+    string? ExpectedRevision = null,
+    Guid? ActorUserId = null,
+    Guid OperationId = default,
+    bool AdminPhysicalAdjustment = false);
 
 /// <summary>Inventory-owned boundary for offer reads and seller stock writes.</summary>
 public interface ISellerOfferInventoryGateway
@@ -49,7 +57,8 @@ public sealed record ProvisionedStockPosition(
     Guid LocationId,
     Guid OfferId,
     decimal OnHand,
-    decimal Reserved);
+    decimal Reserved,
+    string? Revision = null);
 
 /// <summary>
 /// Inventory-owned boundary for eligible-location reads and idempotent stock-position provisioning.

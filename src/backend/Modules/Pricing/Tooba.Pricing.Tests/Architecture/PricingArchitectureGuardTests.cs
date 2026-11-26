@@ -134,21 +134,23 @@ public sealed class PricingArchitectureGuardTests
     {
         var contracts = File.ReadAllText(Path.Combine(
             PricingRoot(), "Tooba.Pricing.Contracts", "Seller", "SellerOfferPricingContracts.cs"));
-        Assert.Contains("Task<Result> SetPriceAsync", contracts, StringComparison.Ordinal);
+        Assert.Contains("Task<Result<SellerPriceWriteReceipt>> SetPriceAsync", contracts, StringComparison.Ordinal);
 
         var directory = File.ReadAllText(Path.Combine(
             PricingRoot(), "Tooba.Pricing.Infrastructure", "Adapters", "PriceDirectory.cs"));
-        var methodStart = directory.IndexOf("public async Task<Result> SetPriceAsync", StringComparison.Ordinal);
+        var methodStart = directory.IndexOf("public async Task<Result<SellerPriceWriteReceipt>> SetPriceAsync", StringComparison.Ordinal);
         Assert.True(methodStart >= 0, "SetPriceAsync Result signature missing");
         var methodEnd = directory.IndexOf("public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync", methodStart, StringComparison.Ordinal);
         Assert.True(methodEnd > methodStart, "SetPriceAsync method body not bounded");
         var setPriceBody = directory[methodStart..methodEnd];
         Assert.Contains("Result.Failure", setPriceBody, StringComparison.Ordinal);
-        Assert.Contains("Result.Success()", setPriceBody, StringComparison.Ordinal);
+        Assert.Contains("Result.Success(", setPriceBody, StringComparison.Ordinal);
         Assert.Contains("MarketCode.TryParse", setPriceBody, StringComparison.Ordinal);
         Assert.Contains("CurrencyCode.TryParse", setPriceBody, StringComparison.Ordinal);
         Assert.DoesNotContain("throw new SemanticException", setPriceBody, StringComparison.Ordinal);
-        Assert.DoesNotContain("catch (", setPriceBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch (Exception", setPriceBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("catch {", setPriceBody, StringComparison.Ordinal);
+        Assert.Contains("catch (DbUpdateConcurrencyException)", setPriceBody, StringComparison.Ordinal);
 
         var offerEndpoint = File.ReadAllText(Path.Combine(
             RepoRoot(),

@@ -1,0 +1,112 @@
+﻿[
+    {
+        "path":  "docs/opencode/tasks/TB-296-P1-A-BACKEND/TASK.md",
+        "sha256":  "90a1f900c0a82e16cd517d23ba7198efa08872c41fada34109210678885e121e",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/PHASE1-EXECUTION-CONTRACT.md",
+        "sha256":  "c3f9d15e409655dcba2ca97c31089375cc0c7af19f586e453eef7f0010163de1",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ADDITIVE-MATRIX.json",
+        "sha256":  "38eb1caa23079680ccb0258a37b4b1a66d2dce73468bb6afca9b72b1a668f9bd",
+        "read":  true
+    },
+    {
+        "path":  "docs/architecture/OFFER-INVENTORY-FULFILLMENT-OWNER-POLICY.md",
+        "sha256":  "76aca0c10ae89c816ff0474410c9e8ab8eb6a447da9f581a2e18af5d75699e95",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/TASK.md",
+        "sha256":  "b7b33af46e7e931bf0f7c472fee13c0111d4e832ab8a3d0a4fc4bcd2c7015380",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/REQUIREMENTS.json",
+        "sha256":  "f2aaf3e2a5fcf33172c77df451925ae367858bf0765e450e1cecffa21d7ccb5e",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ACCEPTANCE-MATRIX.json",
+        "sha256":  "9decfd0e9fef359748bf019c2ae4dc886b10019c68adfdfd3af8271bf8b7e66b",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-REVIEW.md",
+        "sha256":  "b552d6436654f27db42535396fc981e87c4588369667c42aef706397f1ee41e1",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-ROOT-CAUSE-FOLLOWUP.md",
+        "sha256":  "37a6b2c4d97c6e2e9083d9b8e14c517755cc3c3b28b999180e29df5c4b4e7391",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/DEV-HOST-TEST-POLICY.md",
+        "sha256":  "9db42af74a0ae6f25402ede9129192f704d02d6b66487a6466217982425490c9",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/01-architecture.md",
+        "sha256":  "c226101e940418a02bef6d65e6aa01030db368fac3960a2030e27a55b4486c36",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/02-security-permissions.md",
+        "sha256":  "fa0661aef48e078bbbace75bfaaae39a51a724ff93a88347058a3e6590293f72",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/03-openspec.md",
+        "sha256":  "e6a682f432137c12998a75eb09c0c3f5f41a7f36f120996b9f3b237399e047d4",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/04-opencode-acceptance.md",
+        "sha256":  "cc55151b9bb8e4cf33ec59d91da015310e9d6b7e2947c6cc06cd9972cbb38880",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/05-task-layer.md",
+        "sha256":  "35e4cf866130c54281007b41eedeb08c6aeaa4ee73ce46240d4abbc867759500",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/iso-rules/06-backend-layer.md",
+        "sha256":  "4a179eedb66633c63e76176c1e935d98dafdecdb0f5b40654577341f20cac340",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/ARCHITECT-DELIVERY-METHOD.md",
+        "sha256":  "f98744d1faf6c1512c9e9d987d8d9ff62ac8444e606c6526db9290d117aeacf5",
+        "read":  true
+    },
+    {
+        "path":  "docs/opencode/ARCHITECT-QUALITY-GATE.md",
+        "sha256":  "98b8ab3522afc23cfffe0f29919c0a218e10337aa3c8f0cdeba7824da88ae5d5",
+        "read":  true
+    },
+    {
+        "path":  "openspec/changes/offer-production-readiness-296-r10/proposal.md",
+        "sha256":  "efade9e5a225d1b9e7dd9ac8ab136c027de7462edecc022f1a374767a8f28d86",
+        "read":  true
+    },
+    {
+        "path":  "openspec/changes/offer-production-readiness-296-r10/design.md",
+        "sha256":  "e5db123c36bbe51899f8caad0009d9f97304f363fcc885cde1ce248c6a2e7ea0",
+        "read":  true
+    },
+    {
+        "path":  "openspec/changes/offer-production-readiness-296-r10/tasks.md",
+        "sha256":  "0bf5b1723b02e8601e17d8d3b2fcd4985ca10da75856e97fa691e5f5e736a3dc",
+        "read":  true
+    },
+    {
+        "path":  "openspec/changes/offer-production-readiness-296-r10/specs/offer-production-readiness/spec.md",
+        "sha256":  "20be13fecc097d06e358a50aec63725d7824507a142e816129b01e03861573eb",
+        "read":  true
+    }
+]

@@ -9,6 +9,7 @@ using Tooba.StoreContext.Contracts.Current;
 using Tooba.BuildingBlocks.Presentation;
 using Tooba.Offer.Application.Offers.Commands.CreateOffer;
 using Tooba.Offer.Application.Offers.Commands.SetOfferInventory;
+using Tooba.Offer.Application.Offers.Commands.SetOfferAllocation;
 using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
 using Tooba.Offer.Application.Offers.Queries.FindActiveOffer;
@@ -38,6 +39,8 @@ public static class OfferAdminEndpoints
         group.MapPatch("/offers/{offerId:guid}", PatchAsync);
         group.MapMethods("/offers/{offerId:guid}/price", ["POST", "PUT"], PriceAsync);
         group.MapMethods("/offers/{offerId:guid}/inventory", ["POST", "PUT"], InventoryAsync);
+        group.MapMethods("/offers/{offerId:guid}/allocation", ["POST", "PUT"], AllocationAsync);
+        group.MapMethods("/offers/{offerId:guid}/offered-quantity", ["POST", "PUT"], AllocationAsync);
     }
 
     private static async Task<IResult> QueryAsync(
@@ -169,8 +172,24 @@ public static class OfferAdminEndpoints
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, owner.Value, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId), token);
+            offerId, owner.Value, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
         return api.From(result);
+    }
+
+    private static async Task<IResult> AllocationAsync(
+        Guid offerId,
+        SellerOfferAllocationWriteRequest body,
+        ISender sender,
+        IOfferAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        var actorUserId = await authorizer.RequireEditAsync(context, token);
+        var owner = await SellerOfAsync(sender, offerId, token);
+        if (owner.IsFailure) return api.From(owner);
+        return api.From(await sender.Send(new SetOfferAllocationCommand(
+            offerId, owner.Value, body.Quantity, body.ExpectedRevision, actorUserId, body.OperationId ?? Guid.Empty), token));
     }
 
     private static async Task<IResult> InventoryAsync(
@@ -186,7 +205,7 @@ public static class OfferAdminEndpoints
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
         var result = await sender.Send(new SetOfferInventoryCommand(
-            offerId, owner.Value, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId), token);
+            offerId, owner.Value, body.OnHand, body.Reason, body.StockItemId, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, true), token);
         return api.From(result);
     }
 

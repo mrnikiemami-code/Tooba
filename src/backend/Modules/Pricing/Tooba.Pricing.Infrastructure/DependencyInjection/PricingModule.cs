@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,6 +44,7 @@ public sealed class PricingModule : IToobaModule
         services.AddScoped<IPriceLookupGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<ISellerOfferPricingGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<IPriceQueryGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
+        services.AddScoped<IOfferPriceHistoryReader>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());
         services.AddScoped<IPricingSchemaMigrator, PricingSchemaMigrator>();
         services.AddModuleSchemaMigrator("Pricing", ModuleSchemaMigrationOrder.Pricing, (sp, ct) => sp.GetRequiredService<IPricingSchemaMigrator>().MigrateAsync(ct));
         services.AddDbContext<PricingDbContext>((sp, options) =>

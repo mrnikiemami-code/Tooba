@@ -8,7 +8,8 @@ public sealed record LocationAvailability(
     string LocationName,
     decimal OnHand,
     decimal Reserved,
-    decimal Available);
+    decimal Available,
+    string? Revision = null);
 
 /// <summary>Aggregated Offer availability for the current Tenant.</summary>
 public sealed record InventoryAvailability(

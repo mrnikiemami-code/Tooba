@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Contracts.Dtos;
 using Tooba.Offer.Domain.Aggregates;
@@ -16,6 +16,14 @@ public sealed class OfferHistoryStore(OfferDbContext db) : IOfferHistoryWriter, 
         db.OfferHistoryEntries.Add(entry);
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<OfferHistoryItem>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+        await db.OfferHistoryEntries.AsNoTracking().Where(x => x.OfferId == offerId)
+            .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.OfferHistoryEntryId)
+            .Select(x => new OfferHistoryItem(
+                x.OfferId, x.OccurredAt, x.ChangeKind, x.ActorUserId, x.Summary, x.OldValue, x.NewValue))
+            .ToListAsync(cancellationToken);
 
     /// <inheritdoc />
     public async Task<OfferHistoryPage> GetPageAsync(

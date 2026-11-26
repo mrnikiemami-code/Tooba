@@ -23,7 +23,7 @@ public sealed class GetOfferForAdminHandler(IOfferStore store, OfferReadModelCom
         {
             return OfferReadModelComposer.NotFound<SellerOfferDetailPage>();
         }
-        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, request.Locale));
+        return Result.Success(await readModels.DetailAsync(offer, cancellationToken, request.Locale, adminSurface: true));
     }
 }
 

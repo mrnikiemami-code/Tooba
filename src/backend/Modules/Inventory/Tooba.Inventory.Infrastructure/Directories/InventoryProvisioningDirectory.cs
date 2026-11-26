@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.Inventory.Contracts.Errors;
@@ -39,7 +39,8 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         CancellationToken cancellationToken) =>
         await _db.Locations.AsNoTracking()
             .Where(x => x.Status == InventoryLocationStatus.Active
-                && (x.SellerPartyId == null || x.SellerPartyId == sellerPartyId))
+                && (sellerPartyId == null
+                    || (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)))
             .OrderBy(x => x.Code)
             .Select(x => new InventoryEligibleLocation(x.LocationId, x.Code, x.Name))
             .ToListAsync(cancellationToken)
@@ -60,7 +61,8 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
 
         var locationIsActive = await _db.Locations.AsNoTracking()
             .AnyAsync(x => x.LocationId == locationId && x.Status == InventoryLocationStatus.Active
-                && (x.SellerPartyId == null || x.SellerPartyId == sellerPartyId), cancellationToken)
+                && (sellerPartyId == null
+                    || (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)), cancellationToken)
             .ConfigureAwait(false);
         if (!locationIsActive)
         {
@@ -101,7 +103,7 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
             .SingleOrDefaultAsync(x => x.OfferId == offerId && x.LocationId == locationId, cancellationToken);
 
     private static ProvisionedStockPosition Map(StockPosition position) =>
-        new(position.StockItemId, position.LocationId, position.OfferId, position.OnHand, position.Reserved);
+        new(position.StockItemId, position.LocationId, position.OfferId, position.OnHand, position.Reserved, position.UpdatedAt.ToString("O"));
 
     private static bool IsPositionOfferLocationConflict(DbUpdateException ex)
     {

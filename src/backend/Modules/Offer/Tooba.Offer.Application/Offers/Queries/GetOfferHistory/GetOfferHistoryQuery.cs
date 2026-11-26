@@ -1,19 +1,25 @@
-using MediatR;
+﻿using MediatR;
 using Tooba.BuildingBlocks.Results;
+using Tooba.Inventory.Contracts.Seller;
 using Tooba.Offer.Application.Offers.Ports;
 using Tooba.Offer.Application.Offers.ReadModels;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Pricing.Contracts.Seller;
 
 namespace Tooba.Offer.Application.Offers.Queries.GetOfferHistory;
 
 /// <summary>
-/// Authorized read of the recorded Offer history. A seller-scoped caller must own the offer; an admin caller
-/// passes no seller id and is therefore not filtered by seller.
+/// Authorized read of Owner-recorded history. Seller-scoped callers must own the offer; admin callers
+/// pass no seller id. Price/Inventory facts come from their own durable transactions.
 /// </summary>
 public sealed record GetOfferHistoryQuery(Guid OfferId, Guid? SellerPartyId, int Page, int PageSize)
     : IRequest<Result<OfferHistoryPage>>;
 
-internal sealed class GetOfferHistoryHandler(IOfferStore store, IOfferHistoryReader history)
+internal sealed class GetOfferHistoryHandler(
+    IOfferStore store,
+    IOfferHistoryReader history,
+    IOfferPriceHistoryReader priceHistory,
+    IOfferInventoryHistoryReader inventoryHistory)
     : IRequestHandler<GetOfferHistoryQuery, Result<OfferHistoryPage>>
 {
     public async Task<Result<OfferHistoryPage>> Handle(
@@ -22,17 +28,51 @@ internal sealed class GetOfferHistoryHandler(IOfferStore store, IOfferHistoryRea
     {
         var offer = await store.GetByIdAsync(request.OfferId, cancellationToken);
         if (offer is null)
-        {
             return OfferReadModelComposer.NotFound<OfferHistoryPage>();
-        }
-
         if (request.SellerPartyId is Guid sellerId && offer.SellerPartyId != sellerId)
-        {
             return OfferReadModelComposer.NotFound<OfferHistoryPage>();
+
+        var items = new List<OfferHistoryItem>();
+        items.AddRange(await history.ListAsync(request.OfferId, cancellationToken));
+        foreach (var fact in await priceHistory.ListAsync(request.OfferId, cancellationToken))
+        {
+            items.Add(new OfferHistoryItem(
+                fact.OfferId,
+                fact.OccurredAt,
+                "PriceChanged",
+                fact.ActorUserId,
+                "Offer price changed",
+                fact.OldAmount is null ? null : $"amount={fact.OldAmount};currency={fact.Currency}",
+                $"amount={fact.NewAmount};currency={fact.Currency}"));
+        }
+        foreach (var fact in await inventoryHistory.ListAsync(request.OfferId, cancellationToken))
+        {
+            if (fact.Kind == "AllocationChanged")
+            {
+                items.Add(new OfferHistoryItem(
+                    fact.OfferId, fact.OccurredAt, "AllocationChanged", fact.ActorUserId,
+                    "Offer offered quantity changed",
+                    fact.OldAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    fact.NewAllocation?.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            }
+            else
+            {
+                items.Add(new OfferHistoryItem(
+                    fact.OfferId, fact.OccurredAt, "InventoryChanged", fact.ActorUserId,
+                    "Offer inventory changed",
+                    fact.OldOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    fact.NewOnHand?.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+            }
         }
 
-        var page = await history.GetPageAsync(
-            request.OfferId, request.Page, request.PageSize, cancellationToken);
-        return Result.Success(page);
+        var ordered = items
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenBy(x => x.Kind, StringComparer.Ordinal)
+            .ThenBy(x => x.Summary, StringComparer.Ordinal)
+            .ToArray();
+        var safePage = Math.Max(1, request.Page);
+        var safePageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageItems = ordered.Skip((safePage - 1) * safePageSize).Take(safePageSize).ToArray();
+        return Result.Success(new OfferHistoryPage(pageItems, ordered.Length, safePage, safePageSize));
     }
 }

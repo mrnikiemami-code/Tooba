@@ -27,6 +27,17 @@ public sealed record SellerOfferListItem(
 /// <summary>
 /// جزئیات Offer فروشنده با زمینهٔ فقط‌خواندنی Catalog.
 /// </summary>
+/// <summary>Server-owned capability flags for the requested surface.</summary>
+public sealed record OfferRevisions(string Offer, string Price, string OfferedQuantity);
+
+/// <summary>Server-owned capability flags for the requested surface.</summary>
+public sealed record OfferCapabilities(
+    bool CanEditPhysicalInventory,
+    bool CanEditOfferedQuantity,
+    bool CanAssignFulfillment,
+    bool CanEditShippingPolicy);
+
+/// <summary>Detail DTO.</summary>
 public sealed record SellerOfferDetailPage(
     Guid OfferId,
     Guid SellerPartyId,
@@ -65,7 +76,15 @@ public sealed record SellerOfferDetailPage(
     string? VariantLabel = null,
     int UnitQuantityDecimalPlaces = 0,
     decimal? UnitQuantityStep = null,
-    string? UnitRoundingMode = null);
+    string? UnitRoundingMode = null,
+    string? PriceRevision = null,
+    Guid? PriceOperationId = null,
+    decimal? OfferedQuantity = null,
+    decimal? AllocationHeld = null,
+    string? AllocationRevision = null,
+    string? OfferRevision = null,
+    OfferRevisions? Revisions = null,
+    OfferCapabilities? Capabilities = null);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(
@@ -75,7 +94,8 @@ public sealed record SellerOfferInventoryLocation(
     string LocationName,
     decimal OnHand,
     decimal Reserved,
-    decimal Available);
+    decimal Available,
+    string? Revision = null);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.
@@ -127,7 +147,8 @@ public sealed record SellerOfferPriceWriteRequest(
     decimal Amount,
     string? Currency,
     string? Market,
-    string? ExpectedVersion = null);
+    string? ExpectedVersion = null,
+    Guid? OperationId = null);
 
 /// <summary>
 /// فرمان تنظیم موجودی روی‌دست Offer از طریق Inventory؛ Product.Stock نیست.
@@ -136,7 +157,11 @@ public sealed record SellerOfferInventoryWriteRequest(
     decimal OnHand,
     string? Reason,
     Guid? StockItemId = null,
-    string? ExpectedVersion = null);
+    string? ExpectedVersion = null,
+    Guid? OperationId = null);
+
+/// <summary>Body for explicit platform-fulfilled offered quantity.</summary>
+public sealed record SellerOfferAllocationWriteRequest(decimal Quantity, string? ExpectedRevision = null, Guid? OperationId = null);
 
 /// <summary>
 /// Body for idempotently provisioning an empty stock position at one active location.

@@ -8,7 +8,7 @@ public sealed class InventoryArchitectureGuardTests
 {
     private static readonly string[] AllowedDomainFolders = ["Aggregates", "Entities", "ValueObjects", "Events", "Policies"];
     private static readonly string[] AllowedApplicationFolders = ["Ports", "Models", "Checkout", "Orders", "Composition"];
-    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Returns", "Cart", "Resources"];
+    private static readonly string[] AllowedContractsFolders = ["Seller", "Checkout", "Orders", "Availability", "Errors", "Fulfillment", "Replacement", "Returns", "Cart", "Resources"];
     private static readonly string[] AllowedInfrastructureFolders =
         ["Persistence", "Directories", "Adapters", "Events", "Messaging", "DependencyInjection"];
 

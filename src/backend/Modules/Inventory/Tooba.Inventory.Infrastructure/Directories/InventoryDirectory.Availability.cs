@@ -24,6 +24,8 @@ public sealed partial class InventoryDirectory
             return null;
         }
 
+        var allocation = await _db.OfferAllocations.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.OfferId == offerId, cancellationToken);
         var locations = rows.Select(row => new LocationAvailability(
             row.position.StockItemId,
             row.location.LocationId,
@@ -31,13 +33,17 @@ public sealed partial class InventoryDirectory
             row.location.Name,
             row.position.OnHand,
             row.position.Reserved,
-            row.position.OnHand - row.position.Reserved)).ToList();
+            row.position.OnHand - row.position.Reserved,
+            row.position.UpdatedAt.ToString("O"))).ToList();
+        var physicalAvailable = locations.Sum(x => x.Available);
         return new InventoryAvailability(
             offerId,
             rows[0].position.CatalogVariantId,
             locations.Sum(x => x.OnHand),
             locations.Sum(x => x.Reserved),
-            locations.Sum(x => x.Available),
+            allocation is null
+                ? physicalAvailable
+                : Math.Max(0, Math.Min(physicalAvailable, allocation.Quantity - allocation.Held)),
             locations);
     }
 
@@ -46,21 +52,35 @@ public sealed partial class InventoryDirectory
         CancellationToken cancellationToken)
     {
         var values = await GetAvailabilityBatchAsync(offerIds, cancellationToken);
+        var allocations = await _db.OfferAllocations.AsNoTracking()
+            .Where(x => offerIds.Contains(x.OfferId))
+            .ToDictionaryAsync(x => x.OfferId, cancellationToken);
         return values.ToDictionary(
             x => x.Key,
-            x => new OfferInventorySummary(
-                x.Key,
-                x.Value.OnHand,
-                x.Value.Reserved,
-                Math.Max(0, x.Value.Available),
-                x.Value.Locations.Select(location => new SellerInventoryPosition(
-                    location.StockItemId,
-                    location.LocationId,
-                    location.LocationCode,
-                    location.LocationName,
-                    location.OnHand,
-                    location.Reserved,
-                    location.Available)).ToList()));
+            x =>
+            {
+                allocations.TryGetValue(x.Key, out var allocation);
+                var physicalAvailable = x.Value.Locations.Sum(location => location.Available);
+                return new OfferInventorySummary(
+                    x.Key,
+                    x.Value.OnHand,
+                    x.Value.Reserved,
+                    allocation is null
+                        ? Math.Max(0, physicalAvailable)
+                        : Math.Max(0, Math.Min(physicalAvailable, allocation.Quantity - allocation.Held)),
+                    x.Value.Locations.Select(location => new SellerInventoryPosition(
+                        location.StockItemId,
+                        location.LocationId,
+                        location.LocationCode,
+                        location.LocationName,
+                        location.OnHand,
+                        location.Reserved,
+                        location.Available,
+                        location.Revision)).ToList(),
+                    allocation?.Quantity,
+                    allocation?.Held,
+                    allocation?.Revision.ToString("N"));
+            });
     }
 
     private async Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchCoreAsync(
@@ -91,7 +111,8 @@ public sealed partial class InventoryDirectory
                         row.location.Name,
                         row.position.OnHand,
                         row.position.Reserved,
-                        row.position.OnHand - row.position.Reserved)).ToList();
+                        row.position.OnHand - row.position.Reserved,
+                        row.position.UpdatedAt.ToString("O"))).ToList();
                     return new InventoryAvailability(
                         group.Key,
                         group.First().position.CatalogVariantId,

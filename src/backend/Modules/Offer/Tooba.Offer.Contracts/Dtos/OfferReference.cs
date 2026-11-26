@@ -1,4 +1,4 @@
-namespace Tooba.Offer.Contracts.Dtos;
+﻿namespace Tooba.Offer.Contracts.Dtos;
 
 /// <summary>
 /// Stable public offer reference without persistence details.
@@ -13,4 +13,6 @@ public sealed record OfferReference(
     string ReturnPolicyChoice = "Default",
     int? CustomReturnWindowDays = null,
     decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null);
+    decimal? MaximumOrderQuantity = null,
+    OfferFulfillmentResponsibility? FulfillmentResponsibility = null,
+    Guid? FulfillmentShippingTypeId = null);

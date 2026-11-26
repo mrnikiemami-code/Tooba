@@ -11,5 +11,7 @@ public static class OfferContractMapping
         offer.OfferId, offer.CatalogVariantId, offer.SellerPartyId,
         (SalesChannel)(int)offer.Channel, (OfferStatus)(int)offer.Status,
         offer.SellerSku, offer.ReturnPolicyChoice, offer.CustomReturnWindowDays,
-        offer.MinimumOrderQuantity, offer.MaximumOrderQuantity);
+        offer.MinimumOrderQuantity, offer.MaximumOrderQuantity,
+        (OfferFulfillmentResponsibility?)offer.FulfillmentResponsibility,
+        offer.FulfillmentShippingTypeId);
 }

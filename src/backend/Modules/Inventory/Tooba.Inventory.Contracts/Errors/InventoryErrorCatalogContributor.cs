@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Tooba.BuildingBlocks.Presentation.Errors;
 
 namespace Tooba.Inventory.Contracts.Errors;
@@ -77,6 +77,22 @@ public sealed class InventoryErrorCatalogContributor : IErrorCatalogContributor
             "Stock is unavailable for manual payment review."),
         D(InventoryErrorCodes.ReturnRestockInvalid, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
             "Return restock request is invalid."),
+        D(InventoryErrorCodes.LocationOwnerRequired, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "A seller-owned location requires a seller."),
+        D(InventoryErrorCodes.LocationOwnerInvalid, ErrorClassification.Validation, StatusCodes.Status400BadRequest,
+            "Location owner is invalid."),
+        D(InventoryErrorCodes.LocationNotEligible, ErrorClassification.Forbidden, StatusCodes.Status403Forbidden,
+            "Location is not eligible for this owner."),
+        D(InventoryErrorCodes.AllocationBelowHeld, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Offered quantity cannot be below held units."),
+        D(InventoryErrorCodes.AllocationExceedsPhysical, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Offered quantity exceeds eligible physical stock."),
+        D(InventoryErrorCodes.AllocationRevisionConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Offered quantity revision is stale."),
+        D(InventoryErrorCodes.PositionRevisionConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Stock position revision is stale."),
+        D(InventoryErrorCodes.HeldReleaseIntentConflict, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Held release intent conflicts with an existing record."),
         D(InventoryErrorCodes.OutboxUnmappedEventType, ErrorClassification.Platform, StatusCodes.Status500InternalServerError,
             "Integration event type is not registered."),
     ];

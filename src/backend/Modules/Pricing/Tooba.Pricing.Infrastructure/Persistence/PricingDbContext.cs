@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Tooba.Persistence;
 using Tooba.Pricing.Domain;
@@ -35,11 +35,15 @@ public sealed class PricingDbContext : DbContext
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>Durable owner-local price change facts.</summary>
+    public DbSet<PriceChangeFact> PriceChanges => Set<PriceChangeFact>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new AuthoredPriceConfiguration());
+        modelBuilder.ApplyConfiguration(new PriceChangeFactConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }

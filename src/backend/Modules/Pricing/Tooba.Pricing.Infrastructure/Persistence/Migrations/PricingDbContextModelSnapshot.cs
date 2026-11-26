@@ -23,6 +23,67 @@ namespace Tooba.Pricing.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Tooba.Pricing.Domain.Aggregates.PriceChangeFact", b =>
+                {
+                    b.Property<Guid>("FactId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fact_id");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<decimal>("NewAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("new_amount");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("OfferId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("offer_id");
+
+                    b.Property<decimal?>("OldAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("old_amount");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<Guid>("PriceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("price_id");
+
+                    b.Property<string>("Revision")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("revision");
+
+                    b.HasKey("FactId")
+                        .HasName("pk_offer_price_changes");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_offer_price_changes_operation_id");
+
+                    b.HasIndex("OfferId", "OccurredAt")
+                        .HasDatabaseName("ix_offer_price_changes_offer_id_occurred_at");
+
+                    b.ToTable("offer_price_changes", "pricing");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -33,4 +33,12 @@
   <data name="inventory.manual_review.unavailable" xml:space="preserve"><value>Stock is unavailable for manual payment review.</value></data>
   <data name="inventory.return_restock.invalid" xml:space="preserve"><value>Return restock request is invalid.</value></data>
   <data name="inventory.outbox.unmapped_event_type" xml:space="preserve"><value>Integration event type is not registered.</value></data>
+  <data name="inventory.location.owner_required" xml:space="preserve"><value>A seller-owned location requires a seller.</value></data>
+  <data name="inventory.location.owner_invalid" xml:space="preserve"><value>Location owner is invalid.</value></data>
+  <data name="inventory.location.not_eligible" xml:space="preserve"><value>Location is not eligible for this owner.</value></data>
+  <data name="inventory.allocation.below_held" xml:space="preserve"><value>Offered quantity cannot be below held units.</value></data>
+  <data name="inventory.allocation.exceeds_physical" xml:space="preserve"><value>Offered quantity exceeds eligible physical stock.</value></data>
+  <data name="inventory.allocation.revision_conflict" xml:space="preserve"><value>Offered quantity revision is stale.</value></data>
+  <data name="inventory.position.revision_conflict" xml:space="preserve"><value>Stock position revision is stale.</value></data>
+  <data name="inventory.held_release.intent_conflict" xml:space="preserve"><value>Held release intent conflicts with an existing record.</value></data>
 </root>

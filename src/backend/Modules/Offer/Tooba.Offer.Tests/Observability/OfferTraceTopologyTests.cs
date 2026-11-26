@@ -52,6 +52,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IClock>(_ => new FixedClock(DateTimeOffset.Parse("2026-01-01T00:00:00Z")));
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
         services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         var sp = services.BuildServiceProvider();
         var composer = sp.GetRequiredService<OfferReadModelComposer>();
@@ -93,6 +94,7 @@ public sealed class OfferTraceTopologyTests
         services.AddSingleton<IOfferHistoryWriter, NoopHistoryWriter>();
         services.AddOfferModuleCallTracing();
         services.AddSingleton<OfferReadModelComposer>();
+        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
         services.AddSingleton<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Tests.TestFulfillmentAssignments>();
         services.AddToobaCqrsFoundation(typeof(CreateOfferCommand).Assembly);
         var sp = services.BuildServiceProvider();
@@ -218,6 +220,14 @@ public sealed class OfferTraceTopologyTests
     {
         public Task AppendAsync(OfferHistoryEntry entry, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+    }
+
+    private sealed class FakePriceHistory : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
+    {
+        public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>([]);
+        public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
     }
 
     private sealed class FixedStoreCommerce : ICurrentStoreCommerceContext

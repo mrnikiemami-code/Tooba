@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -33,4 +33,12 @@
   <data name="inventory.manual_review.unavailable" xml:space="preserve"><value>موجودی این سفارش در زمان بررسی پرداخت دستی در دسترس نیست.</value></data>
   <data name="inventory.return_restock.invalid" xml:space="preserve"><value>درخواست بازگرداندن موجودی مرجوعی نامعتبر است.</value></data>
   <data name="inventory.outbox.unmapped_event_type" xml:space="preserve"><value>نوع رویداد یکپارچه‌سازی ثبت نشده است.</value></data>
+  <data name="inventory.location.owner_required" xml:space="preserve"><value>محل نگهداری فروشنده به هویت فروشنده نیاز دارد.</value></data>
+  <data name="inventory.location.owner_invalid" xml:space="preserve"><value>مالک محل نگهداری نامعتبر است.</value></data>
+  <data name="inventory.location.not_eligible" xml:space="preserve"><value>این محل برای این مالک مجاز نیست.</value></data>
+  <data name="inventory.allocation.below_held" xml:space="preserve"><value>مقدار عرضه نمی‌تواند کمتر از واحدهای قفل‌شده باشد.</value></data>
+  <data name="inventory.allocation.exceeds_physical" xml:space="preserve"><value>مقدار عرضه از موجودی فیزیکی مجاز بیشتر است.</value></data>
+  <data name="inventory.allocation.revision_conflict" xml:space="preserve"><value>نسخهٔ مقدار عرضه قدیمی است.</value></data>
+  <data name="inventory.position.revision_conflict" xml:space="preserve"><value>نسخهٔ موقعیت موجودی قدیمی است.</value></data>
+  <data name="inventory.held_release.intent_conflict" xml:space="preserve"><value>قصد آزادسازی قفل موجودی با سابقهٔ موجود تعارض دارد.</value></data>
 </root>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
+using Tooba.Inventory.Infrastructure.Persistence.Configurations;
 using Tooba.Persistence;
 
 namespace Tooba.Inventory.Infrastructure.Persistence;
@@ -55,6 +56,12 @@ public sealed class InventoryDbContext : DbContext
     /// </summary>
     public DbSet<HeldObligationReleaseRecord> HeldObligationReleases => Set<HeldObligationReleaseRecord>();
 
+    /// <summary>Seller-facing owner facts.</summary>
+    public DbSet<InventoryChangeFact> OfferInventoryChanges => Set<InventoryChangeFact>();
+
+    /// <summary>Offer-wide new-sale allocation.</summary>
+    public DbSet<OfferAllocation> OfferAllocations => Set<OfferAllocation>();
+
     /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
@@ -72,9 +79,11 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.Code).HasMaxLength(32);
             entity.Property(x => x.Name).HasMaxLength(128);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.OwnerKind).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.SellerPartyId).HasColumnName("seller_party_id");
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => x.Code).IsUnique();
+            entity.HasIndex(x => new { x.OwnerKind, x.SellerPartyId });
         });
         modelBuilder.Entity<StockPosition>(entity =>
         {
@@ -125,6 +134,8 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.Outcome).HasMaxLength(32);
             entity.HasIndex(x => x.ReservationId);
         });
+        modelBuilder.ApplyConfiguration(new InventoryChangeFactConfiguration());
+        modelBuilder.ApplyConfiguration(new OfferAllocationConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }
