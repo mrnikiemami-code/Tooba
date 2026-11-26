@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Reflection;
+using Tooba.Pricing.Contracts.Seller;
+using Tooba.Inventory.Contracts.Seller;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -198,6 +201,46 @@ public sealed class OfferHistoryTests
         Assert.True(validator.Validate(new GetOfferHistoryQuery(OfferId, SellerId, 1, 20)).IsValid);
     }
 
+    [Theory]
+    [InlineData("fa-IR")]
+    [InlineData("fr-FR")]
+    [InlineData("en-US")]
+    public async Task Owner_history_uses_invariant_values_and_stable_event_keys(string cultureName)
+    {
+        var original = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+            var price = new SellerPriceChangeFact(Guid.NewGuid(), OfferId, Guid.NewGuid(),
+                Guid.NewGuid(), SellerId, Now, 1.25m, 2.5m, "IRR", "revision");
+            var allocation = new OfferInventoryChangeFact(Guid.NewGuid(), OfferId, null, null,
+                "AllocationChanged", Guid.NewGuid(), SellerId, Now, null, null, 10m, 20m, null);
+            var physical = new OfferInventoryChangeFact(Guid.NewGuid(), OfferId, Guid.NewGuid(), Guid.NewGuid(),
+                "PhysicalChanged", Guid.NewGuid(), SellerId, Now, 90m, 100m, null, null, null);
+            var sender = BuildSender(new FakeStore(OfferFor(SellerId)), new FakeReader(),
+                new FakePriceHistory([price]), new FakeInventoryHistory([allocation, physical]));
+
+            var result = await sender.Send(new GetOfferHistoryQuery(OfferId, SellerId, 1, 20));
+            Assert.True(result.IsSuccess);
+            Assert.Equal(3, result.Value.TotalCount);
+            var priceItem = Assert.Single(result.Value.Items.Where(x => x.Kind == "PriceChanged"));
+            Assert.Equal("PriceChanged", priceItem.Summary);
+            Assert.Equal("amount=1.25;currency=IRR", priceItem.OldValue);
+            Assert.Equal("amount=2.5;currency=IRR", priceItem.NewValue);
+            Assert.Equal(price.FactId, priceItem.EventId);
+            var allocationItem = Assert.Single(result.Value.Items.Where(x => x.Kind == "AllocationChanged"));
+            Assert.Equal("AllocationChanged", allocationItem.Summary);
+            Assert.Equal("20", allocationItem.NewValue);
+            var inventoryItem = Assert.Single(result.Value.Items.Where(x => x.Kind == "InventoryChanged"));
+            Assert.Equal("InventoryChanged", inventoryItem.Summary);
+            Assert.Equal(physical.LocationId, inventoryItem.LocationId);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+    }
+
     private static DbContextOptions<OfferDbContext> InMemoryOptions()
     {
         var root = new InMemoryDatabaseRoot();
@@ -221,30 +264,31 @@ public sealed class OfferHistoryTests
     private static SellerOffer OfferFor(Guid sellerId) =>
         SellerOffer.Create(OfferId, VariantId, sellerId, OfferChannel.Marketplace, "SKU-1", Now);
 
-    private static ISender BuildSender(IOfferStore store, IOfferHistoryReader reader)
+    private static ISender BuildSender(IOfferStore store, IOfferHistoryReader reader,
+        IOfferPriceHistoryReader? priceHistory = null, IOfferInventoryHistoryReader? inventoryHistory = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddToobaCqrsFoundation(typeof(GetOfferHistoryQuery).Assembly);
         services.AddSingleton(store);
         services.AddSingleton(reader);
-        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(new FakePriceHistory());
-        services.AddSingleton<Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader>(new FakeInventoryHistory());
+        services.AddSingleton<Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader>(priceHistory ?? new FakePriceHistory());
+        services.AddSingleton<Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader>(inventoryHistory ?? new FakeInventoryHistory());
         return services.BuildServiceProvider().GetRequiredService<ISender>();
     }
 
-    private sealed class FakePriceHistory : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
+    private sealed class FakePriceHistory(IReadOnlyList<SellerPriceChangeFact>? facts = null) : Tooba.Pricing.Contracts.Seller.IOfferPriceHistoryReader
     {
         public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>([]);
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>(facts ?? []);
         public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
             Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
     }
 
-    private sealed class FakeInventoryHistory : Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader
+    private sealed class FakeInventoryHistory(IReadOnlyList<OfferInventoryChangeFact>? facts = null) : Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader
     {
         public Task<IReadOnlyList<Tooba.Inventory.Contracts.Seller.OfferInventoryChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<Tooba.Inventory.Contracts.Seller.OfferInventoryChangeFact>>([]);
+            Task.FromResult<IReadOnlyList<Tooba.Inventory.Contracts.Seller.OfferInventoryChangeFact>>(facts ?? []);
     }
 
     private sealed class FakeReader : IOfferHistoryReader

@@ -70,7 +70,12 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
                 || (sellerPartyId is Guid seller && seller != offer.SellerPartyId))
                 throw new ContractOperationException(InventoryErrorCodes.LocationNotEligible);
             if (_commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace
-                && ((offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform) != (sellerPartyId is null)))
+                && (offer.FulfillmentResponsibility switch
+                {
+                    OfferFulfillmentResponsibility.Platform => sellerPartyId is not null,
+                    OfferFulfillmentResponsibility.Seller => sellerPartyId != offer.SellerPartyId,
+                    _ => true,
+                }))
                 throw new ContractOperationException(InventoryErrorCodes.LocationNotEligible);
         }
         var locationIsActive = await EligibleLocations(sellerPartyId)
