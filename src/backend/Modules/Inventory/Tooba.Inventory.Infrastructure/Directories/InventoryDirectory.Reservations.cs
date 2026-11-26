@@ -105,9 +105,15 @@ public sealed partial class InventoryDirectory
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
+        // Use the same reservation-row serialization as full and partial release.
+        // A partial release may change Quantity without changing Held status.
+        await _db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM inventory.reservations WHERE reservation_id = {reservationId} FOR UPDATE",
+            cancellationToken);
         var reservation = await _db.Reservations
             .SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
+        await _db.Entry(reservation).ReloadAsync(cancellationToken);
 
         var journal = await FindConsumptionAsync(reservationId, cancellationToken);
 

@@ -161,6 +161,7 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
 
             var position = await _db.Positions.SingleAsync(
                 x => x.StockItemId == reservation.StockItemId, cancellationToken);
+            await _db.Entry(position).ReloadAsync(cancellationToken);
             position.RecordReleased(reservation.ReservationId, released);
             position.SyncQuantities(position.OnHand, position.Reserved, now);
         }

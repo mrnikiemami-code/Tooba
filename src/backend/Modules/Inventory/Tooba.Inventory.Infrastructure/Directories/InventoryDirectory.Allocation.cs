@@ -60,6 +60,8 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
 
         var existing = await _db.OfferAllocations
             .SingleOrDefaultAsync(x => x.OfferId == request.OfferId, cancellationToken);
+        if (existing is not null)
+            await _db.Entry(existing).ReloadAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(request.ExpectedRevision)
             || (existing is null
                 ? request.ExpectedRevision != "absent"
