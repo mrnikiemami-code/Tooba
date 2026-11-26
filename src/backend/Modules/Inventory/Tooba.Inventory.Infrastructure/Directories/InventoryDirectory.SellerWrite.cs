@@ -46,6 +46,7 @@ public sealed partial class InventoryDirectory
         var location = await _db.Locations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.LocationId == selected.LocationId, cancellationToken);
         if (location is null || location.Status != InventoryLocationStatus.Active
+            || (_commerce is not null && !IsLocationEligible(location, offer))
             || (location.OwnerKind == InventoryLocationOwnerKind.Seller
                 ? location.SellerPartyId != request.SellerPartyId
                     || offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform

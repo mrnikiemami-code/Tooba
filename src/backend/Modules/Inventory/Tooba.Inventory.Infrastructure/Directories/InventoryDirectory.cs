@@ -77,7 +77,14 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
     public async Task<Guid> CreateLocationAsync(string code, string name, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        var location = InventoryLocation.Create(_ids.NewId(), code, name, _clock.UtcNow);
+        var ownerKind = _commerce?.Current switch
+        {
+            { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active } => InventoryLocationOwnerKind.Store,
+            { Edition.Edition: ToobaEdition.Marketplace, Tenant: null } => InventoryLocationOwnerKind.Marketplace,
+            null when _commerce is null => InventoryLocationOwnerKind.Store,
+            _ => throw new ContractOperationException(InventoryErrorCodes.LocationOwnerInvalid),
+        };
+        var location = InventoryLocation.Create(_ids.NewId(), code, name, _clock.UtcNow, ownerKind, null);
         _db.Locations.Add(location);
         await _db.SaveChangesAsync(cancellationToken);
         return location.LocationId;
@@ -94,10 +101,13 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             throw new ContractOperationException(InventoryErrorCodes.CatalogVariantMissing);
         }
 
-        if (await _db.Locations.SingleOrDefaultAsync(x => x.LocationId == locationId, cancellationToken) is not { Status: InventoryLocationStatus.Active })
+        if (await _db.Locations.SingleOrDefaultAsync(x => x.LocationId == locationId, cancellationToken) is not { Status: InventoryLocationStatus.Active } location)
         {
             throw new ContractOperationException(InventoryErrorCodes.LocationNotFound);
         }
+
+        if (_commerce is not null && !IsLocationEligible(location, offer))
+            throw new ContractOperationException(InventoryErrorCodes.LocationNotEligible);
 
         var existing = await _db.Positions.SingleOrDefaultAsync(
             x => x.OfferId == offerId && x.LocationId == locationId,
@@ -133,8 +143,14 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             throw new ContractOperationException(InventoryErrorCodes.AdjustmentQuantityInvalid);
         }
 
-        var position = await _db.Positions.SingleOrDefaultAsync(x => x.StockItemId == stockItemId, cancellationToken)
+        var known = await _db.Positions.AsNoTracking().SingleOrDefaultAsync(x => x.StockItemId == stockItemId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.PositionNotFound);
+        await using var transaction = _db.Database.CurrentTransaction is null
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        await LockOfferAllocationAsync(known.OfferId, cancellationToken);
+        var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
+        await _db.Entry(position).ReloadAsync(cancellationToken);
 
         var delta = kind switch
         {
@@ -162,6 +178,8 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         position.SyncQuantities(position.OnHand, position.Reserved, now);
         await _db.SaveChangesAsync(cancellationToken);
         _ = idempotencyKey;
+        if (transaction is not null)
+            await transaction.CommitAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -246,6 +264,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
         }
 
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
+        await _db.Entry(position).ReloadAsync(cancellationToken);
         var hold = StockReservation.Hold(_ids.NewId(), stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt);
         _db.Reservations.Add(hold);
         position.RecordReserved(hold.ReservationId, quantity);
@@ -301,6 +320,7 @@ public sealed partial class InventoryDirectory : IInventoryDirectory, IInventory
             cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
+        await _db.Entry(reservation).ReloadAsync(cancellationToken);
         if (reservation.Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
             return;
 

@@ -44,7 +44,7 @@ public interface ISellerOfferInventoryGateway
         IReadOnlyCollection<Guid> offerIds,
         CancellationToken cancellationToken);
 
-    /// <summary>Sets on-hand stock, creating an owner-selected default location when necessary.</summary>
+    /// <summary>Sets physical stock on an explicitly provisioned, eligible position using an owner revision.</summary>
     Task<Result> SetInventoryAsync(SetSellerOfferInventory request, CancellationToken cancellationToken);
 }
 

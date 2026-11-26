@@ -5,6 +5,7 @@ using Tooba.Inventory.Contracts.Errors;
 using Tooba.Inventory.Contracts.Returns;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Inventory.Infrastructure.Directories;
 
 namespace Tooba.Inventory.Infrastructure.Adapters;
 
@@ -39,17 +40,20 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
     private readonly InventoryDbContext _db;
     private readonly IInventoryUseCaseGuard _guard;
     private readonly IClock _clock;
+    private readonly IIdGenerator? _ids;
 
     /// <summary>Wires the seam to the owning Inventory schema.</summary>
     public InventoryReturnObligationRelease(
         InventoryDbContext db,
         IInventoryUseCaseGuard guard,
-        IClock clock)
+        IClock clock,
+        IIdGenerator? ids = null)
     {
         _db = db;
         _guard = guard;
         ArgumentNullException.ThrowIfNull(clock);
         _clock = clock;
+        _ids = ids;
     }
 
     /// <inheritdoc />
@@ -104,6 +108,7 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
             throw new ContractOperationException(InventoryErrorCodes.ReservationNotFound);
         }
 
+        await _db.Entry(reservation).ReloadAsync(cancellationToken);
         var now = _clock.UtcNow;
         decimal released;
         string outcome;
@@ -128,6 +133,17 @@ public sealed class InventoryReturnObligationRelease : IInventoryReturnObligatio
 
         if (released > 0m)
         {
+            var target = await _db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken);
+            await InventoryDirectory.LockOfferAllocationAsync(_db, target.OfferId, cancellationToken);
+            if (await _db.OfferAllocations.AsNoTracking().AnyAsync(x => x.OfferId == target.OfferId, cancellationToken))
+            {
+                if (_ids is null) throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
+                var revision = _ids.NewId();
+                var allocationUpdated = await _db.OfferAllocations.Where(x => x.OfferId == target.OfferId && x.Held >= released)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Held, x => x.Held - released)
+                        .SetProperty(x => x.Revision, revision).SetProperty(x => x.UpdatedAt, now), cancellationToken);
+                if (allocationUpdated != 1) throw new ContractOperationException(InventoryErrorCodes.ReservationReleaseMismatch);
+            }
             // Same invariant as the owning release: only Reserved moves, so availability grows by exactly the
             // released quantity and OnHand stays the physical stock the warehouse already holds.
             var updated = await _db.Positions

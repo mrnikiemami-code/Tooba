@@ -6,6 +6,8 @@ using Tooba.Inventory.Contracts.Seller;
 using Tooba.Inventory.Domain.Aggregates;
 using Tooba.Inventory.Domain.ValueObjects;
 using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 
 namespace Tooba.Inventory.Infrastructure.Directories;
 
@@ -21,9 +23,12 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
     private readonly InventoryDbContext _db;
     private readonly IIdGenerator _ids;
     private readonly IClock _clock;
+    private readonly ICurrentCommerceContext? _commerce;
+    private readonly IOfferLookupGateway? _offers;
 
     /// <summary>Binds the directory to the Inventory schema and the shared id/clock seams.</summary>
-    public InventoryProvisioningDirectory(InventoryDbContext db, IIdGenerator ids, IClock clock)
+    public InventoryProvisioningDirectory(InventoryDbContext db, IIdGenerator ids, IClock clock,
+        ICurrentCommerceContext? commerce = null, IOfferLookupGateway? offers = null)
     {
         ArgumentNullException.ThrowIfNull(db);
         ArgumentNullException.ThrowIfNull(ids);
@@ -31,17 +36,15 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         _db = db;
         _ids = ids;
         _clock = clock;
+        _commerce = commerce;
+        _offers = offers;
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<InventoryEligibleLocation>> ListEligibleLocationsAsync(
         Guid? sellerPartyId,
         CancellationToken cancellationToken) =>
-        await _db.Locations.AsNoTracking()
-            .Where(x => x.Status == InventoryLocationStatus.Active
-                && (sellerPartyId == null
-                    ? x.OwnerKind != InventoryLocationOwnerKind.Seller && x.SellerPartyId == null
-                    : (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)))
+        await EligibleLocations(sellerPartyId)
             .OrderBy(x => x.Code)
             .Select(x => new InventoryEligibleLocation(x.LocationId, x.Code, x.Name))
             .ToListAsync(cancellationToken)
@@ -60,11 +63,18 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
             throw new ContractOperationException(InventoryErrorCodes.PositionIdsRequired);
         }
 
-        var locationIsActive = await _db.Locations.AsNoTracking()
-            .AnyAsync(x => x.LocationId == locationId && x.Status == InventoryLocationStatus.Active
-                && (sellerPartyId == null
-                    ? x.OwnerKind != InventoryLocationOwnerKind.Seller && x.SellerPartyId == null
-                    : (x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == sellerPartyId)), cancellationToken)
+        if (_offers is not null)
+        {
+            var offer = await _offers.FindOfferAsync(offerId, cancellationToken);
+            if (offer is null || offer.CatalogVariantId != catalogVariantId
+                || (sellerPartyId is Guid seller && seller != offer.SellerPartyId))
+                throw new ContractOperationException(InventoryErrorCodes.LocationNotEligible);
+            if (_commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace
+                && ((offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform) != (sellerPartyId is null)))
+                throw new ContractOperationException(InventoryErrorCodes.LocationNotEligible);
+        }
+        var locationIsActive = await EligibleLocations(sellerPartyId)
+            .AnyAsync(x => x.LocationId == locationId, cancellationToken)
             .ConfigureAwait(false);
         if (!locationIsActive)
         {
@@ -98,6 +108,22 @@ public sealed class InventoryProvisioningDirectory : IInventoryProvisioningGatew
         }
 
         return Map(position);
+    }
+
+    private IQueryable<InventoryLocation> EligibleLocations(Guid? sellerPartyId)
+    {
+        var active = _db.Locations.AsNoTracking().Where(x => x.Status == InventoryLocationStatus.Active);
+        // Store locations are scoped by the trusted tenant's physical database, never a browser tenant id.
+        if (_commerce?.Current is { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active })
+            return active.Where(x => x.OwnerKind == InventoryLocationOwnerKind.Store && x.SellerPartyId == null);
+        if (_commerce?.Current is { Edition.Edition: ToobaEdition.Marketplace, Tenant: null })
+            return sellerPartyId is Guid seller && seller != Guid.Empty
+                ? active.Where(x => x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == seller)
+                : active.Where(x => x.OwnerKind == InventoryLocationOwnerKind.Marketplace && x.SellerPartyId == null);
+        // Direct owner fixtures may explicitly exercise the seller boundary without a Host context.
+        if (_commerce is null && sellerPartyId is Guid fixtureSeller && fixtureSeller != Guid.Empty)
+            return active.Where(x => x.OwnerKind == InventoryLocationOwnerKind.Seller && x.SellerPartyId == fixtureSeller);
+        return active.Where(x => false);
     }
 
     private Task<StockPosition?> FindPositionAsync(Guid offerId, Guid locationId, CancellationToken cancellationToken) =>

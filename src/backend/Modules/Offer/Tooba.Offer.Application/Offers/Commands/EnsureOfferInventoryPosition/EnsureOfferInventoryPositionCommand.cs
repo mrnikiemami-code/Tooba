@@ -43,8 +43,8 @@ internal sealed class EnsureOfferInventoryPositionCommandHandler(
                 offer.OfferId,
                 offer.CatalogVariantId,
                 request.LocationId,
-                offer.FulfillmentResponsibility == FulfillmentResponsibility.Seller
-                    ? offer.SellerPartyId : request.SellerPartyId,
+                offer.FulfillmentResponsibility == FulfillmentResponsibility.Platform
+                    ? null : offer.SellerPartyId,
                 cancellationToken);
             return Result.Success(position);
         }

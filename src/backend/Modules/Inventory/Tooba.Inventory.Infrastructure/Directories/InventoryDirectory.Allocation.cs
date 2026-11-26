@@ -32,7 +32,7 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
 
         if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
             return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.AllocationRevisionConflict));
-        if (_commerce?.Current?.Edition.Edition == ToobaEdition.SingleStore)
+        if (_commerce is not null && _commerce.Current is not { Edition.Edition: ToobaEdition.Marketplace, Tenant: null })
             return Result.Failure<OfferAllocationReceipt>(new SemanticError(InventoryErrorCodes.LocationNotEligible));
         var variant = await FindVariantAsync(offer.CatalogVariantId, cancellationToken);
         if (variant is null)
@@ -130,11 +130,26 @@ public sealed partial class InventoryDirectory : ISellerOfferAllocationGateway, 
             .ToListAsync(cancellationToken);
 
     // Same transaction-scoped lock for first allocation, reservation and workspace physical mutation.
-    private Task<int> LockOfferAllocationAsync(Guid offerId, CancellationToken cancellationToken)
+    private Task<int> LockOfferAllocationAsync(Guid offerId, CancellationToken cancellationToken) =>
+        LockOfferAllocationAsync(_db, offerId, cancellationToken);
+
+    internal static Task<int> LockOfferAllocationAsync(Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext db, Guid offerId, CancellationToken cancellationToken)
     {
         var lockKey = $"inventory.offer-allocation:{offerId:N}";
-        return _db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
+        return db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", cancellationToken);
     }
+
+    private bool IsLocationEligible(InventoryLocation location, OfferReference offer) =>
+        _commerce?.Current switch
+        {
+            { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active } =>
+                location.OwnerKind == InventoryLocationOwnerKind.Store && location.SellerPartyId is null,
+            { Edition.Edition: ToobaEdition.Marketplace, Tenant: null } =>
+                offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
+                    ? location.OwnerKind == InventoryLocationOwnerKind.Marketplace && location.SellerPartyId is null
+                    : location.OwnerKind == InventoryLocationOwnerKind.Seller && location.SellerPartyId == offer.SellerPartyId,
+            _ => false,
+        };
 
     private static OfferAllocationReceipt ToAllocationReceipt(OfferAllocation row, Guid operationId, Guid? actor) =>
         new(row.OfferId, row.Quantity, row.Held, Math.Max(0, row.Quantity - row.Held),
