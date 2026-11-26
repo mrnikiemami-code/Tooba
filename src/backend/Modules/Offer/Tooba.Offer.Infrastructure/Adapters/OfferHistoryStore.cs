@@ -19,11 +19,9 @@ public sealed class OfferHistoryStore(OfferDbContext db) : IOfferHistoryWriter, 
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<OfferHistoryItem>> ListAsync(Guid offerId, CancellationToken cancellationToken) =>
-        await db.OfferHistoryEntries.AsNoTracking().Where(x => x.OfferId == offerId)
+        (await db.OfferHistoryEntries.AsNoTracking().Where(x => x.OfferId == offerId)
             .OrderByDescending(x => x.OccurredAt).ThenByDescending(x => x.OfferHistoryEntryId)
-            .Select(x => new OfferHistoryItem(
-                x.OfferId, x.OccurredAt, x.ChangeKind, x.ActorUserId, x.Summary, x.OldValue, x.NewValue, x.OfferHistoryEntryId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).Select(ToItem).ToArray();
 
     /// <inheritdoc />
     public async Task<OfferHistoryPage> GetPageAsync(
