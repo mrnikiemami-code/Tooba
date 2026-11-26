@@ -3,6 +3,7 @@ using Tooba.Cart.Domain.Entities;
 using Tooba.Cart.Infrastructure.Directories;
 using Tooba.Inventory.Contracts.Availability;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Ports;
 using Xunit;
 
 namespace Tooba.Cart.Tests.Behavior;
@@ -55,7 +56,7 @@ public sealed class CartLineOrderTests
                 now);
         }
 
-        var projector = new CartSnapshotProjector(new StubAvailability());
+        var projector = new CartSnapshotProjector(new StubAvailability(), new StubOffers());
         var snapshot = await projector.ToSnapshotAsync(cart, CancellationToken.None);
 
         Assert.Equal(
@@ -91,7 +92,7 @@ public sealed class CartLineOrderTests
             cart.AddLine(Line(lineId, offerByLine[lineId], cartId, now), now);
         }
 
-        var projector = new CartSnapshotProjector(new StubAvailability());
+        var projector = new CartSnapshotProjector(new StubAvailability(), new StubOffers());
         var before = await projector.ToSnapshotAsync(cart, CancellationToken.None);
         Assert.Equal(new[] { first, second, third }, before.Lines.Select(x => x.LineId).ToArray());
 
@@ -125,6 +126,21 @@ public sealed class CartLineOrderTests
             taxExclusive: true,
             Guid.NewGuid(),
             now);
+
+    // Ordering tests do not require purchasable offers; preserve the fail-closed lookup contract.
+    private sealed class StubOffers : IOfferLookupGateway
+    {
+        public Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<OfferReference?>(null);
+
+        public Task<IReadOnlyDictionary<Guid, OfferReference>> FindOffersBatchAsync(
+            IReadOnlyCollection<Guid> offerIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, OfferReference>>(new Dictionary<Guid, OfferReference>());
+
+        public Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(
+            IReadOnlyCollection<Guid> catalogVariantIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, int>>(catalogVariantIds.Distinct().ToDictionary(id => id, _ => 0));
+    }
 
     private sealed class StubAvailability : IInventoryAvailabilityGateway
     {
