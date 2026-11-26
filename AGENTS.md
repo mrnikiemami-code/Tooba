@@ -23,7 +23,10 @@ This worktree is an **execution environment**, not a separate product architectu
 - Missing authorized contracts/endpoints, in-scope build/test failures and ordinary implementation gaps are work, not terminal blockers. Follow delivery method §0A; isolate genuine undecided policies and continue every independent safe slice.
 - STOP_FOR_ARCHITECT is terminal, not an intermediate checkpoint. A task-wide BLOCKED requires exact evidence of a global blocker or exhausted independent work.
 - Do not rewrite main-tree `AGENTS.md`, Host, or invent parallel architecture.
-- New OpenCode tasks use `TOOBA-OPENCODE-DELIVERY-V1@1.4.0` and end with `STOP_FOR_ARCHITECT` when required.
+- New OpenCode tasks use `TOOBA-OPENCODE-DELIVERY-V1@1.5.0` and end with `STOP_FOR_ARCHITECT` when required.
 
 ## Out of always-on scope
 Do not auto-load historical story dumps or unrelated past tasks.
+
+## Mandatory architect-owned correction and acceptance gate (owner directive v1.5.0)
+Read the current `docs/opencode/ARCHITECT-DELIVERY-METHOD.md` and `docs/opencode/ARCHITECT-QUALITY-GATE.md` on every handoff/recovery. After STOP_FOR_ARCHITECT, only the architect edits product or existing tests/guards; OpenCode validates exact commits with test-only harness/evidence. Before acceptance or next dependent goal require architect-authored `ARCHITECT-REVIEW.md`, `ARCHITECT-REVIEW.json` and successful `docs/opencode/test-infra/architect-review-gate.cjs` receipt, bound to actual Git diff, all eight AQ checks, immutable mandatory tests and raw evidence. No worker self-approval, no unchecked applicable gate, no repeated repair tickets. See `docs/opencode/test-infra/ARCHITECT-REVIEW-GATE.md`. Preserve main/Cursor and immutable task inputs.

@@ -1,12 +1,12 @@
 # TOOBA — OpenCode Architect Delivery Method
 
 Protocol: **TOOBA-OPENCODE-DELIVERY-V1**
-Version: **1.4.0**
+Version: **1.5.0**
 Adopted: **2026-11-22**
 Owner: **Tooba architect**
 Status: **ACTIVE for new OpenCode tasks; owner DEV authority and continuity clarification also bind current tasks**
-Supersedes: **1.3.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.3.0.md)); earlier **1.2.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.2.0.md)); older [v1.1.0](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md), [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
-Revision authority: **owner explicit approval on 2026-11-26 (Tehran), following R10 premature stop**
+Supersedes: **1.4.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.4.0.md)); **1.3.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.3.0.md)); earlier **1.2.0** ([immutable archive](versions/ARCHITECT-DELIVERY-METHOD-v1.2.0.md)); older [v1.1.0](versions/ARCHITECT-DELIVERY-METHOD-v1.1.0.md), [v1.0.0](versions/ARCHITECT-DELIVERY-METHOD-v1.0.0.md)
+Revision authority: **owner explicit directive on 2026-11-26: architect directly repairs post-handoff defects and mandatory machine-checked architecture review**
 Pilot evidence: 283 → connected 284 → TB-OCC-284 independent acceptance. The owner explicitly authorized recording this method **only on success**, and subsequently confirmed adoption.
 Reviewed code: `611f97a85ec7c2e464e4f649820992202ca3754c`.
 Connected evidence: `fc40d412aa6d085d3db3f1deac461eb93a10f48d`.
@@ -175,9 +175,14 @@ Architect must independently examine: immutable scope, repository diff, underlyi
 
 ## 9. Stable recovery rule for future architect sessions
 
-On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.4.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
+On every future Tooba OpenCode task, the architect MUST first read **this exact file**, then current roadmap/source, then the issued task, its REQ manifest, latest verified code/evidence and architect review. Never reconstruct protocol from a chat paraphrase or another tool's template. Cite `TOOBA-OPENCODE-DELIVERY-V1@1.5.0` in newly issued OpenCode TASK.md; already issued tasks retain their original protocol version and remain immutable. Any change to this protocol requires an explicit version bump, rationale, and architect/owner authorization; no silent reinterpretation.
 
 **This file is the canonical OpenCode architect procedure. The Cursor procedure remains separate.**
 
 ## Mandatory senior architect quality gate (owner directive 2026-11-25)
 Apply `docs/opencode/ARCHITECT-QUALITY-GATE.md` at pre-issue and independent review. All eight applicable AQ checks require source and guard evidence. Functional PASS never waives architectural violations. Preserve immutable task inputs, authorization and §0A; no automatic next task.
+
+## Owner directive 2026-11-26 — architect owns post-handoff repair (v1.5.0)
+Applies to current and future OpenCode tasks; immutable requirements, matrices and safety authority are unchanged. This section supersedes earlier role wording, not acceptance criteria or the finite correction budget. The worker owns a comprehensive initial implementation and its initial tests, then STOP_FOR_ARCHITECT. After handoff the architect personally opens the repository, reviews exact diff and surrounding source, repairs all confirmed in-scope product, test and architecture defects directly on the authorized branch, and records the commits. Never dispatch a worker product-repair task or delegate architect review. OpenCode may only build, execute tests, create test-only fixtures/harnesses and collect evidence against the exact architect candidate; no product, existing tests, guards, baselines, contracts or architecture edits during validation. Report precise failures for direct architect repair. No endless reruns: consolidate findings and changes, run targeted local checks when available, then one complete validation. If still materially blocked, record exact limitation and obtain owner decision before extending the correction budget; never claim PASS or auto-create another repair task. The next worker task is a substantial approved roadmap goal, not an incremental correction.
+
+**Hard dependency gate:** before ARCHITECT_ACCEPT, integration, or issuing the next dependent implementation goal, the architect must personally create ARCHITECT-REVIEW.md plus ARCHITECT-REVIEW.json, run the new architect-review-gate.cjs against the immutable issued matrix/matrices and actual base/candidate/evidence commits, and record its exit 0 receipt. All eight AQ checks required with source references and observed evidence; no unchecked applicable gate. Re-read the current exact quality gate and owner policy at every recovery and acceptance; do not rely on memory or worker reports. The worker must refuse to start a dependent next goal without the recorded architect gate receipt for the predecessor. No worker may author or approve the architect receipt on behalf of the architect. See docs/opencode/test-infra/ARCHITECT-REVIEW-GATE.md for schema, invocation and limitations. The existing acceptance-gate.cjs and independent semantic review remain mandatory; a structural checker cannot prove who read source or whether a judgment is true.
