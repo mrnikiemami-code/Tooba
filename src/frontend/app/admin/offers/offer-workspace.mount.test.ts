@@ -713,3 +713,33 @@ test("platform fulfillment shows offered quantity and locks physical/warehouse c
   assert.equal(physical.disabled, true);
   await tree.unmount();
 });
+
+test("committed create clears scoped recovery before navigation and never restores the old Draft", async () => {
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  let navigated: string | null = null;
+  const adapter = createAdapter({
+    createAndSaveDraft: async () => ({ ok: true, offerId: "offer-committed" }),
+    onCreated: (id) => { navigated = id; },
+  });
+  const first = await mount(createElement(OfferWorkspace, { adapter }));
+  try {
+    await click(q(first.container, "[data-testid=offer-seller-picker-toggle]"));
+    await waitFor(() => qq(first.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+    await click(q(first.container, "[data-testid=offer-seller-dialog-option]"));
+    await click(q(first.container, "[data-testid=offer-product-picker-toggle]"));
+    await waitFor(() => qq(first.container, "[data-testid=offer-product-dialog-option]").length === 3);
+    await click(qq(first.container, "[data-testid=offer-product-dialog-option]")[1]!);
+    await waitFor(() => /ظرفیت:/.test(first.container.textContent ?? ""));
+    await setInputValue(q(first.container, "[data-testid=offer-seller-sku]"), "P1C-COMMITTED");
+    await waitFor(() => Array.from({ length: window.sessionStorage.length }, (_, i) => window.sessionStorage.key(i)).some(k => k?.includes("latest-create")));
+    await click(q(first.container, "[data-testid=admin-offer-submit]"));
+    await waitFor(() => navigated === "offer-committed");
+    assert.equal(Array.from({ length: window.sessionStorage.length }, (_, i) => window.sessionStorage.key(i)).filter(k => k?.startsWith("tooba:offer-workspace:")).length, 0);
+  } finally { await first.unmount(); }
+  const second = await mount(createElement(OfferWorkspace, { adapter }));
+  try {
+    await waitFor(() => Boolean(second.container.querySelector("[data-testid=offer-workspace]")));
+    assert.equal((q(second.container, "[data-testid=offer-seller-sku]") as HTMLInputElement).value, "");
+    assert.equal((q(second.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement).disabled, true);
+  } finally { await second.unmount(); }
+});

@@ -55,6 +55,7 @@ export interface OfferActionsContext {
   setShowCreateErrors: (value: boolean) => void;
   showBlocking: (kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) => void;
   applyLoadedDetail: (detail: OfferWorkspaceDetail) => void;
+  completeCreate: (offerId: string) => void;
 }
 
 export function createOfferActions(ctx: OfferActionsContext) {
@@ -425,7 +426,8 @@ export function createOfferActions(ctx: OfferActionsContext) {
         ctx.setSaveRetryable(!result.denied);
         return;
       }
-      ctx.adapter.onCreated(result.offerId);
+      // The create-and-apply contract has verified the durable read-back. Clear only this local draft.
+      ctx.completeCreate(result.offerId);
     } catch {
       ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.createUnknown);
       ctx.setSaveRetryable(false);

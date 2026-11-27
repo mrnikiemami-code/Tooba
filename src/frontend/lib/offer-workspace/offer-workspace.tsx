@@ -111,6 +111,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const persistKey = draftStorageKey(adapter, detail, selectedSeller, selectedVariant, selectedChannel);
   const [restored, setRestored] = useState(false);
   const staleRestoredDraft = useRef(false);
+  const createCommitted = useRef(false);
   const loadedIdentity = useRef<string | null>(null);
   const loadSequence = useRef(0);
   const [saveRetryable, setSaveRetryable] = useState(true);
@@ -301,7 +302,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setRestored(true);
   }, [detail, isEdit, loading, persistKey, restored, t, adapter]);
   useEffect(() => {
-    if (!restored || saveNeedsReload) return;
+    if (!restored || saveNeedsReload || createCommitted.current) return;
     if (!anyDirty) { discardDraft(persistKey, adapter); return; }
     writeDraft(persistKey, adapter, {
       draft, selectedSeller, selectedProduct, selectedVariant, responsibility, shippingTypeId,
@@ -349,11 +350,16 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   }
   const actions = createOfferActions({
     adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory,
-    createReady, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
+    createReady: createReady && !createCommitted.current, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
     priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
     setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
     setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
+    completeCreate: (offerId) => {
+      createCommitted.current = true;
+      clearPersistedDraft();
+      adapter.onCreated(offerId);
+    },
   });
   if (denied) {
     return (
@@ -498,7 +504,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
                 onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-                disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
+                disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady || Boolean(activeConflict)))}
                 data-offer-save="true"
                 data-testid={saveTestId}
               >
@@ -582,7 +588,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-          disabled={saving || saveNeedsReload || (!isEdit && (!createReady || Boolean(activeConflict)))}
+          disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady || Boolean(activeConflict)))}
           data-offer-save="true"
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
