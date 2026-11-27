@@ -1,4 +1,6 @@
-﻿const { chromium } = require("playwright");
+// Historical monolithic harness has unsafe shared-seed writes and swallowed feedback waits.
+throw new Error("QUARANTINED: use p1c-run-cases.cjs and isolated executable per-ID handlers");
+const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
