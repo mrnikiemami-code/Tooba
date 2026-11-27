@@ -392,18 +392,31 @@ module.exports = {
         assert.equal(await root.getAttribute("dir"), row.direction, prefix + " direction must come from registry");
         observed.push({ prefix, lang: await root.getAttribute("lang"), dir: await root.getAttribute("dir"), tab: (await page.locator("[data-testid=offer-tab-button-identity]").innerText()).replace(/\s+/g, " ").trim() });
       };
-      await page.goto(FRONT + "/fa/admin/offers/" + fx.offerId, { waitUntil: "load" });
+      await page.goto(FRONT + "/fa/admin/offers/" + fx.offerId + "?tab=identity#workspace", { waitUntil: "load" });
       await waitWorkspace(page, "fa-IR");
       await assertLocale("fa");
+      const select = page.locator("[data-testid=panel-language-select]");
+      await select.waitFor({ state: "visible" });
+      assert.deepEqual((await select.locator("option").evaluateAll(options => options.map(o => o.value))).sort(),
+        rows.filter(row => row.isActive).map(row => row.urlPrefix).sort(), "language selector options must equal active registry");
+      async function switchPanel(prefix, expectedLang, expectedPath, search, hash) {
+        const response = page.waitForResponse(r => r.url().includes("/v1/admin/offers/" + fx.offerId)
+          && r.request().method() === "GET" && r.request().headers()["accept-language"] === expectedLang);
+        await select.selectOption(prefix);
+        await page.waitForURL(u => u.pathname === expectedPath && u.search === search && u.hash === hash);
+        await waitWorkspace(page, expectedLang);
+        const observedResponse = await response;
+        assert.equal(observedResponse.status(), 200);
+        ctx.trace.localeSwitchHeaders ??= [];
+        ctx.trace.localeSwitchHeaders.push({ url: observedResponse.url(), language: observedResponse.request().headers()["accept-language"], status: observedResponse.status() });
+      }
       const draftSku = fx.sku + "-DRAFT";
       await page.locator("[data-testid=offer-seller-sku]").fill(draftSku);
       await page.waitForTimeout(300);
-      await page.goto(FRONT + "/en/admin/offers/" + fx.offerId, { waitUntil: "load" });
-      await waitWorkspace(page, "en-US");
+      await switchPanel("en", "en-US", "/en/admin/offers/" + fx.offerId, "?tab=identity", "#workspace");
       await assertLocale("en");
       assert.equal(await page.locator("[data-testid=offer-seller-sku]").inputValue(), draftSku, "Edit draft must survive FA->EN switch");
-      await page.goto(FRONT + "/ru/admin/offers/" + fx.offerId, { waitUntil: "load" });
-      await waitWorkspace(page, "ru-RU");
+      await switchPanel("ru", "ru-RU", "/ru/admin/offers/" + fx.offerId, "?tab=identity", "#workspace");
       await assertLocale("ru");
       assert.match(await page.locator("[data-testid=offer-tab-button-identity]").innerText(), /Идентификация/, "Third-locale registry copy missing");
       assert.equal(await page.locator("[data-testid=offer-seller-sku]").inputValue(), draftSku, "Edit draft must survive EN->RU switch");
@@ -413,9 +426,10 @@ module.exports = {
       await waitWorkspace(page, "fa-IR");
       await page.locator("[data-testid=offer-seller-sku]").fill(createSku);
       await page.waitForTimeout(300);
-      await page.goto(FRONT + "/en/admin/offers/new", { waitUntil: "load" });
+      await select.selectOption("en");
+      await page.waitForURL(u => u.pathname === "/en/admin/offers/new");
       await waitWorkspace(page, "en-US");
-      assert.equal(await page.locator("[data-testid=offer-seller-sku]").inputValue(), createSku, "Create draft must survive locale switch");
+      assert.equal(await page.locator("[data-testid=offer-seller-sku]").inputValue(), createSku, "Create draft must survive in-app locale switch");
 
       await page.goto(FRONT + "/ru/admin/offers", { waitUntil: "load" });
       await page.waitForSelector("[data-testid=admin-offers]", { timeout: 30000 });

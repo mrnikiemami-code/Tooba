@@ -694,19 +694,31 @@ exports["OWN-09"] = () => callRun("OWN-09", async ctx => {
     offers: [{ key: "A", offerId: offer.offerId, sellerId: sellers.A.sellerPartyId, variantId: offer.variantId, positions: [{ ownerKind: "Marketplace", stock: 100, eligible: true }] }],
   });
   const preFault = findStep(harness, "label", "precommit-fault");
-  check(preFault.ok === false, "precommit fault did not surface a failure");
+  check(preFault.ok === false && preFault.error?.includes("injected-before-owner-commit") && stepsFind(harness, "phase", "precommit-injection")?.hit === true, "real owner transaction commit fault was not reached");
   const afterPre = findStep(harness, "label", "after precommit");
   check(afterPre.allocations.length === 0 && afterPre.facts.length === 0, "precommit fault changed owner state/events");
   const postReal = stepsFind(harness, "phase", "postcommit-real");
   check(postReal && postReal.ok === true, "postcommit owner write did not commit");
   const postFault = findStep(harness, "label", "postcommit-projection-fault");
-  check(postFault.ok === false, "postcommit projection fault did not surface");
+  check(postFault.ok === false && postFault.error?.includes("injected-owner-history-read") && stepsFind(harness, "phase", "projection-injection")?.hit === true, "real owner history query fault was not reached");
   const afterPost = findStep(harness, "label", "after postcommit fault");
   check(afterPost.allocations.length === 1 && afterPost.facts.length === 1, "durable owner facts were lost after projection fault");
   const replay = findStep(harness, "label", "replay").value;
   check(replay.IsSuccess === true, "replay did not report the committed owner result");
   const afterReplay = findStep(harness, "label", "after replay");
   check(afterReplay.allocations.length === 1 && afterReplay.facts.length === 1 && afterReplay.consumptions === 0, "replay duplicated owner facts or reported a false zero-write failure");
+  check(JSON.stringify(afterPost.facts) === JSON.stringify(afterReplay.facts), "replay changed committed owner fact");
+  const fact = afterReplay.facts[0];
+  check(fact.OperationId === postReal.operationId && fact.ActorUserId === postReal.actor && fact.OldAllocation === null && Number(fact.NewAllocation) === 20, "owner fact actor/intent/delta mismatch");
+  const history = await ctx.getJson("/v1/admin/offers/" + offer.offerId + "/history?page=1&pageSize=50", ctx.adminHeaders);
+  ctx.trace.recoveredHistory = history;
+  const rows = history.items.filter(row => row.kind === "AllocationChanged");
+  check(rows.length === 1, "actual Offer history must project exactly one logical allocation event");
+  const row = rows[0];
+  check(row.eventId === fact.FactId && row.actorUserId === fact.ActorUserId && row.targetId === offer.offerId &&
+    row.offerId === offer.offerId && row.occurredAt === fact.OccurredAt &&
+    (row.oldValue ?? null) === null && Number(row.newValue) === 20 && (row.locationId ?? null) === null,
+    "actual history event identity/actor/time/delta did not match committed owner fact");
   return "PASS";
 });
 

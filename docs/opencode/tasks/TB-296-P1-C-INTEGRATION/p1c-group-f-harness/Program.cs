@@ -4,6 +4,8 @@
 using System.Text.Json;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
 using Npgsql;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Observability.Tracing;
@@ -56,6 +58,15 @@ InventoryDirectory Dir(bool single)
 }
 bool singleEdition = string.Equals(cfg.Edition, "SingleStore", StringComparison.OrdinalIgnoreCase);
 InventoryDirectory DirMain() => Dir(singleEdition);
+InventoryDbContext FaultDb(IInterceptor interceptor)
+{
+    var builder = new DbContextOptionsBuilder<InventoryDbContext>();
+    ToobaNpgsql.ConfigureModuleContext(builder, conn, InventoryDbContext.Schema, typeof(InventoryDbContext));
+    builder.AddInterceptors(interceptor);
+    return new InventoryDbContext(builder.Options);
+}
+InventoryDirectory FaultDirectory(InventoryDbContext db) =>
+    new(db, guard, offers, catalog, clock, ids, tracer, new FixedCommerce(singleEdition));
 
 async Task<List<PosRef>> Build()
 {
@@ -122,7 +133,7 @@ async Task<Dictionary<string, object?>> Snap(string label, Guid? offerId = null)
     var reservations = await db.Reservations.AsNoTracking().Where(x => stockIds.Contains(x.StockItemId)).OrderBy(x => x.ReservationId)
         .Select(x => new { x.ReservationId, x.StockItemId, Quantity = x.Quantity, Status = x.Status.ToString(), Purpose = x.Purpose.ToString(), ExpiresAt = x.ExpiresAt == null ? null : x.ExpiresAt.Value.ToString("O") }).ToListAsync();
     var facts = await db.OfferInventoryChanges.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).OrderBy(x => x.OccurredAt)
-        .Select(x => new { x.FactId, x.OfferId, x.StockItemId, x.LocationId, x.Kind, x.OperationId, x.OldAllocation, x.NewAllocation, x.OldOnHand, x.NewOnHand, x.Reason }).ToListAsync();
+        .Select(x => new { x.FactId, x.OfferId, x.StockItemId, x.LocationId, x.Kind, x.OperationId, x.OldAllocation, x.NewAllocation, x.OldOnHand, x.NewOnHand, x.Reason, x.ActorUserId, x.OccurredAt }).ToListAsync();
     var reservationIds = reservations.Select(x => x.ReservationId).ToArray();
     var consumptions = await db.ReservationConsumptions.AsNoTracking().Where(x => reservationIds.Contains(x.ReservationId)).CountAsync();
     var releases = await db.HeldObligationReleases.AsNoTracking().Where(x => reservationIds.Contains(x.ReservationId)).CountAsync();
@@ -409,29 +420,35 @@ try
             var p = fixture[0];
             var steps = new List<object>();
             var preOp = Guid.NewGuid();
+            var actor = Guid.Parse(cfg.AdminActor ?? throw new InvalidOperationException("admin actor required"));
+            var preInterceptor = new RejectOwnerCommit();
             var pre = await Run("precommit-fault", async () =>
             {
-                await new ThrowBefore().SetAllocationAsync(new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", Guid.NewGuid(), preOp), default);
-                return new { ok = true };
+                await using var db = FaultDb(preInterceptor);
+                var outcome = await FaultDirectory(db).SetAllocationAsync(new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", actor, preOp), default);
+                return new { outcome.IsSuccess };
             });
             steps.Add(pre);
+            steps.Add(new { phase = "precommit-injection", hit = preInterceptor.Hit });
             steps.Add(await Snap("after precommit", p.OfferId));
             var postOp = Guid.NewGuid();
-            var actor = Guid.NewGuid();
-            var real = DirMain();
-            var committed = await real.SetAllocationAsync(new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", actor, postOp), default);
-            steps.Add(new { phase = "postcommit-real", ok = committed.IsSuccess, code = committed.IsSuccess ? null : committed.Errors.FirstOrDefault()?.Code });
+            var request = new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", actor, postOp);
+            var committed = await DirMain().SetAllocationAsync(request, default);
+            steps.Add(new { phase = "postcommit-real", ok = committed.IsSuccess, code = committed.IsSuccess ? null : committed.Errors.FirstOrDefault()?.Code, operationId = postOp, actor });
+            var projectionInterceptor = new RejectHistoryRead();
             var post = await Run("postcommit-projection-fault", async () =>
             {
-                await new ThrowAfter(real).SetAllocationAsync(new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", actor, postOp), default);
-                return new { ok = true };
+                await using var db = FaultDb(projectionInterceptor);
+                var facts = await ((IOfferInventoryHistoryReader)FaultDirectory(db)).ListAsync(p.OfferId, default);
+                return new { count = facts.Count };
             });
             steps.Add(post);
+            steps.Add(new { phase = "projection-injection", hit = projectionInterceptor.Hit });
             steps.Add(await Snap("after postcommit fault", p.OfferId));
             var replay = await Run("replay", async () =>
             {
-                var r = await real.SetAllocationAsync(new SetSellerOfferAllocation(p.OfferId, p.SellerId, 20m, "absent", actor, postOp), default);
-                return new { r.IsSuccess, code = r.IsSuccess ? null : r.Errors.FirstOrDefault()?.Code };
+                var outcome = await DirMain().SetAllocationAsync(request, default);
+                return new { outcome.IsSuccess, code = outcome.IsSuccess ? null : outcome.Errors.FirstOrDefault()?.Code };
             });
             steps.Add(replay);
             steps.Add(await Snap("after replay", p.OfferId));
@@ -705,18 +722,31 @@ sealed class FixedCommerce(bool single) : ICurrentCommerceContext
             : null,
         new ConnectionReference("p1c-f"), "p1c-f-harness");
 }
-sealed class ThrowBefore : ISellerOfferAllocationGateway
+// Inject after the real owner SaveChanges and before the actual transaction commit.
+sealed class RejectOwnerCommit : DbTransactionInterceptor
 {
-    public Task<Tooba.BuildingBlocks.Results.Result<OfferAllocationReceipt>> SetAllocationAsync(SetSellerOfferAllocation request, CancellationToken ct) =>
-        throw new InvalidOperationException("injected-before-owner-commit");
-}
-sealed class ThrowAfter(ISellerOfferAllocationGateway inner) : ISellerOfferAllocationGateway
-{
-    public async Task<Tooba.BuildingBlocks.Results.Result<OfferAllocationReceipt>> SetAllocationAsync(SetSellerOfferAllocation request, CancellationToken ct)
+    public bool Hit { get; private set; }
+    public override ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction,
+        TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
     {
-        var result = await inner.SetAllocationAsync(request, ct);
-        throw new InvalidOperationException("injected-after-owner-commit");
+        Hit = true;
+        throw new InvalidOperationException("injected-before-owner-commit");
     }
 }
 
-
+// History in Offer is a read projection of durable owner facts, not a second persisted journal.
+// Fail the actual database reader before that projection, then retry using an independent context.
+sealed class RejectHistoryRead : DbCommandInterceptor
+{
+    public bool Hit { get; private set; }
+    public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+        CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+    {
+        if (command.CommandText.Contains("offer_inventory_changes", StringComparison.OrdinalIgnoreCase))
+        {
+            Hit = true;
+            throw new InvalidOperationException("injected-owner-history-read");
+        }
+        return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+    }
+}
