@@ -1,0 +1,13 @@
+{
+  "scanner": "p1c-scan-staged-blobs.cjs",
+  "base": "origin/opencode/iso-agents-002",
+  "outgoingBlobCount": 1,
+  "totalOutgoingBytes": 3749,
+  "oversizedOver10MB": [],
+  "largeOrDumpExtensions": [],
+  "credentialPatternHits": [],
+  "forbiddenFinalHostOutgoing": false,
+  "evidenceRows": 60,
+  "evidenceOk": 60,
+  "evidenceFailures": []
+}
