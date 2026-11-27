@@ -178,7 +178,7 @@ export function InventoryTab(props: InventoryTabProps) {
               data-testid="offer-inventory-reason"
             />
             <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
-          </label> : null
+          </label> : null}
 
           <div className={styles.stack} style={{ marginTop: 12 }}>
             <Note>{t.inventoryReservedReadOnly}</Note>
