@@ -134,6 +134,8 @@ export interface OfferLocalInventoryDraft {
 
 export interface OfferHistoryItem {
   eventId?: string | null;
+  targetId?: string | null;
+  locationId?: string | null;
   offerId: string;
   occurredAt: string;
   kind: string;

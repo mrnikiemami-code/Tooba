@@ -1,3 +1,4 @@
+import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
 ﻿import type { GridServerQuery } from "../../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
@@ -612,10 +613,5 @@ export async function loadAdminOfferHistory(offerId: string, page = 1, pageSize 
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   const response = await fetch(`/v1/admin/offers/${offerId}/history?${params.toString()}`, { headers: headers() });
   if (!response.ok) throw new Error("offer.history.load_failed");
-  const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
-  const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
-    const item = record(raw); if (!item) return [];
-    return [{ offerId: text(prop(item, "offerId", "OfferId")), occurredAt: text(prop(item, "occurredAt", "OccurredAt")), kind: text(prop(item, "kind", "Kind")), actorUserId: prop(item, "actorUserId", "ActorUserId") == null ? null : text(prop(item, "actorUserId", "ActorUserId")), summary: text(prop(item, "summary", "Summary")), oldValue: prop(item, "oldValue", "OldValue") == null ? null : text(prop(item, "oldValue", "OldValue")), newValue: prop(item, "newValue", "NewValue") == null ? null : text(prop(item, "newValue", "NewValue")) }];
-  });
-  return { items, totalCount: Number(payload.totalCount ?? 0), page: Number(payload.page ?? page), pageSize: Number(payload.pageSize ?? pageSize) };
+  return parseOfferHistory(await response.json(), offerId);
 }

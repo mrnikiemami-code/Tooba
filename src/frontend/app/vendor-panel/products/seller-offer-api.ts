@@ -1,3 +1,4 @@
+import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
 ﻿import type { HostReadSource, SellerOfferDetail } from "../seller-api.ts";
 import { sellerHeaders, readJson, currentActor, isDeniedStatus, readProp, asString, asNullableString, asNumber, asNullableNumber, mapSellerOfferDetail } from "../seller-api.ts";
 
@@ -452,11 +453,5 @@ export async function loadSellerOfferHistory(sellerPartyId: string, offerId: str
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   const response = await fetch(`/v1/seller/offers/${offerId}/history?${params.toString()}`, { headers: sellerHeaders(sellerPartyId, currentActor()) });
   if (!response.ok) throw new Error("offer.history.load_failed");
-  const payload = await response.json() as { items?: unknown[]; totalCount?: number; page?: number; pageSize?: number };
-  const items = (Array.isArray(payload.items) ? payload.items : []).flatMap((raw) => {
-    if (!raw || typeof raw !== "object") return [];
-    const item = raw as Record<string, unknown>;
-    return [{ offerId: asString(readProp(item, "offerId", "OfferId")), occurredAt: asString(readProp(item, "occurredAt", "OccurredAt")), kind: asString(readProp(item, "kind", "Kind")), actorUserId: asNullableString(readProp(item, "actorUserId", "ActorUserId")), summary: asString(readProp(item, "summary", "Summary")), oldValue: asNullableString(readProp(item, "oldValue", "OldValue")), newValue: asNullableString(readProp(item, "newValue", "NewValue")) }];
-  });
-  return { items, totalCount: Number(payload.totalCount ?? 0), page: Number(payload.page ?? page), pageSize: Number(payload.pageSize ?? pageSize) };
+  return parseOfferHistory(await response.json(), offerId);
 }
