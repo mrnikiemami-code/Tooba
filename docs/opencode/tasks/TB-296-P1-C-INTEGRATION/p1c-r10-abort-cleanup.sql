@@ -1,0 +1,14 @@
+﻿begin;
+delete from inventory.reservation_consumptions where reservation_id in (select reservation_id from inventory.reservations where stock_item_id in (select stock_item_id from inventory.stock_positions where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a')));
+delete from inventory.reservations where stock_item_id in (select stock_item_id from inventory.stock_positions where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a'));
+delete from inventory.offer_inventory_changes where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from inventory.offer_allocations where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from inventory.outbox_messages where payload::text like '%1d865f7d-65e3-9f30-ba67-d03210ba7b92%' or payload::text like '%e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a%';
+delete from inventory.stock_positions where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from pricing.offer_price_changes where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from pricing.outbox_messages where payload::text like '%1d865f7d-65e3-9f30-ba67-d03210ba7b92%' or payload::text like '%e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a%';
+delete from pricing.prices where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from offer.offer_history where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+delete from offer.outbox_messages where payload::text like '%1d865f7d-65e3-9f30-ba67-d03210ba7b92%' or payload::text like '%e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a%';
+delete from offer.offers where offer_id in ('1d865f7d-65e3-9f30-ba67-d03210ba7b92','e5141ac4-f85f-ae53-bdfe-aa0ee9909e5a');
+commit;
