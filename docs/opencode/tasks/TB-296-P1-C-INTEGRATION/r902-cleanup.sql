@@ -1,0 +1,14 @@
+﻿begin;
+delete from inventory.reservation_consumptions where reservation_id in (select reservation_id from inventory.reservations where stock_item_id in (select stock_item_id from inventory.stock_positions where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb'));
+delete from inventory.reservations where stock_item_id in (select stock_item_id from inventory.stock_positions where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb');
+delete from inventory.offer_inventory_changes where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from inventory.offer_allocations where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from inventory.outbox_messages where payload::text like '%6f156160-bb59-4f39-ecae-5d71ea741fdb%';
+delete from inventory.stock_positions where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from pricing.offer_price_changes where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from pricing.outbox_messages where payload::text like '%6f156160-bb59-4f39-ecae-5d71ea741fdb%';
+delete from pricing.prices where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from offer.offer_history where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+delete from offer.outbox_messages where payload::text like '%6f156160-bb59-4f39-ecae-5d71ea741fdb%';
+delete from offer.offers where offer_id='6f156160-bb59-4f39-ecae-5d71ea741fdb';
+commit;
