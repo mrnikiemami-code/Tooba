@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale, useRegistryLocale, useLocalizedPath } from "../../lib/i18n/locale-context";
+import { parseRegistryPanelPrefix } from "../../lib/i18n/routing";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -97,15 +99,16 @@ function itemAllowed(item: NavItem, caps: Set<string> | null): boolean {
 }
 
 function VendorShellSkeleton() {
+  const registry = useRegistryLocale();
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" data-testid="vendor-shell-loading" dir="rtl">
+    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" data-testid="vendor-shell-loading" dir={registry.locale.direction}>
       <div className="sticky top-0 z-40 h-[65px] border-b border-gray-200 bg-white px-4 lg:px-6 flex items-center gap-3">
         <div className="h-8 w-8 rounded-xl bg-gray-200 animate-pulse" />
         <div className="h-4 w-28 rounded bg-gray-200 animate-pulse" />
         <div className="ms-auto h-4 w-24 rounded bg-gray-100 animate-pulse hidden md:block" />
       </div>
       <div className="flex flex-1">
-        <div className="hidden lg:block w-64 border-l border-gray-200 bg-white p-4 space-y-2">
+        <div className="hidden lg:block w-64 border-e border-gray-200 bg-white p-4 space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-10 rounded-xl bg-gray-100 animate-pulse" />
           ))}
@@ -129,7 +132,11 @@ function VendorShellSkeleton() {
  * زمینهٔ Actor+Seller برای مرز SpiceDB حفظ می‌شود. accent Tooba آبی است.
  */
 export function VendorShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const rawPath = usePathname() ?? "/vendor-panel";
+  const pathname = parseRegistryPanelPrefix(rawPath)?.pathname ?? rawPath;
+  const registry = useRegistryLocale();
+  const locale = useLocale();
+  const copy = (fa: string, en: string) => locale === "fa" ? fa : en;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [contexts, setContexts] = useState<SellerDevContext[]>([]);
@@ -218,7 +225,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
   const contextKey = actorUserId && sellerPartyId ? `${actorUserId}|${sellerPartyId}` : "";
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="vendor-panel-shell">
+    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir={registry.locale.direction} data-testid="vendor-panel-shell">
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center" data-testid="vendor-panel-header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -226,7 +233,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setSidebarOpen((open) => !open)}
               className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="جمع‌کردن منو"
+              aria-label={copy("جمع‌کردن منو", "Collapse menu")}
             >
               <Menu className="w-5 h-5 text-gray-700" />
             </button>
@@ -234,7 +241,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setMobileOpen(true)}
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="منوی موبایل"
+              aria-label={copy("منوی موبایل", "Mobile menu")}
               data-testid="vendor-panel-mobile-menu"
             >
               <Menu className="w-5 h-5 text-gray-700" />
@@ -243,16 +250,16 @@ export function VendorShell({ children }: { children: ReactNode }) {
               <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-sm shrink-0">
                 <Store className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold text-gray-900 hidden sm:block">پنل فروشنده</span>
+              <span className="font-bold text-gray-900 hidden sm:block">{copy("پنل فروشنده", "Seller panel")}</span>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
               <Award className="w-4 h-4 text-amber-500" />
-              <span>فروشنده ویژه</span>
+              <span>{copy("فروشنده ویژه", "Preferred seller")}</span>
             </div>
             <label className="hidden md:flex flex-col text-[10px] text-gray-500">
-              زمینهٔ مجاز
+              {copy("زمینهٔ مجاز", "Authorized context")}
               <select
                 className="mt-0.5 min-h-9 max-w-[14rem] rounded-xl border border-gray-200 bg-white px-2 text-xs text-gray-800"
                 value={contextKey}
@@ -274,8 +281,8 @@ export function VendorShell({ children }: { children: ReactNode }) {
             <Link
               href="/"
               className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
-              aria-label="خروج به فروشگاه"
-              title="خروج"
+              aria-label={copy("خروج به فروشگاه", "Exit to store")}
+              title={copy("خروج", "Sign out")}
             >
               <LogOut className="w-5 h-5" />
             </Link>
@@ -285,12 +292,12 @@ export function VendorShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 relative">
         <aside
-          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 ease-in-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto scrollbar-thin ${
+          className={`hidden lg:block bg-white border-e border-gray-200 shrink-0 transition-all duration-300 ease-in-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto scrollbar-thin ${
             sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0"
           }`}
           data-testid="vendor-panel-sidebar"
         >
-          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی فروشنده" data-testid="vendor-panel-nav-live-only">
+          <nav className="p-4 space-y-1 min-w-[250px]" aria-label={copy("منوی فروشنده", "Seller menu")} data-testid="vendor-panel-nav-live-only">
             {visibleMenuItems.map((item) => (
               <NavLink key={item.id} item={item} pathname={pathname} />
             ))}
@@ -300,7 +307,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
         <main className="flex-1 min-w-0 w-full p-4 md:p-6 lg:p-8" data-testid="vendor-panel-main">
           <div className="md:hidden mb-4">
             <label className="flex flex-col text-[10px] text-gray-500">
-              زمینهٔ مجاز (Actor + فروشنده)
+              {copy("زمینهٔ مجاز (کاربر و فروشنده)", "Authorized user and seller")}
               <select
                 className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
                 value={contextKey}
@@ -324,15 +331,15 @@ export function VendorShell({ children }: { children: ReactNode }) {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+          <aside className="absolute start-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-in duration-300">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center">
                   <Store className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-lg font-bold text-gray-900">پنل فروشنده</span>
+                <span className="text-lg font-bold text-gray-900">{copy("پنل فروشنده", "Seller panel")}</span>
               </div>
-              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="بستن">
+              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label={copy("بستن", "Close")}>
                 <X className="w-5 h-5 text-gray-700" />
               </button>
             </div>
@@ -347,7 +354,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
                 className="flex items-center justify-center gap-2 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 transition-all"
               >
                 <LogOut className="w-5 h-5" />
-                <span>خروج از حساب</span>
+                <span>{copy("خروج از حساب", "Sign out")}</span>
               </Link>
             </div>
           </aside>
@@ -369,9 +376,12 @@ function NavLink({
   dense?: boolean;
 }) {
   const active = isActivePath(pathname, item.href);
+  const locale = useLocale();
+  const localizePath = useLocalizedPath();
+  const english: Record<string, string> = { dashboard: "Dashboard", products: "Products", orders: "Orders", analytics: "Analytics", coupons: "Discounts", reviews: "Reviews", wallet: "Wallet", tickets: "Tickets", notifications: "Notifications", stories: "Stories", fulfillments: "Shipping", returns: "Returns", "access-control": "Access control", settings: "Settings" };
   return (
     <Link
-      href={item.href}
+      href={localizePath(item.href)}
       onClick={onNavigate}
       className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${
         dense ? "px-4 py-3" : "px-3 py-2.5"
@@ -380,8 +390,8 @@ function NavLink({
       data-live={item.live ? "true" : "false"}
     >
       <item.icon className="w-5 h-5 shrink-0" />
-      <span className="flex-1 truncate">{item.label}</span>
-      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>به‌زودی</span> : null}
+      <span className="flex-1 truncate">{locale === "fa" ? item.label : english[item.id] ?? item.label}</span>
+      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>{locale === "fa" ? "به‌زودی" : "Coming soon"}</span> : null}
       {active ? <ChevronLeft className="w-4 h-4 shrink-0" /> : null}
     </Link>
   );

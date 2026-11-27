@@ -14,6 +14,7 @@ import {
   type SellerOfferListRow,
 } from "../seller-api";
 import { useRegistryLocale } from "../../../lib/i18n/registry-locale";
+import { useLocalizedPath } from "../../../lib/i18n/locale-context";
 import { offerListMessagesForRegistry } from "../../../lib/offer-workspace/messages-ru";
 import {
   channelLabel,
@@ -31,13 +32,13 @@ function statusClass(status: string): string {
   return "bg-secondary text-secondary-foreground";
 }
 
-function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOfferFormatters>): GridColumnDef<SellerOfferGridRow>[] {
+function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOfferFormatters>, localizePath: (path: string) => string): GridColumnDef<SellerOfferGridRow>[] {
   const actions: AppGridRowAction<SellerOfferGridRow>[] = [
     {
       id: "edit",
       label: t.view,
       icon: Eye,
-      href: (row) => `/vendor-panel/products/${row.offerId}`,
+      href: (row) => localizePath(`/vendor-panel/products/${row.offerId}`),
       testId: (row) => `seller-offer-edit-${row.offerId}`,
     },
   ];
@@ -152,10 +153,11 @@ function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOffe
 
 export default function VendorProductsPage() {
   const registry = useRegistryLocale();
+  const localizePath = useLocalizedPath();
   const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
   const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
   const t = useMemo(() => offerListMessagesFor(offerLocale.language, offerListMessagesForRegistry(offerLocale.language)), [offerLocale.language]);
-  const columns = useMemo(() => buildColumns(t, format), [t, format]);
+  const columns = useMemo(() => buildColumns(t, format, localizePath), [t, format, localizePath]);
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [total, setTotal] = useState(0);
   const [message, setMessage] = useState<string | undefined>(undefined);
@@ -217,7 +219,7 @@ export default function VendorProductsPage() {
           </p>
         </div>
         <Link
-          href="/vendor-panel/products/new"
+          href={localizePath("/vendor-panel/products/new")}
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
           data-testid="seller-create-offer"
         >

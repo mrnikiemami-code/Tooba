@@ -9,6 +9,7 @@ import type { GridColumnDef } from "../../../design-system/data-grid";
 import { ADMIN_OFFER_GRID_VIEW_KEY, createHostSavedViewStore } from "../saved-view-store";
 import { queryAdminOffersGrid, type AdminOfferRow } from "./admin-offer-api";
 import { useRegistryLocale } from "../../../lib/i18n/registry-locale";
+import { useLocalizedPath } from "../../../lib/i18n/locale-context";
 import { offerListMessagesForRegistry } from "../../../lib/offer-workspace/messages-ru";
 import {
   channelLabel,
@@ -26,13 +27,13 @@ function statusClass(status: string): string {
   return "bg-secondary text-secondary-foreground";
 }
 
-function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOfferFormatters>): GridColumnDef<AdminOfferGridRow>[] {
+function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOfferFormatters>, localizePath: (path: string) => string): GridColumnDef<AdminOfferGridRow>[] {
   const actions: AppGridRowAction<AdminOfferGridRow>[] = [
     {
       id: "edit",
       label: t.view,
       icon: Eye,
-      href: (row) => `/admin/offers/${row.offerId}`,
+      href: (row) => localizePath(`/admin/offers/${row.offerId}`),
       testId: (row) => `admin-offer-edit-${row.offerId}`,
     },
   ];
@@ -162,10 +163,11 @@ function buildColumns(t: OfferListMessages, format: ReturnType<typeof createOffe
 
 export default function AdminOffersPage() {
   const registry = useRegistryLocale();
+  const localizePath = useLocalizedPath();
   const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
   const format = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
   const t = useMemo(() => offerListMessagesFor(offerLocale.language, offerListMessagesForRegistry(offerLocale.language)), [offerLocale.language]);
-  const columns = useMemo(() => buildColumns(t, format), [t, format]);
+  const columns = useMemo(() => buildColumns(t, format, localizePath), [t, format, localizePath]);
   const adapter = useMemo(
     () => async (query: Parameters<typeof queryAdminOffersGrid>[0]) => {
       const result = await queryAdminOffersGrid(query);
@@ -194,7 +196,7 @@ export default function AdminOffersPage() {
         </div>
         <Link
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
-          href="/admin/offers/new"
+          href={localizePath("/admin/offers/new")}
           data-testid="admin-offer-create-link"
         >
           <Plus className="h-4 w-4" aria-hidden />

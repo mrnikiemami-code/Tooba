@@ -18,7 +18,7 @@ export const DEFAULT_ADMIN_ACTOR_ID = "";
 export function adminRequestHeaders(extra?: Record<string, string>): Record<string, string> {
   return {
     Accept: "application/json",
-    "Accept-Language": acceptLanguageForLocale(readBrowserLocaleCookie()),
+    "Accept-Language": typeof document !== "undefined" && document.documentElement.lang ? document.documentElement.lang : acceptLanguageForLocale(readBrowserLocaleCookie()),
     ...(extra ?? {}),
   };
 }

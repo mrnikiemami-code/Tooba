@@ -86,7 +86,8 @@ export function createOfferFormatters(locale: OfferLocaleDefinition): OfferForma
     }
   })();
   const currencyLabel = (currency: string): string => {
-    const code = (currency || "IRR").toUpperCase();
+    const code = currency.toUpperCase();
+    if (!code) return "—";
     try {
       return currencyNames?.of(code) ?? code;
     } catch {
@@ -129,7 +130,8 @@ export function createOfferFormatters(locale: OfferLocaleDefinition): OfferForma
         : `${numberFormatter(4).format(amount)} ${currencyLabel(currency)}`.trim(),
     currencyName: currencyLabel,
     regionName: (region) => {
-      const code = (region || "IR").toUpperCase();
+      const code = region.toUpperCase();
+      if (!code) return "—";
       try {
         return regionNames?.of(code) ?? code;
       } catch {
@@ -261,7 +263,7 @@ export function offerListMessagesFor(
   locale: "fa" | "en" | string,
   override?: Partial<OfferListMessages>,
 ): OfferListMessages {
-  const base = offerListMessages[locale as "fa" | "en"] ?? faList;
+  const base = offerListMessages[locale as "fa" | "en"] ?? enList;
   return override ? { ...base, ...override } : base;
 }
 

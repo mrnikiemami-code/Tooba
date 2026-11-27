@@ -42,10 +42,11 @@ import {
 } from "../access-control/access-control-api";
 import {
   adminNavLabels,
-  resolveAdminChromeLocale,
-  type AdminNavLabels,
+   type AdminNavLabels,
 } from "./admin-chrome-messages";
 import { isActiveAdminNavItem } from "./admin-nav-active";
+import { useLocale, useRegistryLocale, useLocalizedPath } from "../../lib/i18n/locale-context";
+import { parseRegistryPanelPrefix } from "../../lib/i18n/routing";
 
 type NavItemDef = {
   id: string;
@@ -185,18 +186,21 @@ function itemAllowed(item: NavItemDef, caps: Set<string> | null): boolean {
  * (header چسبان + sidebar + drawer) و هویت عملیاتی جدا از Seller Panel.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const rawPath = usePathname() ?? "/admin";
+  const pathname = parseRegistryPanelPrefix(rawPath)?.pathname ?? rawPath;
+  const registry = useRegistryLocale();
+  const locale = useLocale();
+  const copy = (fa: string, en: string) => locale === "fa" ? fa : en;
   const searchParams = useSearchParams();
   const search = searchParams?.toString() ?? "";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [caps, setCaps] = useState<Set<string> | null>(null);
-  const [labels, setLabels] = useState<AdminNavLabels>(() => adminNavLabels("fa"));
+  const labels = useMemo(() => adminNavLabels(locale), [locale]);
 
   useEffect(() => {
-    setLabels(adminNavLabels(resolveAdminChromeLocale()));
-    void prepareAdminDevActor()
+     void prepareAdminDevActor()
       .then(async () => {
         try {
           const effective = await createAdminAccessApi().getMyCapabilities();
@@ -232,7 +236,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500" data-testid="admin-shell-loading">
-        در حال آماده‌سازی پنل مدیریت…
+        {copy("در حال آماده‌سازی پنل مدیریت…", "Preparing admin panel…")}
       </div>
     );
   }
@@ -240,7 +244,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const crumb = crumbFor(pathname, search, labels);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="admin-panel-shell">
+    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir={registry.locale.direction} data-testid="admin-panel-shell">
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center transition-shadow duration-200" data-testid="admin-panel-header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -266,14 +270,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <Shield className="w-4 h-4 text-white" />
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-gray-900 text-sm truncate">مرکز عملیات توبا</p>
-                <p className="text-[10px] text-gray-500 hidden sm:block">پنل مدیریت · {crumb}</p>
+                <p className="font-bold text-gray-900 text-sm truncate">{copy("مرکز عملیات توبا", "Tooba operations")}</p>
+                <p className="text-[10px] text-gray-500 hidden sm:block">{copy("پنل مدیریت", "Admin panel")} · {crumb}</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="hidden sm:inline-flex items-center rounded-full bg-[#2563EB]/10 text-[#2563EB] px-3 py-1 text-[11px] font-bold">
-              دسترسی مدیر
+              {copy("دسترسی مدیر", "Admin access")}
             </span>
             <Link href="/" className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors" aria-label={labels.signOut} title={labels.signOut}>
               <LogOut className="w-5 h-5" />
@@ -284,7 +288,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 relative">
         <aside
-          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 ease-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto motion-reduce:transition-none ${
+          className={`hidden lg:block bg-white border-e border-gray-200 shrink-0 transition-all duration-300 ease-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto motion-reduce:transition-none ${
             sidebarOpen ? "w-64" : "w-0 opacity-0"
           }`}
           data-testid="admin-panel-sidebar"
@@ -311,13 +315,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {mobileOpen ? (
         <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" data-testid="admin-panel-drawer">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 motion-reduce:animate-none">
+          <aside className="absolute start-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-in duration-200 motion-reduce:animate-none">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center">
                   <Shield className="w-4 h-4 text-white" />
                 </div>
-                <span className="font-bold text-gray-900">مدیریت توبا</span>
+                <span className="font-bold text-gray-900">{copy("مدیریت توبا", "Tooba administration")}</span>
               </div>
               <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label={labels.closeMenu}>
                 <X className="w-5 h-5" />
@@ -349,7 +353,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 className="flex items-center justify-center gap-2 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 bg-red-50"
               >
                 <LogOut className="w-5 h-5" />
-                بازگشت به فروشگاه
+                {copy("بازگشت به فروشگاه", "Back to store")}
               </Link>
             </div>
           </aside>
@@ -375,9 +379,11 @@ function NavLink({
   dense?: boolean;
 }) {
   const active = isActivePath(pathname, search, item, siblings);
+  const localizePath = useLocalizedPath();
+  const locale = useLocale();
   return (
     <Link
-      href={item.href}
+      href={localizePath(item.href)}
       onClick={onNavigate}
       className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 motion-reduce:transition-none ${
         dense ? "px-4 py-3" : "px-3 py-2.5"
@@ -388,7 +394,7 @@ function NavLink({
     >
       <item.icon className="w-5 h-5 shrink-0" />
       <span className="flex-1 truncate">{item.label}</span>
-      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>به‌زودی</span> : null}
+      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>{locale === "fa" ? "به‌زودی" : "Coming soon"}</span> : null}
       {active ? <ChevronLeft className="w-4 h-4 shrink-0" /> : null}
     </Link>
   );

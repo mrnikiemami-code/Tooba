@@ -1,5 +1,5 @@
 ﻿import { NextResponse, type NextRequest } from "next/server";
-import { LOCALE_HEADER_NAME } from "./lib/i18n/routing.ts";
+import { LOCALE_HEADER_NAME, parseRegistryPanelPrefix } from "./lib/i18n/routing.ts";
 import { LOCALE_COOKIE_NAME } from "./lib/i18n/locale.ts";
 import { planLocaleMiddleware } from "./lib/i18n/middleware-locale.ts";
 
@@ -33,7 +33,8 @@ export function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set(LOCALE_HEADER_NAME, plan.locale);
     const response = NextResponse.rewrite(rewriteTarget, { request: { headers: requestHeaders } });
-    response.cookies.set(LOCALE_COOKIE_NAME, plan.locale, {
+    // Panel prefixes are candidates only; the registry provider persists an active canonical prefix.
+    if (!parseRegistryPanelPrefix(pathname)) response.cookies.set(LOCALE_COOKIE_NAME, plan.locale, {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",

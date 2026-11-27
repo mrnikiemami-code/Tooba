@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider } from "../design-system";
 import { StorefrontWishlistProvider } from "./storefront/storefront-wishlist-provider";
 import { StorefrontNavigationPendingProvider } from "../lib/storefront-navigation/navigation-pending-context.tsx";
-import { RegistryLocaleProvider, useRegistryLocale } from "../lib/i18n/registry-locale.ts";
+import { useRegistryLocale } from "../lib/i18n/registry-locale.ts";
 
 /** Central registry direction also controls shared Toast feedback. */
 function RegistryToastContainer() {
@@ -31,14 +31,12 @@ function RegistryToastContainer() {
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <RegistryLocaleProvider>
-        <StorefrontWishlistProvider>
+         <StorefrontWishlistProvider>
           <StorefrontNavigationPendingProvider>
             <RegistryToastContainer />
             {children}
           </StorefrontNavigationPendingProvider>
         </StorefrontWishlistProvider>
-      </RegistryLocaleProvider>
-    </ThemeProvider>
+     </ThemeProvider>
   );
 }

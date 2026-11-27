@@ -71,13 +71,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground">
+        <LocaleProvider locale={locale} requestedPrefix={headerLocale ?? jar.get(LOCALE_COOKIE_NAME)?.value ?? null}>
         <AppProviders>
           <StorefrontAppearanceProvider appearance={appearance}>
             <StorefrontProductCardSkinProvider skin={productCardSkin}>
-              <LocaleProvider locale={locale}>{children}</LocaleProvider>
+              {children}
             </StorefrontProductCardSkinProvider>
           </StorefrontAppearanceProvider>
         </AppProviders>
+        </LocaleProvider>
       </body>
     </html>
   );
