@@ -1,0 +1,12 @@
+{
+  "roleId": "13d22a30-dd4a-44ec-a676-429af6827be3",
+  "assignmentId": "dc93f300-c22a-4b88-bb03-a15eb019bd9e",
+  "seller": {
+    "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+    "actorLabel": "اپراتور دیجی‌استایل",
+    "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "sellerLabel": "دیجی‌استایل نمونه",
+    "contextKind": "seller-owner-alt"
+  },
+  "ceil": 204
+}

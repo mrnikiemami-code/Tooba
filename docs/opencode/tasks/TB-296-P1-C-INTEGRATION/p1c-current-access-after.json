@@ -1,4 +1,6 @@
 {
+  "roles": [],
+  "assignments": [],
   "ceiling": [
     {
       "permissionId": "accesscontrol.manage",
@@ -225,10 +227,5 @@
       "scopeKind": "GlobalWithinOwner"
     }
   ],
-  "roles": [],
-  "assignments": [],
-  "capturedAt": "2026-11-27T02:56:59.496Z",
-  "matchesBefore": true,
-  "missing": [],
-  "extra": []
+  "capturedAt": "2026-11-27T06:35:45.197Z"
 }
