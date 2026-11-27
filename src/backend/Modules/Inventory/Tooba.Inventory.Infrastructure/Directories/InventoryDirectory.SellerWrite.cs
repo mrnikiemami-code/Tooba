@@ -45,14 +45,7 @@ public sealed partial class InventoryDirectory
 
         var location = await _db.Locations.AsNoTracking()
             .SingleOrDefaultAsync(x => x.LocationId == selected.LocationId, cancellationToken);
-        if (location is null || location.Status != InventoryLocationStatus.Active
-            || (_commerce is not null && !IsLocationEligible(location, offer))
-            || (location.OwnerKind == InventoryLocationOwnerKind.Seller
-                ? location.SellerPartyId != request.SellerPartyId
-                    || offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
-                : !request.AdminPhysicalAdjustment
-                    || location.SellerPartyId is not null
-                    || offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Seller))
+        if (location is null || !CanAdjustPhysicalLocation(location, offer, request.AdminPhysicalAdjustment))
             return Result.Failure(new SemanticError(InventoryErrorCodes.LocationNotEligible));
 
         var operationId = request.OperationId;
@@ -64,6 +57,13 @@ public sealed partial class InventoryDirectory
         var currentOffer = await FindOfferAsync(request.OfferId, cancellationToken);
         if (currentOffer is null || currentOffer.SellerPartyId != request.SellerPartyId
             || currentOffer.FulfillmentResponsibility != offer.FulfillmentResponsibility)
+            return Result.Failure(new SemanticError(InventoryErrorCodes.LocationNotEligible));
+        // Re-read the location after acquiring the offer lock. Use the same edition/owner
+        // eligibility as availability; the Marketplace responsibility rule must not
+        // reject an authorized Store adjustment in an active SingleStore tenant.
+        var currentLocation = await _db.Locations.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.LocationId == selected.LocationId, cancellationToken);
+        if (currentLocation is null || !CanAdjustPhysicalLocation(currentLocation, currentOffer, request.AdminPhysicalAdjustment))
             return Result.Failure(new SemanticError(InventoryErrorCodes.LocationNotEligible));
         // Serialize workspace intents on the target position, before checking the durable replay.
         await _db.Database.ExecuteSqlAsync(
@@ -128,6 +128,35 @@ public sealed partial class InventoryDirectory
         await _db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Success();
+    }
+
+    private bool CanAdjustPhysicalLocation(InventoryLocation location, OfferReference offer, bool adminPhysicalAdjustment)
+    {
+        if (location.Status != InventoryLocationStatus.Active)
+            return false;
+
+        if (_commerce is not null)
+        {
+            if (!IsLocationEligible(location, offer))
+                return false;
+            return _commerce.Current switch
+            {
+                { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active } =>
+                    adminPhysicalAdjustment, // Store owns physical inventory, not the seller surface.
+                { Edition.Edition: ToobaEdition.Marketplace, Tenant: null } =>
+                    offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Seller
+                    || (offer.FulfillmentResponsibility == OfferFulfillmentResponsibility.Platform
+                        && adminPhysicalAdjustment),
+                _ => false,
+            };
+        }
+
+        // Preserve the existing direct-directory fixture seam; production DI uses commerce.
+        return location.OwnerKind == InventoryLocationOwnerKind.Seller
+            ? location.SellerPartyId == offer.SellerPartyId
+                && offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Platform
+            : adminPhysicalAdjustment && location.SellerPartyId is null
+                && offer.FulfillmentResponsibility != OfferFulfillmentResponsibility.Seller;
     }
 
     private static bool RevisionMatches(DateTimeOffset actual, string expected)

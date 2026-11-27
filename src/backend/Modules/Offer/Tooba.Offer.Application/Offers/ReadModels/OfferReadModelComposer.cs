@@ -129,8 +129,17 @@ public sealed class OfferReadModelComposer(
             offer.UpdatedAt.ToString("O"),
             new OfferRevisions(offer.UpdatedAt.ToString("O"), priceRevision?.Revision ?? "absent", stock?.AllocationRevision ?? "absent"),
             new OfferCapabilities(
-                adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller,
-                commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace
+                commerce is null
+                    ? adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller
+                    : commerce.Current switch
+                    {
+                        { Edition.Edition: ToobaEdition.SingleStore, Tenant.Status: TenantStatus.Active } => adminSurface,
+                        { Edition.Edition: ToobaEdition.Marketplace, Tenant: null } =>
+                            fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller
+                            || (adminSurface && fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform),
+                        _ => false,
+                    },
+                commerce?.Current is { Edition.Edition: ToobaEdition.Marketplace, Tenant: null }
                     && fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform,
                 adminSurface,
                 adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller),
