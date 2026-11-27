@@ -58,7 +58,7 @@ export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDra
 }
 
 export function priceDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
-  return parseDecimal(draft.amount) !== detail.amount;
+  return (draft.amount.trim() !== "" && parseDecimal(draft.amount) == null) || parseDecimal(draft.amount) !== detail.amount || (draft.currency !== detail.currency && draft.amount.trim() !== "");
 }
 
 export function commercialDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
@@ -78,7 +78,7 @@ export function commercialDirty(detail: OfferWorkspaceDetail, draft: OfferWorksp
 
 export function offeredQuantityDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
   if (!detail.capabilities?.canEditOfferedQuantity) return false;
-  return parseDecimal(draft.offeredQuantity) !== detail.offeredQuantity;
+  return (draft.offeredQuantity.trim() !== "" && parseDecimal(draft.offeredQuantity) == null) || parseDecimal(draft.offeredQuantity) !== detail.offeredQuantity;
 }
 
 export function inventoryDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
@@ -96,7 +96,7 @@ export function validatePrice(amountText: string, currency: string): string | nu
   if (amountText.trim().length === 0) return null;
   const amount = parseDecimal(amountText);
   if (amount == null || amount < 0) return "offer.price.invalid";
-  if ((currency || "IRR").toUpperCase() === "IRR" && !Number.isInteger(amount)) {
+  if (currency.toUpperCase() === "IRR" && !Number.isInteger(amount)) {
     return "offer.price.decimals_not_allowed";
   }
   return null;
@@ -105,7 +105,7 @@ export function validatePrice(amountText: string, currency: string): string | nu
 export function quantityAligned(value: number, decimalPlaces: number, step: number | null): boolean {
   if (!Number.isFinite(value) || value <= 0) return false;
   const factor = 10 ** Math.max(0, decimalPlaces);
-  if (Math.round(value * factor) !== value * factor) return false;
+  if (Math.abs(Math.round(value * factor) - value * factor) > 1e-8) return false;
   if (step != null && step > 0) {
     const quotient = value / step;
     if (Math.abs(quotient - Math.round(quotient)) > 1e-9) return false;
@@ -121,6 +121,7 @@ export function validateInventory(
     (row) => parseDecimal(draft.inventoryOnHand[row.stockItemId]) !== row.onHand,
   );
   if (changed.length === 0) return null;
+  if (detail.capabilities?.canEditPhysicalInventory !== true) return "denied";
   for (const row of changed) {
     const value = parseDecimal(draft.inventoryOnHand[row.stockItemId]);
     if (value == null || value < 0) return "offer.inventory.invalid";
@@ -163,6 +164,14 @@ export function validateDraft(
   if (priceError) errors.push({ tab: "pricing", code: priceError });
   const inventoryError = inventoryDirty(detail, draft) ? validateInventory(detail, draft) : null;
   if (inventoryError) errors.push({ tab: "inventory", code: inventoryError });
+  if (offeredQuantityDirty(detail, draft)) {
+    const quantity = parseDecimal(draft.offeredQuantity);
+    const held = detail.allocationHeld ?? 0;
+    if (quantity == null || quantity < 0) errors.push({ tab: "inventory", code: "offer.inventory.invalid" });
+    else if (quantity < held) errors.push({ tab: "inventory", code: "inventory.allocation.below_held" });
+    else if (quantity > detail.onHand) errors.push({ tab: "inventory", code: "inventory.allocation.exceeds_physical" });
+    else if (quantity > 0 && !quantityAligned(quantity, detail.unitQuantityDecimalPlaces ?? 0, detail.unitQuantityStep ?? null)) errors.push({ tab: "inventory", code: "offer.inventory.step_invalid" });
+  }
   const conditionsError = commercialDirty(detail, draft) ? validateConditions(detail, draft) : null;
   if (conditionsError) errors.push({ tab: "conditions", code: conditionsError });
   return errors;
@@ -345,7 +354,13 @@ export function changedInventoryRows(
 
 /** Compares the persisted offer snapshot so a stale session cannot overwrite another session. */
 export function detailVersionChanged(current: OfferWorkspaceDetail, latest: OfferWorkspaceDetail): boolean {
-  return current.lastUpdatedAt !== latest.lastUpdatedAt
+  return current.offerId !== latest.offerId || current.sellerPartyId !== latest.sellerPartyId || current.catalogVariantId !== latest.catalogVariantId || current.channel !== latest.channel
+    || current.lastUpdatedAt !== latest.lastUpdatedAt
+    || current.revisions?.offer !== latest.revisions?.offer
+    || current.revisions?.price !== latest.revisions?.price
+    || current.revisions?.offeredQuantity !== latest.revisions?.offeredQuantity
+    || current.offeredQuantity !== latest.offeredQuantity || current.allocationHeld !== latest.allocationHeld
+    || JSON.stringify(current.capabilities) !== JSON.stringify(latest.capabilities)
     || current.status !== latest.status
     || current.sellerSku !== latest.sellerSku
     || current.returnPolicyChoice !== latest.returnPolicyChoice
@@ -361,6 +376,6 @@ export function detailVersionChanged(current: OfferWorkspaceDetail, latest: Offe
     || current.inventoryLocations.length !== latest.inventoryLocations.length
     || current.inventoryLocations.some((row) => {
       const next = latest.inventoryLocations.find((item) => item.stockItemId === row.stockItemId);
-      return !next || next.onHand !== row.onHand || next.reserved !== row.reserved;
+      return !next || next.locationId !== row.locationId || next.revision !== row.revision || next.onHand !== row.onHand || next.reserved !== row.reserved;
     });
 }

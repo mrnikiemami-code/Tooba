@@ -199,7 +199,7 @@ export interface OfferWorkspaceAdapter {
   searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
   loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
   loadChannels?: () => Promise<string[]>;
-  loadInventoryLocations?: () => Promise<OfferInventoryLocationOption[]>;
+  loadInventoryLocations?: (sellerPartyId?: string, responsibility?: OfferFulfillmentResponsibility | null) => Promise<OfferInventoryLocationOption[]>;
   loadHistory?: (page: number, pageSize: number) => Promise<OfferHistoryPage>;
   findActiveOffer?: (sellerPartyId: string, catalogVariantId: string, channel: string) => Promise<{ offerId: string } | null>;
   createDraft: (input: {
@@ -224,11 +224,12 @@ export interface OfferWorkspaceAdapter {
     inventory: Array<{ locationId: string; onHand: number; reason: string }>;
   }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
   saveCommercial: (patch: OfferCommercialPatch, expectedVersion?: string) => Promise<OfferMutationResult>;
-  savePrice: (input: { amount: number; currency: string }, expectedVersion?: string) => Promise<OfferMutationResult>;
+  savePrice: (input: { amount: number; currency: string; operationId?: string }, expectedVersion?: string) => Promise<OfferMutationResult>;
   saveInventory: (input: {
     stockItemId: string;
     onHand: number;
     reason: string;
+    operationId?: string;
   }, expectedVersion?: string) => Promise<OfferMutationResult>;
   saveOfferedQuantity?: (quantity: number, expectedVersion: string, operationId: string) => Promise<OfferMutationResult>;
   saveFulfillment?: (input: {

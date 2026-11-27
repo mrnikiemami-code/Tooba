@@ -36,7 +36,7 @@ export function ShippingTab(props: ShippingTabProps) {
         : t.shippingUnassigned;
   const typeLabel = props.shippingTypes.find((type) => type.shippingTypeId === props.shippingTypeId)?.label;
 
-  if (role === "seller") {
+  if (role === "seller" || (detail.offerId && detail.capabilities?.canAssignFulfillment !== true)) {
     return (
       <div className={styles.stack} data-testid="offer-tab-shipping">
         <section className={styles.card}>

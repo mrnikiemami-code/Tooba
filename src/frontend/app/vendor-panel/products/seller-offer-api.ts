@@ -16,7 +16,7 @@ export async function loadSellerOfferDetail(
       return { source: "error", detail: null, message: "seller-offer-http-" + String(response.status) };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    return detail ? { source: "host", detail } : { source: "error", detail: null, message: "seller-offer-invalid" };
+    return detail && detail.offerId === offerId && detail.sellerPartyId === sellerPartyId ? { source: "host", detail } : { source: "error", detail: null, message: "seller-offer-invalid" };
   } catch {
     return { source: "error", detail: null, message: "host-unreachable" };
   }
@@ -65,7 +65,7 @@ export async function patchSellerOffer(
     if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId) {
       return { ok: false, errorCode: "seller.offer.response_mismatch" };
     }
-    if (patch.sellerSku !== undefined && (detail.sellerSku ?? "") !== patch.sellerSku) {
+    if (patch.sellerSku !== undefined && (detail.sellerSku ?? null) !== patch.sellerSku) {
       return { ok: false, errorCode: "seller.offer.response_mismatch" };
     }
     if (patch.status !== undefined && detail.status !== patch.status) {
@@ -178,9 +178,10 @@ export async function createSellerOffer(
 export async function writeSellerOfferPrice(
   sellerPartyId: string,
   offerId: string,
-  input: { amount: number; currency?: string | null; market?: string | null },
+  input: { amount: number; currency?: string | null; market?: string | null; operationId?: string },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}/price`, {
       method: "PUT",
@@ -190,6 +191,7 @@ export async function writeSellerOfferPrice(
         currency: input.currency ?? undefined,
         market: input.market ?? undefined,
         expectedVersion,
+        operationId: input.operationId,
       }),
     });
     if (isDeniedStatus(response.status) || response.status === 404) {
@@ -200,7 +202,7 @@ export async function writeSellerOfferPrice(
       return { ok: false, errorCode: body?.errorCode ?? "seller.price.write-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || detail.amount !== input.amount) {
+    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || detail.amount !== input.amount || (input.currency && detail.currency !== input.currency)) {
       return { ok: false, errorCode: "seller.price.response_mismatch" };
     }
     return { ok: true, detail };
@@ -232,9 +234,10 @@ export async function writeSellerOfferedQuantity(
 export async function writeSellerOfferInventory(
   sellerPartyId: string,
   offerId: string,
-  input: { onHand: number; reason?: string | null; stockItemId?: string | null },
+  input: { onHand: number; reason?: string | null; stockItemId?: string | null; operationId?: string },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}/inventory`, {
       method: "PUT",
@@ -244,6 +247,7 @@ export async function writeSellerOfferInventory(
         reason: input.reason ?? undefined,
         stockItemId: input.stockItemId ?? undefined,
         expectedVersion,
+        operationId: input.operationId,
       }),
     });
     if (isDeniedStatus(response.status) || response.status === 404) {

@@ -88,6 +88,7 @@ export default function VendorProductDetailPage() {
       saveCommercial: (patch, version) => patchSellerOffer(sellerPartyId, offerId, patch, version),
       savePrice: (input, version) => writeSellerOfferPrice(sellerPartyId, offerId, input, version),
       saveInventory: (input, version) => writeSellerOfferInventory(sellerPartyId, offerId, input, version),
+      saveOfferedQuantity: (quantity, version, operationId) => writeSellerOfferedQuantity(sellerPartyId, offerId, quantity, version, operationId),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/vendor-panel/products")),
     };
@@ -143,7 +144,7 @@ export default function VendorProductDetailPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl">
-      <OfferWorkspace adapter={adapter} renderExtras={renderExtras} />
+      <OfferWorkspace adapter={adapter} renderExtras={renderExtras} localeDefinition={offerLocale} messages={workspaceMessages} />
     </main>
   );
 }

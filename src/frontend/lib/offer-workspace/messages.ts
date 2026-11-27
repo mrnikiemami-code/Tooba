@@ -99,6 +99,9 @@ export interface OfferWorkspaceMessages {
   inventoryPhysical: string;
   inventoryReserved: string;
   inventoryAvailable: string;
+  inventoryOfferedQuantity: string;
+  inventoryOfferedHint: string;
+  inventoryAllocationExceedsPhysical: string;
   inventoryLocation: string;
   inventoryOnHand: string;
   inventoryReason: string;
@@ -314,6 +317,9 @@ const fa: OfferWorkspaceMessages = {
   inventoryPhysical: "موجودی فیزیکی",
   inventoryReserved: "رزرو",
   inventoryAvailable: "قابل فروش",
+  inventoryOfferedQuantity: "مقدار عرضه",
+  inventoryOfferedHint: "مقدار عرضه شامل واحدهای رزروشده است؛ موجودی فیزیکی تغییر نمی‌کند.",
+  inventoryAllocationExceedsPhysical: "مقدار عرضه نباید از موجودی فیزیکی بیشتر باشد.",
   inventoryLocation: "انبار",
   inventoryOnHand: "موجودی",
   inventoryReason: "دلیل اصلاح",
@@ -530,6 +536,9 @@ const en: OfferWorkspaceMessages = {
   inventoryPhysical: "Physical",
   inventoryReserved: "Reserved",
   inventoryAvailable: "Available",
+  inventoryOfferedQuantity: "Offered quantity",
+  inventoryOfferedHint: "Offered quantity includes held units and does not change physical stock.",
+  inventoryAllocationExceedsPhysical: "Offered quantity must not exceed physical stock.",
   inventoryLocation: "Warehouse",
   inventoryOnHand: "On hand",
   inventoryReason: "Adjustment reason",
@@ -661,6 +670,9 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
       return t.validationDecimals;
     case "offer.inventory.invalid":
       return t.validationInventory;
+    case "inventory.allocation.exceeds_physical":
+      return t.inventoryAllocationExceedsPhysical;
+    case "inventory.allocation.below_held":
     case "offer.inventory.below_reserved":
       return t.validationBelowReserved;
     case "offer.inventory.reason_required":
@@ -679,6 +691,8 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
       return t.validationReturnRange;
     case "offer.fulfillment.change_protected":
       return t.fulfillmentProtected;
+    case "inventory.allocation.revision_conflict":
+    case "inventory.position.revision_conflict":
     case "concurrency.conflict":
       return t.concurrentChange;
     case "offer.buyable.no_price":

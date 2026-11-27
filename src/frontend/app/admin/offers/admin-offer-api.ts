@@ -221,7 +221,7 @@ export async function loadAdminOfferDetail(offerId: string): Promise<{ ok: true;
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) return { ok: false, errorCode: `admin.offer.http.${response.status}` };
     const detail = mapAdminOfferDetail(await response.json());
-    return detail ? { ok: true, detail } : { ok: false, errorCode: "admin.offer.invalid-response" };
+    return detail && detail.offerId === offerId ? { ok: true, detail } : { ok: false, errorCode: "admin.offer.invalid-response" };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }
@@ -320,16 +320,17 @@ export async function patchAdminOffer(
 
 export async function writeAdminOfferPrice(
   offerId: string,
-  input: { amount: number; currency?: string; market?: string },
+  input: { amount: number; currency?: string; market?: string; operationId?: string },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
   try {
     await prepareAdminDevActor();
-    const currency = input.currency || "IRR";
+    const currency = input.currency || undefined;
     const response = await fetch(`/v1/admin/offers/${offerId}/price`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ amount: input.amount, currency, market: input.market ?? "IR", expectedVersion }),
+      body: JSON.stringify({ amount: input.amount, currency, market: input.market, expectedVersion, operationId: input.operationId }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
@@ -337,7 +338,7 @@ export async function writeAdminOfferPrice(
       return { ok: false, errorCode: body?.errorCode ?? "admin.price.write-failed" };
     }
     const detail = mapAdminOfferDetail(await response.json());
-    if (!detail || detail.offerId !== offerId || detail.amount !== input.amount || detail.currency !== currency) {
+    if (!detail || detail.offerId !== offerId || detail.amount !== input.amount || (currency !== undefined && detail.currency !== currency)) {
       return { ok: false, errorCode: "admin.price.response_mismatch" };
     }
     return { ok: true, detail };
@@ -368,15 +369,16 @@ export async function writeAdminOfferedQuantity(
 
 export async function writeAdminOfferInventory(
   offerId: string,
-  input: { onHand: number; reason: string; stockItemId: string },
+  input: { onHand: number; reason: string; stockItemId: string; operationId?: string },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
   try {
     await prepareAdminDevActor();
     const response = await fetch(`/v1/admin/offers/${offerId}/inventory`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId, expectedVersion }),
+      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId, expectedVersion, operationId: input.operationId }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
@@ -577,10 +579,11 @@ export async function loadAdminAllowedOfferChannels(): Promise<string[]> {
 
 export interface AdminInventoryLocationOption { locationId: string; code: string; name: string; }
 
-export async function loadAdminInventoryLocations(): Promise<AdminInventoryLocationOption[]> {
+export async function loadAdminInventoryLocations(sellerPartyId?: string): Promise<AdminInventoryLocationOption[]> {
   await prepareAdminDevActor();
   try {
-    const response = await fetch("/v1/admin/offers/inventory-locations", { headers: headers() });
+    const query = sellerPartyId ? "?" + new URLSearchParams({ sellerPartyId }).toString() : "";
+    const response = await fetch("/v1/admin/offers/inventory-locations" + query, { headers: headers() });
     if (!response.ok) return [];
     const payload = await response.json();
     return Array.isArray(payload) ? payload.flatMap((raw) => {

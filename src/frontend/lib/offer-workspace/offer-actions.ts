@@ -1,5 +1,6 @@
 ﻿import type { MutableRefObject } from "react";
-import { changedInventoryRows, detailVersionChanged, offeredQuantityDirty, parseDecimal, quantityAligned, validateDraft, type OfferWorkspaceDraft } from "./model.ts";
+import { offerIntentScope, ownerWriteIntent } from "./owner-write-intent.ts";
+import { changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
@@ -88,7 +89,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
   }
 
   function finishSaveFailure(tab: OfferTabId, result: { errorCode: string; denied?: boolean }, savedAny: boolean) {
-    const transient = result.errorCode === "host-unreachable" || result.errorCode === "concurrency.conflict";
+    const transient = result.errorCode === "host-unreachable" || result.errorCode === "concurrency.conflict" || result.errorCode.includes("revision_conflict") || result.errorCode.includes("response_mismatch");
     ctx.setActiveTab(tab);
     ctx.setTabError({ tab, code: result.errorCode || "save" });
     ctx.setSaveNeedsReload(transient);
@@ -97,7 +98,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     ctx.showBlocking(transient ? "reload" : "error", savedAny ? ctx.t.partialTitle : ctx.t.saveErrorTitle, savedAny ? `${text} ${ctx.t.partialSaved}` : text);
     if (savedAny) {
       ctx.setSaveNotice(ctx.t.partialSaved);
-      ctx.setSaveRetryable(true);
+      ctx.setSaveRetryable(!transient);
     }
   }
 
@@ -123,6 +124,9 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
   async function runSave() {
     if (!ctx.detail || ctx.saving || ctx.saveRef.current) return;
+    if ((ctx.shippingChanged && ctx.detail.capabilities?.canAssignFulfillment !== true) || (ctx.stockChanged && ctx.detail.capabilities?.canEditPhysicalInventory !== true) || (ctx.offeredChanged && (ctx.detail.capabilities?.canEditOfferedQuantity !== true || !ctx.adapter.saveOfferedQuantity))) {
+      ctx.showBlocking("error", ctx.t.saveErrorTitle, ctx.t.denied); return;
+    }
     if (ctx.saveNeedsReload) {
       ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
       return;
@@ -159,6 +163,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     ctx.setSaveNeedsReload(false);
     ctx.setSaveRetryable(true);
     let savedAny = false;
+    let current = ctx.detail;
     const expectedAmount = parseDecimal(ctx.draft.amount);
     const expectedInventory = new Map<string, number | null>();
     if (ctx.stockChanged) {
@@ -166,6 +171,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     }
 
     try {
+      const scope = offerIntentScope(ctx.adapter.role, current.sellerPartyId, current.offerId, current.channel);
       if (ctx.adapter.loadDetail) {
         const latest = await ctx.adapter.loadDetail();
         if (!latest.ok) {
@@ -184,8 +190,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
       }
 
       if (ctx.commercialChanged) {
-        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(ctx.detail, ctx.draft), ctx.detail?.offerRevision ?? ctx.detail?.revisions?.offer ?? undefined);
+        const revision = current.revisions?.offer ?? current.offerRevision;
+        if (!revision) return finishSaveFailure("conditions", { errorCode: "concurrency.conflict" }, savedAny);
+        const result = await ctx.adapter.saveCommercial(buildCommercialPatch(current, ctx.draft), revision);
         if (!result.ok) return finishSaveFailure("conditions", result, savedAny);
+        current = result.detail;
         applySavedDetail(result.detail, "commercial");
         savedAny = true;
       }
@@ -197,8 +206,13 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(true);
           return;
         }
-        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency }, ctx.detail?.priceRevision ?? ctx.detail?.revisions?.price ?? "absent");
+        const revision = current.revisions?.price ?? current.priceRevision;
+        if (!revision) return finishSaveFailure("pricing", { errorCode: "concurrency.conflict" }, savedAny);
+        const intent = ownerWriteIntent(scope + ":price", revision, [expectedAmount, ctx.draft.currency]);
+        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency, operationId: intent.operationId }, revision);
         if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
+        if (result.detail.amount !== expectedAmount || result.detail.currency !== ctx.draft.currency) return finishSaveFailure("pricing", { errorCode: "offer.price.response_mismatch" }, savedAny);
+        intent.clear(); current = result.detail;
         applySavedDetail(result.detail, "price");
         savedAny = true;
       }
@@ -211,8 +225,13 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(true);
           return;
         }
-        const result = await ctx.adapter.saveOfferedQuantity(quantity, ctx.detail?.revisions?.offeredQuantity ?? ctx.detail?.allocationRevision ?? "absent", crypto.randomUUID());
+        const revision = current.revisions?.offeredQuantity ?? current.allocationRevision;
+        if (!revision) return finishSaveFailure("inventory", { errorCode: "concurrency.conflict" }, savedAny);
+        const intent = ownerWriteIntent(scope + ":allocation", revision, quantity);
+        const result = await ctx.adapter.saveOfferedQuantity(quantity, revision, intent.operationId);
         if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
+        if (result.detail.offeredQuantity !== quantity) return finishSaveFailure("inventory", { errorCode: "offer.allocation.response_mismatch" }, savedAny);
+        intent.clear(); current = result.detail;
         ctx.setDetail(result.detail);
         ctx.setDraft((current) => ({ ...current, offeredQuantity: result.detail.offeredQuantity != null ? String(result.detail.offeredQuantity) : "" }));
         savedAny = true;
@@ -220,15 +239,16 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
       if (ctx.stockChanged) {
         const changedRows = changedInventoryRows(ctx.detail, ctx.draft);
-        const inventoryRevisions = new Map(ctx.detail.inventoryLocations.map((row) => [row.stockItemId, row.revision]));
         for (const row of changedRows) {
-          const result = await ctx.adapter.saveInventory({
-            stockItemId: row.stockItemId,
-            onHand: parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]) ?? row.onHand,
-            reason: ctx.draft.inventoryReason.trim(),
-          }, inventoryRevisions.get(row.stockItemId) ?? row.revision ?? "absent");
+          const revision = current.inventoryLocations.find((item) => item.stockItemId === row.stockItemId)?.revision;
+          if (!revision) return finishSaveFailure("inventory", { errorCode: "concurrency.conflict" }, savedAny);
+          const onHand = parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId])!;
+          const reason = ctx.draft.inventoryReason.trim();
+          const intent = ownerWriteIntent(scope + ":physical:" + row.stockItemId, revision, [onHand, reason]);
+          const result = await ctx.adapter.saveInventory({ stockItemId: row.stockItemId, onHand, reason, operationId: intent.operationId }, revision);
           if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
-          inventoryRevisions.set(row.stockItemId, result.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId)?.revision ?? null);
+          if (result.detail.inventoryLocations.find((item) => item.stockItemId === row.stockItemId)?.onHand !== onHand) return finishSaveFailure("inventory", { errorCode: "offer.inventory.response_mismatch" }, savedAny);
+          intent.clear(); current = result.detail;
           applySavedInventory(result.detail, row.stockItemId);
           savedAny = true;
         }
@@ -237,7 +257,9 @@ export function createOfferActions(ctx: OfferActionsContext) {
 
       if (ctx.shippingChanged && ctx.adapter.saveFulfillment) {
         ctx.setShippingSaving(true);
-        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, ctx.detail?.offerRevision ?? ctx.detail?.revisions?.offer ?? undefined);
+        const revision = current.revisions?.offer ?? current.offerRevision;
+        if (!revision) { ctx.setShippingSaving(false); return finishSaveFailure("shipping", { errorCode: "concurrency.conflict" }, savedAny); }
+        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, revision);
         ctx.setShippingSaving(false);
         if (!result.ok) return finishSaveFailure("shipping", result, savedAny);
         const verification = ctx.adapter.loadDetail ? await ctx.adapter.loadDetail() : null;
@@ -245,7 +267,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setShippingError(ctx.t.perTabError);
           return finishSaveFailure("shipping", { errorCode: "seller.shipping.response_mismatch" }, savedAny);
         }
-        ctx.applyLoadedDetail(verification.detail);
+        ctx.setDetail(verification.detail);
         ctx.setShippingNotice(ctx.t.shippingSaved);
         savedAny = true;
       }
@@ -262,9 +284,8 @@ export function createOfferActions(ctx: OfferActionsContext) {
         const expectedMax = ctx.draft.maximumOrderQuantity.trim() ? parseDecimal(ctx.draft.maximumOrderQuantity) : null;
         const expectedDays = ctx.draft.customReturnWindowDays.trim() ? Number.parseInt(ctx.draft.customReturnWindowDays, 10) : null;
         const commercialMismatch = ctx.commercialChanged && (
-          verification.detail.sellerSku !== ctx.draft.sellerSku.trim()
+          (verification.detail.sellerSku ?? null) !== (ctx.draft.sellerSku.trim() || null)
           || verification.detail.status !== ctx.draft.status
-          || verification.detail.currency !== ctx.draft.currency
           || verification.detail.returnPolicyChoice !== ctx.draft.returnPolicyChoice
           || (verification.detail.customReturnWindowDays ?? null) !== expectedDays
           || (verification.detail.minimumOrderQuantity ?? null) !== expectedMin
@@ -276,7 +297,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           || verification.detail.channel !== ctx.detail.channel
           || commercialMismatch
           || (ctx.offeredChanged && verification.detail.offeredQuantity !== parseDecimal(ctx.draft.offeredQuantity))
-          || (ctx.priceChanged && verification.detail.amount !== expectedAmount)
+          || (ctx.priceChanged && (verification.detail.amount !== expectedAmount || verification.detail.currency !== ctx.draft.currency))
           || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
             const expected = expectedInventory.get(row.stockItemId);
@@ -305,6 +326,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     } finally {
       ctx.saveRef.current = false;
       ctx.setSaving(false);
+      ctx.setShippingSaving(false);
     }
   }
 
@@ -320,7 +342,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       return;
     }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
-    if (ctx.priceChanged && (parsedAmount == null || parsedAmount < 0)) {
+    if (ctx.priceChanged && (parsedAmount == null || validatePrice(ctx.draft.amount, ctx.draft.currency))) {
       ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.validationAmount); return;
     }
     const parsedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
@@ -334,8 +356,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationStep); return;
     }
     const inventoryInputs = ctx.localInventory.filter((row) => row.onHand.trim().length > 0).map((row) => ({ ...row, parsed: parseDecimal(row.onHand) }));
-    if (inventoryInputs.some((row) => row.parsed == null || (row.parsed > 0 && !quantityAligned(row.parsed, dp, step)))) {
+    if (inventoryInputs.some((row) => row.parsed == null || row.parsed < 0 || (row.parsed > 0 && !quantityAligned(row.parsed, dp, step)))) {
       ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationStep); return;
+    }
+    if ((parsedMin != null && parsedMax != null && parsedMin > parsedMax) || (ctx.draft.returnPolicyChoice === "Custom" && (!Number.isInteger(parseDecimal(ctx.draft.customReturnWindowDays)) || (parseDecimal(ctx.draft.customReturnWindowDays) ?? 0) <= 0))) {
+      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationReturnWindow); return;
     }
     if (inventoryInputs.length > 0 && !ctx.draft.inventoryReason.trim()) {
       ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationReason); return;
@@ -349,7 +374,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     try {
       const localDetail = ctx.detail;
       const createInput = {
-        sellerPartyId: ctx.selectedSeller?.sellerPartyId,
+        sellerPartyId: ctx.selectedSeller?.sellerPartyId ?? ctx.adapter.fixedSeller?.sellerPartyId,
         catalogVariantId: ctx.selectedVariant.catalogVariantId,
         sellerSku: ctx.draft.sellerSku.trim() || null,
         channel: ctx.selectedChannel,
@@ -411,5 +436,6 @@ function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspac
     customReturnWindowDays: draft.returnPolicyChoice === "Custom" ? parseDecimal(draft.customReturnWindowDays) : null,
     minimumOrderQuantity: parseDecimal(draft.minimumOrderQuantity),
     maximumOrderQuantity: parseDecimal(draft.maximumOrderQuantity),
+    clearOrderQuantityLimits: draft.minimumOrderQuantity.trim() === "" && draft.maximumOrderQuantity.trim() === "",
   };
 }

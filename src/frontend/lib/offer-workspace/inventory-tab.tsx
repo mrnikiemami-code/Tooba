@@ -26,9 +26,9 @@ export interface InventoryTabProps {
 
 export function InventoryTab(props: InventoryTabProps) {
   const { t, format, detail } = props;
-  const totalOnHand = detail.inventoryLocations.reduce((sum, row) => sum + row.onHand, 0);
-  const totalReserved = detail.inventoryLocations.reduce((sum, row) => sum + row.reserved, 0);
-  const totalAvailable = detail.inventoryLocations.reduce((sum, row) => sum + row.available, 0);
+  const totalOnHand = detail.onHand;
+  const totalReserved = detail.reserved;
+  const totalAvailable = detail.availableUnits;
   const noPositions = detail.inventoryLocations.length === 0;
   const preCreate = noPositions && Boolean(props.localLocations?.length && props.localInventory);
 
@@ -104,9 +104,9 @@ export function InventoryTab(props: InventoryTabProps) {
 
           {detail.capabilities?.canEditOfferedQuantity ? (
             <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
-              <span className={styles.fieldLabel}>{t.inventoryAvailable}</span>
+              <span className={styles.fieldLabel}>{t.inventoryOfferedQuantity}</span>
               <input className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`} value={props.offeredQuantity ?? ""} onChange={(event) => props.onOfferedQuantityChange?.(event.target.value)} inputMode="decimal" dir="ltr" data-testid="offer-offered-quantity-input" />
-              <span className={styles.fieldHint}>{t.inventoryReservedReadOnly}</span>
+              <span className={styles.fieldHint}>{t.inventoryOfferedHint}</span>
             </label>
           ) : null}
           <div style={{ marginTop: 14 }}>
@@ -143,7 +143,7 @@ export function InventoryTab(props: InventoryTabProps) {
                               style={{ maxWidth: 128 }}
                               value={props.onHand[row.stockItemId] ?? ""}
                               onChange={(event) => props.onOnHandChange(row.stockItemId, event.target.value)}
-                              disabled={detail.capabilities?.canEditPhysicalInventory === false}
+                              disabled={detail.capabilities?.canEditPhysicalInventory !== true}
                               inputMode="decimal"
                               dir="ltr"
                               aria-invalid={invalid}
@@ -166,7 +166,7 @@ export function InventoryTab(props: InventoryTabProps) {
             )}
           </div>
 
-          <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+          {detail.capabilities?.canEditPhysicalInventory === true ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
             <span className={styles.fieldLabel}>
               {t.inventoryReason}
               <DirtyDot show={props.dirty} label={t.dirtyTab} />
@@ -178,7 +178,7 @@ export function InventoryTab(props: InventoryTabProps) {
               data-testid="offer-inventory-reason"
             />
             <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
-          </label>
+          </label> : null
 
           <div className={styles.stack} style={{ marginTop: 12 }}>
             <Note>{t.inventoryReservedReadOnly}</Note>
