@@ -23,7 +23,7 @@ This worktree is an **execution environment**, not a separate product architectu
 - Missing authorized contracts/endpoints, in-scope build/test failures and ordinary implementation gaps are work, not terminal blockers. Follow delivery method §0A; isolate genuine undecided policies and continue every independent safe slice.
 - STOP_FOR_ARCHITECT is terminal, not an intermediate checkpoint. A task-wide BLOCKED requires exact evidence of a global blocker or exhausted independent work.
 - Do not rewrite main-tree `AGENTS.md`, Host, or invent parallel architecture.
-- New OpenCode tasks use `TOOBA-OPENCODE-DELIVERY-V1@1.5.2` and end with `STOP_FOR_ARCHITECT` when required.
+- New OpenCode tasks use `TOOBA-OPENCODE-DELIVERY-V1@1.5.3` and end with `STOP_FOR_ARCHITECT` when required.
 
 ## Out of always-on scope
 Do not auto-load historical story dumps or unrelated past tasks.
@@ -36,3 +36,6 @@ For TB-296 P1-A/B/C only, follow the owner-authorized phase development release 
 
 ## Mechanical compile fixes (delivery v1.5.2)
 Follow the owner-authorized mechanical-correction rule in `docs/opencode/ARCHITECT-DELIVERY-METHOD.md`. OpenCode fixes obvious local syntax and unambiguous mechanical compile errors during the same validation task without stopping for architect approval. No semantic, architecture, authorization, localization-authority, test/guard/baseline or contract edits. Record exact diff and rerun affected checks; independent architect acceptance remains mandatory. This overrides earlier blanket validation-only edit wording only within that narrow scope.
+
+## Low-risk local corrections (v1.5.3)
+Follow the current delivery method: worker fixes mechanical and unambiguous local presentation/test-harness defects in the same goal. Architect retains substantive result semantics, data/security, domain, central locale and architecture repairs. No weakening assertions, bypassing dialogs, unsafe fixture cleanup or stopping independent safe cases. Exact separate correction/evidence commits required.

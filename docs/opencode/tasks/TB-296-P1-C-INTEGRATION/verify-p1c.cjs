@@ -1,4 +1,8 @@
-﻿const { chromium } = require("playwright");
+// ARCHITECT SAFETY QUARANTINE — historical runner preserved at ac192d333d3642c729d58339422ecc5a193ce309.
+// Do not remove this gate. A new test-only runner must use isolated fixtures and exact
+// before/after permission and stock restoration, not the destructive legacy cleanup.
+throw new Error("BLOCKED_UNSAFE_LEGACY_HARNESS: use ARCHITECT-CONTINUATION.md; do not execute historical verify-r10.cjs or this runner");
+const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 

@@ -1,5 +1,5 @@
 ﻿# ISO-RULES — OpenCode acceptance method (always-on summary)
-Source of truth: `docs/opencode/ARCHITECT-DELIVERY-METHOD.md` (**TOOBA-OPENCODE-DELIVERY-V1@1.5.2** for newly issued tasks)
+Source of truth: `docs/opencode/ARCHITECT-DELIVERY-METHOD.md` (**TOOBA-OPENCODE-DELIVERY-V1@1.5.3** for newly issued tasks)
 
 MUST:
 - OpenCode-only artifacts live under `docs/opencode/` — do not rewrite Cursor delivery gates or `docs/ai/delivery/**` to satisfy OpenCode.
@@ -38,3 +38,6 @@ For TB-296 P1-A/B/C only, follow the owner-authorized phase development release 
 
 ## Mechanical compile fixes (delivery v1.5.2)
 Follow the owner-authorized mechanical-correction rule in `docs/opencode/ARCHITECT-DELIVERY-METHOD.md`. OpenCode fixes obvious local syntax and unambiguous mechanical compile errors during the same validation task without stopping for architect approval. No semantic, architecture, authorization, localization-authority, test/guard/baseline or contract edits. Record exact diff and rerun affected checks; independent architect acceptance remains mandatory. This overrides earlier blanket validation-only edit wording only within that narrow scope.
+
+## Low-risk local corrections (v1.5.3)
+Follow the current delivery method: worker fixes mechanical and unambiguous local presentation/test-harness defects in the same goal. Architect retains substantive result semantics, data/security, domain, central locale and architecture repairs. No weakening assertions, bypassing dialogs, unsafe fixture cleanup or stopping independent safe cases. Exact separate correction/evidence commits required.
