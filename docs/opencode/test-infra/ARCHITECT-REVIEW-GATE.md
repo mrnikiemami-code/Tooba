@@ -12,3 +12,6 @@ For AQ-01 specifically trace DB language registry, active/default/fallback, rout
 
 ## Scoped test scheduling clarification (delivery v1.5.1)
 For TB-296 P1-A/B/C only, follow the owner-authorized phase development release and deferred test ledger in `docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-PHASE-TEST-SCHEDULING.md`. This narrow exception permits isolated B development before final predecessor ACCEPT, and isolated C evidence assembly. It does not waive independent source review, focused checks, architecture requirements, the full original matrices, or the final machine-checked architect acceptance gate. All other tasks retain the existing hard gate.
+
+## Mechanical compile fixes (delivery v1.5.2)
+Follow the owner-authorized mechanical-correction rule in `docs/opencode/ARCHITECT-DELIVERY-METHOD.md`. OpenCode fixes obvious local syntax and unambiguous mechanical compile errors during the same validation task without stopping for architect approval. No semantic, architecture, authorization, localization-authority, test/guard/baseline or contract edits. Record exact diff and rerun affected checks; independent architect acceptance remains mandatory. This overrides earlier blanket validation-only edit wording only within that narrow scope.
