@@ -24,6 +24,7 @@ public sealed class OfferErrorCatalogAndLocalizationTests
         Array.Empty<IErrorMessageContributor>());
 
     [Theory]
+    [InlineData(OfferErrorCodes.PriceAmountRequired, StatusCodes.Status400BadRequest, ErrorClassification.Business)]
     [InlineData(OfferErrorCodes.NotFound, StatusCodes.Status404NotFound, ErrorClassification.NotFound)]
     [InlineData(OfferErrorCodes.DuplicateActiveListing, StatusCodes.Status409Conflict, ErrorClassification.Conflict)]
     [InlineData(OfferErrorCodes.ReturnPolicyOverrideDenied, StatusCodes.Status403Forbidden, ErrorClassification.Forbidden)]
@@ -68,6 +69,7 @@ public sealed class OfferErrorCatalogAndLocalizationTests
         var sample = new[]
         {
             OfferErrorCodes.NotFound,
+            OfferErrorCodes.PriceAmountRequired,
             OfferErrorCodes.MinQuantityInvalid,
             OfferErrorCodes.DuplicateActiveListing,
             OfferErrorCodes.ReturnPolicyOverrideDenied,

@@ -10,6 +10,8 @@ public sealed class OfferErrorCatalogContributor : IErrorCatalogContributor
     /// <inheritdoc />
     public IReadOnlyList<ErrorDescriptor> Contribute() =>
     [
+        D(OfferErrorCodes.PriceAmountRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Price amount is required."),
         D(OfferErrorCodes.MinQuantityInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Minimum order quantity must be greater than zero."),
         D(OfferErrorCodes.MaxQuantityInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,

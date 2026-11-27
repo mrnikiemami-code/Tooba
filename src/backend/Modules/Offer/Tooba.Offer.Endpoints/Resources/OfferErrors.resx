@@ -85,6 +85,9 @@
     <value>Fulfillment assignment body is malformed.</value>
   </data>
   <data name="offer.fulfillment.change_protected" xml:space="preserve"><value>Fulfillment responsibility cannot change while existing commitments or allocation are protected.</value></data>
+  <data name="offer.price.amount_required" xml:space="preserve">
+    <value>Price amount is required.</value>
+  </data>
 </root>
 
 

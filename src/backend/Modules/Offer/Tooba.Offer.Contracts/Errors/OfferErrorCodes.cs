@@ -3,6 +3,9 @@
 /// <summary>Stable semantic error codes owned by Offer.</summary>
 public static class OfferErrorCodes
 {
+    /// <summary>An explicit price amount is required; zero is distinct from absence.</summary>
+    public const string PriceAmountRequired = "offer.price.amount_required";
+
     /// <summary>The minimum quantity is invalid.</summary>
     public const string MinQuantityInvalid = "offer.min_quantity.invalid";
 

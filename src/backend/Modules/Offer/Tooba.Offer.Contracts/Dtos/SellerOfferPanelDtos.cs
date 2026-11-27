@@ -145,7 +145,7 @@ public sealed record AdminOfferCreateRequest(
 /// فرمان نوشتن مبلغ بدون مالیات روی Offer متعلق به همان فروشنده از طریق Pricing.
 /// </summary>
 public sealed record SellerOfferPriceWriteRequest(
-    decimal Amount,
+    decimal? Amount,
     string? Currency,
     string? Market,
     string? ExpectedVersion = null,

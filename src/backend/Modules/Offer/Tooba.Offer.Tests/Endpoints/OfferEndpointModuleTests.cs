@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Xunit;
 using Tooba.Offer.Contracts.Ports;
 using Tooba.Offer.Contracts.Dtos;
@@ -40,6 +41,29 @@ public sealed class OfferEndpointModuleTests
         Assert.DoesNotContain("Results.Json(await sender.Send", source, StringComparison.Ordinal);
         Assert.DoesNotContain("panel.CreateOfferAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("panel.PatchOfferAsync", source, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"amount\":null}")]
+    public void Missing_price_amount_remains_missing_at_json_boundary(string json)
+    {
+        var request = JsonSerializer.Deserialize<SellerOfferPriceWriteRequest>(json,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(request);
+        Assert.Null(request!.Amount);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(100000)]
+    public void Explicit_price_amount_is_preserved_at_json_boundary(int amount)
+    {
+        var json = JsonSerializer.Serialize(new { amount });
+        var request = JsonSerializer.Deserialize<SellerOfferPriceWriteRequest>(json,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(request);
+        Assert.Equal((decimal?)amount, request!.Amount);
     }
 
     private static string FindRepoRoot()

@@ -19,6 +19,7 @@ using Tooba.Offer.Application.Offers.Queries.ListSellerOffers;
 using Tooba.Offer.Application.Offers.Queries.QueryOffers;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Offer.Contracts.Dtos;
+using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Endpoints.Errors;
 
 namespace Tooba.Offer.Endpoints.Seller;
@@ -177,8 +178,10 @@ public static class OfferSellerEndpoints
         CancellationToken token)
     {
         var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
+        if (body.Amount is not decimal amount)
+            return api.FromFailure(new SemanticError(OfferErrorCodes.PriceAmountRequired));
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, sellerId, body.Amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
+            offerId, sellerId, amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
         return api.From(result);
     }
 
