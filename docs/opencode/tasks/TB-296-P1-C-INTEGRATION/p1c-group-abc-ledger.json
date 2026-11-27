@@ -1,0 +1,390 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "PASS",
+    "reason": "Eligible DEV identity created exactly one Draft with the selected allowed channel 'Marketplace', confirmed by the owner GET and independent SQL.",
+    "startedAt": "2026-11-27T07:37:25.941Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-01-P.json",
+    "evidenceSha256": "634145c652a3d994fb5fbd253b3185dcfaa5b661a4aeaa8e33a48a16e787257b",
+    "finishedAt": "2026-11-27T07:37:27.668Z"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "Error: R10-01-B requires the same variant in two independently allowed channels. The served SingleStore DEV tenant exposes only [Marketplace]; the other enumerated channels [Direct,Agency,Corporate,Affiliate,Api] would require a second authorized StoreCommerce context / edition switch, which is not authorized here. A changed channel cannot reach intent-conflict evaluation because it is denied earlier with offer.channel.not_allowed (observed).\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-cases.cjs:171:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:37:27.669Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-01-B.json",
+    "evidenceSha256": "5b2403d5b16680e15aa0a3878d4b9cb305b05408b440e69f8cd93819f7ed7719",
+    "finishedAt": "2026-11-27T07:37:30.408Z"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "PASS",
+    "reason": "One populated save persisted exactly one durable Draft (SKU, Custom return policy 9, limits 2/6) confirmed by owner GET and SQL; the real shared-workspace mounted regression preserved typed values across tab switches (log p1c-mount-regression.log).",
+    "startedAt": "2026-11-27T07:37:30.409Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-02-P.json",
+    "evidenceSha256": "dcf8714602b203af3602d50e5e538f4162b5024626ebd595af47e5a336162db2",
+    "finishedAt": "2026-11-27T07:37:47.623Z"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "PASS",
+    "reason": "Invalid drafts (min>max and out-of-range custom return window) were rejected as typed 4xx before any Offer-owned write; independent SQL shows zero offers, history and outbox rows.",
+    "startedAt": "2026-11-27T07:37:47.623Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-02-N.json",
+    "evidenceSha256": "a911f6049530e26a015a764d1d45e1f968a880c24c68d344370bec35b8ff4936",
+    "finishedAt": "2026-11-27T07:37:48.373Z"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "PASS",
+    "reason": "Three concurrent identical create intents resolved to one durable Offer with one Created history entry and one outbox message (deterministic replay); the shared-workspace mounted regression also created exactly one draft on rapid double submit (log p1c-mount-regression.log).",
+    "startedAt": "2026-11-27T07:37:48.374Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-02-B.json",
+    "evidenceSha256": "d61719db389e6b0e6e3eb3b40b2c5f1eddf7498a85f4ff2cf5eaa97589d485c9",
+    "finishedAt": "2026-11-27T07:37:49.250Z"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "PASS",
+    "reason": "Two eligible locations each received a real stock position with on-hand/available 7 and 4 and reserved 0, matching the owner GET and independent SQL.",
+    "startedAt": "2026-11-27T07:37:49.250Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-03-P.json",
+    "evidenceSha256": "af29918dee6bb6c69d8617216717969d2978955e872287c04a20cdd3138716b2",
+    "finishedAt": "2026-11-27T07:37:50.348Z"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "PASS",
+    "reason": "A direct API provisioning attempt at a foreign/ineligible location (cbf48081-3386-4ead-bc05-3351468c5cb4) was denied with typed inventory.location.not_found and no stock position was created for the offer.",
+    "startedAt": "2026-11-27T07:37:50.348Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-03-N.json",
+    "evidenceSha256": "f65910896837eca93ccd84d9f706f27f1e291e766f8cfcab088a4f0049aa9125",
+    "finishedAt": "2026-11-27T07:37:51.256Z"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "PASS",
+    "reason": "The first position write persisted; the second failed with a typed revision conflict leaving its own state unchanged and no duplicate position; retrying only the failed remainder persisted it, keeping both successes and their recorded reasons.",
+    "startedAt": "2026-11-27T07:37:51.256Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-03-B.json",
+    "evidenceSha256": "871c56537d59177be3cbe46e8b19ce228b5ea3f9c9fc1a95169ea45fe0f06654",
+    "finishedAt": "2026-11-27T07:37:52.327Z"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "PASS",
+    "reason": "Create then commercial edit reread all requested fields exactly from the owner GET and SQL (P1C-ba1a38af-d08b-4e86-9a3b-a02be691e0f4-EDIT, Custom/9, 3/7); the real shared-workspace mounted regression confirmed a committed create clears scoped recovery before navigation and create-page re-entry never restores the old draft (log p1c-mount-regression.log).",
+    "startedAt": "2026-11-27T07:37:52.328Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-04-P.json",
+    "evidenceSha256": "9a01e65a780454423d8717dc80d864e600f137b3c3a42020354fca4d091466df",
+    "finishedAt": "2026-11-27T07:37:53.274Z"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "PASS",
+    "reason": "After a simulated lost create response, re-sending the exact intent deterministically recovered the same committed Offer; a changed value under the same request id was rejected with offer.create.intent_conflict and the durable state stayed intact; the committed response seller matched the requested seller; the shared-workspace mounted regression kept the uncertain-response draft/recovery paths honest (log p1c-mount-regression.log).",
+    "startedAt": "2026-11-27T07:37:53.275Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-04-N.json",
+    "evidenceSha256": "dc7e68726d2e5f72ba2cce7dd723c29dd90d0f1ff4c43e365f29aca92a0adbea",
+    "finishedAt": "2026-11-27T07:37:54.199Z"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "PASS",
+    "reason": "Two sessions shared one offer revision; the first write persisted and the stale second write was denied with a typed conflict while the first value remained.",
+    "startedAt": "2026-11-27T07:37:54.199Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-05-P.json",
+    "evidenceSha256": "0ea32bd2d3c0491fca647e50c5ea8a45cf81f05a56126ae336c55f5d5a9edc3a",
+    "finishedAt": "2026-11-27T07:37:55.192Z"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "PASS",
+    "reason": "A stale price write and stale stock write were both denied with typed conflicts; the first price and physical count remained, and no extra price fact was recorded.",
+    "startedAt": "2026-11-27T07:37:55.192Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-05-N.json",
+    "evidenceSha256": "af08e47d8cccc2efadfa5b4c68bf1b5cece41ce3e6cd31f24ab34e1fe3c67a04",
+    "finishedAt": "2026-11-27T07:37:56.324Z"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "PASS",
+    "reason": "Two concurrent same-revision stock writes and two concurrent same-revision price writes each produced exactly one winner; persisted values equal the winners and on-hand (7) >= reserved (0).",
+    "startedAt": "2026-11-27T07:37:56.325Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-05-B.json",
+    "evidenceSha256": "7d4803a5273c20f0d84eeb458ea9bd146bcda6384eae2a81d525e467f57ac0b8",
+    "finishedAt": "2026-11-27T07:37:57.530Z"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "PASS",
+    "reason": "Authorized history returned the real recorded create, inventory, price and commercial changes with scope, timestamps, actor and old/new values matching independent SQL.",
+    "startedAt": "2026-11-27T07:37:57.530Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-06-P.json",
+    "evidenceSha256": "b524d351e0a5910e6e0b9266b77b96da92bbecd8792382378ded3f3946b3d5db",
+    "finishedAt": "2026-11-27T07:37:58.607Z"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "PASS",
+    "reason": "A different current DEV seller was denied both detail and history for the owned offer with typed not-found and no history disclosure.",
+    "startedAt": "2026-11-27T07:37:58.608Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-06-N.json",
+    "evidenceSha256": "426e062a18164d0dbb33952dba2389ca5d355bb88ad399a96a8cac741ec71742",
+    "finishedAt": "2026-11-27T07:37:59.594Z"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "PASS",
+    "reason": "A newly persisted offer exposed exactly one honest create event with the recorded actor; a page beyond the set was empty while total count and page metadata stayed stable.",
+    "startedAt": "2026-11-27T07:37:59.594Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-06-B.json",
+    "evidenceSha256": "c80428cef4ad84bd8262ce59d196ca8cf9899bdf104c40281334bd507422ac34",
+    "finishedAt": "2026-11-27T07:38:00.331Z"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "FAIL",
+    "reason": "AssertionError [ERR_ASSERTION]: Candidate identity is not isolated\n    at createOffer (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:29:10)\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:98:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:38:00.332Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-07-P.json",
+    "evidenceSha256": "66a98400e08b6c455fd84dd2a56c838db66f7f611c52d44d0ecf2da51fd632fc",
+    "finishedAt": "2026-11-27T07:38:01.606Z"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "FAIL",
+    "reason": "AssertionError [ERR_ASSERTION]: Candidate identity is not isolated\n    at createOffer (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:29:10)\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:131:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:38:01.606Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-07-N.json",
+    "evidenceSha256": "cc02e0d89e46d9c854937c567fa2dc1026589b88323dae7107aa08a27158034b",
+    "finishedAt": "2026-11-27T07:38:02.863Z"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "FAIL",
+    "reason": "AssertionError [ERR_ASSERTION]: Cleared minimum must be null\n+ actual - expected\n\n+ undefined\n- null\n\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:157:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:38:02.863Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-07-B.json",
+    "evidenceSha256": "000049e6f8ffa9efea54683dc0f6fc09dccd97d91b7cd9a000e9bbfeabb9efc7",
+    "finishedAt": "2026-11-27T07:38:03.661Z"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "PASS",
+    "reason": "Base price 123456 IRR and authorized Seller fulfillment with a real active shipping type both persisted and reread exactly from the owning Pricing/Offer stores.",
+    "startedAt": "2026-11-27T07:38:03.661Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-08-P.json",
+    "evidenceSha256": "9c038db778d713364f441148d9bc9ba371166afcb597dbd15919d907f42f8342",
+    "finishedAt": "2026-11-27T07:38:04.934Z"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "FAIL",
+    "reason": "AssertionError [ERR_ASSERTION]: Unauthorized seller fulfillment must not write responsibility\n+ actual - expected\n\n+ undefined\n- null\n\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:233:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:38:04.935Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-08-N.json",
+    "evidenceSha256": "bf95609b44d0175fb61f14a9f0c59e1258e9458f6fbaabf212fb6db8dcb365e3",
+    "finishedAt": "2026-11-27T07:38:06.142Z"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "FAIL",
+    "reason": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- null\n\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:268:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:38:06.142Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence\\R10-08-B.json",
+    "evidenceSha256": "5d200b1ae9117bf8f54671875ca98455de8b56ba2040f12a74152b6c536dc37d",
+    "finishedAt": "2026-11-27T07:38:07.687Z"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-03",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-04",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-05",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-06",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-07",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-08",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-09",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  }
+]

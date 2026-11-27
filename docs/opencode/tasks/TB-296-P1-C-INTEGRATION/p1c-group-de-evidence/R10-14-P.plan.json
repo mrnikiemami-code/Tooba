@@ -1,0 +1,39 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "tests": [
+    {
+      "testId": "R10-14-P",
+      "scenarioSha256": "3e41abc090483aebf5938319ad1eab07bd2f36f7929c6e6f843064fa7131ccf1",
+      "assertionIds": [
+        "provider_identity",
+        "durable_offer",
+        "independent_sql",
+        "focused_guards"
+      ],
+      "expectedFacts": {
+        "provider_identity": {
+          "edition": "SingleStore",
+          "tenantId": "store-alpha",
+          "database": "tooba_alpha"
+        },
+        "durable_offer": {
+          "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+          "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+          "status": "Draft",
+          "sellerSku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019"
+        },
+        "independent_sql": {
+          "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+          "status": "Draft",
+          "seller_sku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019",
+          "history": 1
+        },
+        "focused_guards": {
+          "exit": 0,
+          "failed": 0
+        }
+      }
+    }
+  ]
+}

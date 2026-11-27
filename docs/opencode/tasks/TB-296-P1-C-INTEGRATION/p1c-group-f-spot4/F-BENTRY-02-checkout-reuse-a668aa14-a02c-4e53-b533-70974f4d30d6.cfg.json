@@ -1,0 +1,34 @@
+{
+  "edition": "Marketplace",
+  "runId": "f-bentry-02-mwyoret1",
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "httpBase": "http://127.0.0.1:5088",
+  "offers": [
+    {
+      "key": "A",
+      "offerId": "8400a716-c417-c87a-f0bf-4446c7806007",
+      "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "variantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+      "positions": [
+        {
+          "ownerKind": "Marketplace",
+          "stock": 100,
+          "eligible": true
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "offerId": "4d63f752-40b1-3dbf-9b4e-b4e52377d253",
+      "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "variantId": "01a05388-8aa2-7000-870b-beb8efae6ec5",
+      "positions": [
+        {
+          "ownerKind": "Marketplace",
+          "stock": 100,
+          "eligible": true
+        }
+      ]
+    }
+  ]
+}

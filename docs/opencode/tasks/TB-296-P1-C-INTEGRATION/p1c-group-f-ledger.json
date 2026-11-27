@@ -1,0 +1,306 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-03",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-04",
+    "status": "NOT_RUN",
+    "reason": "Error: No unused published integer-precision Catalog variant is available for an isolated fixture.\n    at chooseVariant (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:146:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:483:13\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:84:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:50:34.951Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-evidence\\OWN-04.json",
+    "evidenceSha256": "251e649716e322307544167dac2c2b498abf5c9c13d09b7d0d8d4d4fcdba7482",
+    "finishedAt": "2026-11-27T07:50:36.152Z"
+  },
+  {
+    "id": "OWN-05",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-06",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-07",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-08",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-09",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  }
+]

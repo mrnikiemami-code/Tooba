@@ -1,0 +1,56 @@
+{
+  "id": "R10-14-N",
+  "requests": [],
+  "sql": [],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "negativeControls": {
+    "acceptanceSelf": {
+      "exit": 0,
+      "stdout": "PASS: positive fixture + 11 negative controls\n",
+      "stderr": ""
+    },
+    "architectSelf": {
+      "exit": 0,
+      "stdout": "PASS: positive fixture + 14 negative controls\n",
+      "stderr": ""
+    },
+    "valid": {
+      "exit": 0,
+      "ok": true
+    },
+    "missing": {
+      "label": "missing-test",
+      "exit": 1,
+      "ok": false,
+      "errors": [
+        "missing plan/result R10-14-N"
+      ],
+      "stdout": "{\n  \"ok\": false,\n  \"errors\": [\n    \"missing plan/result R10-14-N\"\n  ]\n}\n"
+    },
+    "changed": {
+      "label": "changed-fact",
+      "exit": 1,
+      "ok": false,
+      "errors": [
+        "oracle equality mismatch R10-14-N/acceptance_self_test",
+        "evidence facts mismatch R10-14-N"
+      ],
+      "stdout": "{\n  \"ok\": false,\n  \"errors\": [\n    \"oracle equality mismatch R10-14-N/acceptance_self_test\",\n    \"evidence facts mismatch R10-14-N\"\n  ]\n}\n"
+    },
+    "tampered": {
+      "label": "tampered-evidence",
+      "exit": 1,
+      "ok": false,
+      "errors": [
+        "hash mismatch R10-14-N"
+      ],
+      "stdout": "{\n  \"ok\": false,\n  \"errors\": [\n    \"hash mismatch R10-14-N\"\n  ]\n}\n"
+    }
+  },
+  "reason": "Actual acceptance and architect gates rejected all mandated negative controls: missing test, changed fact and tampered evidence hash, plus their own 11 and 14 self-test controls."
+}

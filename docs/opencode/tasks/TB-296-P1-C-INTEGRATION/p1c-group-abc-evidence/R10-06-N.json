@@ -1,0 +1,269 @@
+{
+  "id": "R10-06-N",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/allowed-channels",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        "Marketplace"
+      ]
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers",
+      "method": "POST",
+      "payload": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "channel": "Marketplace",
+        "sellerSku": "P1C-2c62055e-7d66-4104-b873-f7a263ca93c7",
+        "status": "Draft",
+        "requestId": "P1C-697d9e54-8e02-4ae1-96ee-7ab0d5131530"
+      },
+      "status": 201,
+      "body": {
+        "offerId": "92c913b1-5157-dbf3-08f5-d70493454db1",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-2c62055e-7d66-4104-b873-f7a263ca93c7",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:37:58.8065502+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:37:58.8065502+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:37:58.8065502+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/seller/offers/92c913b1-5157-dbf3-08f5-d70493454db1",
+      "method": "GET",
+      "status": 404,
+      "body": {
+        "type": "about:blank",
+        "title": "پیشنهاد پیدا نشد.",
+        "status": 404,
+        "instance": "/v1/seller/offers/92c913b1-5157-dbf3-08f5-d70493454db1",
+        "errorCode": "offer.not_found",
+        "traceId": "c2467c01e3297ba50783971017410796",
+        "correlationId": "eea4d6aa3ea9406d85e3eb92cbf3655f",
+        "requestId": "0HNQC6P6UTA4C:00000040"
+      }
+    },
+    {
+      "route": "/v1/seller/offers/92c913b1-5157-dbf3-08f5-d70493454db1/history?page=1&pageSize=20",
+      "method": "GET",
+      "status": 404,
+      "body": {
+        "type": "about:blank",
+        "title": "پیشنهاد پیدا نشد.",
+        "status": 404,
+        "instance": "/v1/seller/offers/92c913b1-5157-dbf3-08f5-d70493454db1/history",
+        "errorCode": "offer.not_found",
+        "traceId": "8abac37bf78de591702613d074fa10b6",
+        "correlationId": "29a1b25552d44294bc3c57ab1c02ca50",
+        "requestId": "0HNQC6P6UTA4B:00000040"
+      }
+    }
+  ],
+  "sql": [
+    {
+      "label": "before-d5131530",
+      "state": {
+        "offers": [],
+        "prices": [],
+        "history": [],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    },
+    {
+      "label": "foreign-denied",
+      "state": {
+        "offers": [
+          {
+            "status": "Draft",
+            "channel": "Marketplace",
+            "offer_id": "92c913b1-5157-dbf3-08f5-d70493454db1",
+            "created_at": "2026-11-27T07:37:58.80655+00:00",
+            "seller_sku": "P1C-2c62055e-7d66-4104-b873-f7a263ca93c7",
+            "updated_at": "2026-11-27T07:37:58.80655+00:00",
+            "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "return_policy_choice": "Default",
+            "maximum_order_quantity": null,
+            "minimum_order_quantity": null,
+            "custom_return_window_days": null,
+            "fulfillment_responsibility": null,
+            "creation_intent_fingerprint": "3abd093f5287b9e9752938ed89e01f9a29a4fc16f1f47e2f50303d00621cf348",
+            "fulfillment_shipping_type_id": null
+          }
+        ],
+        "prices": [],
+        "history": [
+          {
+            "summary": "Created",
+            "offer_id": "92c913b1-5157-dbf3-08f5-d70493454db1",
+            "new_value": "status=Draft;channel=Marketplace",
+            "old_value": null,
+            "change_kind": "Created",
+            "occurred_at": "2026-11-27T07:37:58.80655+00:00",
+            "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+            "offer_history_entry_id": "01a21bf0-8b16-7000-9d02-c1cce6f1787d"
+          }
+        ],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [
+          "{\"offerId\":\"92c913b1-5157-dbf3-08f5-d70493454db1\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+        ],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    }
+  ],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "fixture": {
+    "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "variant": "01a0967d-a2eb-7000-9a12-779c15789bac",
+    "channel": "Marketplace",
+    "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+  },
+  "reason": "A different current DEV seller was denied both detail and history for the owned offer with typed not-found and no history disclosure.",
+  "beforeCleanup": {
+    "offers": [
+      {
+        "status": "Draft",
+        "channel": "Marketplace",
+        "offer_id": "92c913b1-5157-dbf3-08f5-d70493454db1",
+        "created_at": "2026-11-27T07:37:58.80655+00:00",
+        "seller_sku": "P1C-2c62055e-7d66-4104-b873-f7a263ca93c7",
+        "updated_at": "2026-11-27T07:37:58.80655+00:00",
+        "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "return_policy_choice": "Default",
+        "maximum_order_quantity": null,
+        "minimum_order_quantity": null,
+        "custom_return_window_days": null,
+        "fulfillment_responsibility": null,
+        "creation_intent_fingerprint": "3abd093f5287b9e9752938ed89e01f9a29a4fc16f1f47e2f50303d00621cf348",
+        "fulfillment_shipping_type_id": null
+      }
+    ],
+    "prices": [],
+    "history": [
+      {
+        "summary": "Created",
+        "offer_id": "92c913b1-5157-dbf3-08f5-d70493454db1",
+        "new_value": "status=Draft;channel=Marketplace",
+        "old_value": null,
+        "change_kind": "Created",
+        "occurred_at": "2026-11-27T07:37:58.80655+00:00",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "offer_history_entry_id": "01a21bf0-8b16-7000-9d02-c1cce6f1787d"
+      }
+    ],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [
+      "{\"offerId\":\"92c913b1-5157-dbf3-08f5-d70493454db1\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+    ],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  },
+  "afterCleanup": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  }
+}

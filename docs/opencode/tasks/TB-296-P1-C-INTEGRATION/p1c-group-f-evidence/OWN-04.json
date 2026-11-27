@@ -1,0 +1,1976 @@
+{
+  "id": "OWN-04",
+  "generatedAt": "2026-11-27T07:50:34.952Z",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-886e-00fa7e00bbfb&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "4fe67166-9706-4497-aaa4-2cd4d757676d",
+        "catalogVariantId": "01a05387-fe75-7000-886e-00fa7e00bbfb",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000886e00fa7e00bbfb",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-92b4-61eca613fa95&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ac59c677-4f8a-490a-bd2d-fca03ad204de",
+        "catalogVariantId": "01a05387-fe75-7000-92b4-61eca613fa95",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe75700092b461eca613fa95",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-98a2-3dc084cb3375&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "4f5ade69-20cb-47c2-9e5e-167382190371",
+        "catalogVariantId": "01a05387-fe75-7000-98a2-3dc084cb3375",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe75700098a23dc084cb3375",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-aaaf-d9b752789ae4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "831cefbe-cb77-41da-b9b5-24100729de35",
+        "catalogVariantId": "01a05387-fe75-7000-aaaf-d9b752789ae4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05387fe757000aaafd9b752789ae4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-aad8-284b8c3e3791&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ac783e9f-fea9-4177-a5be-3dc3332be020",
+        "catalogVariantId": "01a05387-fe75-7000-aad8-284b8c3e3791",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000aad8284b8c3e3791",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-aadb-5586bc6496af&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7fb33b0a-3d14-425e-90db-57906f9f5a41",
+        "catalogVariantId": "01a05387-fe75-7000-aadb-5586bc6496af",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000aadb5586bc6496af",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-ad7f-ab1bb61d55ad&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7221efdc-8271-4f7a-825f-4ff0c58591b3",
+        "catalogVariantId": "01a05387-fe75-7000-ad7f-ab1bb61d55ad",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000ad7fab1bb61d55ad",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-ae28-3ecca39a551b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1acab178-d8b2-430c-bccc-5b045cf0521a",
+        "catalogVariantId": "01a05387-fe75-7000-ae28-3ecca39a551b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000ae283ecca39a551b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-fe75-7000-b433-3f8a44ea0b6b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7666f348-35fc-422e-bb5f-b13ca3a9ead8",
+        "catalogVariantId": "01a05387-fe75-7000-b433-3f8a44ea0b6b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387fe757000b4333f8a44ea0b6b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd4-7000-8599-c9f1855d31c9&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f8bcb513-8ab2-4407-aae6-bf587e8f948a",
+        "catalogVariantId": "01a05387-ffd4-7000-8599-c9f1855d31c9",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd470008599c9f1855d31c9",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd4-7000-90ee-d1d3cf88b188&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a4d9e143-2eed-4548-b484-33befd50061b",
+        "catalogVariantId": "01a05387-ffd4-7000-90ee-d1d3cf88b188",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd4700090eed1d3cf88b188",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd4-7000-9879-7b8b0d4c4891&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "cc8ec11f-559f-4eaf-8514-620ceeb65efa",
+        "catalogVariantId": "01a05387-ffd4-7000-9879-7b8b0d4c4891",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd4700098797b8b0d4c4891",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd4-7000-9987-e3b0ff65e680&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "992f2412-7b46-4e90-9480-26635c50aa76",
+        "catalogVariantId": "01a05387-ffd4-7000-9987-e3b0ff65e680",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05387ffd470009987e3b0ff65e680",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd4-7000-999d-1b442c5adc35&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f83a2f9e-1c60-468e-b2f3-e80e6c7d3280",
+        "catalogVariantId": "01a05387-ffd4-7000-999d-1b442c5adc35",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd47000999d1b442c5adc35",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd5-7000-8c77-25c4032f6286&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "c89fe8f1-224d-466a-b305-221df41394f3",
+        "catalogVariantId": "01a05387-ffd5-7000-8c77-25c4032f6286",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd570008c7725c4032f6286",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd5-7000-a4c9-b13f1805e849&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "fc6d620d-f1b9-44ea-9e18-353037b85fa5",
+        "catalogVariantId": "01a05387-ffd5-7000-a4c9-b13f1805e849",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd57000a4c9b13f1805e849",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd5-7000-a888-1620541d3c86&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a1418c8c-48b6-463e-ac09-130be53587ab",
+        "catalogVariantId": "01a05387-ffd5-7000-a888-1620541d3c86",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd57000a8881620541d3c86",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05387-ffd5-7000-a8fe-f7e1763993b0&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "6fce25fb-3d8d-4375-8766-fe86753dd50f",
+        "catalogVariantId": "01a05387-ffd5-7000-a8fe-f7e1763993b0",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05387ffd57000a8fef7e1763993b0",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Platform",
+        "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0176-7000-b47a-1056033b732d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "c49a88f6-4429-45f8-be17-a3ff78d6a74d",
+        "catalogVariantId": "01a05388-0176-7000-b47a-1056033b732d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538801767000b47a1056033b732d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0176-7000-b7f2-a5ca4aeea29c&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "5c587834-8d24-4ad3-994c-1f388dc27ead",
+        "catalogVariantId": "01a05388-0176-7000-b7f2-a5ca4aeea29c",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538801767000b7f2a5ca4aeea29c",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0176-7000-bb2e-689afbb451ec&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "658bcfe3-3207-4be5-8bd2-bfe964f63195",
+        "catalogVariantId": "01a05388-0176-7000-bb2e-689afbb451ec",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538801767000bb2e689afbb451ec",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0176-7000-bba6-283a7f2f18f2&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "47e7e162-3a4b-41b4-a40a-d3f4c9d2d3a3",
+        "catalogVariantId": "01a05388-0176-7000-bba6-283a7f2f18f2",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538801767000bba6283a7f2f18f2",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0176-7000-bdf3-b7d178b40f0c&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a89dd0e7-11a0-4eb5-b90f-5bbe79940f8c",
+        "catalogVariantId": "01a05388-0176-7000-bdf3-b7d178b40f0c",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538801767000bdf3b7d178b40f0c",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0177-7000-8d1e-03ecf96bb59a&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "3548bd5a-f1b5-45ac-a9f2-66b9fc7c767e",
+        "catalogVariantId": "01a05388-0177-7000-8d1e-03ecf96bb59a",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388017770008d1e03ecf96bb59a",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0177-7000-99f6-a526ec85b7d1&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "0b589982-7743-40d7-91b6-e25401d7d782",
+        "catalogVariantId": "01a05388-0177-7000-99f6-a526ec85b7d1",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880177700099f6a526ec85b7d1",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Platform",
+        "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0177-7000-9c3a-e60a5dfb033d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "5ddb58de-4536-46e5-b228-173b6ac608b9",
+        "catalogVariantId": "01a05388-0177-7000-9c3a-e60a5dfb033d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388017770009c3ae60a5dfb033d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0177-7000-9fbd-4990a75ebc60&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "8b58c2d8-0ddf-4cdf-8a00-5efef03dce0a",
+        "catalogVariantId": "01a05388-0177-7000-9fbd-4990a75ebc60",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388017770009fbd4990a75ebc60",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-02fd-7000-84ab-a3ec48ee437a&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "4c7791c1-7f65-4012-bbdc-1f3f48406590",
+        "catalogVariantId": "01a05388-02fd-7000-84ab-a3ec48ee437a",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538802fd700084aba3ec48ee437a",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-02fd-7000-a788-1720ce411ff4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "3bf70c9e-fe23-4380-ab62-87a62dc292d8",
+        "catalogVariantId": "01a05388-02fd-7000-a788-1720ce411ff4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538802fd7000a7881720ce411ff4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Platform",
+        "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-02fd-7000-bfbe-87a56c269b13&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a9b1ba17-c502-482b-90a0-841bcd1f690d",
+        "catalogVariantId": "01a05388-02fd-7000-bfbe-87a56c269b13",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538802fd7000bfbe87a56c269b13",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0462-7000-87c4-bba6bbf07bda&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "d3e1e5da-a46c-4d0e-bf7c-15669f853c90",
+        "catalogVariantId": "01a05388-0462-7000-87c4-bba6bbf07bda",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880462700087c4bba6bbf07bda",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0462-7000-8c68-5e7fb12a9769&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "9e5765f5-f7e9-45a6-a93a-2828772a9c66",
+        "catalogVariantId": "01a05388-0462-7000-8c68-5e7fb12a9769",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05388046270008c685e7fb12a9769",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0462-7000-a932-f01dc267863c&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f9e6b545-bdd8-41ec-a6d4-a48cf0f3fd9b",
+        "catalogVariantId": "01a05388-0462-7000-a932-f01dc267863c",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538804627000a932f01dc267863c",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-05b7-7000-bdbd-ee4ee15d3520&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "b8e07ac8-41b3-41e2-b0e1-58ccbf52e88a",
+        "catalogVariantId": "01a05388-05b7-7000-bdbd-ee4ee15d3520",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538805b77000bdbdee4ee15d3520",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-05b8-7000-b619-0f226541921b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "63b72189-2fac-46cf-beb2-e1068606f4e2",
+        "catalogVariantId": "01a05388-05b8-7000-b619-0f226541921b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538805b87000b6190f226541921b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-05b8-7000-b92a-3831db882e8d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ded0229d-01b8-4074-939a-3d28ec504e63",
+        "catalogVariantId": "01a05388-05b8-7000-b92a-3831db882e8d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538805b87000b92a3831db882e8d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0763-7000-8613-a47b66e742b2&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f3e575de-585d-4d9d-b430-88bb71ce212c",
+        "catalogVariantId": "01a05388-0763-7000-8613-a47b66e742b2",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388076370008613a47b66e742b2",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0763-7000-88ff-d1e7faed20b5&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1f780820-fc70-4f89-b3ce-764d7b50d323",
+        "catalogVariantId": "01a05388-0763-7000-88ff-d1e7faed20b5",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053880763700088ffd1e7faed20b5",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0763-7000-bb0f-3acdb1b6326b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "6f7802cc-9a44-4a5c-8bbc-bdc2e2cfe652",
+        "catalogVariantId": "01a05388-0763-7000-bb0f-3acdb1b6326b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538807637000bb0f3acdb1b6326b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0d7b-7000-b722-da36334c1824&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "c31b6d61-4315-45b1-9d64-f36b8bd897a2",
+        "catalogVariantId": "01a05388-0d7b-7000-b722-da36334c1824",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880d7b7000b722da36334c1824",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0d7b-7000-ba00-95273bf74abe&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "c0104314-dc4e-4495-afd9-67703c35d928",
+        "catalogVariantId": "01a05388-0d7b-7000-ba00-95273bf74abe",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880d7b7000ba0095273bf74abe",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0d7b-7000-bbbb-159e28904bd4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "44618699-dfb1-45a3-83a8-12eece484ea8",
+        "catalogVariantId": "01a05388-0d7b-7000-bbbb-159e28904bd4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053880d7b7000bbbb159e28904bd4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0fe9-7000-8626-4b29440b6919&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "8e67f602-d683-4ca2-b559-bf5af5a67990",
+        "catalogVariantId": "01a05388-0fe9-7000-8626-4b29440b6919",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053880fe9700086264b29440b6919",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0fe9-7000-8f70-e43e9c6188f1&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ae18c0c7-e909-4ba5-af44-e6bf0e593136",
+        "catalogVariantId": "01a05388-0fe9-7000-8f70-e43e9c6188f1",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880fe970008f70e43e9c6188f1",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-0fe9-7000-9eb7-9f842a4c988f&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "096c87a6-9220-47ac-a6ba-b34c8269593e",
+        "catalogVariantId": "01a05388-0fe9-7000-9eb7-9f842a4c988f",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053880fe970009eb79f842a4c988f",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-119f-7000-8dd5-f075875d714d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7d9afae8-e9f9-4533-bc92-b64f48ca0c3a",
+        "catalogVariantId": "01a05388-119f-7000-8dd5-f075875d714d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388119f70008dd5f075875d714d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-119f-7000-9f04-fea3ec88ba58&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "61c7bc6d-7dbe-445a-8655-a5f458306f22",
+        "catalogVariantId": "01a05388-119f-7000-9f04-fea3ec88ba58",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05388119f70009f04fea3ec88ba58",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-119f-7000-b893-6b3f453b8e41&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "67f75f35-77f4-42ae-878d-acd20ea05e75",
+        "catalogVariantId": "01a05388-119f-7000-b893-6b3f453b8e41",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388119f7000b8936b3f453b8e41",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170d-7000-8354-747555e873f4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "588a1201-aa73-4d67-9f78-d6996bfc0c5e",
+        "catalogVariantId": "01a05388-170d-7000-8354-747555e873f4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05388170d70008354747555e873f4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170d-7000-90cc-464b14e30eb0&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "5fe80212-d0ac-4be8-8cf1-b41294e42b1c",
+        "catalogVariantId": "01a05388-170d-7000-90cc-464b14e30eb0",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170d700090cc464b14e30eb0",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170d-7000-9f05-81872192f92b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "838d025d-5d5a-4771-968d-7b2ec0bb4896",
+        "catalogVariantId": "01a05388-170d-7000-9f05-81872192f92b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170d70009f0581872192f92b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170d-7000-ab85-db67f671d21b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "93c31fe2-b8f3-4bd9-a6e4-2f67a3a0281f",
+        "catalogVariantId": "01a05388-170d-7000-ab85-db67f671d21b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170d7000ab85db67f671d21b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170d-7000-b707-6135636315dd&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "5f358e39-6e90-4b6b-9a54-b3944a2a5afe",
+        "catalogVariantId": "01a05388-170d-7000-b707-6135636315dd",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170d7000b7076135636315dd",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170e-7000-92e3-2044822351b6&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "31229cb2-64cf-4f5b-8b20-7c95de9b7b07",
+        "catalogVariantId": "01a05388-170e-7000-92e3-2044822351b6",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170e700092e32044822351b6",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170e-7000-b287-4884267ee87f&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ed67e716-81de-4348-8950-8f6b667e5f05",
+        "catalogVariantId": "01a05388-170e-7000-b287-4884267ee87f",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170e7000b2874884267ee87f",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-170e-7000-bff7-61c464f17c3c&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ea84135f-db09-471a-b0b6-f43c89ba162f",
+        "catalogVariantId": "01a05388-170e-7000-bff7-61c464f17c3c",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388170e7000bff761c464f17c3c",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-851a-84640fa9736d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "98f612da-c25d-48f7-88b3-67080f6bb050",
+        "catalogVariantId": "01a05388-1912-7000-851a-84640fa9736d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538819127000851a84640fa9736d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-8825-f3f1ed4a4c8e&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "2dae6e57-54f2-4bf8-9b50-b5b3052e2fba",
+        "catalogVariantId": "01a05388-1912-7000-8825-f3f1ed4a4c8e",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388191270008825f3f1ed4a4c8e",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-8aaf-fb119bd5b5ae&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+        "catalogVariantId": "01a05388-1912-7000-8aaf-fb119bd5b5ae",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388191270008aaffb119bd5b5ae",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Platform",
+        "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-9544-c9ea4c99dfc9&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "22bbef51-f525-435c-b726-4eea6b7cc865",
+        "catalogVariantId": "01a05388-1912-7000-9544-c9ea4c99dfc9",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388191270009544c9ea4c99dfc9",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-a358-6b38c6f403da&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "3dfb41f7-ca79-420b-a735-ef3d45b9006b",
+        "catalogVariantId": "01a05388-1912-7000-a358-6b38c6f403da",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538819127000a3586b38c6f403da",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-a565-7c063c4ea21b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "4f8dab0b-0f83-4fe6-9322-68a3d3f5f344",
+        "catalogVariantId": "01a05388-1912-7000-a565-7c063c4ea21b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538819127000a5657c063c4ea21b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-af77-63d64cc6eb73&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "85b7e32f-152b-4fad-ae36-570341e47e90",
+        "catalogVariantId": "01a05388-1912-7000-af77-63d64cc6eb73",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538819127000af7763d64cc6eb73",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1912-7000-b048-17354aa91c35&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "29ae3efa-3b77-4ef0-bbb3-4aae5f48d271",
+        "catalogVariantId": "01a05388-1912-7000-b048-17354aa91c35",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538819127000b04817354aa91c35",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abb-7000-93f4-acd12ecaf9da&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "2e6848c1-d4cf-4295-8323-87301447ca99",
+        "catalogVariantId": "01a05388-1abb-7000-93f4-acd12ecaf9da",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053881abb700093f4acd12ecaf9da",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-9314-2532a2607f5d&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "d2acaf84-1828-4e55-9455-29fb335dd8f5",
+        "catalogVariantId": "01a05388-1abc-7000-9314-2532a2607f5d",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc700093142532a2607f5d",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-97f2-93fb37a82616&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a57c4927-b5d3-4ae3-a459-2bcf970dc1f9",
+        "catalogVariantId": "01a05388-1abc-7000-97f2-93fb37a82616",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc700097f293fb37a82616",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-a112-69ff802f3f17&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "6cfd8d72-d67f-4342-a52a-c63cbab08497",
+        "catalogVariantId": "01a05388-1abc-7000-a112-69ff802f3f17",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc7000a11269ff802f3f17",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-a31f-614f6601466b&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "2424baf6-3f4d-4394-a0c6-435cc1b234a6",
+        "catalogVariantId": "01a05388-1abc-7000-a31f-614f6601466b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc7000a31f614f6601466b",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-a68c-8a77640344d0&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "4f358250-d0ba-4b60-af13-22d1a5311a5e",
+        "catalogVariantId": "01a05388-1abc-7000-a68c-8a77640344d0",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc7000a68c8a77640344d0",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-ac0e-2f9c62928038&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "63a7b86a-33e0-4983-8bef-16ccd9b40bd1",
+        "catalogVariantId": "01a05388-1abc-7000-ac0e-2f9c62928038",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc7000ac0e2f9c62928038",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1abc-7000-bfd7-c66a74c73fc6&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "eed23470-00c8-4275-8c87-633eaa0228a4",
+        "catalogVariantId": "01a05388-1abc-7000-bfd7-c66a74c73fc6",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881abc7000bfd7c66a74c73fc6",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-84c9-4f99fa6d6c6f&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "743f8e90-b722-4dd1-96a5-4be143b53fd6",
+        "catalogVariantId": "01a05388-1c80-7000-84c9-4f99fa6d6c6f",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c80700084c94f99fa6d6c6f",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-87d8-ee0307a679dd&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1a4ebb0a-cc4f-4ced-9274-e9649b87afc5",
+        "catalogVariantId": "01a05388-1c80-7000-87d8-ee0307a679dd",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c80700087d8ee0307a679dd",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-90e4-99e426a1e752&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "43032f27-1575-4e02-a773-6ecc12052087",
+        "catalogVariantId": "01a05388-1c80-7000-90e4-99e426a1e752",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c80700090e499e426a1e752",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-aa4e-231f95296f26&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f93d6004-5c00-42bf-89c2-b14de297ae28",
+        "catalogVariantId": "01a05388-1c80-7000-aa4e-231f95296f26",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c807000aa4e231f95296f26",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-ac54-251a37e3bf2a&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f9959617-5fe1-4075-9136-e7f4f7cbbf28",
+        "catalogVariantId": "01a05388-1c80-7000-ac54-251a37e3bf2a",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c807000ac54251a37e3bf2a",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-b86f-21a7195e8510&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "0f070779-b84c-4ecf-88c5-a543b97cc980",
+        "catalogVariantId": "01a05388-1c80-7000-b86f-21a7195e8510",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c807000b86f21a7195e8510",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-ba2c-790398bff1b8&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "2a24f936-96be-4679-8854-3a9601cacbce",
+        "catalogVariantId": "01a05388-1c80-7000-ba2c-790398bff1b8",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053881c807000ba2c790398bff1b8",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1c80-7000-baf7-af1487e24bdf&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+        "catalogVariantId": "01a05388-1c80-7000-baf7-af1487e24bdf",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881c807000baf7af1487e24bdf",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-81df-5aaed41d58a4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "73160a4e-dee1-4e34-a050-ff0a26be6470",
+        "catalogVariantId": "01a05388-1e5a-7000-81df-5aaed41d58a4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a700081df5aaed41d58a4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-9659-779b27d79080&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7663b771-6c7e-4b64-91e8-e1a4fa318f17",
+        "catalogVariantId": "01a05388-1e5a-7000-9659-779b27d79080",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a70009659779b27d79080",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-a3c4-f99def109896&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "797934d6-d210-4997-9cd6-f4cff1ea8a3d",
+        "catalogVariantId": "01a05388-1e5a-7000-a3c4-f99def109896",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a7000a3c4f99def109896",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-b0ab-5ba6ae3524cd&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "0dca73ed-3ae5-4f82-8487-4a9a42af4865",
+        "catalogVariantId": "01a05388-1e5a-7000-b0ab-5ba6ae3524cd",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a7000b0ab5ba6ae3524cd",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-b5a7-70b5cba06fff&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "6bcaa7a6-d786-4a81-b972-16d0b4b8f38a",
+        "catalogVariantId": "01a05388-1e5a-7000-b5a7-70b5cba06fff",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a7000b5a770b5cba06fff",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-bbc5-350932e9c4ae&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "b6c9f5ca-bcb8-47ca-bf8f-129b7185c640",
+        "catalogVariantId": "01a05388-1e5a-7000-bbc5-350932e9c4ae",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053881e5a7000bbc5350932e9c4ae",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-bd39-f4f76a90ffe2&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "d77636f3-a5db-455e-9b59-bea4ef655f1b",
+        "catalogVariantId": "01a05388-1e5a-7000-bd39-f4f76a90ffe2",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a7000bd39f4f76a90ffe2",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1e5a-7000-bde0-5029dc097f59&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ac6a11d1-220a-40eb-8ffa-1e2596eda9d9",
+        "catalogVariantId": "01a05388-1e5a-7000-bde0-5029dc097f59",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881e5a7000bde05029dc097f59",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1ff2-7000-99af-acdd22c6fa0a&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "5fc34662-094a-43da-81ba-23a3c72f8490",
+        "catalogVariantId": "01a05388-1ff2-7000-99af-acdd22c6fa0a",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881ff2700099afacdd22c6fa0a",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1ff2-7000-a50e-25bd4c7cee31&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1ebf05d2-8e5f-405a-87c8-a4af697e5d4c",
+        "catalogVariantId": "01a05388-1ff2-7000-a50e-25bd4c7cee31",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a053881ff27000a50e25bd4c7cee31",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-1ff2-7000-a7d8-ca692d185500&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ab612685-7673-4127-a0f3-a5fc61d06418",
+        "catalogVariantId": "01a05388-1ff2-7000-a7d8-ca692d185500",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053881ff27000a7d8ca692d185500",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-21d7-7000-9973-c429b328ab54&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "cd8350e0-5cdb-4cc3-95ed-0f39ba70e8b5",
+        "catalogVariantId": "01a05388-21d7-7000-9973-c429b328ab54",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538821d770009973c429b328ab54",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-21d7-7000-a48b-2cc4e5428f88&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "00ecf5ba-c5b4-4cdf-8734-04b2f1f5e224",
+        "catalogVariantId": "01a05388-21d7-7000-a48b-2cc4e5428f88",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538821d77000a48b2cc4e5428f88",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-21d7-7000-b22b-51e7957a7f49&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ae0e5300-d32d-4c2b-8838-dcf6250a7edc",
+        "catalogVariantId": "01a05388-21d7-7000-b22b-51e7957a7f49",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538821d77000b22b51e7957a7f49",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-23aa-7000-8160-beb9261c8405&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "33446230-ec3d-4147-9992-08d23deef072",
+        "catalogVariantId": "01a05388-23aa-7000-8160-beb9261c8405",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538823aa70008160beb9261c8405",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-23aa-7000-867b-0c5a738ceda4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "d6edccf1-bd5c-4cd3-a6e3-15b00402f029",
+        "catalogVariantId": "01a05388-23aa-7000-867b-0c5a738ceda4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538823aa7000867b0c5a738ceda4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-23aa-7000-a237-f376884ad046&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "122505bb-e726-4b16-a440-096d89acf818",
+        "catalogVariantId": "01a05388-23aa-7000-a237-f376884ad046",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538823aa7000a237f376884ad046",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-8866-4289d82c73c6&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "15c20c45-e623-4841-ab0a-48d5b63e0be4",
+        "catalogVariantId": "01a05388-2571-7000-8866-4289d82c73c6",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053882571700088664289d82c73c6",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-8b5e-c45efdd8f288&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "7637dab3-35fa-4af6-b3cb-30473e213510",
+        "catalogVariantId": "01a05388-2571-7000-8b5e-c45efdd8f288",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a05388257170008b5ec45efdd8f288",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-936c-6c9e917d8c11&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f9da7f6d-010f-4566-9a31-ad2788cbf3fa",
+        "catalogVariantId": "01a05388-2571-7000-936c-6c9e917d8c11",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538825717000936c6c9e917d8c11",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-9759-8d26a2dc63ba&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "c8b5c273-6d19-405f-b741-c75a7aee3121",
+        "catalogVariantId": "01a05388-2571-7000-9759-8d26a2dc63ba",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053882571700097598d26a2dc63ba",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-9df3-32da8469f5d2&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "9331c22a-1229-4e83-b329-07419a95752e",
+        "catalogVariantId": "01a05388-2571-7000-9df3-32da8469f5d2",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388257170009df332da8469f5d2",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-a113-b48219ce43e6&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ae06fd72-913f-4ec5-8bf2-509852517fc0",
+        "catalogVariantId": "01a05388-2571-7000-a113-b48219ce43e6",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538825717000a113b48219ce43e6",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-a5ac-077058e70806&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1caf5482-62c7-46f6-8438-741dc2a60444",
+        "catalogVariantId": "01a05388-2571-7000-a5ac-077058e70806",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538825717000a5ac077058e70806",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-a5dd-994626b1b7c1&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "efe23e34-91f0-4136-8161-f53687281017",
+        "catalogVariantId": "01a05388-2571-7000-a5dd-994626b1b7c1",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538825717000a5dd994626b1b7c1",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2571-7000-bd58-038ceaa0748e&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "18f84b7a-a06f-4bda-a297-a20a63a6171f",
+        "catalogVariantId": "01a05388-2571-7000-bd58-038ceaa0748e",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538825717000bd58038ceaa0748e",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-81c4-02519de68e44&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "f42248ae-8ba6-4201-8714-9ea542ee3103",
+        "catalogVariantId": "01a05388-2717-7000-81c4-02519de68e44",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053882717700081c402519de68e44",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-89eb-a36d9fb5defd&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "34414925-7beb-4e2a-b295-c7c2ab95bfc4",
+        "catalogVariantId": "01a05388-2717-7000-89eb-a36d9fb5defd",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a053882717700089eba36d9fb5defd",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-9bb1-b69a0412830e&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "ea2fc7b4-03e0-4ff8-987d-1473281668ac",
+        "catalogVariantId": "01a05388-2717-7000-9bb1-b69a0412830e",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388271770009bb1b69a0412830e",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-9dc3-de371cdcf155&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "224491c3-2b5c-48c6-8046-746c4ea79047",
+        "catalogVariantId": "01a05388-2717-7000-9dc3-de371cdcf155",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a05388271770009dc3de371cdcf155",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-a4d3-0f25e34825c7&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1966943f-3f95-49e7-98b5-2de3217404b9",
+        "catalogVariantId": "01a05388-2717-7000-a4d3-0f25e34825c7",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538827177000a4d30f25e34825c7",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-ab2a-bc0e2ab2a0c5&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "aee84c4a-caa0-40c0-86cc-969fab6b7d6c",
+        "catalogVariantId": "01a05388-2717-7000-ab2a-bc0e2ab2a0c5",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538827177000ab2abc0e2ab2a0c5",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-b05e-c97ddc649e3c&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "62d09342-c611-4369-b0ae-de574a0b4a1a",
+        "catalogVariantId": "01a05388-2717-7000-b05e-c97ddc649e3c",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538827177000b05ec97ddc649e3c",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-b437-7d9a0c216f0e&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "d9347c79-825f-4eea-a04a-4f6b88afa3ff",
+        "catalogVariantId": "01a05388-2717-7000-b437-7d9a0c216f0e",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538827177000b4377d9a0c216f0e",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-2717-7000-badb-7ac8f7b315d2&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "619f12d0-9c08-4112-be7a-d628405771ca",
+        "catalogVariantId": "01a05388-2717-7000-badb-7ac8f7b315d2",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538827177000badb7ac8f7b315d2",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-28ea-7000-98a6-ed329c2b03bc&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "98309619-418c-4880-94b4-7bd0eebe45f2",
+        "catalogVariantId": "01a05388-28ea-7000-98a6-ed329c2b03bc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-ARM-01a0538828ea700098a6ed329c2b03bc",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-28ea-7000-9e1b-cc94f245d69e&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "1cd20650-3a5f-4ce3-9c56-c041096edce0",
+        "catalogVariantId": "01a05388-28ea-7000-9e1b-cc94f245d69e",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538828ea70009e1bcc94f245d69e",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-28eb-7000-86ef-74cbfb9fa1c4&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "a3be2696-84fd-4069-9525-4b6e12343f9d",
+        "catalogVariantId": "01a05388-28eb-7000-86ef-74cbfb9fa1c4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538828eb700086ef74cbfb9fa1c4",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-28eb-7000-89ba-3de660d24635&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "2dce6422-864a-40d1-aeeb-60e070374842",
+        "catalogVariantId": "01a05388-28eb-7000-89ba-3de660d24635",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538828eb700089ba3de660d24635",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a05388-28eb-7000-9df7-12ece41575ba&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "97b71cd9-d0ea-4b81-9943-30349522fb4d",
+        "catalogVariantId": "01a05388-28eb-7000-9df7-12ece41575ba",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "VAR-01a0538828eb70009df712ece41575ba",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    }
+  ],
+  "sql": [],
+  "harness": [],
+  "status": "NOT_RUN",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "reason": "Error: No unused published integer-precision Catalog variant is available for an isolated fixture.\n    at chooseVariant (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:146:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:483:13\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:84:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)"
+}

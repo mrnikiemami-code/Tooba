@@ -1,0 +1,374 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-01",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:58:50.561Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-01.json",
+    "evidenceSha256": "e5eba25633cf8a49e8ad1bbeeb38873cc77900e790c2edc47b64d230b5948489",
+    "finishedAt": "2026-11-27T07:58:56.692Z"
+  },
+  {
+    "id": "OWN-02",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:58:56.692Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-02.json",
+    "evidenceSha256": "cec4073aea6adb340a21f14c1c70cd13afd3b6337117616ec8c4b341f40c4ad1",
+    "finishedAt": "2026-11-27T07:58:59.705Z"
+  },
+  {
+    "id": "OWN-03",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:58:59.706Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-03.json",
+    "evidenceSha256": "ee59a6b511c5a1a2d92ad09ee8c6d26711dee3185e42a60ef8875c818539687a",
+    "finishedAt": "2026-11-27T07:59:05.202Z"
+  },
+  {
+    "id": "OWN-04",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:05.203Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-04.json",
+    "evidenceSha256": "57bdc6ef84c939b5c9ab8aeb40f7257f8cf0c66ba5d30f6d29bec9b9f1a60058",
+    "finishedAt": "2026-11-27T07:59:08.651Z"
+  },
+  {
+    "id": "OWN-05",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:08.652Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-05.json",
+    "evidenceSha256": "3e2aefb5f4a01c10ef7a635b93be35db00439e5c24473d2ea4b2d088b4eb6792",
+    "finishedAt": "2026-11-27T07:59:12.630Z"
+  },
+  {
+    "id": "OWN-06",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:12.630Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-06.json",
+    "evidenceSha256": "c9d887411dc5b65866a1a413c6225d4252591de00189f5f70705e22e63af6936",
+    "finishedAt": "2026-11-27T07:59:16.547Z"
+  },
+  {
+    "id": "OWN-07",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:16.547Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-07.json",
+    "evidenceSha256": "a5a36f6aaf17665f8117715c93a222994345e0efa1736c2d668f8c5cce2369af",
+    "finishedAt": "2026-11-27T07:59:22.319Z"
+  },
+  {
+    "id": "OWN-08",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:22.320Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-08.json",
+    "evidenceSha256": "1166a978347867435c0341cb686f7c748f459652e33638cc8b6158fdf3609505",
+    "finishedAt": "2026-11-27T07:59:25.807Z"
+  },
+  {
+    "id": "OWN-09",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:25.807Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-09.json",
+    "evidenceSha256": "dffb03d4ef244104fde0304ec2fb45a73679f8f9f41b85d89b896e417b1cd4ef",
+    "finishedAt": "2026-11-27T07:59:29.269Z"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "Error: OWN-10 geometry, seven-tab, DB registry and third-locale shell observed; the Marketplace-only clause 'platform physical read-only, allocation editable' and the in-app locale switch with draft preservation cannot be observed on the authorized SingleStore DEV Host (admin capability has canEditPhysicalInventory=true, canEditOfferedQuantity=false). No cross-edition switch or invented control was used.\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:747:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:87:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T07:59:29.270Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\OWN-10.json",
+    "evidenceSha256": "f8fdda6d26b0caad803e5179ba71737061b1eef2344fdf2b133689d371c9b363",
+    "finishedAt": "2026-11-27T07:59:37.910Z"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:37.910Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-ORDER.json",
+    "evidenceSha256": "d6dc2986b1b42bee33eeb4b0b6943e40b6ac49451dd44150385da3b72b2d0d4b",
+    "finishedAt": "2026-11-27T07:59:45.518Z"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:45.518Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-HOLD.json",
+    "evidenceSha256": "294e90a898cf1c365c9c611bab53edaf0f348aa556e104ea5937fd5839a42b7d",
+    "finishedAt": "2026-11-27T07:59:51.249Z"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T07:59:51.250Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-ALLOCATION.json",
+    "evidenceSha256": "11ecfab73a4db6e37ba209c143edd0a470a4f10515d68c35e82d8c8d206bea2d",
+    "finishedAt": "2026-11-27T08:00:00.524Z"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T08:00:00.524Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-PARTIAL.json",
+    "evidenceSha256": "5ec21c7a8d0f0017a091d4f41d6bff0a3aaa51b8f52cd9270a49cf63b4870f40",
+    "finishedAt": "2026-11-27T08:00:07.297Z"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T08:00:07.297Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-RECOVERY.json",
+    "evidenceSha256": "a3e0cfcfa6d41b0221624ec75385288122868365f879a560acc8615e0d6136a4",
+    "finishedAt": "2026-11-27T08:00:12.915Z"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T08:00:12.916Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\D2-HTTP.json",
+    "evidenceSha256": "f1e95dec38e178dc96f5b354c24e72393eae85318f9031839ee7dc551256e879",
+    "finishedAt": "2026-11-27T08:00:15.684Z"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T08:00:15.684Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\F-BENTRY-01.json",
+    "evidenceSha256": "5726ddc3c7da37886755c625a7fb3657c381a7d84c44df0dc9cc2d1fd19fd4b4",
+    "finishedAt": "2026-11-27T08:00:20.821Z"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+    "startedAt": "2026-11-27T08:00:20.821Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence\\F-BENTRY-02.json",
+    "evidenceSha256": "f33568fca556a36fda3d9d0cefbd82f0f8f273a40fde1d7fe4ce592118823181",
+    "finishedAt": "2026-11-27T08:00:26.416Z"
+  }
+]

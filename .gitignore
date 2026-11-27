@@ -1,4 +1,4 @@
-# Build
+﻿# Build
 bin/
 obj/
 *.user
@@ -95,3 +95,6 @@ src/**/TestResults/
 # Raw host stdout captures: unbounded, can exceed GitHub's 100 MB blob limit.
 # Only already-tracked (small) captures stay tracked; new/grown ones are ignored.
 docs/architecture/evidence/**/host-stdout*.txt
+
+# P1-C ECC raw host stdout (424 MB; GitHub blob limit)
+docs/opencode/tasks/TB-296-P1-C-INTEGRATION/final-host.out.log

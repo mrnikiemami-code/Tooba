@@ -1,0 +1,536 @@
+{
+  "id": "OWN-01",
+  "generatedAt": "2026-11-27T07:52:52.788Z",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/sellers/01a030d1-40db-7000-b90c-a0705133f0eb/access-control/ceiling",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        {
+          "permissionId": "accesscontrol.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "AccessControl",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "accesscontrol.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "AccessControl",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "fulfillment.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "Fulfillment",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "fulfillment.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Fulfillment",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.cancel",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.detail",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.export",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.fulfill",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.handle",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.refund",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "order.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Order",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "product.create",
+          "enabled": false,
+          "delegable": true,
+          "module": "Product",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "product.edit",
+          "enabled": false,
+          "delegable": true,
+          "module": "Product",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "product.publish",
+          "enabled": false,
+          "delegable": true,
+          "module": "Product",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "product.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Product",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "promotion.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "Promotion",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "promotion.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Promotion",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "refund.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Refund",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "return.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "Return",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "return.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Return",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "review.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Review",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "seller.settings.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "Seller",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "seller.settings.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Seller",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "settlement.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Settlement",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "story.create",
+          "enabled": false,
+          "delegable": true,
+          "module": "Story",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "story.edit",
+          "enabled": false,
+          "delegable": true,
+          "module": "Story",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "story.submit",
+          "enabled": false,
+          "delegable": true,
+          "module": "Story",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "story.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Story",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "support.create",
+          "enabled": false,
+          "delegable": true,
+          "module": "Support",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "support.manage",
+          "enabled": false,
+          "delegable": true,
+          "module": "Support",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "support.reply",
+          "enabled": false,
+          "delegable": true,
+          "module": "Support",
+          "scopeKind": "GlobalWithinOwner"
+        },
+        {
+          "permissionId": "support.view",
+          "enabled": false,
+          "delegable": true,
+          "module": "Support",
+          "scopeKind": "GlobalWithinOwner"
+        }
+      ]
+    },
+    {
+      "route": "/v1/admin/sellers/01a030d1-40db-7000-b90c-a0705133f0eb/access-control/ceiling",
+      "method": "PUT",
+      "payload": {
+        "entries": [
+          {
+            "permissionId": "accesscontrol.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "accesscontrol.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "fulfillment.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "fulfillment.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.cancel",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.detail",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.export",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.fulfill",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.handle",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.refund",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "order.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "product.create",
+            "enabled": true,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "product.edit",
+            "enabled": true,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "product.publish",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "product.view",
+            "enabled": true,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "promotion.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "promotion.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "refund.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "return.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "return.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "review.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "seller.settings.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "seller.settings.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "settlement.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "story.create",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "story.edit",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "story.submit",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "story.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "support.create",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "support.manage",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "support.reply",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          },
+          {
+            "permissionId": "support.view",
+            "enabled": false,
+            "scopeKind": "GlobalWithinOwner",
+            "scopeResourceId": null
+          }
+        ]
+      },
+      "status": 204,
+      "body": null
+    },
+    {
+      "route": "/v1/admin/sellers/01a030d1-40db-7000-b90c-a0705133f0eb/access-control/roles",
+      "method": "POST",
+      "payload": {
+        "name": "P1C F OWN-01",
+        "code": "p1c-f-own-01-mwyop1dw",
+        "description": "P1C group F temporary fixture"
+      },
+      "status": 200,
+      "body": {
+        "id": "5ed13dcd-95ca-4dfe-b7df-8e86722b87a4",
+        "ownerScopeKind": "Seller",
+        "ownerScopeId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "name": "P1C F OWN-01",
+        "code": "p1c-f-own-01-mwyop1dw",
+        "description": "P1C group F temporary fixture",
+        "isSystem": false,
+        "isMutable": true,
+        "isArchived": false,
+        "permissionCount": 0,
+        "assignmentCount": 0,
+        "createdAt": "2026-11-27T07:52:53.8303957+00:00",
+        "updatedAt": "2026-11-27T07:52:53.8303957+00:00"
+      }
+    },
+    {
+      "route": "/v1/admin/sellers/01a030d1-40db-7000-b90c-a0705133f0eb/access-control/roles/5ed13dcd-95ca-4dfe-b7df-8e86722b87a4/permissions",
+      "method": "PUT",
+      "payload": [
+        {
+          "permissionId": "product.create",
+          "scopeKind": "GlobalWithinOwner",
+          "scopeResourceId": null,
+          "enabled": true
+        },
+        {
+          "permissionId": "product.view",
+          "scopeKind": "GlobalWithinOwner",
+          "scopeResourceId": null,
+          "enabled": true
+        },
+        {
+          "permissionId": "product.edit",
+          "scopeKind": "GlobalWithinOwner",
+          "scopeResourceId": null,
+          "enabled": true
+        }
+      ],
+      "status": 204,
+      "body": null
+    }
+  ],
+  "sql": [],
+  "harness": [],
+  "status": "FAIL",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "reason": "Error: sellerB role permissions 204 null\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:33:25)\n    at prepareSellerB (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:244:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:344:3\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:84:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+  "accessRestore": {
+    "after": [],
+    "matchesCeilingSnapshot": true
+  }
+}

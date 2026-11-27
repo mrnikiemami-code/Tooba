@@ -1,0 +1,36 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+  "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+  "database": "tooba_alpha",
+  "testBuildCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "testBuildSucceeded": true,
+  "tests": [
+    {
+      "testId": "R10-14-N",
+      "scenarioSha256": "d26970b790978a0514a3eb59cccdec0c0f37af1528463f4a82812c71bcfbcde7",
+      "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+      "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+      "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+      "status": "PASS",
+      "executed": true,
+      "assertions": [
+        {
+          "assertionId": "acceptance_self_test",
+          "pass": true,
+          "expected": true,
+          "observed": true
+        },
+        {
+          "assertionId": "architect_self_test",
+          "pass": true,
+          "expected": true,
+          "observed": true
+        }
+      ],
+      "evidencePath": "R10-14-N.evidence.json",
+      "evidenceSha256": "b91b557355f607eaf8bfaf1bb743998c4f54f87f45be13273b3ef140fdcb30f8"
+    }
+  ]
+}

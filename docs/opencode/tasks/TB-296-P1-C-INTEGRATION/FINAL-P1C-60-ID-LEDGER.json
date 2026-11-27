@@ -1,0 +1,3219 @@
+{
+  "ledgerName": "FINAL-P1C-60-ID-LEDGER",
+  "taskId": "TB-296-P1-C-INTEGRATION",
+  "generatedAt": "2026-11-27T08:13:55.785Z",
+  "mode": "test/evidence-only consolidation (no tests rerun, no DB writes)",
+  "immutableIdSet": {
+    "count": 60,
+    "unique": 60,
+    "order": [
+      "R10-01-P",
+      "R10-01-N",
+      "R10-01-B",
+      "R10-02-P",
+      "R10-02-N",
+      "R10-02-B",
+      "R10-03-P",
+      "R10-03-N",
+      "R10-03-B",
+      "R10-04-P",
+      "R10-04-N",
+      "R10-04-B",
+      "R10-05-P",
+      "R10-05-N",
+      "R10-05-B",
+      "R10-06-P",
+      "R10-06-N",
+      "R10-06-B",
+      "R10-07-P",
+      "R10-07-N",
+      "R10-07-B",
+      "R10-08-P",
+      "R10-08-N",
+      "R10-08-B",
+      "R10-09-P",
+      "R10-09-N",
+      "R10-09-B",
+      "R10-10-P",
+      "R10-10-N",
+      "R10-10-B",
+      "R10-11-P",
+      "R10-11-N",
+      "R10-11-B",
+      "R10-12-P",
+      "R10-12-N",
+      "R10-12-B",
+      "R10-13-P",
+      "R10-13-N",
+      "R10-13-B",
+      "R10-14-P",
+      "R10-14-N",
+      "R10-14-B",
+      "OWN-01",
+      "OWN-02",
+      "OWN-03",
+      "OWN-04",
+      "OWN-05",
+      "OWN-06",
+      "OWN-07",
+      "OWN-08",
+      "OWN-09",
+      "OWN-10",
+      "D2-ORDER",
+      "D2-HOLD",
+      "D2-ALLOCATION",
+      "D2-PARTIAL",
+      "D2-RECOVERY",
+      "D2-HTTP",
+      "F-BENTRY-01",
+      "F-BENTRY-02"
+    ],
+    "source": "FINAL-LEDGER.json (existing immutable 60-ID order)"
+  },
+  "integrity": {
+    "uniqueIds": 60,
+    "rowCount": 60,
+    "oneRowPerId": true,
+    "duplicateIds": [],
+    "missingImmutableIds": [],
+    "extraIds": [],
+    "nameOnlyMapping": false
+  },
+  "counts": {
+    "PASS": 57,
+    "FAIL": 1,
+    "NOT_RUN": 2
+  },
+  "passIds": [
+    "R10-01-P",
+    "R10-01-N",
+    "R10-02-P",
+    "R10-02-N",
+    "R10-02-B",
+    "R10-03-P",
+    "R10-03-N",
+    "R10-03-B",
+    "R10-04-P",
+    "R10-04-N",
+    "R10-04-B",
+    "R10-05-P",
+    "R10-05-N",
+    "R10-05-B",
+    "R10-06-P",
+    "R10-06-N",
+    "R10-06-B",
+    "R10-07-P",
+    "R10-07-N",
+    "R10-07-B",
+    "R10-08-P",
+    "R10-08-B",
+    "R10-09-P",
+    "R10-09-N",
+    "R10-09-B",
+    "R10-10-P",
+    "R10-10-N",
+    "R10-10-B",
+    "R10-11-P",
+    "R10-11-N",
+    "R10-11-B",
+    "R10-12-P",
+    "R10-12-N",
+    "R10-12-B",
+    "R10-13-P",
+    "R10-13-N",
+    "R10-13-B",
+    "R10-14-P",
+    "R10-14-N",
+    "R10-14-B",
+    "OWN-01",
+    "OWN-02",
+    "OWN-03",
+    "OWN-04",
+    "OWN-05",
+    "OWN-06",
+    "OWN-07",
+    "OWN-08",
+    "OWN-09",
+    "D2-ORDER",
+    "D2-HOLD",
+    "D2-ALLOCATION",
+    "D2-PARTIAL",
+    "D2-RECOVERY",
+    "D2-HTTP",
+    "F-BENTRY-01",
+    "F-BENTRY-02"
+  ],
+  "failIds": [
+    "R10-08-N"
+  ],
+  "notRunIds": [
+    "R10-01-B",
+    "OWN-10"
+  ],
+  "preservedPriorPass": [
+    {
+      "id": "R10-01-N",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+      "recordedSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+      "actualSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+      "preserved": true
+    },
+    {
+      "id": "R10-04-B",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+      "recordedSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+      "actualSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+      "preserved": true
+    },
+    {
+      "id": "R10-10-P",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+      "recordedSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+      "actualSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+      "preserved": true
+    },
+    {
+      "id": "R10-10-N",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+      "recordedSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+      "actualSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+      "preserved": true
+    },
+    {
+      "id": "R10-10-B",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+      "recordedSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+      "actualSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+      "preserved": true
+    },
+    {
+      "id": "R10-12-N",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "recordedSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "actualSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "preserved": true
+    },
+    {
+      "id": "R10-13-N",
+      "consolidatedStatus": "PASS",
+      "consolidatedEvidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "recordedSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "actualSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "preserved": true
+    }
+  ],
+  "preservedPriorPassAllOk": true,
+  "evidence": {
+    "checks": 60,
+    "failures": 0,
+    "allVerified": true,
+    "uniqueFiles": 59,
+    "files": [
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-01-P.json",
+        "sha256": "6efc583da7f7b9bede584895ca40692c0e2464848358c69d119a8bd4835f4930",
+        "sizeBytes": 11502
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-01-N.json",
+        "sha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+        "sizeBytes": 4187
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-01-B.json",
+        "sha256": "9d82f6efd3fa0fe9a71ecdf4097ff041b4fe0be1e51614013dc43b10904ae528",
+        "sizeBytes": 6147
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-P.json",
+        "sha256": "0bad69e80ec6633f547f7d5f356f0fcebc0c931b15dda3413d27e95a2b3d3d09",
+        "sizeBytes": 16365
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-N.json",
+        "sha256": "ccb67246283d94aca8fd6fa8a33821778c3d1eca1667a509a248df67d53e2dde",
+        "sizeBytes": 5876
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-B.json",
+        "sha256": "cc597807f1c6d11f8aedb7822f2be8970657797248ffaf80868486b24f8f3e62",
+        "sizeBytes": 16321
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-P.json",
+        "sha256": "987a11441727b9feb2cc13ac97e505af2d363fe7b8d7a3ae2a3dfb1cdeeee142",
+        "sizeBytes": 30065
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-N.json",
+        "sha256": "8dfa88baeda1116ae86f125e0990ff0b4146132c2b3f1bf2e7d5ea5e2a855513",
+        "sizeBytes": 14023
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-B.json",
+        "sha256": "fcd1f5ada99187779dd2533008c5f1a8aeceb2597a756f361470f6ed7a8e040e",
+        "sizeBytes": 33921
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-04-P.json",
+        "sha256": "f84287c1c0b05fee38a535807851c162067499982c0e2cbc5dcea90ef909b06f",
+        "sizeBytes": 17614
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-04-N.json",
+        "sha256": "7153c565b5efd0c319cf83adc9f31124f882ed16b354cc59289b4f3577893787",
+        "sizeBytes": 14965
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-04-B.json",
+        "sha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+        "sizeBytes": 24477
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-P.json",
+        "sha256": "7c89434ca96713dbc2fc69c31d720d4ba87db6b4d2ca3b152b95582982e747ae",
+        "sizeBytes": 16720
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-N.json",
+        "sha256": "86174880c699d7dc48078911a225882839c9a54e8800646ff8fca4d7e7990f63",
+        "sizeBytes": 33636
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-B.json",
+        "sha256": "659f2927556b9a0d931061649e7694d03557d5af53ceab476cfce4e796c49056",
+        "sizeBytes": 42490
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-P.json",
+        "sha256": "15841ea5163be48728686bb84f7ed6e3ad1d127748c221f43297279cfe7d35a4",
+        "sizeBytes": 36234
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-N.json",
+        "sha256": "079701fa46771f44f28dbb51e5d5da503274781f16676c7f5c63b16f2c0561c6",
+        "sizeBytes": 9602
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-B.json",
+        "sha256": "b5c0767d4a530d69ca1570318f274abbd700bcccdfacb83352fd4829b07c9fe8",
+        "sizeBytes": 8229
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-P.json",
+        "sha256": "0c61d592043818a34dc813dbc7bf76b9c19540e52b9dbf6726cc2dd8689956cc",
+        "sizeBytes": 52964
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-N.json",
+        "sha256": "f3d792abbef4e6e22f612f8a51d2da613668c560fa090eecb5c657ea48631967",
+        "sizeBytes": 25844
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-B.json",
+        "sha256": "e73a1823d006d1740d668d0a6c2d0174461eddcffa9965d1a6e0766d76881313",
+        "sizeBytes": 30354
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-P.json",
+        "sha256": "2fb5f976726f36ad6483f5a7e7534a2ba467af8ab7e3e8498ade87c0e1a88989",
+        "sizeBytes": 31643
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-N.json",
+        "sha256": "fec82900ebcd5ed387caa91f5cd4a017339742762f71db6bdb7f96710f6546b9",
+        "sizeBytes": 38469
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-B.json",
+        "sha256": "548bf2310017161fc06fdde8f972a7b36464d511e06993fcab1dbeab8e7a7d21",
+        "sizeBytes": 42949
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-P.json",
+        "sha256": "0450b582bffc5efe48dd7be4fd43bfcec1a7eee223f64fd08a687813e4755175",
+        "sizeBytes": 9860
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-N.json",
+        "sha256": "f7fb306d4fc6ec18b22cb52ff6b70a7a8f22311563ad0adab9240678e44254b2",
+        "sizeBytes": 725
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-B.json",
+        "sha256": "7cb96cc8361120b402aa942726009d34dcba9b33a3543d7337cb68d4a0b44c9d",
+        "sizeBytes": 3952
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-P.json",
+        "sha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+        "sizeBytes": 30608
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-N.json",
+        "sha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+        "sizeBytes": 10488
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-B.json",
+        "sha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+        "sizeBytes": 27850
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-P.json",
+        "sha256": "9efa9d7bba42c4a52fab8a2633578442d37e683d2880501b321c9b8fccd3e328",
+        "sizeBytes": 9519
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-N.json",
+        "sha256": "7193fb332ec86494911680b41f1f5a598ff8aa4de070cfd3173e0a6c2229da57",
+        "sizeBytes": 16341
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-B.json",
+        "sha256": "c338bb47ac87a70d250e2894ec45f6e4a6b1696336e778bcaeb399c37a58ce81",
+        "sizeBytes": 12766
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-12-P.json",
+        "sha256": "f23a315f3e3d18a2b11314294fe66f0a2dbb120cfee0aec20940ee782f30502d",
+        "sizeBytes": 15094
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+        "sha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+        "sizeBytes": 9306
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-12-B.json",
+        "sha256": "73fe40098d3813067f507a54b00afd518b2f3086f0e728286751b66d8a831a17",
+        "sizeBytes": 116930
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-P.json",
+        "sha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+        "sizeBytes": 35618
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-B.json",
+        "sha256": "8c2a566f9de94fb6b821f2721bc9b97488226e3d14ebe5c22d095be9a098c601",
+        "sizeBytes": 13016
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-P.json",
+        "sha256": "7e708d646fd217a130be1a499c90de54cd26fb4c79639b64cfa42125285cbb95",
+        "sizeBytes": 18017
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-N.json",
+        "sha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+        "sizeBytes": 1786
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-B.json",
+        "sha256": "cb4f6bbc45f4d8423287126d830565f868b8ff8f85f4b87251a27d9f90cd64d9",
+        "sizeBytes": 16377
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-01.json",
+        "sha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938",
+        "sizeBytes": 990503
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-02.json",
+        "sha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8",
+        "sizeBytes": 223878
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-03.json",
+        "sha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e",
+        "sizeBytes": 370247
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-04.json",
+        "sha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117",
+        "sizeBytes": 189969
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-05.json",
+        "sha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc",
+        "sizeBytes": 192907
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-06.json",
+        "sha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2",
+        "sizeBytes": 185635
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-07.json",
+        "sha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094",
+        "sizeBytes": 197137
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-08.json",
+        "sha256": "f005e8528ab05c8f69e0295855e5a2696dc763296488d21415b023f0799de104",
+        "sizeBytes": 196916
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-09.json",
+        "sha256": "dcb412565d4ada605bc6beca900d1926093805d116581c09723c64ce9d787dad",
+        "sizeBytes": 184069
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-10.json",
+        "sha256": "11050437ecf6b4bb3d009f54e90dcbaeb28f7dbdbd60b8a245e46a3d3c6e8471",
+        "sizeBytes": 193953
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-ORDER.json",
+        "sha256": "1ff173bebc745bc6c7a343474e42caeebc7e041ad0cca66ac75a85c0186ecdb3",
+        "sizeBytes": 553313
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-HOLD.json",
+        "sha256": "c05d50d654fbd5e0456a27752a7a5d7736d91e79ef40f16f64f84736180827fb",
+        "sizeBytes": 363051
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-ALLOCATION.json",
+        "sha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb",
+        "sizeBytes": 546577
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-PARTIAL.json",
+        "sha256": "e9171d947c6ed674d34256994357cd5ac371fcdd0dba26c36ac5db652f68fb62",
+        "sizeBytes": 366948
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-RECOVERY.json",
+        "sha256": "f2471f93fb5dc7970619bb7590f4c14aed9c7e86186ae7b07bdc975f80d12bea",
+        "sizeBytes": 197157
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-HTTP.json",
+        "sha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b",
+        "sizeBytes": 210416
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/F-BENTRY-01.json",
+        "sha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7",
+        "sizeBytes": 354024
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/F-BENTRY-02.json",
+        "sha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff",
+        "sizeBytes": 365735
+      }
+    ],
+    "perId": [
+      {
+        "id": "R10-01-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-01-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 11502,
+        "recordedSha256": "6efc583da7f7b9bede584895ca40692c0e2464848358c69d119a8bd4835f4930",
+        "actualSha256": "6efc583da7f7b9bede584895ca40692c0e2464848358c69d119a8bd4835f4930",
+        "hashMatch": true,
+        "topLevelId": "R10-01-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-01-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-01-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 4187,
+        "recordedSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+        "actualSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+        "hashMatch": true,
+        "topLevelId": "R10-01-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-01-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-01-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 6147,
+        "recordedSha256": "9d82f6efd3fa0fe9a71ecdf4097ff041b4fe0be1e51614013dc43b10904ae528",
+        "actualSha256": "9d82f6efd3fa0fe9a71ecdf4097ff041b4fe0be1e51614013dc43b10904ae528",
+        "hashMatch": true,
+        "topLevelId": "R10-01-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-02-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 16365,
+        "recordedSha256": "0bad69e80ec6633f547f7d5f356f0fcebc0c931b15dda3413d27e95a2b3d3d09",
+        "actualSha256": "0bad69e80ec6633f547f7d5f356f0fcebc0c931b15dda3413d27e95a2b3d3d09",
+        "hashMatch": true,
+        "topLevelId": "R10-02-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-02-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 5876,
+        "recordedSha256": "ccb67246283d94aca8fd6fa8a33821778c3d1eca1667a509a248df67d53e2dde",
+        "actualSha256": "ccb67246283d94aca8fd6fa8a33821778c3d1eca1667a509a248df67d53e2dde",
+        "hashMatch": true,
+        "topLevelId": "R10-02-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-02-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-02-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 16321,
+        "recordedSha256": "cc597807f1c6d11f8aedb7822f2be8970657797248ffaf80868486b24f8f3e62",
+        "actualSha256": "cc597807f1c6d11f8aedb7822f2be8970657797248ffaf80868486b24f8f3e62",
+        "hashMatch": true,
+        "topLevelId": "R10-02-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-03-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 30065,
+        "recordedSha256": "987a11441727b9feb2cc13ac97e505af2d363fe7b8d7a3ae2a3dfb1cdeeee142",
+        "actualSha256": "987a11441727b9feb2cc13ac97e505af2d363fe7b8d7a3ae2a3dfb1cdeeee142",
+        "hashMatch": true,
+        "topLevelId": "R10-03-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-03-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 14023,
+        "recordedSha256": "8dfa88baeda1116ae86f125e0990ff0b4146132c2b3f1bf2e7d5ea5e2a855513",
+        "actualSha256": "8dfa88baeda1116ae86f125e0990ff0b4146132c2b3f1bf2e7d5ea5e2a855513",
+        "hashMatch": true,
+        "topLevelId": "R10-03-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-03-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-03-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 33921,
+        "recordedSha256": "fcd1f5ada99187779dd2533008c5f1a8aeceb2597a756f361470f6ed7a8e040e",
+        "actualSha256": "fcd1f5ada99187779dd2533008c5f1a8aeceb2597a756f361470f6ed7a8e040e",
+        "hashMatch": true,
+        "topLevelId": "R10-03-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-04-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-04-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 17614,
+        "recordedSha256": "f84287c1c0b05fee38a535807851c162067499982c0e2cbc5dcea90ef909b06f",
+        "actualSha256": "f84287c1c0b05fee38a535807851c162067499982c0e2cbc5dcea90ef909b06f",
+        "hashMatch": true,
+        "topLevelId": "R10-04-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-04-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-04-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 14965,
+        "recordedSha256": "7153c565b5efd0c319cf83adc9f31124f882ed16b354cc59289b4f3577893787",
+        "actualSha256": "7153c565b5efd0c319cf83adc9f31124f882ed16b354cc59289b4f3577893787",
+        "hashMatch": true,
+        "topLevelId": "R10-04-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-04-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-04-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 24477,
+        "recordedSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+        "actualSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+        "hashMatch": true,
+        "topLevelId": "R10-04-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-05-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 16720,
+        "recordedSha256": "7c89434ca96713dbc2fc69c31d720d4ba87db6b4d2ca3b152b95582982e747ae",
+        "actualSha256": "7c89434ca96713dbc2fc69c31d720d4ba87db6b4d2ca3b152b95582982e747ae",
+        "hashMatch": true,
+        "topLevelId": "R10-05-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-05-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 33636,
+        "recordedSha256": "86174880c699d7dc48078911a225882839c9a54e8800646ff8fca4d7e7990f63",
+        "actualSha256": "86174880c699d7dc48078911a225882839c9a54e8800646ff8fca4d7e7990f63",
+        "hashMatch": true,
+        "topLevelId": "R10-05-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-05-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-05-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 42490,
+        "recordedSha256": "659f2927556b9a0d931061649e7694d03557d5af53ceab476cfce4e796c49056",
+        "actualSha256": "659f2927556b9a0d931061649e7694d03557d5af53ceab476cfce4e796c49056",
+        "hashMatch": true,
+        "topLevelId": "R10-05-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-06-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 36234,
+        "recordedSha256": "15841ea5163be48728686bb84f7ed6e3ad1d127748c221f43297279cfe7d35a4",
+        "actualSha256": "15841ea5163be48728686bb84f7ed6e3ad1d127748c221f43297279cfe7d35a4",
+        "hashMatch": true,
+        "topLevelId": "R10-06-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-06-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 9602,
+        "recordedSha256": "079701fa46771f44f28dbb51e5d5da503274781f16676c7f5c63b16f2c0561c6",
+        "actualSha256": "079701fa46771f44f28dbb51e5d5da503274781f16676c7f5c63b16f2c0561c6",
+        "hashMatch": true,
+        "topLevelId": "R10-06-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-06-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-06-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 8229,
+        "recordedSha256": "b5c0767d4a530d69ca1570318f274abbd700bcccdfacb83352fd4829b07c9fe8",
+        "actualSha256": "b5c0767d4a530d69ca1570318f274abbd700bcccdfacb83352fd4829b07c9fe8",
+        "hashMatch": true,
+        "topLevelId": "R10-06-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-07-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 52964,
+        "recordedSha256": "0c61d592043818a34dc813dbc7bf76b9c19540e52b9dbf6726cc2dd8689956cc",
+        "actualSha256": "0c61d592043818a34dc813dbc7bf76b9c19540e52b9dbf6726cc2dd8689956cc",
+        "hashMatch": true,
+        "topLevelId": "R10-07-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-07-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 25844,
+        "recordedSha256": "f3d792abbef4e6e22f612f8a51d2da613668c560fa090eecb5c657ea48631967",
+        "actualSha256": "f3d792abbef4e6e22f612f8a51d2da613668c560fa090eecb5c657ea48631967",
+        "hashMatch": true,
+        "topLevelId": "R10-07-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-07-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-07-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 30354,
+        "recordedSha256": "e73a1823d006d1740d668d0a6c2d0174461eddcffa9965d1a6e0766d76881313",
+        "actualSha256": "e73a1823d006d1740d668d0a6c2d0174461eddcffa9965d1a6e0766d76881313",
+        "hashMatch": true,
+        "topLevelId": "R10-07-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-08-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 31643,
+        "recordedSha256": "2fb5f976726f36ad6483f5a7e7534a2ba467af8ab7e3e8498ade87c0e1a88989",
+        "actualSha256": "2fb5f976726f36ad6483f5a7e7534a2ba467af8ab7e3e8498ade87c0e1a88989",
+        "hashMatch": true,
+        "topLevelId": "R10-08-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-08-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 38469,
+        "recordedSha256": "fec82900ebcd5ed387caa91f5cd4a017339742762f71db6bdb7f96710f6546b9",
+        "actualSha256": "fec82900ebcd5ed387caa91f5cd4a017339742762f71db6bdb7f96710f6546b9",
+        "hashMatch": true,
+        "topLevelId": "R10-08-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-08-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-evidence-r2/R10-08-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 42949,
+        "recordedSha256": "548bf2310017161fc06fdde8f972a7b36464d511e06993fcab1dbeab8e7a7d21",
+        "actualSha256": "548bf2310017161fc06fdde8f972a7b36464d511e06993fcab1dbeab8e7a7d21",
+        "hashMatch": true,
+        "topLevelId": "R10-08-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-09-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 9860,
+        "recordedSha256": "0450b582bffc5efe48dd7be4fd43bfcec1a7eee223f64fd08a687813e4755175",
+        "actualSha256": "0450b582bffc5efe48dd7be4fd43bfcec1a7eee223f64fd08a687813e4755175",
+        "hashMatch": true,
+        "topLevelId": "R10-09-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-09-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 725,
+        "recordedSha256": "f7fb306d4fc6ec18b22cb52ff6b70a7a8f22311563ad0adab9240678e44254b2",
+        "actualSha256": "f7fb306d4fc6ec18b22cb52ff6b70a7a8f22311563ad0adab9240678e44254b2",
+        "hashMatch": true,
+        "topLevelId": "R10-09-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-09-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-09-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 3952,
+        "recordedSha256": "7cb96cc8361120b402aa942726009d34dcba9b33a3543d7337cb68d4a0b44c9d",
+        "actualSha256": "7cb96cc8361120b402aa942726009d34dcba9b33a3543d7337cb68d4a0b44c9d",
+        "hashMatch": true,
+        "topLevelId": "R10-09-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-10-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 30608,
+        "recordedSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+        "actualSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+        "hashMatch": true,
+        "topLevelId": "R10-10-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-10-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 10488,
+        "recordedSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+        "actualSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+        "hashMatch": true,
+        "topLevelId": "R10-10-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-10-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-final-evidence3/R10-10-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 27850,
+        "recordedSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+        "actualSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+        "hashMatch": true,
+        "topLevelId": "R10-10-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-11-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 9519,
+        "recordedSha256": "9efa9d7bba42c4a52fab8a2633578442d37e683d2880501b321c9b8fccd3e328",
+        "actualSha256": "9efa9d7bba42c4a52fab8a2633578442d37e683d2880501b321c9b8fccd3e328",
+        "hashMatch": true,
+        "topLevelId": "R10-11-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-11-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 16341,
+        "recordedSha256": "7193fb332ec86494911680b41f1f5a598ff8aa4de070cfd3173e0a6c2229da57",
+        "actualSha256": "7193fb332ec86494911680b41f1f5a598ff8aa4de070cfd3173e0a6c2229da57",
+        "hashMatch": true,
+        "topLevelId": "R10-11-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-11-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-11-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 12766,
+        "recordedSha256": "c338bb47ac87a70d250e2894ec45f6e4a6b1696336e778bcaeb399c37a58ce81",
+        "actualSha256": "c338bb47ac87a70d250e2894ec45f6e4a6b1696336e778bcaeb399c37a58ce81",
+        "hashMatch": true,
+        "topLevelId": "R10-11-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-12-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-12-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 15094,
+        "recordedSha256": "f23a315f3e3d18a2b11314294fe66f0a2dbb120cfee0aec20940ee782f30502d",
+        "actualSha256": "f23a315f3e3d18a2b11314294fe66f0a2dbb120cfee0aec20940ee782f30502d",
+        "hashMatch": true,
+        "topLevelId": "R10-12-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-12-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 9306,
+        "recordedSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+        "actualSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+        "hashMatch": true,
+        "topLevelId": null,
+        "hasObservations": true
+      },
+      {
+        "id": "R10-12-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-12-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 116930,
+        "recordedSha256": "73fe40098d3813067f507a54b00afd518b2f3086f0e728286751b66d8a831a17",
+        "actualSha256": "73fe40098d3813067f507a54b00afd518b2f3086f0e728286751b66d8a831a17",
+        "hashMatch": true,
+        "topLevelId": "R10-12-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-13-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 35618,
+        "recordedSha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+        "actualSha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+        "hashMatch": true,
+        "topLevelId": "R10-13-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-13-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 9306,
+        "recordedSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+        "actualSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+        "hashMatch": true,
+        "topLevelId": null,
+        "hasObservations": true
+      },
+      {
+        "id": "R10-13-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 13016,
+        "recordedSha256": "8c2a566f9de94fb6b821f2721bc9b97488226e3d14ebe5c22d095be9a098c601",
+        "actualSha256": "8c2a566f9de94fb6b821f2721bc9b97488226e3d14ebe5c22d095be9a098c601",
+        "hashMatch": true,
+        "topLevelId": "R10-13-B",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-14-P",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-P.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 18017,
+        "recordedSha256": "7e708d646fd217a130be1a499c90de54cd26fb4c79639b64cfa42125285cbb95",
+        "actualSha256": "7e708d646fd217a130be1a499c90de54cd26fb4c79639b64cfa42125285cbb95",
+        "hashMatch": true,
+        "topLevelId": "R10-14-P",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-14-N",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-N.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 1786,
+        "recordedSha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+        "actualSha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+        "hashMatch": true,
+        "topLevelId": "R10-14-N",
+        "hasObservations": true
+      },
+      {
+        "id": "R10-14-B",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-14-B.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 16377,
+        "recordedSha256": "cb4f6bbc45f4d8423287126d830565f868b8ff8f85f4b87251a27d9f90cd64d9",
+        "actualSha256": "cb4f6bbc45f4d8423287126d830565f868b8ff8f85f4b87251a27d9f90cd64d9",
+        "hashMatch": true,
+        "topLevelId": "R10-14-B",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-01",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-01.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 990503,
+        "recordedSha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938",
+        "actualSha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938",
+        "hashMatch": true,
+        "topLevelId": "OWN-01",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-02",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-02.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 223878,
+        "recordedSha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8",
+        "actualSha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8",
+        "hashMatch": true,
+        "topLevelId": "OWN-02",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-03",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-03.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 370247,
+        "recordedSha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e",
+        "actualSha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e",
+        "hashMatch": true,
+        "topLevelId": "OWN-03",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-04",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-04.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 189969,
+        "recordedSha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117",
+        "actualSha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117",
+        "hashMatch": true,
+        "topLevelId": "OWN-04",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-05",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-05.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 192907,
+        "recordedSha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc",
+        "actualSha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc",
+        "hashMatch": true,
+        "topLevelId": "OWN-05",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-06",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-06.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 185635,
+        "recordedSha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2",
+        "actualSha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2",
+        "hashMatch": true,
+        "topLevelId": "OWN-06",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-07",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-07.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 197137,
+        "recordedSha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094",
+        "actualSha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094",
+        "hashMatch": true,
+        "topLevelId": "OWN-07",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-08",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-08.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 196916,
+        "recordedSha256": "f005e8528ab05c8f69e0295855e5a2696dc763296488d21415b023f0799de104",
+        "actualSha256": "f005e8528ab05c8f69e0295855e5a2696dc763296488d21415b023f0799de104",
+        "hashMatch": true,
+        "topLevelId": "OWN-08",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-09",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-09.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 184069,
+        "recordedSha256": "dcb412565d4ada605bc6beca900d1926093805d116581c09723c64ce9d787dad",
+        "actualSha256": "dcb412565d4ada605bc6beca900d1926093805d116581c09723c64ce9d787dad",
+        "hashMatch": true,
+        "topLevelId": "OWN-09",
+        "hasObservations": true
+      },
+      {
+        "id": "OWN-10",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/OWN-10.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 193953,
+        "recordedSha256": "11050437ecf6b4bb3d009f54e90dcbaeb28f7dbdbd60b8a245e46a3d3c6e8471",
+        "actualSha256": "11050437ecf6b4bb3d009f54e90dcbaeb28f7dbdbd60b8a245e46a3d3c6e8471",
+        "hashMatch": true,
+        "topLevelId": "OWN-10",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-ORDER",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-ORDER.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 553313,
+        "recordedSha256": "1ff173bebc745bc6c7a343474e42caeebc7e041ad0cca66ac75a85c0186ecdb3",
+        "actualSha256": "1ff173bebc745bc6c7a343474e42caeebc7e041ad0cca66ac75a85c0186ecdb3",
+        "hashMatch": true,
+        "topLevelId": "D2-ORDER",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-HOLD",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-HOLD.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 363051,
+        "recordedSha256": "c05d50d654fbd5e0456a27752a7a5d7736d91e79ef40f16f64f84736180827fb",
+        "actualSha256": "c05d50d654fbd5e0456a27752a7a5d7736d91e79ef40f16f64f84736180827fb",
+        "hashMatch": true,
+        "topLevelId": "D2-HOLD",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-ALLOCATION",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-ALLOCATION.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 546577,
+        "recordedSha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb",
+        "actualSha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb",
+        "hashMatch": true,
+        "topLevelId": "D2-ALLOCATION",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-PARTIAL",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-PARTIAL.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 366948,
+        "recordedSha256": "e9171d947c6ed674d34256994357cd5ac371fcdd0dba26c36ac5db652f68fb62",
+        "actualSha256": "e9171d947c6ed674d34256994357cd5ac371fcdd0dba26c36ac5db652f68fb62",
+        "hashMatch": true,
+        "topLevelId": "D2-PARTIAL",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-RECOVERY",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-RECOVERY.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 197157,
+        "recordedSha256": "f2471f93fb5dc7970619bb7590f4c14aed9c7e86186ae7b07bdc975f80d12bea",
+        "actualSha256": "f2471f93fb5dc7970619bb7590f4c14aed9c7e86186ae7b07bdc975f80d12bea",
+        "hashMatch": true,
+        "topLevelId": "D2-RECOVERY",
+        "hasObservations": true
+      },
+      {
+        "id": "D2-HTTP",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/D2-HTTP.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 210416,
+        "recordedSha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b",
+        "actualSha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b",
+        "hashMatch": true,
+        "topLevelId": "D2-HTTP",
+        "hasObservations": true
+      },
+      {
+        "id": "F-BENTRY-01",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/F-BENTRY-01.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 354024,
+        "recordedSha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7",
+        "actualSha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7",
+        "hashMatch": true,
+        "topLevelId": "F-BENTRY-01",
+        "hasObservations": true
+      },
+      {
+        "id": "F-BENTRY-02",
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3/F-BENTRY-02.json",
+        "exists": true,
+        "nonempty": true,
+        "sizeBytes": 365735,
+        "recordedSha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff",
+        "actualSha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff",
+        "hashMatch": true,
+        "topLevelId": "F-BENTRY-02",
+        "hasObservations": true
+      }
+    ]
+  },
+  "identity": {
+    "declaredBaseHead": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+    "declaredCodeHead": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+    "headsAgree": true,
+    "currentWorktreeHead": "2ba30567e9392cb7035ec40b252dc46c5d5d8652",
+    "worktreeStatusEntries": 140,
+    "postRunNote": "Executed-source head is the declared 028b9da8. Current worktree HEAD differs because later task commits exist; the six executed case modules still hash-match the working tree (see codeIdentity), so the executed harness sources are present unchanged.",
+    "servedHostDllReverified": {
+      "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/.tmp-p1c-final-host/Tooba.Host.dll",
+      "expected": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+      "actual": null,
+      "exists": false,
+      "match": false,
+      "note": "artifact absent post-run (cleaned)"
+    },
+    "groupFHarnessDllReverified": {
+      "path": "C:/Users/User/AppData/Local/Temp/opencode/p1c-f-harness/bin/Debug/net8.0/p1c-f-harness.dll",
+      "expected": "c9bee91d34e04d40bf3676242a49ab7735f7a3c106558e2594e39057b43a3080",
+      "actual": "c9bee91d34e04d40bf3676242a49ab7735f7a3c106558e2594e39057b43a3080",
+      "exists": true,
+      "match": true
+    },
+    "database": "tooba_alpha",
+    "databaseIdentity": "tooba_alpha|local|local",
+    "host": "http://127.0.0.1:5088",
+    "frontend": "http://127.0.0.1:3000",
+    "servedHostDll": ".tmp-p1c-final-host/Tooba.Host.dll",
+    "servedHostDllSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+    "providerEdition": "SingleStore",
+    "providerTenant": "store-alpha",
+    "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "groupFHarnessDllSha256": "c9bee91d34e04d40bf3676242a49ab7735f7a3c106558e2594e39057b43a3080",
+    "groupFHarnessSourceSha256": "69306683f5f7d1cff611cdf744aa71ef6cff1b47bfe1f39bc29cb2947f7c0a00",
+    "codeIdentity": [
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-abc-cases.cjs",
+        "expected": "415ccdf5a2c2d4d224e4af4ef941ca00183fafa1ee79abc9c0f52e5564ffb186",
+        "actual": "415ccdf5a2c2d4d224e4af4ef941ca00183fafa1ee79abc9c0f52e5564ffb186",
+        "match": true,
+        "exists": true
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-pricing-fulfillment.cjs",
+        "expected": "e7b2ee21a6a94bfe950837bd8994434431fd919bbc218df1c236ce13034d2b26",
+        "actual": "e7b2ee21a6a94bfe950837bd8994434431fd919bbc218df1c236ce13034d2b26",
+        "match": true,
+        "exists": true
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-edit-history.cjs",
+        "expected": "ae780c73a0d95b31972fc1f097375899a29476da7283c79c017c075ee19ec703",
+        "actual": "ae780c73a0d95b31972fc1f097375899a29476da7283c79c017c075ee19ec703",
+        "match": true,
+        "exists": true
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-support.cjs",
+        "expected": "c45a0c5cbc104db7a8a10703f917882879a34848f04b39c3bca303c672e8c74a",
+        "actual": "c45a0c5cbc104db7a8a10703f917882879a34848f04b39c3bca303c672e8c74a",
+        "match": true,
+        "exists": true
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-cases.cjs",
+        "expected": "5defe5fb32bb06ef7d7338a94300dd3897ae56114d365ea0e19a1ccfc00651b9",
+        "actual": "5defe5fb32bb06ef7d7338a94300dd3897ae56114d365ea0e19a1ccfc00651b9",
+        "match": true,
+        "exists": true
+      },
+      {
+        "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-cases.cjs",
+        "expected": "a1ce13fe14b377c5b520230eeb72ef0c9881e75576e9eee20a7b8edf35edac4c",
+        "actual": "a1ce13fe14b377c5b520230eeb72ef0c9881e75576e9eee20a7b8edf35edac4c",
+        "match": true,
+        "exists": true
+      }
+    ]
+  },
+  "sources": {
+    "GROUP-ABC-RESULT.json": "d9a409c0b604f7d45277de8ff98f02090b811a1bbe0ad78018def5038cd3a774",
+    "p1c-group-abc-ledger-r2.json": "ce50ad0e4454b99cbacc4ac26a472e6d1ea2235919f5a1fbcc6ca82e1cc0fe7e",
+    "p1c-group-de-summary.json": "5b1cdc916e16e9f7f335137b4fe4b00dee7d41bbda8295c55ea80d1b02d8c0fb",
+    "p1c-group-de-consolidated-ledger.json": "56be605c5e9c513671d3a41b5cdf1dcd84fbd30f574eee85a02d8bdb6ac52d1e",
+    "p1c-executed-ledger4.json": "d4083adc694dde1df90fcd1870106c75ff58c39f0c4ca28d10f9145f319d9efb",
+    "p1c-group-f-summary.json": "0c4cbbb8c56920d5b95f4b72355805dd76f01d04c76932f3e94fea7e8020d538",
+    "FINAL-LEDGER.json": "0f48acfc88b8a7b0dcf296c0d5147117ccf22d79af672c6863176f72338576b6"
+  },
+  "conflicts": {
+    "genuinePassVsFail": [],
+    "staleSnapshotNotRunVsExecuted": [
+      {
+        "id": "R10-01-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-04-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-10-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-10-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-10-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-12-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-12-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-12-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-13-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-13-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-13-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-P",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-N",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-B",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-01",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-02",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-03",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-04",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-05",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-06",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-07",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-08",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-09",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-ORDER",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-HOLD",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-ALLOCATION",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-PARTIAL",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-RECOVERY",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-HTTP",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "F-BENTRY-01",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "F-BENTRY-02",
+        "snapshot": "p1c-group-abc-ledger-r2.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-01-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-04-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-04-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-08-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-08-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "FAIL"
+      },
+      {
+        "id": "R10-08-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-09-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-11-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-12-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-12-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-13-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-13-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-P",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-N",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-14-B",
+        "snapshot": "p1c-executed-ledger4.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-01-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-02-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-03-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-04-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-04-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-05-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-06-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-07-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-08-P",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "R10-08-N",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "FAIL"
+      },
+      {
+        "id": "R10-08-B",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-01",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-02",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-03",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-04",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-05",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-06",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-07",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-08",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "OWN-09",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-ORDER",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-HOLD",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-ALLOCATION",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-PARTIAL",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-RECOVERY",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "D2-HTTP",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "F-BENTRY-01",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      },
+      {
+        "id": "F-BENTRY-02",
+        "snapshot": "p1c-group-de-consolidated-ledger.json",
+        "snapshotStatus": "NOT_RUN",
+        "consolidatedStatus": "PASS"
+      }
+    ],
+    "genuineProductFailures": [
+      "R10-08-N"
+    ],
+    "note": "No PASS-vs-FAIL contradiction for any ID. Stale NOT_RUN entries in earlier/out-of-scope snapshots are superseded by later real executed evidence for that exact ID."
+  },
+  "rows": [
+    {
+      "id": "R10-01-P",
+      "status": "PASS",
+      "reason": "Eligible DEV identity created exactly one Draft with the selected allowed channel 'Marketplace', confirmed by the owner GET and independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-01-P.json",
+      "evidenceSha256": "6efc583da7f7b9bede584895ca40692c0e2464848358c69d119a8bd4835f4930",
+      "finishedAt": "2026-11-27T07:40:00.430Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-01-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-01-N.json",
+      "evidenceSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-01-B",
+      "status": "NOT_RUN",
+      "reason": "Error: R10-01-B requires the same variant in two independently allowed channels. The served SingleStore DEV tenant exposes only [Marketplace]; the other enumerated channels [Direct,Agency,Corporate,Affiliate,Api] would require a second authorized StoreCommerce context / edition switch, which is not authorized here. A changed channel cannot reach intent-conflict evaluation because it is denied earlier with offer.channel.not_allowed (observed).\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-cases.cjs:171:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-01-B.json",
+      "evidenceSha256": "9d82f6efd3fa0fe9a71ecdf4097ff041b4fe0be1e51614013dc43b10904ae528",
+      "finishedAt": "2026-11-27T07:40:01.284Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "NOT_RUN"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-P",
+      "status": "PASS",
+      "reason": "One populated save persisted exactly one durable Draft (SKU, Custom return policy 9, limits 2/6) confirmed by owner GET and SQL; the real shared-workspace mounted regression preserved typed values across tab switches (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-P.json",
+      "evidenceSha256": "0bad69e80ec6633f547f7d5f356f0fcebc0c931b15dda3413d27e95a2b3d3d09",
+      "finishedAt": "2026-11-27T07:40:07.684Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-N",
+      "status": "PASS",
+      "reason": "Invalid drafts (min>max and out-of-range custom return window) were rejected as typed 4xx before any Offer-owned write; independent SQL shows zero offers, history and outbox rows.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-N.json",
+      "evidenceSha256": "ccb67246283d94aca8fd6fa8a33821778c3d1eca1667a509a248df67d53e2dde",
+      "finishedAt": "2026-11-27T07:40:08.381Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-B",
+      "status": "PASS",
+      "reason": "Three concurrent identical create intents resolved to one durable Offer with one Created history entry and one outbox message (deterministic replay); the shared-workspace mounted regression also created exactly one draft on rapid double submit (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-B.json",
+      "evidenceSha256": "cc597807f1c6d11f8aedb7822f2be8970657797248ffaf80868486b24f8f3e62",
+      "finishedAt": "2026-11-27T07:40:09.337Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-P",
+      "status": "PASS",
+      "reason": "Two eligible locations each received a real stock position with on-hand/available 7 and 4 and reserved 0, matching the owner GET and independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-P.json",
+      "evidenceSha256": "987a11441727b9feb2cc13ac97e505af2d363fe7b8d7a3ae2a3dfb1cdeeee142",
+      "finishedAt": "2026-11-27T07:40:10.425Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-N",
+      "status": "PASS",
+      "reason": "A direct API provisioning attempt at a foreign/ineligible location (5b88a2a5-8c9f-4ab0-8ceb-e523ade88cae) was denied with typed inventory.location.not_found and no stock position was created for the offer.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-N.json",
+      "evidenceSha256": "8dfa88baeda1116ae86f125e0990ff0b4146132c2b3f1bf2e7d5ea5e2a855513",
+      "finishedAt": "2026-11-27T07:40:11.373Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-B",
+      "status": "PASS",
+      "reason": "The first position write persisted; the second failed with a typed revision conflict leaving its own state unchanged and no duplicate position; retrying only the failed remainder persisted it, keeping both successes and their recorded reasons.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-B.json",
+      "evidenceSha256": "fcd1f5ada99187779dd2533008c5f1a8aeceb2597a756f361470f6ed7a8e040e",
+      "finishedAt": "2026-11-27T07:40:12.536Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-P",
+      "status": "PASS",
+      "reason": "Create then commercial edit reread all requested fields exactly from the owner GET and SQL (P1C-86b6131e-d296-4d51-9ef5-1d20d9988c41-EDIT, Custom/9, 3/7); the real shared-workspace mounted regression confirmed a committed create clears scoped recovery before navigation and create-page re-entry never restores the old draft (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-04-P.json",
+      "evidenceSha256": "f84287c1c0b05fee38a535807851c162067499982c0e2cbc5dcea90ef909b06f",
+      "finishedAt": "2026-11-27T07:40:13.540Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-N",
+      "status": "PASS",
+      "reason": "After a simulated lost create response, re-sending the exact intent deterministically recovered the same committed Offer; a changed value under the same request id was rejected with offer.create.intent_conflict and the durable state stayed intact; the committed response seller matched the requested seller; the shared-workspace mounted regression kept the uncertain-response draft/recovery paths honest (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-04-N.json",
+      "evidenceSha256": "7153c565b5efd0c319cf83adc9f31124f882ed16b354cc59289b4f3577893787",
+      "finishedAt": "2026-11-27T07:40:14.470Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-04-B.json",
+      "evidenceSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-P",
+      "status": "PASS",
+      "reason": "Two sessions shared one offer revision; the first write persisted and the stale second write was denied with a typed conflict while the first value remained.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-P.json",
+      "evidenceSha256": "7c89434ca96713dbc2fc69c31d720d4ba87db6b4d2ca3b152b95582982e747ae",
+      "finishedAt": "2026-11-27T07:40:15.443Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-N",
+      "status": "PASS",
+      "reason": "A stale price write and stale stock write were both denied with typed conflicts; the first price and physical count remained, and no extra price fact was recorded.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-N.json",
+      "evidenceSha256": "86174880c699d7dc48078911a225882839c9a54e8800646ff8fca4d7e7990f63",
+      "finishedAt": "2026-11-27T07:40:16.676Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-B",
+      "status": "PASS",
+      "reason": "Two concurrent same-revision stock writes and two concurrent same-revision price writes each produced exactly one winner; persisted values equal the winners and on-hand (4) >= reserved (0).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-B.json",
+      "evidenceSha256": "659f2927556b9a0d931061649e7694d03557d5af53ceab476cfce4e796c49056",
+      "finishedAt": "2026-11-27T07:40:17.801Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-P",
+      "status": "PASS",
+      "reason": "Authorized history returned the real recorded create, inventory, price and commercial changes with scope, timestamps, actor and old/new values matching independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-P.json",
+      "evidenceSha256": "15841ea5163be48728686bb84f7ed6e3ad1d127748c221f43297279cfe7d35a4",
+      "finishedAt": "2026-11-27T07:40:18.846Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-N",
+      "status": "PASS",
+      "reason": "A different current DEV seller was denied both detail and history for the owned offer with typed not-found and no history disclosure.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-N.json",
+      "evidenceSha256": "079701fa46771f44f28dbb51e5d5da503274781f16676c7f5c63b16f2c0561c6",
+      "finishedAt": "2026-11-27T07:40:19.763Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-B",
+      "status": "PASS",
+      "reason": "A newly persisted offer exposed exactly one honest create event with the recorded actor; a page beyond the set was empty while total count and page metadata stayed stable.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-B.json",
+      "evidenceSha256": "b5c0767d4a530d69ca1570318f274abbd700bcccdfacb83352fd4829b07c9fe8",
+      "finishedAt": "2026-11-27T07:40:20.474Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-P",
+      "status": "PASS",
+      "reason": "Integer and fractional Catalog variants accepted their exact aligned limits and stock: 1/5 and 3, 0.25/1.75 and 1.5, with congruent independent GET and SQL reads.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-P.json",
+      "evidenceSha256": "0c61d592043818a34dc813dbc7bf76b9c19540e52b9dbf6726cc2dd8689956cc",
+      "finishedAt": "2026-11-27T07:40:22.236Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-N",
+      "status": "PASS",
+      "reason": "Wrong precision on integer and fractional variants, min>max, and an out-of-range custom return window were rejected with typed errors while persisted limits and policy stayed unchanged.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-N.json",
+      "evidenceSha256": "f3d792abbef4e6e22f612f8a51d2da613668c560fa090eecb5c657ea48631967",
+      "finishedAt": "2026-11-27T07:40:23.843Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-B",
+      "status": "PASS",
+      "reason": "Clearing limits produced true nulls while retaining the Custom policy; return-window boundaries 1 and 30 persisted exactly and the below-boundary value was rejected without changing state.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-B.json",
+      "evidenceSha256": "e73a1823d006d1740d668d0a6c2d0174461eddcffa9965d1a6e0766d76881313",
+      "finishedAt": "2026-11-27T07:40:25.018Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-08-P",
+      "status": "PASS",
+      "reason": "Base price 123456 IRR and authorized Seller fulfillment with a real active shipping type both persisted and reread exactly from the owning Pricing/Offer stores.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-08-P.json",
+      "evidenceSha256": "2fb5f976726f36ad6483f5a7e7534a2ba467af8ab7e3e8498ade87c0e1a88989",
+      "finishedAt": "2026-11-27T07:40:26.347Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-08-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-08-N",
+      "status": "FAIL",
+      "reason": "AssertionError [ERR_ASSERTION]: Only the initial explicit price fact may exist\n\n2 !== 1\n\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-pricing-fulfillment.cjs:238:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runCase (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-support.cjs:166:20)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-08-N.json",
+      "evidenceSha256": "fec82900ebcd5ed387caa91f5cd4a017339742762f71db6bdb7f96710f6546b9",
+      "finishedAt": "2026-11-27T07:40:27.473Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "FAIL"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-08-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-08-B",
+      "status": "PASS",
+      "reason": "Policy-approved zero price persisted, negative price was denied without overwrite, and shipping assignment cleared to true null while an orphan shipping type was rejected by owner policy.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-08-B.json",
+      "evidenceSha256": "548bf2310017161fc06fdde8f972a7b36464d511e06993fcab1dbeab8e7a7d21",
+      "finishedAt": "2026-11-27T07:40:28.882Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-08-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-09-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-09-P.json",
+      "evidenceSha256": "0450b582bffc5efe48dd7be4fd43bfcec1a7eee223f64fd08a687813e4755175",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-09-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-09-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-09-N.json",
+      "evidenceSha256": "f7fb306d4fc6ec18b22cb52ff6b70a7a8f22311563ad0adab9240678e44254b2",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-09-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-09-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-09-B.json",
+      "evidenceSha256": "7cb96cc8361120b402aa942726009d34dcba9b33a3543d7337cb68d4a0b44c9d",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-09-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-10-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-P.json",
+      "evidenceSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-10-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-N.json",
+      "evidenceSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-10-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-B.json",
+      "evidenceSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-P.json",
+      "evidenceSha256": "9efa9d7bba42c4a52fab8a2633578442d37e683d2880501b321c9b8fccd3e328",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-N.json",
+      "evidenceSha256": "7193fb332ec86494911680b41f1f5a598ff8aa4de070cfd3173e0a6c2229da57",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-B.json",
+      "evidenceSha256": "c338bb47ac87a70d250e2894ec45f6e4a6b1696336e778bcaeb399c37a58ce81",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-12-P.json",
+      "evidenceSha256": "f23a315f3e3d18a2b11314294fe66f0a2dbb120cfee0aec20940ee782f30502d",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-12-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-inventory-feedback-result.json",
+      "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": null,
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-12-B.json",
+      "evidenceSha256": "73fe40098d3813067f507a54b00afd518b2f3086f0e728286751b66d8a831a17",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-12-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-13-P.json",
+      "evidenceSha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-13-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-inventory-feedback-result.json",
+      "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": null,
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-13-B.json",
+      "evidenceSha256": "8c2a566f9de94fb6b821f2721bc9b97488226e3d14ebe5c22d095be9a098c601",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-13-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-14-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-P.json",
+      "evidenceSha256": "7e708d646fd217a130be1a499c90de54cd26fb4c79639b64cfa42125285cbb95",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-14-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-N.json",
+      "evidenceSha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-14-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-B.json",
+      "evidenceSha256": "cb4f6bbc45f4d8423287126d830565f868b8ff8f85f4b87251a27d9f90cd64d9",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-01.json",
+      "evidenceSha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-01",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-02.json",
+      "evidenceSha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-02",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-03",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-03.json",
+      "evidenceSha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-03",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-04",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-04.json",
+      "evidenceSha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-04",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-05",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-05.json",
+      "evidenceSha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-05",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-06",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-06.json",
+      "evidenceSha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-06",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-07",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-07.json",
+      "evidenceSha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-07",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-08",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-08.json",
+      "evidenceSha256": "f005e8528ab05c8f69e0295855e5a2696dc763296488d21415b023f0799de104",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-08",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-09",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-09.json",
+      "evidenceSha256": "dcb412565d4ada605bc6beca900d1926093805d116581c09723c64ce9d787dad",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-09",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-10",
+      "status": "NOT_RUN",
+      "reason": "Error: OWN-10 geometry, seven-tab, DB registry and third-locale shell observed; the Marketplace-only clause 'platform physical read-only, allocation editable' and the in-app locale switch with draft preservation cannot be observed on the authorized SingleStore DEV Host (admin capability has canEditPhysicalInventory=true, canEditOfferedQuantity=false). No cross-edition switch or invented control was used.\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:779:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:95:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-10.json",
+      "evidenceSha256": "11050437ecf6b4bb3d009f54e90dcbaeb28f7dbdbd60b8a245e46a3d3c6e8471",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "NOT_RUN"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-10",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-ORDER",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-ORDER.json",
+      "evidenceSha256": "1ff173bebc745bc6c7a343474e42caeebc7e041ad0cca66ac75a85c0186ecdb3",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-ORDER",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-HOLD",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-HOLD.json",
+      "evidenceSha256": "c05d50d654fbd5e0456a27752a7a5d7736d91e79ef40f16f64f84736180827fb",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-HOLD",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-ALLOCATION",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-ALLOCATION.json",
+      "evidenceSha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-ALLOCATION",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-PARTIAL",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-PARTIAL.json",
+      "evidenceSha256": "e9171d947c6ed674d34256994357cd5ac371fcdd0dba26c36ac5db652f68fb62",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-PARTIAL",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-RECOVERY",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-RECOVERY.json",
+      "evidenceSha256": "f2471f93fb5dc7970619bb7590f4c14aed9c7e86186ae7b07bdc975f80d12bea",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-RECOVERY",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-HTTP",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-HTTP.json",
+      "evidenceSha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-HTTP",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "F-BENTRY-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-01.json",
+      "evidenceSha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "F-BENTRY-01",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "F-BENTRY-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-02.json",
+      "evidenceSha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "F-BENTRY-02",
+        "hasObservations": true
+      }
+    }
+  ]
+}

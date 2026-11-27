@@ -1,0 +1,17 @@
+{
+  "ok": false,
+  "r9Remaining": 1,
+  "roles": [],
+  "assignments": [],
+  "ceilingEnabled": 0,
+  "baselines": [
+    {
+      "offerId": "457e375f-ceec-4b66-b81e-3829c4e15893",
+      "ok": true
+    },
+    {
+      "offerId": "01a0ba10-5a31-7000-b733-4cd74ef3763a",
+      "ok": true
+    }
+  ]
+}

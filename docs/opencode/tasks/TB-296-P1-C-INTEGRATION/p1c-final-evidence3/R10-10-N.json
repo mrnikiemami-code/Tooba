@@ -1,0 +1,69 @@
+{
+  "id": "R10-10-N",
+  "base": "295d8241d277f4320f90ee9e5e75e907dfa5905f",
+  "status": "PASS",
+  "candidate": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "guardChanges": "",
+  "before": {
+    "cases": [
+      {
+        "type": "test:fail",
+        "name": "FE-SIZE: oversized frontend files are shrink-only against baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-source-size.guard.test.ts",
+        "message": "OVERSIZED_GROWTH src/frontend/app/admin/admin-api.ts: 1399 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-error-map.ts: 1714 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-order-items-shipping-panel.tsx: 1210 > baseline 884\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery-section.tsx: 1854 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts: 4276 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-return-workspace.tsx: 2303 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-shipment-plan-270r2.mount.test.ts: 1010 > 800\nOVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215\nOVERSIZED_GROWTH src/frontend/app/admin/host-client.ts: 1318 > baseline 1254\nOVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440\nOVERSIZED_GROWTH src/frontend/app/admin/product-workspace-screen.tsx: 1650 > baseline 1570\nNEW_OVERSIZED_FILE src/frontend/app/fulfillment/fulfillment-api.ts: 876 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-api.ts: 1600 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-request-modal.tsx: 890 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-api.ts: 1064 > 800\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-group-cards.tsx: 870 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-shipping.tsx: 1436 > baseline 945\nNEW_OVERSIZED_FILE src/frontend/app/stories/management/StoryManagementScreen.tsx: 3541 > 800\nNEW_OVERSIZED_FILE src/frontend/app/stories/story-api.ts: 1334 > 800\nOVERSIZED_GROWTH src/frontend/design-system/app-data-grid/AppDataGrid.tsx: 1111 > baseline 1086\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/messages/authoring-messages.ts: 1030 > 800\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/ui/authoring-screen.tsx: 1211 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.mount.test.ts: 961 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.tsx: 1024 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx: 1170 > 800\nOVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907\n\n27 !== 0\n",
+        "code": "ERR_ASSERTION"
+      },
+      {
+        "type": "test:pass",
+        "name": "FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-import-boundary.guard.test.ts",
+        "message": "",
+        "code": null
+      }
+    ],
+    "exit": 1,
+    "stderr": ""
+  },
+  "injected": {
+    "cases": [
+      {
+        "type": "test:fail",
+        "name": "FE-SIZE: oversized frontend files are shrink-only against baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-source-size.guard.test.ts",
+        "message": "OVERSIZED_GROWTH src/frontend/app/admin/admin-api.ts: 1399 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-error-map.ts: 1714 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-order-items-shipping-panel.tsx: 1210 > baseline 884\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery-section.tsx: 1854 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts: 4276 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-return-workspace.tsx: 2303 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-shipment-plan-270r2.mount.test.ts: 1010 > 800\nOVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215\nOVERSIZED_GROWTH src/frontend/app/admin/host-client.ts: 1318 > baseline 1254\nOVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440\nOVERSIZED_GROWTH src/frontend/app/admin/product-workspace-screen.tsx: 1650 > baseline 1570\nNEW_OVERSIZED_FILE src/frontend/app/fulfillment/fulfillment-api.ts: 876 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-api.ts: 1600 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-request-modal.tsx: 890 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-api.ts: 1064 > 800\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-group-cards.tsx: 870 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-shipping.tsx: 1436 > baseline 945\nNEW_OVERSIZED_FILE src/frontend/app/stories/management/StoryManagementScreen.tsx: 3541 > 800\nNEW_OVERSIZED_FILE src/frontend/app/stories/story-api.ts: 1334 > 800\nOVERSIZED_GROWTH src/frontend/design-system/app-data-grid/AppDataGrid.tsx: 1111 > baseline 1086\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/messages/authoring-messages.ts: 1030 > 800\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/ui/authoring-screen.tsx: 1211 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.mount.test.ts: 961 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.tsx: 1024 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx: 1170 > 800\nNEW_OVERSIZED_FILE src/frontend/lib/p1c-forbidden-import-negative-control.ts: 804 > 800\nOVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907\n\n28 !== 0\n",
+        "code": "ERR_ASSERTION"
+      },
+      {
+        "type": "test:fail",
+        "name": "FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-import-boundary.guard.test.ts",
+        "message": "New shared→feature imports:\nsrc/frontend/lib/p1c-forbidden-import-negative-control.ts -> ../app/admin/p1c-forbidden\n\n1 !== 0\n",
+        "code": "ERR_ASSERTION"
+      }
+    ],
+    "exit": 1,
+    "stderr": ""
+  },
+  "after": {
+    "cases": [
+      {
+        "type": "test:fail",
+        "name": "FE-SIZE: oversized frontend files are shrink-only against baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-source-size.guard.test.ts",
+        "message": "OVERSIZED_GROWTH src/frontend/app/admin/admin-api.ts: 1399 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-error-map.ts: 1714 > baseline 1002\nOVERSIZED_GROWTH src/frontend/app/admin/admin-order-items-shipping-panel.tsx: 1210 > baseline 884\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery-section.tsx: 1854 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-order-operational-delivery.mount.test.ts: 4276 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-return-workspace.tsx: 2303 > 800\nNEW_OVERSIZED_FILE src/frontend/app/admin/admin-shipment-plan-270r2.mount.test.ts: 1010 > 800\nOVERSIZED_GROWTH src/frontend/app/admin/category-admin-screen.tsx: 2230 > baseline 2215\nOVERSIZED_GROWTH src/frontend/app/admin/host-client.ts: 1318 > baseline 1254\nOVERSIZED_GROWTH src/frontend/app/admin/landing-pages/admin-landing-page-composer.tsx: 1442 > baseline 1440\nOVERSIZED_GROWTH src/frontend/app/admin/product-workspace-screen.tsx: 1650 > baseline 1570\nNEW_OVERSIZED_FILE src/frontend/app/fulfillment/fulfillment-api.ts: 876 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-api.ts: 1600 > 800\nNEW_OVERSIZED_FILE src/frontend/app/returns/return-request-modal.tsx: 890 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-landing-blocks.tsx: 1033 > baseline 1026\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-api.ts: 1064 > 800\nNEW_OVERSIZED_FILE src/frontend/app/storefront/storefront-shipping-group-cards.tsx: 870 > 800\nOVERSIZED_GROWTH src/frontend/app/storefront/storefront-shipping.tsx: 1436 > baseline 945\nNEW_OVERSIZED_FILE src/frontend/app/stories/management/StoryManagementScreen.tsx: 3541 > 800\nNEW_OVERSIZED_FILE src/frontend/app/stories/story-api.ts: 1334 > 800\nOVERSIZED_GROWTH src/frontend/design-system/app-data-grid/AppDataGrid.tsx: 1111 > baseline 1086\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/messages/authoring-messages.ts: 1030 > 800\nNEW_OVERSIZED_FILE src/frontend/features/admin-shipping-authoring/ui/authoring-screen.tsx: 1211 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.mount.test.ts: 961 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-carrier-execution/order-group-carrier-execution.tsx: 1024 > 800\nNEW_OVERSIZED_FILE src/frontend/features/order-operational-groups/ui/post-dispatch-exception-dialog.tsx: 1170 > 800\nOVERSIZED_GROWTH src/frontend/lib/storefront-composition/shared-composition-renderer.tsx: 918 > baseline 907\n\n27 !== 0\n",
+        "code": "ERR_ASSERTION"
+      },
+      {
+        "type": "test:pass",
+        "name": "FE-BOUNDARY-001: no new shared→feature reverse imports beyond baseline",
+        "file": "C:\\Users\\User\\AppData\\Local\\Temp\\tooba-p1c-guards-gkwgxN\\negative\\src\\frontend\\lib\\architecture\\frontend-import-boundary.guard.test.ts",
+        "message": "",
+        "code": null
+      }
+    ],
+    "exit": 1,
+    "stderr": ""
+  },
+  "reason": "Executed original guards with exact assertion identities and isolated cleanup",
+  "tempRemoved": true
+}

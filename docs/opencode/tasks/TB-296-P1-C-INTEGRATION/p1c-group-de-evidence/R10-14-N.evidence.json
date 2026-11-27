@@ -1,0 +1,19 @@
+{
+  "testId": "R10-14-N",
+  "scenarioSha256": "d26970b790978a0514a3eb59cccdec0c0f37af1528463f4a82812c71bcfbcde7",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "assertions": [
+    {
+      "assertionId": "acceptance_self_test",
+      "pass": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "assertionId": "architect_self_test",
+      "pass": true,
+      "expected": true,
+      "observed": true
+    }
+  ]
+}

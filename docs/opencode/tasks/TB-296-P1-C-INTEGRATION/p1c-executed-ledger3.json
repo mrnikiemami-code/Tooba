@@ -1,0 +1,330 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP and independent PostgreSQL",
+    "startedAt": "2026-11-27T06:44:59.333Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-01-N.json",
+    "evidenceSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+    "finishedAt": "2026-11-27T06:45:00.638Z"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "PASS",
+    "reason": "All executable assertions observed on actual HTTP and independent PostgreSQL",
+    "startedAt": "2026-11-27T06:45:00.640Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-04-B.json",
+    "evidenceSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+    "finishedAt": "2026-11-27T06:45:02.539Z"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "PASS",
+    "reason": "Executed original guards with exact assertion identities and isolated cleanup",
+    "startedAt": "2026-11-27T06:45:02.543Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-P.json",
+    "evidenceSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+    "finishedAt": "2026-11-27T06:45:05.996Z"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "PASS",
+    "reason": "Executed original guards with exact assertion identities and isolated cleanup",
+    "startedAt": "2026-11-27T06:45:05.996Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-N.json",
+    "evidenceSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+    "finishedAt": "2026-11-27T06:45:08.039Z"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "PASS",
+    "reason": "Executed original guards with exact assertion identities and isolated cleanup",
+    "startedAt": "2026-11-27T06:45:08.040Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-B.json",
+    "evidenceSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+    "finishedAt": "2026-11-27T06:45:08.177Z"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "PASS",
+    "reason": "REUSED VERIFIED CONNECTED EVIDENCE (b73a36b): Inline reason validation, actual SQL-confirmed correction, error modal, unchanged state on abort and successful exact retry.",
+    "startedAt": "2026-11-27T06:45:08.179Z",
+    "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+    "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+    "finishedAt": "2026-11-27T06:45:08.181Z"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "PASS",
+    "reason": "REUSED VERIFIED CONNECTED EVIDENCE (b73a36b): Controlled network abort, unchanged independent GET/SQL, reload dialog and exactly one identical retry intent; one additional physical fact only.",
+    "startedAt": "2026-11-27T06:45:08.183Z",
+    "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+    "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+    "finishedAt": "2026-11-27T06:45:08.183Z"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-01",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-02",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-03",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-04",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-05",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-06",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-07",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-08",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-09",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "NOT_RUN",
+    "reason": "MISSING_EXECUTABLE_ORACLE"
+  }
+]

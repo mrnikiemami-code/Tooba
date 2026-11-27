@@ -1,0 +1,37 @@
+{
+  "edition": "Marketplace",
+  "runId": "own-01-mwyp0urs",
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "httpBase": "http://127.0.0.1:5088",
+  "retiredLocationId": "a22ef859-273e-4141-9857-d344018853d8",
+  "offers": [
+    {
+      "key": "A",
+      "offerId": "d0407077-af17-ee25-c462-e9588c04356a",
+      "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "variantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+      "positions": [
+        {
+          "ownerKind": "Seller",
+          "sellerOwner": "01a030d1-40cb-7000-8abe-6d31739956c5",
+          "stock": 100,
+          "eligible": true
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "offerId": "b96a7705-b6c1-0626-e210-a7b6121936a5",
+      "sellerId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+      "variantId": "004dd892-61cc-486b-ba2f-1f245039835a",
+      "positions": [
+        {
+          "ownerKind": "Seller",
+          "sellerOwner": "01a030d1-40db-7000-b90c-a0705133f0eb",
+          "stock": 100,
+          "eligible": true
+        }
+      ]
+    }
+  ]
+}

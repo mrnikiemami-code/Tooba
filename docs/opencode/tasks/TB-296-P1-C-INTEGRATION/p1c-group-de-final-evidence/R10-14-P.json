@@ -1,0 +1,354 @@
+{
+  "id": "R10-14-P",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/allowed-channels",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        "Marketplace"
+      ]
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40db-7000-b90c-a0705133f0eb&catalogVariantId=01a0967d-a2eb-7000-9a12-779c15789bac&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": null
+    },
+    {
+      "route": "/v1/admin/offers",
+      "method": "POST",
+      "payload": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "channel": "Marketplace",
+        "sellerSku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+        "status": "Draft",
+        "requestId": "P1C-0ba509d8-2884-4f6e-82ec-58a79b33a008"
+      },
+      "status": 201,
+      "body": {
+        "offerId": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:48:18.4655366+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:48:18.4655366+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:48:18.4655366+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/48367b32-f0a8-061b-d64e-dacb6efe4595",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:48:18.465536+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:48:18.4655360+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:48:18.4655360+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    }
+  ],
+  "sql": [
+    {
+      "label": "before-9b33a008",
+      "state": {
+        "offers": [],
+        "prices": [],
+        "history": [],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    },
+    {
+      "label": "gate-fixture",
+      "state": {
+        "offers": [
+          {
+            "status": "Draft",
+            "channel": "Marketplace",
+            "offer_id": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+            "created_at": "2026-11-27T07:48:18.465536+00:00",
+            "seller_sku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+            "updated_at": "2026-11-27T07:48:18.465536+00:00",
+            "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "return_policy_choice": "Default",
+            "maximum_order_quantity": null,
+            "minimum_order_quantity": null,
+            "custom_return_window_days": null,
+            "fulfillment_responsibility": null,
+            "creation_intent_fingerprint": "d1940a76b0430aab3c9109245b00ddd8f392c334bec9f5de4253c225848459b5",
+            "fulfillment_shipping_type_id": null
+          }
+        ],
+        "prices": [],
+        "history": [
+          {
+            "summary": "Created",
+            "offer_id": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+            "new_value": "status=Draft;channel=Marketplace",
+            "old_value": null,
+            "change_kind": "Created",
+            "occurred_at": "2026-11-27T07:48:18.465536+00:00",
+            "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+            "offer_history_entry_id": "01a21bf9-ffa1-7000-9a85-81437302ed28"
+          }
+        ],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [
+          "{\"offerId\":\"48367b32-f0a8-061b-d64e-dacb6efe4595\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+        ],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    }
+  ],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "fixture": {
+    "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "variant": "01a0967d-a2eb-7000-9a12-779c15789bac",
+    "channel": "Marketplace",
+    "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "offerId": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+    "sku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+    "requestId": "P1C-0ba509d8-2884-4f6e-82ec-58a79b33a008",
+    "contexts": [
+      {
+        "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "actorLabel": "اپراتور آرمان",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerLabel": "فروشگاه آرمان",
+        "contextKind": "seller-owner"
+      },
+      {
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "actorLabel": "اپراتور دیجی‌استایل",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerLabel": "دیجی‌استایل نمونه",
+        "contextKind": "seller-owner-alt"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "label": "focused-offer-guards",
+      "command": "dotnet test src/backend/Modules/Offer/Tooba.Offer.Tests/Tooba.Offer.Tests.csproj --no-restore --nologo --filter FullyQualifiedName~OfferArchitectureGuardTests|FullyQualifiedName~OfferEndpointValidatorCoverageGuardTests --logger console;verbosity=minimal",
+      "exit": 0,
+      "stdout": "  Tooba.ModuleContracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\BuildingBlocks\\Tooba.ModuleContracts\\bin\\Debug\\net8.0\\Tooba.ModuleContracts.dll\r\n  Tooba.BuildingBlocks -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\BuildingBlocks\\Tooba.BuildingBlocks\\bin\\Debug\\net8.0\\Tooba.BuildingBlocks.dll\r\n  Tooba.Offer.Domain -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Domain\\bin\\Debug\\net8.0\\Tooba.Offer.Domain.dll\r\n  Tooba.Fulfillment.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Fulfillment\\Tooba.Fulfillment.Contracts\\bin\\Debug\\net8.0\\Tooba.Fulfillment.Contracts.dll\r\n  Tooba.Catalog.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Catalog\\Tooba.Catalog.Contracts\\bin\\Debug\\net8.0\\Tooba.Catalog.Contracts.dll\r\n  Tooba.Persistence -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\BuildingBlocks\\Tooba.Persistence\\bin\\Debug\\net8.0\\Tooba.Persistence.dll\r\n  Tooba.Inventory.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Inventory\\Tooba.Inventory.Contracts\\bin\\Debug\\net8.0\\Tooba.Inventory.Contracts.dll\r\n  Tooba.StoreContext.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\StoreContext\\Tooba.StoreContext.Contracts\\bin\\Debug\\net8.0\\Tooba.StoreContext.Contracts.dll\r\n  Tooba.Party.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Party\\Tooba.Party.Contracts\\bin\\Debug\\net8.0\\Tooba.Party.Contracts.dll\r\n  Tooba.Offer.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Contracts\\bin\\Debug\\net8.0\\Tooba.Offer.Contracts.dll\r\n  Tooba.Pricing.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Pricing\\Tooba.Pricing.Contracts\\bin\\Debug\\net8.0\\Tooba.Pricing.Contracts.dll\r\n  Tooba.Cart.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Cart\\Tooba.Cart.Contracts\\bin\\Debug\\net8.0\\Tooba.Cart.Contracts.dll\r\n  Tooba.Order.Contracts -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Order\\Tooba.Order.Contracts\\bin\\Debug\\net8.0\\Tooba.Order.Contracts.dll\r\n  Tooba.Offer.Application -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Application\\bin\\Debug\\net8.0\\Tooba.Offer.Application.dll\r\n  Tooba.Offer.Infrastructure -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Infrastructure\\bin\\Debug\\net8.0\\Tooba.Offer.Infrastructure.dll\r\n  Tooba.Offer.Endpoints -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Endpoints\\bin\\Debug\\net8.0\\Tooba.Offer.Endpoints.dll\r\n  Tooba.Offer.Tests -> D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Tests\\bin\\Debug\\net8.0\\Tooba.Offer.Tests.dll\r\nTest run for D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\backend\\Modules\\Offer\\Tooba.Offer.Tests\\bin\\Debug\\net8.0\\Tooba.Offer.Tests.dll (.NETCoreApp,Version=v8.0)\r\nA total of 1 test files matched the specified pattern.\r\n\r\nPassed!  - Failed:     0, Passed:    34, Skipped:     0, Total:    34, Duration: 696 ms - Tooba.Offer.Tests.dll (net8.0)\r\n",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "acceptanceGate": {
+    "command": "D:\\Program Files\\nodejs\\node.exe D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\test-infra\\acceptance-gate.cjs D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.matrix.json D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.plan.json D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.run.json D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence",
+    "exit": 0,
+    "stdout": "{\n  \"ok\": true,\n  \"errors\": []\n}\n",
+    "stderr": "",
+    "error": null
+  },
+  "identity": {
+    "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+    "buildId": "7tcRkdNm2wPHBfpPYVSvT",
+    "hostPath": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\.tmp-p1c-final-host\\Tooba.Host.dll",
+    "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+    "database": "tooba_alpha|local|local",
+    "provider": {
+      "edition": "SingleStore",
+      "deploymentId": "dev-singlestore",
+      "tenantId": "store-alpha",
+      "connectionReference": "tenant-alpha",
+      "resolvedHost": "127.0.0.1",
+      "themeReference": "theme-alpha",
+      "defaultMarketReference": "IR",
+      "traceId": "f480020c4728f325f8c094b2725bf463"
+    }
+  },
+  "gateFiles": {
+    "matrix": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.matrix.json",
+    "plan": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.plan.json",
+    "run": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.run.json",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.evidence.json"
+  },
+  "reason": "Real isolated fixture, provider/build/DB identities, evidence hash and focused Offer guards were accepted by the actual acceptance gate bound to the served Next build and Host DLL.",
+  "beforeCleanup": {
+    "offers": [
+      {
+        "status": "Draft",
+        "channel": "Marketplace",
+        "offer_id": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+        "created_at": "2026-11-27T07:48:18.465536+00:00",
+        "seller_sku": "P1C-7f7609eb-404d-4d59-a873-bbf610588524",
+        "updated_at": "2026-11-27T07:48:18.465536+00:00",
+        "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "return_policy_choice": "Default",
+        "maximum_order_quantity": null,
+        "minimum_order_quantity": null,
+        "custom_return_window_days": null,
+        "fulfillment_responsibility": null,
+        "creation_intent_fingerprint": "d1940a76b0430aab3c9109245b00ddd8f392c334bec9f5de4253c225848459b5",
+        "fulfillment_shipping_type_id": null
+      }
+    ],
+    "prices": [],
+    "history": [
+      {
+        "summary": "Created",
+        "offer_id": "48367b32-f0a8-061b-d64e-dacb6efe4595",
+        "new_value": "status=Draft;channel=Marketplace",
+        "old_value": null,
+        "change_kind": "Created",
+        "occurred_at": "2026-11-27T07:48:18.465536+00:00",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "offer_history_entry_id": "01a21bf9-ffa1-7000-9a85-81437302ed28"
+      }
+    ],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [
+      "{\"offerId\":\"48367b32-f0a8-061b-d64e-dacb6efe4595\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+    ],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  },
+  "afterCleanup": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  }
+}

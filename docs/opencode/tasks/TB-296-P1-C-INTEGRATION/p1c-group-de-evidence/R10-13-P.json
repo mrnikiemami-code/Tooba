@@ -1,0 +1,896 @@
+{
+  "id": "R10-13-P",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/allowed-channels",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        "Marketplace"
+      ]
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40db-7000-b90c-a0705133f0eb&catalogVariantId=01a0967d-a2eb-7000-9a12-779c15789bac&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": null
+    },
+    {
+      "route": "/v1/admin/offers",
+      "method": "POST",
+      "payload": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "channel": "Marketplace",
+        "sellerSku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+        "status": "Draft",
+        "requestId": "P1C-d3772907-db54-454c-86b8-338b7a29fa4a"
+      },
+      "status": 201,
+      "body": {
+        "offerId": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:45:11.7906042+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:45:11.7906042+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:45:11.7906042+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/orders/query",
+      "method": "POST",
+      "payload": {
+        "page": 1,
+        "pageSize": 10,
+        "filters": [],
+        "sorts": []
+      },
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "checkoutId": "01a1f0e8-2bef-7000-b82d-ec05998fcdfc",
+            "reference": "TB-20261118230509-01-fb053e / TB-20261118230509-02-fa14f8",
+            "submittedAt": "2026-11-18T23:05:09.871251+00:00",
+            "customerDisplayName": "آزمون چندفروشنده",
+            "sellerCount": 2,
+            "sellerDisplayNames": "2 فروشنده",
+            "lineCount": 4,
+            "payableAmount": 21540748.6,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "ReturnRequested",
+            "supplyStatus": "Fulfilled",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1eef2-1fae-7000-b46c-f1d80b3b288d",
+            "reference": "TB-20261118135647-01-e4ac97",
+            "submittedAt": "2026-11-18T13:56:47.662864+00:00",
+            "customerDisplayName": "آزمون مرجوعی",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Cancelled",
+            "status": "Cancelled",
+            "supplyStatus": "NotApplicable",
+            "reservationLabel": "پایان‌یافته #1",
+            "reservationLabelEn": "Expired #1",
+            "reservationState": "expired",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": true,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1eeef-09e2-7000-8023-f5b439226c9d",
+            "reference": "TB-20261118135325-01-51532b",
+            "submittedAt": "2026-11-18T13:53:25.474895+00:00",
+            "customerDisplayName": "آزمون مرجوعی",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "RefundCompleted",
+            "supplyStatus": "Fulfilled",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 2,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1eee6-3025-7000-8f43-2e0661ba8b42",
+            "reference": "TB-20261118134345-01-3b7c78",
+            "submittedAt": "2026-11-18T13:43:45.445044+00:00",
+            "customerDisplayName": "آزمون مرجوعی",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Cancelled",
+            "status": "Cancelled",
+            "supplyStatus": "NotApplicable",
+            "reservationLabel": "پایان‌یافته #2",
+            "reservationLabelEn": "Expired #2",
+            "reservationState": "expired",
+            "reservationCycleNumber": 2,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": true
+          },
+          {
+            "checkoutId": "01a1e9c4-cbfe-7000-937c-f347423c7033",
+            "reference": "TB-20261117134911-01-12a264",
+            "submittedAt": "2026-11-17T13:49:11.03892+00:00",
+            "customerDisplayName": "TB266R1 گیرنده",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "RefundCompleted",
+            "supplyStatus": "Fulfilled",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1db2f-e36e-7000-b7d3-afb2fe86e81a",
+            "reference": "TB-20261114175151-01-7d5f59",
+            "submittedAt": "2026-11-14T17:51:51.150547+00:00",
+            "customerDisplayName": "TB266R1 گیرنده",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "RefundCompleted",
+            "supplyStatus": "Fulfilled",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1db20-ae31-7000-91d1-0b63649ac5c3",
+            "reference": "TB-20261114173514-01-73cd8a",
+            "submittedAt": "2026-11-14T17:35:14.48114+00:00",
+            "customerDisplayName": "TB266R1 گیرنده",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 2624545,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "RefundCompleted",
+            "supplyStatus": "Fulfilled",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 2,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1daaf-21bc-7000-b5d1-1dd42a194dcf",
+            "reference": "TB-20261114153112-01-6aa876",
+            "submittedAt": "2026-11-14T15:31:12.956614+00:00",
+            "customerDisplayName": "خریدار TB266",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 1767900,
+            "currency": "IRR",
+            "paymentState": "PendingPayment",
+            "status": "PendingPayment",
+            "supplyStatus": "AvailableForReacquire",
+            "reservationLabel": "پایان‌یافته #1",
+            "reservationLabelEn": "Expired #1",
+            "reservationState": "expired",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": true,
+            "reservationNeedsReacquire": true,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1daa2-519d-7000-bb9c-c4d0150a1971",
+            "reference": "TB-20261114151713-01-cfbc30",
+            "submittedAt": "2026-11-14T15:17:13.245228+00:00",
+            "customerDisplayName": "خریدار TB266",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 1767900,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "Paid",
+            "supplyStatus": "Reserved",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          },
+          {
+            "checkoutId": "01a1daa2-4a2d-7000-9086-c0e309939070",
+            "reference": "TB-20261114151711-01-b558d5",
+            "submittedAt": "2026-11-14T15:17:11.341791+00:00",
+            "customerDisplayName": "خریدار TB266",
+            "sellerCount": 1,
+            "sellerDisplayNames": "فروشگاه آرمان",
+            "lineCount": 1,
+            "payableAmount": 1767900,
+            "currency": "IRR",
+            "paymentState": "Paid",
+            "status": "Paid",
+            "supplyStatus": "Reserved",
+            "reservationLabel": "نهایی‌شده",
+            "reservationLabelEn": "Committed",
+            "reservationState": "committed",
+            "reservationCycleNumber": 1,
+            "reservationRetryPossible": false,
+            "reservationNeedsReacquire": false,
+            "reservationRetryLimitReached": false
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 11
+      }
+    },
+    {
+      "route": "/v1/admin/catalog/products?page=1&pageSize=10&locale=fa-IR",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "title": "سامسونگ هدفون سری 1",
+            "brandName": "سامسونگ",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "publishedVariantCount": 3,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-7c93-7000-a102-0160861d58cd",
+            "title": "نایک پیراهن مردانه سری 1",
+            "brandName": "نایک",
+            "primaryMediaAssetId": "01a05388-2dab-7000-adab-0449eae01b95",
+            "publishedVariantCount": 9,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-87f9-7000-a893-23eb5060ccee",
+            "title": "نایک شلوار مردانه سری 1",
+            "brandName": "نایک",
+            "primaryMediaAssetId": "01a05388-2dab-7000-adab-0449eae01b95",
+            "publishedVariantCount": 9,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05387-fbd0-7000-acd3-4382ce92c773",
+            "title": "گوشی هوشمند سری 1",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "publishedVariantCount": 9,
+            "unitCode": "kg",
+            "unitName": "کیلوگرم",
+            "quantityDecimalPlaces": 2,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05387-fdf5-7000-95a0-5d7cd42a8747",
+            "title": "اپل گوشی هوشمند مدل 2",
+            "brandName": "اپل",
+            "primaryMediaAssetId": "01a05387-fb8e-7000-9af9-106febeb15b7",
+            "publishedVariantCount": 9,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05387-ff3c-7000-9882-8fa39e84c1d2",
+            "title": "شیائومی گوشی هوشمند نسخه 3",
+            "brandName": "شیائومی",
+            "primaryMediaAssetId": "01a05387-fb96-7000-812d-1157c2bf09fa",
+            "publishedVariantCount": 9,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-00bd-7000-94a1-ab2e91983bc0",
+            "title": "هواوی گوشی هوشمند مجموعه 4",
+            "brandName": "هواوی",
+            "primaryMediaAssetId": "01a05387-fb9e-7000-9b19-552f94fe8dd6",
+            "publishedVariantCount": 9,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-026f-7000-8872-8ac9261352dd",
+            "title": "سامسونگ گوشی ساده سری 1",
+            "brandName": "سامسونگ",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "publishedVariantCount": 3,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-03e4-7000-9111-b0ce246fef3a",
+            "title": "اپل گوشی ساده مدل 2",
+            "brandName": "اپل",
+            "primaryMediaAssetId": "01a05387-fb8e-7000-9af9-106febeb15b7",
+            "publishedVariantCount": 3,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          },
+          {
+            "productId": "01a05388-0544-7000-b09f-c99bd6b0cc87",
+            "title": "شیائومی گوشی ساده نسخه 3",
+            "brandName": "شیائومی",
+            "primaryMediaAssetId": "01a05387-fb96-7000-812d-1157c2bf09fa",
+            "publishedVariantCount": 3,
+            "unitCode": "pcs",
+            "unitName": "عدد",
+            "quantityDecimalPlaces": 0,
+            "roundingMode": "Nearest"
+          }
+        ],
+        "totalCount": 40,
+        "page": 1,
+        "pageSize": 10,
+        "hasMore": true
+      }
+    },
+    {
+      "route": "/v1/admin/offers/query",
+      "method": "POST",
+      "payload": {
+        "page": 1,
+        "pageSize": 5,
+        "filters": [],
+        "sorts": []
+      },
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "offerId": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+            "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+            "productTitle": "زارا شلوار مردانه سری 6",
+            "sellerSku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 0,
+            "lastUpdatedAt": "2026-11-27T07:45:11.790604+00:00",
+            "sellerDisplayName": "دیجی‌استایل نمونه",
+            "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+            "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+            "brandName": "زارا",
+            "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "457e375f-ceec-4b66-b81e-3829c4e15893",
+            "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "productTitle": "سامسونگ هدفون سری 1",
+            "sellerSku": "VAR-01a053886ce870009cd266df593dd1ff",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 876543,
+            "currency": "IRR",
+            "availableUnits": 199,
+            "lastUpdatedAt": "2026-11-26T04:02:13.57542+00:00",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "variantCode": "DEMO-demo-prod-av-audio-headphones-1-2",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): آبی",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "01a0ba10-5a31-7000-b733-4cd74ef3763a",
+            "catalogVariantId": "024ed01b-2d73-4d55-963c-96c9addba00d",
+            "productId": "01a05389-f1f9-7000-83dd-1b13242a38c5",
+            "productTitle": "نوشابه و آبمیوه‌ مدل 2",
+            "sellerSku": "DEV-SEED-OOS",
+            "status": "Active",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 0,
+            "lastUpdatedAt": "2026-11-26T04:01:32.787683+00:00",
+            "sellerDisplayName": "DEV-SEED OOS Seller",
+            "variantCode": "ENR-demo-prod-supermarket-beverages-soft-drinks-2",
+            "primaryMediaAssetId": "01a05388-bd4f-7000-88fc-da5e248cc9a9",
+            "variantLabel": "رنگ: سیاه",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "1c1f65ca-4c10-4ef3-5835-2b1bfa46bfa9",
+            "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "productTitle": "سامسونگ هدفون سری 1",
+            "sellerSku": "R10-DEBUG-1795644381651",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 3,
+            "lastUpdatedAt": "2026-11-25T22:06:21.709798+00:00",
+            "sellerDisplayName": "دیجی‌استایل نمونه",
+            "variantCode": "DEMO-demo-prod-av-audio-headphones-1-2",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): آبی",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "364356a1-470c-6ae2-bd02-65742e20cf4b",
+            "catalogVariantId": "01a05388-6ce8-7000-935a-9adef2652668",
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "productTitle": "سامسونگ هدفون سری 1",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 0,
+            "lastUpdatedAt": "2026-11-24T02:34:22.720534+00:00",
+            "sellerDisplayName": "DEV-SEED OOS Seller",
+            "variantCode": "DEMO-demo-prod-av-audio-headphones-1-1",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): مشکی",
+            "unitQuantityDecimalPlaces": 0
+          }
+        ],
+        "page": 1,
+        "pageSize": 5,
+        "totalCount": 3226
+      }
+    },
+    {
+      "route": "/v1/admin/offers/query",
+      "method": "POST",
+      "payload": {
+        "page": 2,
+        "pageSize": 5,
+        "filters": [],
+        "sorts": []
+      },
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "offerId": "ba979a98-a3cb-4cd0-88af-1d12d5ebc461",
+            "catalogVariantId": "01a05388-889a-7000-988b-46aebd9f3d4a",
+            "productId": "01a05388-87f9-7000-a893-23eb5060ccee",
+            "productTitle": "نایک شلوار مردانه سری 1",
+            "sellerSku": "VAR-01a05388889a7000988b46aebd9f3d4a",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 9920897.88,
+            "currency": "IRR",
+            "availableUnits": 198,
+            "lastUpdatedAt": "2026-11-08T03:18:08.0608+00:00",
+            "sellerDisplayName": "فروشگاه نیلوا",
+            "variantCode": "DEMO-demo-prod-fashion-men-men-pants-1-6",
+            "primaryMediaAssetId": "01a05388-2dab-7000-adab-0449eae01b95",
+            "brandName": "نایک",
+            "variantLabel": "رنگ (clothing): سرمه‌ای · سایز (clothing): XL",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "6dec0970-25e5-4711-97a9-04b389e6fffb",
+            "catalogVariantId": "01a05388-7d6a-7000-a74e-41dd4951d87a",
+            "productId": "01a05388-7c93-7000-a102-0160861d58cd",
+            "productTitle": "نایک پیراهن مردانه سری 1",
+            "sellerSku": "VAR-01a053887d6a7000a74e41dd4951d87a",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 2263006,
+            "currency": "IRR",
+            "availableUnits": 198,
+            "lastUpdatedAt": "2026-11-08T03:18:08.02805+00:00",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "variantCode": "DEMO-demo-prod-fashion-men-men-shirts-1-6",
+            "primaryMediaAssetId": "01a05388-2dab-7000-adab-0449eae01b95",
+            "brandName": "نایک",
+            "variantLabel": "رنگ (clothing): مشکی · سایز (clothing): S",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "0442a1fa-1d95-4b24-b9d9-129fc19942d2",
+            "catalogVariantId": "01a05388-889a-7000-988b-46aebd9f3d4a",
+            "productId": "01a05388-87f9-7000-a893-23eb5060ccee",
+            "productTitle": "نایک شلوار مردانه سری 1",
+            "sellerSku": "VAR-01a05388889a7000988b46aebd9f3d4a",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 8702542,
+            "currency": "IRR",
+            "availableUnits": 199,
+            "lastUpdatedAt": "2026-11-08T03:18:08.007243+00:00",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "variantCode": "DEMO-demo-prod-fashion-men-men-pants-1-6",
+            "primaryMediaAssetId": "01a05388-2dab-7000-adab-0449eae01b95",
+            "brandName": "نایک",
+            "variantLabel": "رنگ (clothing): سرمه‌ای · سایز (clothing): XL",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "6fce25fb-3d8d-4375-8766-fe86753dd50f",
+            "catalogVariantId": "01a05387-ffd5-7000-a8fe-f7e1763993b0",
+            "productId": "01a05387-ff3c-7000-9882-8fa39e84c1d2",
+            "productTitle": "شیائومی گوشی هوشمند نسخه 3",
+            "sellerSku": "VAR-01a05387ffd57000a8fef7e1763993b0",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 4535448,
+            "currency": "IRR",
+            "availableUnits": 200,
+            "lastUpdatedAt": "2026-10-29T09:22:33.388782+00:00",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "variantCode": "DEMO-demo-prod-mobile-tablet-phones-smartphones-3-8",
+            "primaryMediaAssetId": "01a05387-fb96-7000-812d-1157c2bf09fa",
+            "brandName": "شیائومی",
+            "variantLabel": "رنگ (mobile): سفید · حافظه داخلی (mobile): ۵۱۲ گیگ",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "3bf70c9e-fe23-4380-ab62-87a62dc292d8",
+            "catalogVariantId": "01a05388-02fd-7000-a788-1720ce411ff4",
+            "productId": "01a05388-026f-7000-8872-8ac9261352dd",
+            "productTitle": "سامسونگ گوشی ساده سری 1",
+            "sellerSku": "VAR-01a0538802fd7000a7881720ce411ff4",
+            "status": "Active",
+            "channel": "Marketplace",
+            "amount": 8117720,
+            "currency": "IRR",
+            "availableUnits": 200,
+            "lastUpdatedAt": "2026-10-29T09:22:33.381848+00:00",
+            "sellerDisplayName": "فروشگاه آرمان",
+            "variantCode": "DEMO-demo-prod-mobile-tablet-phones-feature-phones-1-3",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): طلایی",
+            "unitQuantityDecimalPlaces": 0
+          }
+        ],
+        "page": 2,
+        "pageSize": 5,
+        "totalCount": 3226
+      }
+    },
+    {
+      "route": "/v1/admin/offers/query",
+      "method": "POST",
+      "payload": {
+        "page": 1,
+        "pageSize": 10,
+        "filters": [
+          {
+            "field": "status",
+            "operator": "eq",
+            "value": "Draft"
+          }
+        ],
+        "sorts": []
+      },
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "offerId": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+            "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+            "productTitle": "زارا شلوار مردانه سری 6",
+            "sellerSku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 0,
+            "lastUpdatedAt": "2026-11-27T07:45:11.790604+00:00",
+            "sellerDisplayName": "دیجی‌استایل نمونه",
+            "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+            "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+            "brandName": "زارا",
+            "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "1c1f65ca-4c10-4ef3-5835-2b1bfa46bfa9",
+            "catalogVariantId": "01a05388-6ce8-7000-9cd2-66df593dd1ff",
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "productTitle": "سامسونگ هدفون سری 1",
+            "sellerSku": "R10-DEBUG-1795644381651",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 3,
+            "lastUpdatedAt": "2026-11-25T22:06:21.709798+00:00",
+            "sellerDisplayName": "دیجی‌استایل نمونه",
+            "variantCode": "DEMO-demo-prod-av-audio-headphones-1-2",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): آبی",
+            "unitQuantityDecimalPlaces": 0
+          },
+          {
+            "offerId": "364356a1-470c-6ae2-bd02-65742e20cf4b",
+            "catalogVariantId": "01a05388-6ce8-7000-935a-9adef2652668",
+            "productId": "01a05388-6c35-7000-b35d-97e953b28374",
+            "productTitle": "سامسونگ هدفون سری 1",
+            "status": "Draft",
+            "channel": "Marketplace",
+            "currency": "IRR",
+            "availableUnits": 0,
+            "lastUpdatedAt": "2026-11-24T02:34:22.720534+00:00",
+            "sellerDisplayName": "DEV-SEED OOS Seller",
+            "variantCode": "DEMO-demo-prod-av-audio-headphones-1-1",
+            "primaryMediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "brandName": "سامسونگ",
+            "variantLabel": "رنگ (mobile): مشکی",
+            "unitQuantityDecimalPlaces": 0
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 3
+      }
+    }
+  ],
+  "sql": [
+    {
+      "label": "before-7a29fa4a",
+      "state": {
+        "offers": [],
+        "prices": [],
+        "history": [],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    }
+  ],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "fixture": {
+    "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "variant": "01a0967d-a2eb-7000-9a12-779c15789bac",
+    "channel": "Marketplace",
+    "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "offerId": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+    "sku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+    "requestId": "P1C-d3772907-db54-454c-86b8-338b7a29fa4a",
+    "contexts": [
+      {
+        "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "actorLabel": "اپراتور آرمان",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerLabel": "فروشگاه آرمان",
+        "contextKind": "seller-owner"
+      },
+      {
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "actorLabel": "اپراتور دیجی‌استایل",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerLabel": "دیجی‌استایل نمونه",
+        "contextKind": "seller-owner-alt"
+      }
+    ]
+  },
+  "performance": {
+    "formMedianMs": 867,
+    "formP95Ms": 897,
+    "formSamples": [
+      897,
+      869,
+      867,
+      862,
+      855
+    ],
+    "pickerMedianMs": 68,
+    "pickerP95Ms": 83,
+    "pickerSamples": [
+      65,
+      68,
+      76,
+      83,
+      44
+    ],
+    "r8FormMs": 1598,
+    "r8PickerMs": 103
+  },
+  "regression": {
+    "orders": 10,
+    "products": 10,
+    "paging": {
+      "page1": 5,
+      "page2": 5,
+      "overlap": 0
+    },
+    "filteredDrafts": 3
+  },
+  "reason": "5-sample warm form median/p95 867/897ms and picker 68/83ms stayed at or below R8 1598/103ms; actual orders, products and grid paging/filter regressions returned complete rows.",
+  "beforeCleanup": {
+    "offers": [
+      {
+        "status": "Draft",
+        "channel": "Marketplace",
+        "offer_id": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+        "created_at": "2026-11-27T07:45:11.790604+00:00",
+        "seller_sku": "P1C-bccea7a4-3530-4ffb-bee7-5e450634f2a5",
+        "updated_at": "2026-11-27T07:45:11.790604+00:00",
+        "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "return_policy_choice": "Default",
+        "maximum_order_quantity": null,
+        "minimum_order_quantity": null,
+        "custom_return_window_days": null,
+        "fulfillment_responsibility": null,
+        "creation_intent_fingerprint": "9913ffaee910218f2cf084af87461caa3123e0173dbe0131391e0c972e855d11",
+        "fulfillment_shipping_type_id": null
+      }
+    ],
+    "prices": [],
+    "history": [
+      {
+        "summary": "Created",
+        "offer_id": "9ce94620-b5fc-4e9b-38d4-6be6815176fa",
+        "new_value": "status=Draft;channel=Marketplace",
+        "old_value": null,
+        "change_kind": "Created",
+        "occurred_at": "2026-11-27T07:45:11.790604+00:00",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "offer_history_entry_id": "01a21bf7-266e-7000-942f-fc99fdb46479"
+      }
+    ],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [
+      "{\"offerId\":\"9ce94620-b5fc-4e9b-38d4-6be6815176fa\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+    ],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  },
+  "afterCleanup": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  }
+}

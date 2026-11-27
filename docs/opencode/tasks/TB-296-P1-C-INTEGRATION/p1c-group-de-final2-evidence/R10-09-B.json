@@ -1,0 +1,103 @@
+{
+  "id": "R10-09-B",
+  "requests": [
+    {
+      "route": "/v1/languages",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        {
+          "languageId": "01a06a53-4139-7000-bb9b-3078a0d2e5c4",
+          "code": "fa-IR",
+          "urlPrefix": "fa",
+          "displayName": "Persian (Iran)",
+          "nativeName": "فارسی",
+          "direction": "rtl",
+          "culture": "fa-IR",
+          "calendarDisplay": "Jalali",
+          "isActive": true,
+          "isDefault": true,
+          "sortOrder": 0
+        },
+        {
+          "languageId": "01a06a53-4196-7000-9b98-fb3706490005",
+          "code": "en-US",
+          "urlPrefix": "en",
+          "displayName": "English (United States)",
+          "nativeName": "English",
+          "direction": "ltr",
+          "culture": "en-US",
+          "calendarDisplay": "Gregorian",
+          "isActive": true,
+          "isDefault": false,
+          "sortOrder": 1
+        },
+        {
+          "languageId": "01a0844c-829e-7000-ab25-64b381896053",
+          "code": "ru-RU",
+          "urlPrefix": "ru",
+          "displayName": "Russian",
+          "nativeName": "Русский",
+          "direction": "ltr",
+          "culture": "ru-RU",
+          "calendarDisplay": "Gregorian",
+          "isActive": true,
+          "isDefault": false,
+          "sortOrder": 20
+        }
+      ]
+    }
+  ],
+  "sql": [],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "resolverProbe": {
+    "command": "D:\\Program Files\\nodejs\\node.exe --experimental-strip-types C:\\Users\\User\\AppData\\Local\\Temp\\p1c-locale-2ll6go\\resolver.mjs",
+    "exit": 0,
+    "stdout": "{\"live\":[{\"prefix\":\"fa\",\"code\":\"fa-IR\",\"direction\":\"rtl\",\"calendar\":\"jalali\",\"isDefault\":true},{\"prefix\":\"en\",\"code\":\"en-US\",\"direction\":\"ltr\",\"calendar\":\"gregorian\",\"isDefault\":false},{\"prefix\":\"ru\",\"code\":\"ru-RU\",\"direction\":\"ltr\",\"calendar\":\"gregorian\",\"isDefault\":false}],\"liveResolved\":{\"fa\":\"fa-IR\",\"en\":\"en-US\",\"ru\":\"ru-RU\",\"unknown\":\"fa-IR\"},\"fixture\":{\"de\":\"de-DE\",\"unknown\":\"en-US\",\"fa\":\"fa-IR\"}}\n",
+    "stderr": "(node:19868) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer-opencode-iso-002/src/frontend/lib/i18n/registry-locale-model.ts is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\src\\frontend\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+    "error": null,
+    "moduleSha256": "1c87e3b427ae3f110d0d6cd569e3bb7092b65e6d72bc1d8dde5c648fccb0e77d"
+  },
+  "resolverObserved": {
+    "live": [
+      {
+        "prefix": "fa",
+        "code": "fa-IR",
+        "direction": "rtl",
+        "calendar": "jalali",
+        "isDefault": true
+      },
+      {
+        "prefix": "en",
+        "code": "en-US",
+        "direction": "ltr",
+        "calendar": "gregorian",
+        "isDefault": false
+      },
+      {
+        "prefix": "ru",
+        "code": "ru-RU",
+        "direction": "ltr",
+        "calendar": "gregorian",
+        "isDefault": false
+      }
+    ],
+    "liveResolved": {
+      "fa": "fa-IR",
+      "en": "en-US",
+      "ru": "ru-RU",
+      "unknown": "fa-IR"
+    },
+    "fixture": {
+      "de": "de-DE",
+      "unknown": "en-US",
+      "fa": "fa-IR"
+    }
+  },
+  "reason": "Live DB registry matched the public API, and the actual shared resolver honored an isolated changed default (en-US) plus code-differs-from-prefix (de-DE) fixture; module SHA captured."
+}

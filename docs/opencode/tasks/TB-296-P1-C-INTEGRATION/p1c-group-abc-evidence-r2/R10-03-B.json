@@ -1,0 +1,859 @@
+{
+  "id": "R10-03-B",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/allowed-channels",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        "Marketplace"
+      ]
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers",
+      "method": "POST",
+      "payload": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "channel": "Marketplace",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "requestId": "P1C-86bf63d9-36b0-4778-bb6b-2402e3d51919"
+      },
+      "status": 201,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.5580852+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580852+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580852+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/inventory-locations",
+      "method": "GET",
+      "status": 200,
+      "body": [
+        {
+          "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+          "code": "WH-ACC-ACC-DEMO",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+          "code": "WH-ACC-BOOK",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a0440a-5bbe-7000-b5b5-60f90286cfa9",
+          "code": "WH-ACC-MOB",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a03826-97d7-7000-b41f-e6d22fce9ef4",
+          "code": "WH-DEMO-MSH",
+          "name": "انبار نمایشی مشهد"
+        },
+        {
+          "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+          "code": "WH-DEMO-THR",
+          "name": "انبار نمایشی تهران"
+        },
+        {
+          "locationId": "01a030d1-41e1-7000-a814-107a0daaf184",
+          "code": "WH-ISF",
+          "name": "انبار اصفهان"
+        },
+        {
+          "locationId": "01a030d1-41ef-7000-a0d7-bb03ec8b2ddc",
+          "code": "WH-KSH",
+          "name": "انبار فروشنده ب"
+        },
+        {
+          "locationId": "01a04569-de22-7000-856a-b4433ab1e70b",
+          "code": "WH-SCHEMA-MOBILE",
+          "name": "انبار schema موبایل"
+        },
+        {
+          "locationId": "01a030d1-41d3-7000-956b-80e9ed968e0d",
+          "code": "WH-THR",
+          "name": "انبار تهران"
+        }
+      ]
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory/positions",
+      "method": "POST",
+      "payload": {
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501"
+      },
+      "status": 200,
+      "body": {
+        "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "onHand": 0,
+        "reserved": 0,
+        "revision": "2026-11-27T07:40:11.5885150+00:00"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory/positions",
+      "method": "POST",
+      "payload": {
+        "locationId": "01a0440a-5c48-7000-b995-232803e19be5"
+      },
+      "status": 200,
+      "body": {
+        "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+        "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "onHand": 0,
+        "reserved": 0,
+        "revision": "2026-11-27T07:40:11.5971730+00:00"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 0,
+            "reserved": 0,
+            "available": 0,
+            "revision": "2026-11-27T07:40:11.5885150+00:00"
+          },
+          {
+            "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+            "locationCode": "WH-ACC-BOOK",
+            "locationName": "انبار دمو ACC",
+            "onHand": 0,
+            "reserved": 0,
+            "available": 0,
+            "revision": "2026-11-27T07:40:11.5971730+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.558085+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580850+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580850+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory",
+      "method": "PUT",
+      "payload": {
+        "onHand": 6,
+        "reason": "P1C first-position",
+        "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+        "expectedVersion": "2026-11-27T07:40:11.5885150+00:00",
+        "operationId": "11028938-9ca8-4710-95b2-5674fe176c4a"
+      },
+      "status": 200,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 6,
+        "reserved": 0,
+        "availableUnits": 6,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 6,
+            "reserved": 0,
+            "available": 6,
+            "revision": "2026-11-27T07:40:11.7014710+00:00"
+          },
+          {
+            "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+            "locationCode": "WH-ACC-BOOK",
+            "locationName": "انبار دمو ACC",
+            "onHand": 0,
+            "reserved": 0,
+            "available": 0,
+            "revision": "2026-11-27T07:40:11.5971730+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.558085+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580850+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580850+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory",
+      "method": "PUT",
+      "payload": {
+        "onHand": 3,
+        "reason": "P1C failed-second",
+        "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+        "expectedVersion": "2000-01-01T00:00:00.0000000+00:00",
+        "operationId": "21f5430e-54df-4bb8-9b82-299f7303c58e"
+      },
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "نسخهٔ موقعیت موجودی قدیمی است.",
+        "status": 409,
+        "instance": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory",
+        "errorCode": "inventory.position.revision_conflict",
+        "traceId": "4fc89454f5daea0cef68b58d4c2aec46",
+        "correlationId": "62890835f9204e43aa2bfe85e25ac231",
+        "requestId": "0HNQC6P6UTA5C:0000001C"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 6,
+        "reserved": 0,
+        "availableUnits": 6,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 6,
+            "reserved": 0,
+            "available": 6,
+            "revision": "2026-11-27T07:40:11.7014710+00:00"
+          },
+          {
+            "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+            "locationCode": "WH-ACC-BOOK",
+            "locationName": "انبار دمو ACC",
+            "onHand": 0,
+            "reserved": 0,
+            "available": 0,
+            "revision": "2026-11-27T07:40:11.5971730+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.558085+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580850+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580850+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f/inventory",
+      "method": "PUT",
+      "payload": {
+        "onHand": 3,
+        "reason": "P1C retry-second",
+        "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+        "expectedVersion": "2026-11-27T07:40:11.5971730+00:00",
+        "operationId": "fab00332-2530-4c7a-8ac7-71d52cf01baa"
+      },
+      "status": 200,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 9,
+        "reserved": 0,
+        "availableUnits": 9,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 6,
+            "reserved": 0,
+            "available": 6,
+            "revision": "2026-11-27T07:40:11.7014710+00:00"
+          },
+          {
+            "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+            "locationCode": "WH-ACC-BOOK",
+            "locationName": "انبار دمو ACC",
+            "onHand": 3,
+            "reserved": 0,
+            "available": 3,
+            "revision": "2026-11-27T07:40:11.8141710+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.558085+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580850+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580850+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/8084eeee-f9d3-198f-b676-ec73562e438f",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 9,
+        "reserved": 0,
+        "availableUnits": 9,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 6,
+            "reserved": 0,
+            "available": 6,
+            "revision": "2026-11-27T07:40:11.7014710+00:00"
+          },
+          {
+            "stockItemId": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+            "locationCode": "WH-ACC-BOOK",
+            "locationName": "انبار دمو ACC",
+            "onHand": 3,
+            "reserved": 0,
+            "available": 3,
+            "revision": "2026-11-27T07:40:11.8141710+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T07:40:11.558085+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T07:40:11.5580850+00:00",
+        "revisions": {
+          "offer": "2026-11-27T07:40:11.5580850+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    }
+  ],
+  "sql": [
+    {
+      "label": "before-e3d51919",
+      "state": {
+        "offers": [],
+        "prices": [],
+        "history": [],
+        "positions": [],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [],
+        "inventoryOutbox": []
+      }
+    },
+    {
+      "label": "retry-complete",
+      "state": {
+        "offers": [
+          {
+            "status": "Draft",
+            "channel": "Marketplace",
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "created_at": "2026-11-27T07:40:11.558085+00:00",
+            "seller_sku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+            "updated_at": "2026-11-27T07:40:11.558085+00:00",
+            "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "return_policy_choice": "Default",
+            "maximum_order_quantity": null,
+            "minimum_order_quantity": null,
+            "custom_return_window_days": null,
+            "fulfillment_responsibility": null,
+            "creation_intent_fingerprint": "771cd7d4590e553f4d9ea7389d5004138990ec00e9a2ab4ba63fbe8fe0fc87f4",
+            "fulfillment_shipping_type_id": null
+          }
+        ],
+        "prices": [],
+        "history": [
+          {
+            "summary": "Created",
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "new_value": "status=Draft;channel=Marketplace",
+            "old_value": null,
+            "change_kind": "Created",
+            "occurred_at": "2026-11-27T07:40:11.558085+00:00",
+            "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+            "offer_history_entry_id": "01a21bf2-91a6-7000-80c4-1f0b156ff539"
+          }
+        ],
+        "positions": [
+          {
+            "on_hand": 3,
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "reserved": 0,
+            "created_at": "2026-11-27T07:40:11.597173+00:00",
+            "updated_at": "2026-11-27T07:40:11.814171+00:00",
+            "location_id": "01a0440a-5c48-7000-b995-232803e19be5",
+            "stock_item_id": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac"
+          },
+          {
+            "on_hand": 6,
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "reserved": 0,
+            "created_at": "2026-11-27T07:40:11.588515+00:00",
+            "updated_at": "2026-11-27T07:40:11.701471+00:00",
+            "location_id": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "stock_item_id": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac"
+          }
+        ],
+        "priceFacts": [],
+        "allocations": [],
+        "offerOutbox": [
+          "{\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+        ],
+        "priceOutbox": [],
+        "reservations": [],
+        "inventoryFacts": [
+          {
+            "kind": "PhysicalChanged",
+            "reason": "P1C first-position",
+            "fact_id": "01a21bf2-923a-7000-8c77-be15e473b923",
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "location_id": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "new_on_hand": 6,
+            "occurred_at": "2026-11-27T07:40:11.701471+00:00",
+            "old_on_hand": 0,
+            "operation_id": "11028938-9ca8-4710-95b2-5674fe176c4a",
+            "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+            "stock_item_id": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+            "new_allocation": null,
+            "old_allocation": null
+          },
+          {
+            "kind": "PhysicalChanged",
+            "reason": "P1C retry-second",
+            "fact_id": "01a21bf2-92a8-7000-a71f-dfc6cfbe382e",
+            "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+            "location_id": "01a0440a-5c48-7000-b995-232803e19be5",
+            "new_on_hand": 3,
+            "occurred_at": "2026-11-27T07:40:11.814171+00:00",
+            "old_on_hand": 0,
+            "operation_id": "fab00332-2530-4c7a-8ac7-71d52cf01baa",
+            "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+            "stock_item_id": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+            "new_allocation": null,
+            "old_allocation": null
+          }
+        ],
+        "inventoryOutbox": [
+          "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":0}",
+          "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":6.000000}",
+          "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"delta\":6.000000}",
+          "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":0}",
+          "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":3.000000}",
+          "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"delta\":3.000000}"
+        ]
+      }
+    }
+  ],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "fixture": {
+    "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "variant": "01a0967d-a2eb-7000-9a12-779c15789bac",
+    "channels": [
+      "Marketplace"
+    ],
+    "channel": "Marketplace",
+    "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "admin": {
+      "X-Tooba-Dev-Actor-User-Id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+    },
+    "contexts": [
+      {
+        "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "actorLabel": "اپراتور آرمان",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerLabel": "فروشگاه آرمان",
+        "contextKind": "seller-owner"
+      },
+      {
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "actorLabel": "اپراتور دیجی‌استایل",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerLabel": "دیجی‌استایل نمونه",
+        "contextKind": "seller-owner-alt"
+      }
+    ]
+  },
+  "reason": "The first position write persisted; the second failed with a typed revision conflict leaving its own state unchanged and no duplicate position; retrying only the failed remainder persisted it, keeping both successes and their recorded reasons.",
+  "beforeCleanup": {
+    "offers": [
+      {
+        "status": "Draft",
+        "channel": "Marketplace",
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "created_at": "2026-11-27T07:40:11.558085+00:00",
+        "seller_sku": "P1C-18c0d9c8-1763-4443-8c26-6ddde04a89f8",
+        "updated_at": "2026-11-27T07:40:11.558085+00:00",
+        "seller_party_id": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "return_policy_choice": "Default",
+        "maximum_order_quantity": null,
+        "minimum_order_quantity": null,
+        "custom_return_window_days": null,
+        "fulfillment_responsibility": null,
+        "creation_intent_fingerprint": "771cd7d4590e553f4d9ea7389d5004138990ec00e9a2ab4ba63fbe8fe0fc87f4",
+        "fulfillment_shipping_type_id": null
+      }
+    ],
+    "prices": [],
+    "history": [
+      {
+        "summary": "Created",
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "new_value": "status=Draft;channel=Marketplace",
+        "old_value": null,
+        "change_kind": "Created",
+        "occurred_at": "2026-11-27T07:40:11.558085+00:00",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "offer_history_entry_id": "01a21bf2-91a6-7000-80c4-1f0b156ff539"
+      }
+    ],
+    "positions": [
+      {
+        "on_hand": 3,
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "reserved": 0,
+        "created_at": "2026-11-27T07:40:11.597173+00:00",
+        "updated_at": "2026-11-27T07:40:11.814171+00:00",
+        "location_id": "01a0440a-5c48-7000-b995-232803e19be5",
+        "stock_item_id": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac"
+      },
+      {
+        "on_hand": 6,
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "reserved": 0,
+        "created_at": "2026-11-27T07:40:11.588515+00:00",
+        "updated_at": "2026-11-27T07:40:11.701471+00:00",
+        "location_id": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "stock_item_id": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+        "catalog_variant_id": "01a0967d-a2eb-7000-9a12-779c15789bac"
+      }
+    ],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [
+      "{\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"catalogVariantId\":\"01a0967d-a2eb-7000-9a12-779c15789bac\",\"sellerPartyId\":\"01a030d1-40db-7000-b90c-a0705133f0eb\"}"
+    ],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [
+      {
+        "kind": "PhysicalChanged",
+        "reason": "P1C first-position",
+        "fact_id": "01a21bf2-923a-7000-8c77-be15e473b923",
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "location_id": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "new_on_hand": 6,
+        "occurred_at": "2026-11-27T07:40:11.701471+00:00",
+        "old_on_hand": 0,
+        "operation_id": "11028938-9ca8-4710-95b2-5674fe176c4a",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "stock_item_id": "01a21bf2-91c4-7000-8605-b4e5dc7b4e56",
+        "new_allocation": null,
+        "old_allocation": null
+      },
+      {
+        "kind": "PhysicalChanged",
+        "reason": "P1C retry-second",
+        "fact_id": "01a21bf2-92a8-7000-a71f-dfc6cfbe382e",
+        "offer_id": "8084eeee-f9d3-198f-b676-ec73562e438f",
+        "location_id": "01a0440a-5c48-7000-b995-232803e19be5",
+        "new_on_hand": 3,
+        "occurred_at": "2026-11-27T07:40:11.814171+00:00",
+        "old_on_hand": 0,
+        "operation_id": "fab00332-2530-4c7a-8ac7-71d52cf01baa",
+        "actor_user_id": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "stock_item_id": "01a21bf2-91cd-7000-a8c8-403ca7e6a266",
+        "new_allocation": null,
+        "old_allocation": null
+      }
+    ],
+    "inventoryOutbox": [
+      "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":0}",
+      "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":6.000000}",
+      "{\"stockItemId\":\"01a21bf2-91c4-7000-8605-b4e5dc7b4e56\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"delta\":6.000000}",
+      "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":0}",
+      "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"available\":3.000000}",
+      "{\"stockItemId\":\"01a21bf2-91cd-7000-a8c8-403ca7e6a266\",\"offerId\":\"8084eeee-f9d3-198f-b676-ec73562e438f\",\"delta\":3.000000}"
+    ]
+  },
+  "afterCleanup": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  }
+}

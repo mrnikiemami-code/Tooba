@@ -1,0 +1,82 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+  "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+  "database": "tooba_alpha",
+  "testBuildCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "testBuildSucceeded": true,
+  "tests": [
+    {
+      "testId": "R10-14-P",
+      "scenarioSha256": "3e41abc090483aebf5938319ad1eab07bd2f36f7929c6e6f843064fa7131ccf1",
+      "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+      "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+      "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+      "status": "PASS",
+      "executed": true,
+      "assertions": [
+        {
+          "assertionId": "provider_identity",
+          "pass": true,
+          "expected": {
+            "edition": "SingleStore",
+            "tenantId": "store-alpha",
+            "database": "tooba_alpha"
+          },
+          "observed": {
+            "edition": "SingleStore",
+            "tenantId": "store-alpha",
+            "database": "tooba_alpha"
+          }
+        },
+        {
+          "assertionId": "durable_offer",
+          "pass": true,
+          "expected": {
+            "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "status": "Draft",
+            "sellerSku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019"
+          },
+          "observed": {
+            "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "status": "Draft",
+            "sellerSku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019"
+          }
+        },
+        {
+          "assertionId": "independent_sql",
+          "pass": true,
+          "expected": {
+            "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+            "status": "Draft",
+            "seller_sku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019",
+            "history": 1
+          },
+          "observed": {
+            "offerId": "7d90c187-b95d-4051-631a-44be0d88e80c",
+            "status": "Draft",
+            "seller_sku": "P1C-2c8ebc7e-8320-4130-8d5b-6bb153ffd019",
+            "history": 1
+          }
+        },
+        {
+          "assertionId": "focused_guards",
+          "pass": true,
+          "expected": {
+            "exit": 0,
+            "failed": 0
+          },
+          "observed": {
+            "exit": 0,
+            "failed": 0
+          }
+        }
+      ],
+      "evidencePath": "R10-14-P.evidence.json",
+      "evidenceSha256": "d7ac99849bcb7abbd9c5c618a5be3e10ada0ba3359b256f68e57cc9b7c1dac6a"
+    }
+  ]
+}

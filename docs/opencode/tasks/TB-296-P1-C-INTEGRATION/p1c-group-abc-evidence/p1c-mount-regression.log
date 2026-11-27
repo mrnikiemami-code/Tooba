@@ -1,0 +1,36 @@
+✔ edit workspace renders the seven tabs in order and only one panel at a time (88.5523ms)
+✔ edit identity is locked but seller SKU stays editable and dirty (25.9342ms)
+✔ IRR price with decimals is invalid and never calls the price writer (35.856ms)
+✔ valid price save persists and clears the pricing dirty flag (46.0533ms)
+✔ inventory below reserved blocks save; valid adjust requires a reason and then persists (73.8667ms)
+✔ return policy hides the custom window unless Custom is selected (39.0105ms)
+✔ archived lifecycle is locked and buyability is derived (27.4661ms)
+✔ admin shipping gates the type until responsibility is chosen and saves the real contract (49.6941ms)
+✔ discounts and history stay explicitly gated with no fabricated data (28.9145ms)
+✔ denied detail renders the denied state instead of a fake workspace (2.8572ms)
+✔ seller create mode disables dependent tabs, does not auto-select, and creates once (62.5013ms)
+✔ tab switches preserve typed draft values (UX-03) (24.2443ms)
+✔ picker selection survives paging in both directions (UX-29) (33.2175ms)
+✔ a failed save keeps the typed data and surfaces the error (UX-22) (15.0291ms)
+✔ unsaved changes arm the beforeunload guard (UX-23) (8.3938ms)
+✔ product and variant are independent: product change clears the old variant (51.0531ms)
+✔ a product without sellable variants shows a clear message (27.6308ms)
+✔ existing active listing is explained and linked before create (40.401ms)
+✔ formatted amount input normalizes Persian digits and never turns empty into zero (19.0948ms)
+✔ partial inventory save keeps the failed location draft and retries only the remainder (28.9529ms)
+✔ a network save is uncertain: draft kept, no retry button, reload action offered (15.0192ms)
+✔ language navigation restores unsaved selections and drafts (16.729ms)
+✔ an isolated third-language definition drives direction and copy without touching the live registry (6.761ms)
+✔ rapid double submit creates exactly one draft (33.9219ms)
+✔ shipping selection survives a language/reload remount with scoped recovery (25.5922ms)
+✔ partial create keeps the created Draft recoverable through MessageBox (37.7552ms)
+✔ platform fulfillment shows offered quantity and locks physical/warehouse controls (9.2108ms)
+✔ committed create clears scoped recovery before navigation and never restores the old Draft (51.9251ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12175.7664

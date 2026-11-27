@@ -1,0 +1,354 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "PASS",
+    "reason": "Actual create/edit/list routes at FA/EN/RU obeyed live registry code/direction and preserved local drafts across real locale switches.",
+    "startedAt": "2026-11-27T07:47:15.797Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-09-P.json",
+    "evidenceSha256": "8133bd3145cab54b03d57d2122dd5ddac6ccf8530f44b8b60cac770f8fa71268",
+    "finishedAt": "2026-11-27T07:47:21.783Z"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "PASS",
+    "reason": "Invalid public two-letter prefix returned a real 404; unknown panel prefix canonicalized to the active default /fa/admin/offers with zero offer writes.",
+    "startedAt": "2026-11-27T07:47:21.784Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-09-N.json",
+    "evidenceSha256": "f7fb306d4fc6ec18b22cb52ff6b70a7a8f22311563ad0adab9240678e44254b2",
+    "finishedAt": "2026-11-27T07:47:22.699Z"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "PASS",
+    "reason": "Live DB registry matched the public API, and the actual shared resolver honored an isolated changed default (en-US) plus code-differs-from-prefix (de-DE) fixture; module SHA captured.",
+    "startedAt": "2026-11-27T07:47:22.699Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-09-B.json",
+    "evidenceSha256": "41c4a6e60e8d9fa0bfffd16fde75339711d26a93d873b9ee2e939df5b7f144ea",
+    "finishedAt": "2026-11-27T07:47:22.959Z"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "PASS",
+    "reason": "Actual Offer architecture/endpoint/validation guards (106) and Host architecture-boundary guards (8) executed against immutable backend source with zero failures.",
+    "startedAt": "2026-11-27T07:47:22.959Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-11-P.json",
+    "evidenceSha256": "f8d4af8dacce9ba3fc52e12dab13b246ae2c5dd605f32a7d4e67f9b22841446e",
+    "finishedAt": "2026-11-27T07:47:36.786Z"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "PASS",
+    "reason": "Actual anonymous/foreign admin query and write commands plus foreign seller query all failed closed; independent before/after PostgreSQL snapshot was identical.",
+    "startedAt": "2026-11-27T07:47:36.786Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-11-N.json",
+    "evidenceSha256": "388c9ee4ac56c6752c715cb06aea9c3bdd930455c2e476f2d20d0cbd77a838d8",
+    "finishedAt": "2026-11-27T07:47:37.873Z"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "PASS",
+    "reason": "Host compiled from current immutable source and both adjacent Pricing (13) and Inventory (53) consumers passed with zero failures.",
+    "startedAt": "2026-11-27T07:47:37.873Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-11-B.json",
+    "evidenceSha256": "5a5e4d4a8b48b1bde7a0f3a2c87d4455730408c2ae603677d93f986b521caf83",
+    "finishedAt": "2026-11-27T07:47:48.841Z"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "PASS",
+    "reason": "Actual successful admin save used exactly one shared Toast (تغییرات ذخیره شد.) that auto-closed in 4322ms; no permanent banner; independent GET/SQL observed the persisted SKU and one new history event.",
+    "startedAt": "2026-11-27T07:47:48.842Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-12-P.json",
+    "evidenceSha256": "680f316405e91690f0b30bab959df0b76630195ed78808f5e47219bb4db63a44",
+    "finishedAt": "2026-11-27T07:47:55.874Z"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "PASS",
+    "reason": "Actual dirty exit kept the form/draft on cancel and discarded only on confirm with no write; the real seller duplicate route showed the shared MessageBox link to the existing offer and created no duplicate row.",
+    "startedAt": "2026-11-27T07:47:55.874Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-12-B.json",
+    "evidenceSha256": "9cae070c3e9b6d0cdb41d1e4123b9b382ce2fdec0e99af42c1fc3cc4ed8dbc17",
+    "finishedAt": "2026-11-27T07:48:01.555Z"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "PASS",
+    "reason": "5-sample warm form median/p95 871/886ms and picker 75/105ms stayed at or below R8 1598/103ms; actual orders, products and grid paging/filter regressions returned complete rows.",
+    "startedAt": "2026-11-27T07:48:01.555Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-13-P.json",
+    "evidenceSha256": "3ba57bc5e13043d2c33fb170d5c8a6212a4d34b2baa1b7b224d0e17704f2fd7d",
+    "finishedAt": "2026-11-27T07:48:11.754Z"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "PASS",
+    "reason": "Actual long-label offer form and third-locale grid stayed within viewport at 360/768/1440 with visible usable save/tab controls and zero unintended horizontal overflow.",
+    "startedAt": "2026-11-27T07:48:11.755Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-13-B.json",
+    "evidenceSha256": "1c1185f85035de7ef441f71b7aebf302ae06d6ce9598c2311b994339f7b9d025",
+    "finishedAt": "2026-11-27T07:48:18.286Z"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "PASS",
+    "reason": "Real isolated fixture, provider/build/DB identities, evidence hash and focused Offer guards were accepted by the actual acceptance gate bound to the served Next build and Host DLL.",
+    "startedAt": "2026-11-27T07:48:18.287Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-P.json",
+    "evidenceSha256": "44ce6fe79314bb9952e58b1c5c1664781e94ad7ebaf092574a6efb43769e7546",
+    "finishedAt": "2026-11-27T07:48:22.995Z"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "PASS",
+    "reason": "Actual acceptance and architect gates rejected all mandated negative controls: missing test, changed fact and tampered evidence hash, plus their own 11 and 14 self-test controls.",
+    "startedAt": "2026-11-27T07:48:22.995Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-N.json",
+    "evidenceSha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+    "finishedAt": "2026-11-27T07:48:23.562Z"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "PASS",
+    "reason": "Induced mid-test failure was followed by exact finally cleanup; independent snapshot is empty, the unrelated offer hash is unchanged and the cleaned offer reread is not found.",
+    "startedAt": "2026-11-27T07:48:23.563Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final-evidence\\R10-14-B.json",
+    "evidenceSha256": "6edd8a74d016b58c01ef12f5aad958ed18187be0c5e7ccbfe3bf156a2a80a102",
+    "finishedAt": "2026-11-27T07:48:25.197Z"
+  },
+  {
+    "id": "OWN-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-03",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-04",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-05",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-06",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-07",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-08",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-09",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  }
+]

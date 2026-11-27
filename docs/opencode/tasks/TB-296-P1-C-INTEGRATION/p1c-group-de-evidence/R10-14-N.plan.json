@@ -1,0 +1,18 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "tests": [
+    {
+      "testId": "R10-14-N",
+      "scenarioSha256": "d26970b790978a0514a3eb59cccdec0c0f37af1528463f4a82812c71bcfbcde7",
+      "assertionIds": [
+        "acceptance_self_test",
+        "architect_self_test"
+      ],
+      "expectedFacts": {
+        "acceptance_self_test": true,
+        "architect_self_test": true
+      }
+    }
+  ]
+}

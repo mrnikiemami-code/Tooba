@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "sourceCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "hostSha256": "bc839dc66053490b1a1de64daa6d655a7c4bf912d4b4ddcb32c5e57ed347c932",
+  "nextBuildId": "7tcRkdNm2wPHBfpPYVSvT",
+  "database": "tooba_alpha",
+  "testBuildCommit": "028b9da8d6710c944bf1bcdcd6bf5fea3faa0a53",
+  "testBuildSucceeded": true,
+  "tests": []
+}

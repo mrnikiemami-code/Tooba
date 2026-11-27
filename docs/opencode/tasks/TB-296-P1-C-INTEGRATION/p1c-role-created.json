@@ -1,0 +1,15 @@
+﻿{
+    "id":  "9de2593b-ae2f-4d0f-bc04-deac599ee5fe",
+    "ownerScopeKind":  "Seller",
+    "ownerScopeId":  "01a030d1-40db-7000-b90c-a0705133f0eb",
+    "name":  "P1C Fixture 060231",
+    "code":  "p1c-fixture-060231",
+    "description":  "P1-C synthetic DEV fixture",
+    "isSystem":  false,
+    "isMutable":  true,
+    "isArchived":  false,
+    "permissionCount":  0,
+    "assignmentCount":  0,
+    "createdAt":  "2026-11-27T02:32:31.8103116+00:00",
+    "updatedAt":  "2026-11-27T02:32:31.8103116+00:00"
+}

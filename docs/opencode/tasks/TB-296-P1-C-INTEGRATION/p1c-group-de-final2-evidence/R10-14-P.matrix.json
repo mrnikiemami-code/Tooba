@@ -1,0 +1,18 @@
+{
+  "taskId": "TB-296-R10-OFFER-PRODUCTION-READINESS",
+  "tests": [
+    {
+      "reqId": "R10-14",
+      "invariantId": "R10-14-INV",
+      "testId": "R10-14-P",
+      "caseType": "positive",
+      "given": "isolated fixtures and issued matrix",
+      "action": "execute required tests",
+      "expected": "observed facts, hashes and provider identities",
+      "forbiddenEffects": "No unauthorized writes, fabricated results, weakened guards or violation of the named requirement; negative cases must prove unchanged relevant state.",
+      "oracle": "Executed source/guard or real owning-provider result; independent GET/SQL for persistence, exact observed facts and request counts.",
+      "proofGrade": "EXECUTED_TEST_WITH_OWNING_PROVIDER_WHERE_DURABLE",
+      "reasonIfNotApplicable": null
+    }
+  ]
+}

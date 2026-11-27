@@ -1,0 +1,176 @@
+{
+  "generatedAt": "2026-11-27T08:08:43.204Z",
+  "module": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-cases.cjs",
+  "moduleSha256": "a1ce13fe14b377c5b520230eeb72ef0c9881e75576e9eee20a7b8edf35edac4c",
+  "executedGroup": [
+    "OWN-01",
+    "OWN-02",
+    "OWN-03",
+    "OWN-04",
+    "OWN-05",
+    "OWN-06",
+    "OWN-07",
+    "OWN-08",
+    "OWN-09",
+    "OWN-10",
+    "D2-ORDER",
+    "D2-HOLD",
+    "D2-ALLOCATION",
+    "D2-PARTIAL",
+    "D2-RECOVERY",
+    "D2-HTTP",
+    "F-BENTRY-01",
+    "F-BENTRY-02"
+  ],
+  "preservedPriorPass": [
+    "R10-01-N",
+    "R10-04-B",
+    "R10-10-P",
+    "R10-10-N",
+    "R10-10-B",
+    "R10-12-N",
+    "R10-13-N"
+  ],
+  "counts": {
+    "NOT_RUN": 36,
+    "PASS": 24
+  },
+  "ledger": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-executed-ledger4.json",
+  "evidenceDir": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-final-evidence3",
+  "dbIdentity": "tooba_alpha|local|local",
+  "host": "http://127.0.0.1:5088",
+  "harness": {
+    "dll": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-f-harness\\bin\\Debug\\net8.0\\p1c-f-harness.dll",
+    "dllSha256": "c9bee91d34e04d40bf3676242a49ab7735f7a3c106558e2594e39057b43a3080",
+    "source": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-harness/Program.cs",
+    "sourceSha256": "69306683f5f7d1cff611cdf744aa71ef6cff1b47bfe1f39bc29cb2947f7c0a00"
+  },
+  "results": [
+    {
+      "id": "OWN-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-01.json",
+      "evidenceSha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938"
+    },
+    {
+      "id": "OWN-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-02.json",
+      "evidenceSha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8"
+    },
+    {
+      "id": "OWN-03",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-03.json",
+      "evidenceSha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e"
+    },
+    {
+      "id": "OWN-04",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-04.json",
+      "evidenceSha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117"
+    },
+    {
+      "id": "OWN-05",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-05.json",
+      "evidenceSha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc"
+    },
+    {
+      "id": "OWN-06",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-06.json",
+      "evidenceSha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2"
+    },
+    {
+      "id": "OWN-07",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-07.json",
+      "evidenceSha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094"
+    },
+    {
+      "id": "OWN-08",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-08.json",
+      "evidenceSha256": "f005e8528ab05c8f69e0295855e5a2696dc763296488d21415b023f0799de104"
+    },
+    {
+      "id": "OWN-09",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-09.json",
+      "evidenceSha256": "dcb412565d4ada605bc6beca900d1926093805d116581c09723c64ce9d787dad"
+    },
+    {
+      "id": "OWN-10",
+      "status": "NOT_RUN",
+      "reason": "Error: OWN-10 geometry, seven-tab, DB registry and third-locale shell observed; the Marketplace-only clause 'platform physical read-only, allocation editable' and the in-app locale switch with draft preservation cannot be observed on the authorized SingleStore DEV Host (admin capability has canEditPhysicalInventory=true, canEditOfferedQuantity=false). No cross-edition switch or invented control was used.\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:779:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:95:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-10.json",
+      "evidenceSha256": "11050437ecf6b4bb3d009f54e90dcbaeb28f7dbdbd60b8a245e46a3d3c6e8471"
+    },
+    {
+      "id": "D2-ORDER",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-ORDER.json",
+      "evidenceSha256": "1ff173bebc745bc6c7a343474e42caeebc7e041ad0cca66ac75a85c0186ecdb3"
+    },
+    {
+      "id": "D2-HOLD",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-HOLD.json",
+      "evidenceSha256": "c05d50d654fbd5e0456a27752a7a5d7736d91e79ef40f16f64f84736180827fb"
+    },
+    {
+      "id": "D2-ALLOCATION",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-ALLOCATION.json",
+      "evidenceSha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb"
+    },
+    {
+      "id": "D2-PARTIAL",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-PARTIAL.json",
+      "evidenceSha256": "e9171d947c6ed674d34256994357cd5ac371fcdd0dba26c36ac5db652f68fb62"
+    },
+    {
+      "id": "D2-RECOVERY",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-RECOVERY.json",
+      "evidenceSha256": "f2471f93fb5dc7970619bb7590f4c14aed9c7e86186ae7b07bdc975f80d12bea"
+    },
+    {
+      "id": "D2-HTTP",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-HTTP.json",
+      "evidenceSha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b"
+    },
+    {
+      "id": "F-BENTRY-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-01.json",
+      "evidenceSha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7"
+    },
+    {
+      "id": "F-BENTRY-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-02.json",
+      "evidenceSha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff"
+    }
+  ]
+}

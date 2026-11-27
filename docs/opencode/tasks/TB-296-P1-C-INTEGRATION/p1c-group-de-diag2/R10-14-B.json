@@ -1,0 +1,40 @@
+{
+  "id": "R10-14-B",
+  "status": "NOT_RUN",
+  "requests": [
+    {
+      "label": "create",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "برای این فروشنده و گونه و کانال یک پیشنهاد فعال وجود دارد.",
+        "status": 409,
+        "instance": "/v1/admin/offers",
+        "errorCode": "offer.listing.duplicate_active",
+        "traceId": "d83533c3b749e0e0cf92073e2d4c15cb",
+        "correlationId": "f2b278c59484417c98515df5c2f673de",
+        "requestId": "0HNQC6P6UTACR:00000004"
+      }
+    }
+  ],
+  "sql": [],
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "before": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  },
+  "reason": "AssertionError [ERR_ASSERTION]: isolated create failed\n\n409 !== 201\n\n    at R10-14-B (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-cases.cjs:919:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "R10-09-N",
+  "requests": [],
+  "sql": [],
+  "status": "PASS",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "d5e2df7b6f7af59005ee966531d74a09187e08c9a1153ef2e752014ba477ade5",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-baseline-20261127062248.dump"
+  },
+  "negativeRoute": {
+    "invalidPublicStatus": 404,
+    "unknownPanelStatus": 200,
+    "finalPath": "/fa/admin/offers",
+    "beforeCount": 3323,
+    "afterCount": 3323,
+    "bodyText": "Not found This route does not exist."
+  },
+  "reason": "Invalid public two-letter prefix returned a real 404; unknown panel prefix canonicalized to the active default /fa/admin/offers with zero offer writes."
+}
