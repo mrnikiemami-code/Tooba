@@ -1,0 +1,273 @@
+{
+  "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+  "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+  "events": [
+    {
+      "type": "request",
+      "body": {
+        "onHand": 12,
+        "reason": "P1C verified correction",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "expectedVersion": "2026-11-27T03:28:06.6429190+00:00",
+        "operationId": "b44b883f-f4dc-4d2f-9b85-a0d227b89764"
+      }
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "body": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a05388-8aa2-7000-898c-c5b6339457c6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-FEEDBACK-1795750086343",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 12,
+        "reserved": 0,
+        "availableUnits": 12,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 12,
+            "reserved": 0,
+            "available": 12,
+            "revision": "2026-11-27T03:28:08.4397680+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-7",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "fulfillmentResponsibility": "Seller",
+        "lastUpdatedAt": "2026-11-27T03:28:06.444812+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): L",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T03:28:06.4448120+00:00",
+        "revisions": {
+          "offer": "2026-11-27T03:28:06.4448120+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "type": "request",
+      "body": {
+        "onHand": 14,
+        "reason": "P1C controlled failure",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "expectedVersion": "2026-11-27T03:28:08.4397680+00:00",
+        "operationId": "b38092b7-2594-42ec-97a3-ee2b9675325e"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "type": "request",
+      "body": {
+        "onHand": 14,
+        "reason": "P1C controlled failure",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "expectedVersion": "2026-11-27T03:28:08.4397680+00:00",
+        "operationId": "b38092b7-2594-42ec-97a3-ee2b9675325e"
+      }
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "body": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a05388-8aa2-7000-898c-c5b6339457c6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-FEEDBACK-1795750086343",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 14,
+        "reserved": 0,
+        "availableUnits": 14,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 14,
+            "reserved": 0,
+            "available": 14,
+            "revision": "2026-11-27T03:28:13.7504720+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-7",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "fulfillmentResponsibility": "Seller",
+        "lastUpdatedAt": "2026-11-27T03:28:06.444812+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): L",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T03:28:06.4448120+00:00",
+        "revisions": {
+          "offer": "2026-11-27T03:28:06.4448120+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    }
+  ],
+  "observations": [
+    {
+      "independentSql": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "onHand": 10,
+        "reserved": 0,
+        "factCount": 1
+      }
+    },
+    {
+      "inline": "ذخیره انجام نشد\nدلیل اصلاح الزامی است.\nتلاش دوباره"
+    },
+    {
+      "independentSql": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "onHand": 10,
+        "reserved": 0,
+        "factCount": 1
+      }
+    },
+    {
+      "kind": "success",
+      "text": "تغییرات ذخیره شد."
+    },
+    {
+      "independentRead": {
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "locationCode": "WH-ACC-ACC-DEMO",
+        "locationName": "انبار دمو ACC",
+        "onHand": 12,
+        "reserved": 0,
+        "available": 12,
+        "revision": "2026-11-27T03:28:08.4397680+00:00"
+      }
+    },
+    {
+      "independentSql": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "onHand": 12,
+        "reserved": 0,
+        "factCount": 2
+      }
+    },
+    {
+      "kind": "dialog",
+      "text": "ذخیره انجام نشد\n\nارتباط قطع شد و نتیجه ذخیره قطعی نیست. برای جلوگیری از ثبت تکراری، وضعیت را بازخوانی کنید.\n\nبازخوانی وضعیت\nبستن"
+    },
+    {
+      "afterFailure": {
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "locationCode": "WH-ACC-ACC-DEMO",
+        "locationName": "انبار دمو ACC",
+        "onHand": 12,
+        "reserved": 0,
+        "available": 12,
+        "revision": "2026-11-27T03:28:08.4397680+00:00"
+      }
+    },
+    {
+      "independentSql": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "onHand": 12,
+        "reserved": 0,
+        "factCount": 2
+      }
+    },
+    {
+      "kind": "success",
+      "text": "تغییرات ذخیره شد."
+    },
+    {
+      "independentRead": {
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "locationCode": "WH-ACC-ACC-DEMO",
+        "locationName": "انبار دمو ACC",
+        "onHand": 14,
+        "reserved": 0,
+        "available": 14,
+        "revision": "2026-11-27T03:28:13.7504720+00:00"
+      }
+    },
+    {
+      "independentSql": {
+        "offerId": "eecf9756-6fff-2e49-452e-e66cfb857f49",
+        "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+        "onHand": 14,
+        "reserved": 0,
+        "factCount": 3
+      }
+    }
+  ],
+  "before": {
+    "stockItemId": "01a21b0b-c77f-7000-bf2f-ed7c7c75b3e7",
+    "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+    "locationCode": "WH-ACC-ACC-DEMO",
+    "locationName": "انبار دمو ACC",
+    "onHand": 10,
+    "reserved": 0,
+    "available": 10,
+    "revision": "2026-11-27T03:28:06.6429190+00:00"
+  },
+  "status": "PASS"
+}
