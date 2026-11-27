@@ -25,6 +25,7 @@ import {
 } from "../admin-offer-api";
 import { adminOfferIntent, clearAdminOfferIntent } from "../offer-create-intent";
 import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
+import { offerIntentScope } from "../../../../lib/offer-workspace/owner-write-intent.ts";
 
 const PAGE_SIZE = 10;
 
@@ -85,9 +86,9 @@ export default function AdminCreateOfferPage() {
         findAdminActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadShippingTypes: () => loadAdminShippingTypes(),
       loadChannels: () => loadAdminAllowedOfferChannels(),
-      loadInventoryLocations: () => loadAdminInventoryLocations(),
+      loadInventoryLocations: (sellerId, responsibility) => responsibility === "Platform" ? loadAdminInventoryLocations() : sellerId ? loadAdminInventoryLocations(sellerId) : Promise.resolve([]),
       createAndSaveDraft: async (input) => {
-        const scope = `admin:${input.sellerPartyId}:${input.catalogVariantId}`;
+        const scope = offerIntentScope("admin", input.sellerPartyId ?? "", input.catalogVariantId, input.channel);
         let requestId: string;
         try {
           requestId = adminOfferIntent(scope);
@@ -95,6 +96,7 @@ export default function AdminCreateOfferPage() {
           return { ok: false, errorCode: "offer.create.intent_not_durable" };
         }
         return createAndApplyOffer({
+          scope,
           create: async () => {
             const created = await createAdminOffer({
               sellerPartyId: input.sellerPartyId ?? "",
@@ -115,11 +117,11 @@ export default function AdminCreateOfferPage() {
             const result = await loadAdminOfferDetail(offerId);
             return result.ok ? { ok: true, detail: result.detail } : { ok: false, errorCode: result.errorCode };
           },
-          savePrice: async (offerId, amount, currency) => {
-            const result = await writeAdminOfferPrice(offerId, { amount, currency });
+          savePrice: async (offerId, amount, currency, version, operationId) => {
+            const result = await writeAdminOfferPrice(offerId, { amount, currency, operationId }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
-          saveConditions: async (offerId, value) => {
+          saveConditions: async (offerId, value, version) => {
             const result = await patchAdminOffer(offerId, {
               sellerSku: value.sellerSku,
               status: "Draft",
@@ -127,22 +129,22 @@ export default function AdminCreateOfferPage() {
               customReturnWindowDays: value.customReturnWindowDays,
               minimumOrderQuantity: value.minimumOrderQuantity,
               maximumOrderQuantity: value.maximumOrderQuantity,
-            });
+            }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           provisionPosition: async (offerId, locationId) => {
             const result = await ensureAdminInventoryPosition(offerId, locationId);
             return result ? { ok: true, stockItemId: result.stockItemId } : { ok: false, errorCode: "inventory.provision.failed" };
           },
-          saveInventory: async (offerId, stockItemId, onHand, reason) => {
-            const result = await writeAdminOfferInventory(offerId, { stockItemId, onHand, reason });
+          saveInventory: async (offerId, stockItemId, onHand, reason, version, operationId) => {
+            const result = await writeAdminOfferInventory(offerId, { stockItemId, onHand, reason, operationId }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
-          saveFulfillment: async (offerId, value) => {
+          saveFulfillment: async (offerId, value, version) => {
             const result = await assignAdminOfferFulfillment(offerId, {
               responsibility: value.responsibility,
               shippingTypeId: value.shippingTypeId,
-            });
+            }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           onCommitted: () => clearAdminOfferIntent(scope),
@@ -150,7 +152,7 @@ export default function AdminCreateOfferPage() {
       },
       createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku, channel }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
-        const scope = `admin:${sellerPartyId}:${catalogVariantId}`;
+        const scope = offerIntentScope("admin", sellerPartyId, catalogVariantId, channel ?? "");
         let requestId: string;
         try {
           requestId = adminOfferIntent(scope);

@@ -71,7 +71,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
   const format: OfferFormatters = useMemo(() => createOfferFormatters(offerLocale), [offerLocale]);
   const baseMessages = useMemo(
-    () => offerWorkspaceMessages[offerLocale.language as "fa" | "en"] ?? offerWorkspaceMessages.fa,
+    () => offerWorkspaceMessages[offerLocale.language as "fa" | "en"] ?? offerWorkspaceMessages.en,
     [offerLocale.language],
   );
   const t: OfferWorkspaceMessages = useMemo(
@@ -127,7 +127,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     const tenant = typeof window === "undefined" ? "ssr" : window.localStorage.getItem("tooba.tenantId") ?? "default";
     const owner = detail?.sellerPartyId ?? selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "owner";
     const variant = detail?.catalogVariantId ?? selectedVariant?.catalogVariantId ?? "variant";
-    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${variant}:${selectedChannel}:${adapter.offerId ?? "new"}`;
+    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${variant}:${detail?.channel ?? selectedChannel}:${adapter.offerId ?? "new"}`;
   }, [adapter.role, adapter.mode, adapter.offerId, adapter.fixedSeller?.sellerPartyId, detail?.sellerPartyId, detail?.catalogVariantId, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, selectedChannel]);
   const restoredRef = useRef(false);
   const [saveRetryable, setSaveRetryable] = useState(true);
@@ -183,10 +183,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const localDetail = useMemo(
     () => detail ?? (
       identityReady && selectedProduct && selectedVariant
-        ? buildLocalDetail(adapter, selectedSeller, selectedProduct, selectedVariant, draft.sellerSku)
+        ? buildLocalDetail(adapter, selectedSeller, selectedProduct, selectedVariant, draft.sellerSku, selectedChannel)
         : null
     ),
-    [adapter, detail, draft.sellerSku, identityReady, selectedProduct, selectedSeller, selectedVariant],
+    [adapter, detail, draft.sellerSku, identityReady, selectedProduct, selectedSeller, selectedVariant, selectedChannel],
   );
   const dirtyDetail = detail ?? localDetail;
   const commercialChanged = dirtyDetail ? commercialDirty(dirtyDetail, draft) : false;
@@ -271,13 +271,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   useEffect(() => {
     if (isEdit || !adapter.loadInventoryLocations) return;
     let active = true;
-    void adapter.loadInventoryLocations().then((rows) => {
+    setInventoryLocations([]);
+    void adapter.loadInventoryLocations(selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId, responsibility).then((rows) => {
       if (!active) return;
       setInventoryLocations(rows);
-      setLocalInventory((current) => current.length > 0 ? current : rows.map((row) => ({ locationId: row.locationId, onHand: "", reason: "" })));
+      setLocalInventory((current) => rows.map((row) => current.find((item) => item.locationId === row.locationId) ?? { locationId: row.locationId, onHand: "", reason: "" }));
     });
     return () => { active = false; };
-  }, [adapter, isEdit]);
+  }, [adapter, isEdit, selectedSeller?.sellerPartyId, responsibility]);
   useEffect(() => {
     if (restoredRef.current) return;
     if (isEdit && (!detail || loading)) return;
@@ -784,7 +785,7 @@ function emptyDraft(): OfferWorkspaceDraft {
   return {
     sellerSku: "",
     amount: "",
-    currency: "IRR",
+    currency: "",
     inventoryOnHand: {},
     inventoryReason: "",
     offeredQuantity: "",

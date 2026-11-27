@@ -24,6 +24,7 @@ import {
 } from "../seller-offer-api";
 import { clearOfferIntent, readOrCreateOfferIntent } from "../offer-create-intent";
 import { createAndApplyOffer } from "../../../../features/offer-create/offer-create-and-apply.ts";
+import { offerIntentScope } from "../../../../lib/offer-workspace/owner-write-intent.ts";
 
 const PAGE_SIZE = 10;
 
@@ -72,7 +73,7 @@ export default function VendorCreateOfferPage() {
       loadChannels: () => loadSellerAllowedOfferChannels(sellerPartyId),
       loadInventoryLocations: () => loadSellerInventoryLocations(sellerPartyId),
       createAndSaveDraft: async (input) => {
-        const scope = `${sellerPartyId}:${input.catalogVariantId}`;
+        const scope = offerIntentScope("seller", sellerPartyId, input.catalogVariantId, input.channel);
         let requestId: string;
         try {
           requestId = readOrCreateOfferIntent(scope);
@@ -80,10 +81,16 @@ export default function VendorCreateOfferPage() {
           return { ok: false, errorCode: "offer.create.intent_not_durable" };
         }
         return createAndApplyOffer({
+          scope,
           create: async () => {
             const created = await createSellerOffer(sellerPartyId, {
               catalogVariantId: input.catalogVariantId,
               sellerSku: input.sellerSku,
+              channel: input.channel,
+              returnPolicyChoice: input.returnPolicyChoice,
+              customReturnWindowDays: input.customReturnWindowDays,
+              minimumOrderQuantity: input.minimumOrderQuantity,
+              maximumOrderQuantity: input.maximumOrderQuantity,
               status: "Draft",
               requestId,
             });
@@ -97,19 +104,19 @@ export default function VendorCreateOfferPage() {
               ? { ok: true, detail: result.detail }
               : { ok: false, errorCode: result.message ?? "host-unreachable" };
           },
-          savePrice: async (offerId, amount, currency) => {
-            const result = await writeSellerOfferPrice(sellerPartyId, offerId, { amount, currency });
+          savePrice: async (offerId, amount, currency, version, operationId) => {
+            const result = await writeSellerOfferPrice(sellerPartyId, offerId, { amount, currency, operationId }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           provisionPosition: async (offerId, locationId) => {
             const result = await ensureSellerInventoryPosition(sellerPartyId, offerId, locationId);
             return result ? { ok: true, stockItemId: result.stockItemId } : { ok: false, errorCode: "inventory.provision.failed" };
           },
-          saveInventory: async (offerId, stockItemId, onHand, reason) => {
-            const result = await writeSellerOfferInventory(sellerPartyId, offerId, { stockItemId, onHand, reason });
+          saveInventory: async (offerId, stockItemId, onHand, reason, version, operationId) => {
+            const result = await writeSellerOfferInventory(sellerPartyId, offerId, { stockItemId, onHand, reason, operationId }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
-          saveConditions: async (offerId, value) => {
+          saveConditions: async (offerId, value, version) => {
             const result = await patchSellerOffer(sellerPartyId, offerId, {
               sellerSku: value.sellerSku,
               status: "Draft",
@@ -117,14 +124,14 @@ export default function VendorCreateOfferPage() {
               customReturnWindowDays: value.customReturnWindowDays,
               minimumOrderQuantity: value.minimumOrderQuantity,
               maximumOrderQuantity: value.maximumOrderQuantity,
-            });
+            }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           onCommitted: () => clearOfferIntent(scope),
         }, input);
       },
       createDraft: async ({ catalogVariantId, sellerSku, channel }) => {
-        const scope = `${sellerPartyId}:${catalogVariantId}`;
+        const scope = offerIntentScope("seller", sellerPartyId, catalogVariantId, channel ?? "");
         let requestId: string;
         try {
           requestId = readOrCreateOfferIntent(scope);

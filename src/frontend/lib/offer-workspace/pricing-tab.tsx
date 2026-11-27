@@ -79,9 +79,9 @@ function AmountInput({ value, onChange, format, invalid }: { value: string; onCh
 
 export function PricingTab(props: PricingTabProps) {
   const { t, format, detail } = props;
-  const currency = detail.currency || "IRR";
+  const currency = detail.currency || props.currency;
   const amount = detail.amount;
-  const legacyDecimals = amount != null && (currency || "IRR").toUpperCase() === "IRR" && !Number.isInteger(amount);
+  const legacyDecimals = amount != null && currency.toUpperCase() === "IRR" && !Number.isInteger(amount);
   const parsed = parseDecimal(props.amount);
   const preview = parsed != null && parsed >= 0 ? format.money(parsed, currency) : null;
   return (
@@ -113,8 +113,8 @@ export function PricingTab(props: PricingTabProps) {
                   <td data-label={t.pricingAmount} className={`${styles.numCell} ${styles.strongCell}`}>
                     {amount == null ? "—" : format.money(amount, currency)}
                   </td>
-                  <td data-label={t.market}>{format.regionName("IR")}</td>
-                  <td data-label={t.channel}>{t.channelMarketplace}</td>
+                  <td data-label={t.market}>{"—"}</td>
+                  <td data-label={t.channel}>{detail.channel === "Marketplace" ? t.channelMarketplace : detail.channel || "—"}</td>
                   <td data-label={t.pricingType}>{t.pricingTypeBase}</td>
                   <td data-label={t.pricingStatus}>
                     <span className={`${styles.pill} ${amount == null ? styles.pillNeutral : styles.pillOk}`}>

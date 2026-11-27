@@ -6,6 +6,7 @@ export function buildLocalDetail(
   product: OfferProductOption,
   variant: OfferVariantOption,
   sellerSku: string,
+  channel: string,
 ): OfferWorkspaceDetail {
   return {
     offerId: "",
@@ -17,9 +18,9 @@ export function buildLocalDetail(
     brandName: product.brandName,
     sellerSku: sellerSku.trim() || null,
     status: "Draft",
-    channel: "Marketplace",
+    channel,
     amount: null,
-    currency: "IRR",
+    currency: "",
     onHand: 0,
     reserved: 0,
     availableUnits: 0,
