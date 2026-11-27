@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
 import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { ErrorState, Skeleton } from "../../../../design-system";
-import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
-import { OfferWorkspace } from "../../../../lib/offer-workspace";
+import { useLocale, useLocalizedPath } from "../../../../lib/i18n/locale-context";
+import { OfferWorkspace, offerWorkspaceMessages } from "../../../../lib/offer-workspace";
 import type { OfferTabId, OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { loadSellerReservationPolicy, readSellerPartyId } from "../../seller-api";
 import {
@@ -28,7 +28,8 @@ export default function VendorProductDetailPage() {
   const localizePath = useLocalizedPath();
   const registry = useRegistryLocale();
   const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
-  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
+  const resourceLocale = useLocale();
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language) ?? offerWorkspaceMessages[resourceLocale];
   const offerId = params?.offerId ?? "";
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
   const [reservation, setReservation] = useState<ReservationPolicyEditorView | null>(null);
@@ -98,7 +99,7 @@ export default function VendorProductDetailPage() {
     if (tab === "identity" && detail.productId) {
       return (
         <details className="rounded-ds border border-border bg-surface" data-testid="seller-product-attributes">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">اطلاعات تکمیلی محصول</summary>
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">{workspaceMessages.productAdditionalInformation}</summary>
           <div className="border-t border-border p-3">
             <SellerProductAttributesPanel productId={detail.productId} />
           </div>
@@ -113,7 +114,7 @@ export default function VendorProductDetailPage() {
             draft={reservationDraft}
             onDraftChange={setReservationDraft}
             canEdit={false}
-            locale="fa"
+            locale={resourceLocale}
           />
         </section>
       );
@@ -132,10 +133,10 @@ export default function VendorProductDetailPage() {
     return (
       <main className="mx-auto w-full max-w-6xl">
         <ErrorState
-          title="دسترسی مجاز نیست"
-          detail="هویت فروشنده در نشست مشخص نیست."
+          title={workspaceMessages.denied}
+          detail={workspaceMessages.sellerSessionHint}
           onRetry={() => window.location.reload()}
-          retryLabel="تلاش دوباره"
+          retryLabel={workspaceMessages.retry}
         />
       </main>
     );

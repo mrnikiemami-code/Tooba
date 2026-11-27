@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { DEFAULT_LOCALE, dirForLocale, langForLocale, LOCALE_COOKIE_NAME, type Locale } from "./locale.ts";
-import { localePath, parseLocalePrefix, parseRegistryPanelPrefix, stripLocalePrefix } from "./routing.ts";
+import { localePath, parseLocalePrefix, parseRegistryPanelPrefix, registryPanelSwitchPath, stripLocalePrefix } from "./routing.ts";
 import { loadActiveRegistryLanguages, renderingFallback, resolveRegistryLanguage, type RegistryLocaleDefinition, type RegistryLocaleState } from "./registry-locale-model.ts";
 
 const initialRegistry: RegistryLocaleState = { locale: renderingFallback(DEFAULT_LOCALE), loaded: false, available: false, requestedPrefix: null, languages: [], panel: false };
@@ -93,7 +93,10 @@ export function LocaleProvider({ locale: serverLocale, requestedPrefix = null, c
   const switchLocalePath = useCallback((target: Locale) => localePath(target, typeof window === "undefined" ? "/" : stripLocalePrefix(window.location.pathname)), []);
   const switchRegistryPath = useCallback((target: string) => {
     const entry = registry.languages.find(row => row.active && row.urlPrefix === target);
-    return panel && entry ? panelPath(entry.urlPrefix, path) : null;
+    if (!panel || !entry) return null;
+    return typeof window === "undefined"
+      ? registryPanelSwitchPath(entry.urlPrefix, path)
+      : registryPanelSwitchPath(entry.urlPrefix, window.location.pathname, window.location.search, window.location.hash);
   }, [registry.languages, panel, path]);
   const value = useMemo(() => ({ locale, registry, localizePath, switchLocalePath, switchRegistryPath }), [locale, registry, localizePath, switchLocalePath, switchRegistryPath]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

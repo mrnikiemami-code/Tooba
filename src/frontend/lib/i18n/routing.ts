@@ -107,6 +107,14 @@ export function parseRegistryPanelPrefix(pathname: string): { prefix: string; pa
   return { prefix: match[1]!, pathname: `/${match[2]}${rest === "" ? "" : rest}` };
 }
 
+/** Build a panel locale switch without losing seller context, tab or fragment.
+ * The caller resolves the target against the active language registry first. */
+export function registryPanelSwitchPath(prefix: string, pathname: string, search = "", hash = ""): string | null {
+  const bare = parseRegistryPanelPrefix(pathname)?.pathname ?? pathname;
+  if (!/^\/(admin|vendor-panel)(?:\/|$)/.test(bare) || !/^[a-z0-9-]+$/i.test(prefix)) return null;
+  return "/" + prefix + bare + search + hash;
+}
+
 /** حذف prefix locale از مسیر داخلی. */
 export function stripLocalePrefix(pathname: string): string {
   const parsed = parseLocalePrefix(pathname);

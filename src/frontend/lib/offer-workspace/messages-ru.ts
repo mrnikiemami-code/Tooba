@@ -4,6 +4,11 @@ import { offerListMessages, type OfferListMessages } from "./i18n.ts";
 /** Russian overrides for offer-owned copy; missing keys fall back to the English catalog. */
 const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   titleEdit: "Предложение",
+  productAdditionalInformation: "Дополнительная информация о продукте",
+  denied: "Доступ запрещён",
+  sellerSessionHint: "Продавец определяется текущим сеансом.",
+  retry: "Повторить",
+  priceRequired: "Введите сумму или отмените изменение цены. Пустая сумма не сохраняется как ноль.",
   titleCreate: "Новое предложение",
   save: "Сохранить",
   saving: "Сохранение…",

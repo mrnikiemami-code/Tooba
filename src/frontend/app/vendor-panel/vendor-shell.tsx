@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLocale, useRegistryLocale, useLocalizedPath } from "../../lib/i18n/locale-context";
 import { parseRegistryPanelPrefix } from "../../lib/i18n/routing";
+import { PanelLanguageSwitcher } from "../../lib/i18n/panel-language-switcher";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -277,6 +278,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
                 )}
               </select>
             </label>
+            {(pathname === "/vendor-panel/products" || pathname.startsWith("/vendor-panel/products/")) && <PanelLanguageSwitcher />}
             <span className="text-sm text-gray-600 truncate max-w-[100px] sm:max-w-none">{sellerLabel}</span>
             <Link
               href="/"

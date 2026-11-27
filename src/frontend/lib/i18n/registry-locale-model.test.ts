@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseRegistryLanguages, resolveRegistryLanguage, renderingFallback } from "./registry-locale-model.ts";
+import { registryPanelSwitchPath } from "./routing.ts";
 
 const rows = [
   { code: "fa-IR", urlPrefix: "persian", culture: "fa-IR", direction: "RTL", calendarDisplay: "Jalali", isActive: true, isDefault: true, nativeName: "فارسی" },
@@ -20,4 +21,13 @@ test("registry—not two-letter guesses—owns enabled locale, prefix, direction
 test("malformed active registry rows do not become enabled fake languages", () => {
   assert.throws(() => parseRegistryLanguages([{ ...rows[0], culture: "" }]));
   assert.throws(() => parseRegistryLanguages([rows[0], { ...rows[1], urlPrefix: "persian" }]));
+});
+
+test("panel language switching preserves offer identity, seller context and tab", () => {
+  assert.equal(registryPanelSwitchPath("turkish", "/persian/vendor-panel/products/abc", "?sellerPartyId=seller-a&tab=pricing", "#price"),
+    "/turkish/vendor-panel/products/abc?sellerPartyId=seller-a&tab=pricing#price");
+  assert.equal(registryPanelSwitchPath("english", "/admin/offers/new", "?tab=inventory"),
+    "/english/admin/offers/new?tab=inventory");
+  assert.equal(registryPanelSwitchPath("english", "/products/abc"), null);
+  assert.equal(registryPanelSwitchPath("../bad", "/admin/offers"), null);
 });

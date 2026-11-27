@@ -47,6 +47,7 @@ import {
 import { isActiveAdminNavItem } from "./admin-nav-active";
 import { useLocale, useRegistryLocale, useLocalizedPath } from "../../lib/i18n/locale-context";
 import { parseRegistryPanelPrefix } from "../../lib/i18n/routing";
+import { PanelLanguageSwitcher } from "../../lib/i18n/panel-language-switcher";
 
 type NavItemDef = {
   id: string;
@@ -276,6 +277,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {(pathname === "/admin/offers" || pathname.startsWith("/admin/offers/")) && <PanelLanguageSwitcher />}
             <span className="hidden sm:inline-flex items-center rounded-full bg-[#2563EB]/10 text-[#2563EB] px-3 py-1 text-[11px] font-bold">
               {copy("دسترسی مدیر", "Admin access")}
             </span>

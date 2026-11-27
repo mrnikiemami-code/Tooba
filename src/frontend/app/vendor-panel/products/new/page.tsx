@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
 import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
 import { ErrorState, Skeleton } from "../../../../design-system";
-import { useLocalizedPath } from "../../../../lib/i18n/locale-context";
-import { OfferWorkspace } from "../../../../lib/offer-workspace";
+import { useLocale, useLocalizedPath } from "../../../../lib/i18n/locale-context";
+import { OfferWorkspace, offerWorkspaceMessages } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { readSellerPartyId } from "../../seller-api";
 import {
@@ -33,7 +33,8 @@ export default function VendorCreateOfferPage() {
   const localizePath = useLocalizedPath();
   const registry = useRegistryLocale();
   const offerLocale = { code: registry.locale.code, culture: registry.locale.culture, language: registry.locale.language, direction: registry.locale.direction, calendar: registry.locale.calendar };
-  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language);
+  const resourceLocale = useLocale();
+  const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language) ?? offerWorkspaceMessages[resourceLocale];
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -168,10 +169,10 @@ export default function VendorCreateOfferPage() {
     return (
       <main className="mx-auto w-full max-w-6xl">
         <ErrorState
-          title="دسترسی مجاز نیست"
-          detail="هویت فروشنده در نشست مشخص نیست."
+          title={workspaceMessages.denied}
+          detail={workspaceMessages.sellerSessionHint}
           onRetry={() => window.location.reload()}
-          retryLabel="تلاش دوباره"
+          retryLabel={workspaceMessages.retry}
         />
       </main>
     );

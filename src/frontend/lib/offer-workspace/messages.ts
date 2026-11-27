@@ -54,6 +54,7 @@ export interface OfferWorkspaceMessages {
   channelPolicyPending: string;
   sellerHint: string;
   sellerSessionHint: string;
+  productAdditionalInformation: string;
   sellerRequired: string;
   productRequired: string;
   variantRequired: string;
@@ -272,6 +273,7 @@ const fa: OfferWorkspaceMessages = {
   channelPolicyPending: "کانال فعلی سامانه؛ سیاست انتخاب کانال هنوز از سوی دامنه تعیین نشده و به‌صورت انتخاب کاربر نمایش داده نمی‌شود.",
   sellerHint: "جست‌وجو بر اساس نام یا کد فروشنده، با صفحه‌بندی سروری.",
   sellerSessionHint: "هویت فروشنده از نشست شما خوانده می‌شود.",
+  productAdditionalInformation: "اطلاعات تکمیلی محصول",
   sellerRequired: "فروشنده را انتخاب کنید.",
   productRequired: "محصول را از کاتالوگ انتخاب کنید.",
   variantRequired: "یک تنوع معتبر انتخاب کنید.",
@@ -491,6 +493,7 @@ const en: OfferWorkspaceMessages = {
   channelPolicyPending: "Current system channel; the owning domain has not yet decided a selectable channel policy.",
   sellerHint: "Search by seller name or code with server paging.",
   sellerSessionHint: "The seller identity comes from your session.",
+  productAdditionalInformation: "Additional product information",
   sellerRequired: "Choose a seller.",
   productRequired: "Choose a product from the catalogue.",
   variantRequired: "Choose a valid variant.",
@@ -662,6 +665,7 @@ export const offerWorkspaceMessages: Record<"fa" | "en", OfferWorkspaceMessages>
 /** Maps validation/server codes to user-facing copy; never renders a raw machine code. */
 export function offerErrorText(t: OfferWorkspaceMessages, code: string): string {
   switch (code) {
+    case "offer.price.amount_required":
     case "offer.price.required":
       return t.priceRequired;
     case "offer.price.invalid":
