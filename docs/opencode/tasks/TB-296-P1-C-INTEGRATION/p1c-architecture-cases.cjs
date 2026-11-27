@@ -21,10 +21,13 @@ function snapshot(root,sha,label){
   checked("git",["archive","--format=tar","--output="+tar,sha,"src/frontend",...baselineDirs]);
   checked("tar",["-xf",tar,"-C",target]);fs.unlinkSync(tar);return target;
 }
-const driver="const {run}=require('node:test');const files=JSON.parse(process.argv[1]);const out=[];const stream=run({files,concurrency:1});for(const type of ['test:pass','test:fail'])stream.on(type,d=>{if(d.nesting===0){const e=d.details?.error;out.push({type,name:d.name,file:d.file,message:e?.cause?.message??e?.message??'',code:e?.cause?.code??e?.code??null});}});stream.on('end',()=>{process.stdout.write(JSON.stringify(out));process.exitCode=out.some(x=>x.type==='test:fail')?1:0;});stream.resume();";
+const driver="const {run}=require('node:test');const files=JSON.parse(process.argv[2]);const out=[];const stream=run({files,concurrency:1});for(const type of ['test:pass','test:fail'])stream.on(type,d=>{if(d.nesting===0){const e=d.details?.error;out.push({type,name:d.name,file:d.file,message:e?.cause?.message??e?.message??'',code:e?.cause?.code??e?.code??null});}});stream.on('end',()=>{process.stdout.write(JSON.stringify(out));process.exitCode=out.some(x=>x.type==='test:fail')?1:0;});stream.resume();";
 function runGuards(root,names=guards){
   const files=names.map(n=>path.join(root,guardDir,n));files.forEach(f=>assert.ok(fs.existsSync(f),f));
-  const result=command(process.execPath,["--experimental-strip-types","-e",driver,JSON.stringify(files)],root);
+  const runner=path.join(root,"p1c-node-guard-driver.cjs");
+  if(!fs.existsSync(runner))fs.writeFileSync(runner,driver,{flag:"wx"});
+  else assert.equal(fs.readFileSync(runner,"utf8"),driver);
+  const result=command(process.execPath,["--experimental-strip-types",runner,JSON.stringify(files)],root);
   const cases=JSON.parse(result.stdout);
   assert.ok(cases.length>=names.length,"guard runner did not report all files");
   assert.ok(cases.every(c=>c.type==="test:pass"||c.type==="test:fail"));
