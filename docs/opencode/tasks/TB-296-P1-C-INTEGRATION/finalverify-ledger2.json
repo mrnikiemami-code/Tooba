@@ -1,0 +1,330 @@
+[
+  {
+    "id": "R10-01-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-01-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-02-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-03-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-04-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-05-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-06-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-07-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-08-N",
+    "status": "PASS",
+    "reason": "Blank price variants were rejected as typed 4xx without write and an unauthorized seller fulfillment attempt was denied without writing responsibility.",
+    "startedAt": "2026-11-27T14:27:33.432Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-08-N.json",
+    "evidenceSha256": "eaccce0039002457084018183e0141fdc0dcfe9e2fddedc988ea41a4e6eade47",
+    "finishedAt": "2026-11-27T14:27:35.847Z"
+  },
+  {
+    "id": "R10-08-B",
+    "status": "PASS",
+    "reason": "Policy-approved zero price persisted, negative price was denied without overwrite, and shipping assignment cleared to true null while an orphan shipping type was rejected by owner policy.",
+    "startedAt": "2026-11-27T14:27:35.848Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-08-B.json",
+    "evidenceSha256": "f43e584b7c6eacf8bc790aa514449196537d42b3dd8bece4d12679233738692e",
+    "finishedAt": "2026-11-27T14:27:37.429Z"
+  },
+  {
+    "id": "R10-09-P",
+    "status": "PASS",
+    "reason": "Actual create/edit/list routes at FA/EN/RU obeyed live registry code/direction and preserved local drafts across real locale switches.",
+    "startedAt": "2026-11-27T14:27:37.429Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-09-P.json",
+    "evidenceSha256": "06383d06610fbe7a652a59c1152c8306032f7ab4ba8e437bd19b8fdcab8d4346",
+    "finishedAt": "2026-11-27T14:27:41.457Z"
+  },
+  {
+    "id": "R10-09-N",
+    "status": "PASS",
+    "reason": "Invalid public two-letter prefix returned a real 404; unknown panel prefix canonicalized to the active default /fa/admin/offers with zero offer writes.",
+    "startedAt": "2026-11-27T14:27:41.458Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-09-N.json",
+    "evidenceSha256": "89efad570bbcf900e36328c48dd0cbb4064bb2279b5061209a7f437bddadb7c8",
+    "finishedAt": "2026-11-27T14:27:42.518Z"
+  },
+  {
+    "id": "R10-09-B",
+    "status": "PASS",
+    "reason": "Live DB registry matched the public API, and the actual shared resolver honored an isolated changed default (en-US) plus code-differs-from-prefix (de-DE) fixture; module SHA captured.",
+    "startedAt": "2026-11-27T14:27:42.519Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-09-B.json",
+    "evidenceSha256": "62ac31d2219a74547112df13b5d972aeda733f9a1566f147c967d0f76260790a",
+    "finishedAt": "2026-11-27T14:27:42.773Z"
+  },
+  {
+    "id": "R10-10-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-10-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-11-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-12-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-13-B",
+    "status": "PASS",
+    "reason": "Actual long-label offer form and third-locale grid stayed within viewport at 360/768/1440 with visible usable save/tab controls and zero unintended horizontal overflow.",
+    "startedAt": "2026-11-27T14:27:42.774Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\R10-13-B.json",
+    "evidenceSha256": "4b1debeb85c883a1acf8160f940bf126fead62f6788bf0a78c1af8a9322f448b",
+    "finishedAt": "2026-11-27T14:27:49.499Z"
+  },
+  {
+    "id": "R10-14-P",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-N",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "R10-14-B",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-03",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-04",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-05",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-06",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-07",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-08",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "OWN-09",
+    "status": "FAIL",
+    "reason": "Error: real owner transaction commit fault was not reached\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:44:25)\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:697:3\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:95:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+    "startedAt": "2026-11-27T14:27:49.500Z",
+    "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalverify-evidence2\\OWN-09.json",
+    "evidenceSha256": "eafde5d004d0323031383e2911690d69546577697152fc6cbf56bd35fd8dfd8e",
+    "finishedAt": "2026-11-27T14:27:51.517Z"
+  },
+  {
+    "id": "OWN-10",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ORDER",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HOLD",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-ALLOCATION",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-PARTIAL",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-RECOVERY",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "D2-HTTP",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-01",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  },
+  {
+    "id": "F-BENTRY-02",
+    "status": "NOT_RUN",
+    "reason": "not yet executed"
+  }
+]

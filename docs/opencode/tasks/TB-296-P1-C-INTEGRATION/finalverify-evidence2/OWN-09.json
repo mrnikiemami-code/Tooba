@@ -1,0 +1,429 @@
+{
+  "id": "OWN-09",
+  "generatedAt": "2026-11-27T14:27:49.500Z",
+  "requests": [
+    {
+      "route": "/v1/admin/dev-context",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "actorLabel": "admin-actor@tooba.local",
+        "tenantId": "store-alpha"
+      }
+    },
+    {
+      "route": "/v1/seller/dev-contexts",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "actors": [
+          {
+            "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+            "actorLabel": "اپراتور آرمان",
+            "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "sellerLabel": "فروشگاه آرمان",
+            "contextKind": "seller-owner"
+          },
+          {
+            "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+            "actorLabel": "اپراتور دیجی‌استایل",
+            "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+            "sellerLabel": "دیجی‌استایل نمونه",
+            "contextKind": "seller-owner-alt"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/v1/admin/offers/active-listing?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&catalogVariantId=01a0967d-a2eb-7000-9a12-779c15789bac&channel=Marketplace",
+      "method": "GET",
+      "status": 200,
+      "body": null
+    },
+    {
+      "route": "/v1/admin/offers",
+      "method": "POST",
+      "payload": {
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "channel": "Marketplace",
+        "sellerSku": "P1C-5029bf0f-ceff-45e3-97af-74c078e0bcd1",
+        "status": "Draft",
+        "requestId": "P1C-8f764c88-3435-41f4-ab00-77f1239add06"
+      },
+      "status": 201,
+      "body": {
+        "offerId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-5029bf0f-ceff-45e3-97af-74c078e0bcd1",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T14:27:49.5154541+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T14:27:49.5154541+00:00",
+        "revisions": {
+          "offer": "2026-11-27T14:27:49.5154541+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/87f4df3c-e204-2452-355c-a68e7cae84c9",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-5029bf0f-ceff-45e3-97af-74c078e0bcd1",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-11-27T14:27:49.515454+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T14:27:49.5154540+00:00",
+        "revisions": {
+          "offer": "2026-11-27T14:27:49.5154540+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    },
+    {
+      "route": "/v1/admin/offers/87f4df3c-e204-2452-355c-a68e7cae84c9/fulfillment",
+      "method": "PUT",
+      "payload": {
+        "responsibility": "Platform",
+        "shippingTypeId": null,
+        "expectedVersion": "2026-11-27T14:27:49.5154540+00:00"
+      },
+      "status": 200,
+      "body": {
+        "offerId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "channel": "Marketplace",
+        "status": "Draft",
+        "sellerSku": "P1C-5029bf0f-ceff-45e3-97af-74c078e0bcd1",
+        "returnPolicyChoice": "Default",
+        "fulfillmentResponsibility": "Platform"
+      }
+    },
+    {
+      "route": "/v1/admin/offers/87f4df3c-e204-2452-355c-a68e7cae84c9",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "offerId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+        "productId": "01a0967d-a26c-7000-947b-efdcba9b6020",
+        "productTitle": "زارا شلوار مردانه سری 6",
+        "brandName": "زارا",
+        "sellerSku": "P1C-5029bf0f-ceff-45e3-97af-74c078e0bcd1",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-6-3",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "fulfillmentResponsibility": "Platform",
+        "lastUpdatedAt": "2026-11-27T14:27:49.570717+00:00",
+        "variantLabel": "رنگ (clothing): بژ · سایز (clothing): XL",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-27T14:27:49.5707170+00:00",
+        "revisions": {
+          "offer": "2026-11-27T14:27:49.5707170+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        }
+      }
+    }
+  ],
+  "sql": [],
+  "harness": [
+    {
+      "command": "fault",
+      "config": {
+        "edition": "Marketplace",
+        "runId": "own-09-mwz2sx5h",
+        "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+        "httpBase": "http://127.0.0.1:5088",
+        "offers": [
+          {
+            "key": "A",
+            "offerId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+            "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "variantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "positions": [
+              {
+                "ownerKind": "Marketplace",
+                "stock": 100,
+                "eligible": true
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "command": "fault",
+        "edition": "Marketplace",
+        "runId": "own-09-mwz2sx5h",
+        "fixture": [
+          {
+            "OfferKey": "A",
+            "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+            "SellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+            "VariantId": "01a0967d-a2eb-7000-9a12-779c15789bac",
+            "LocationId": "01a21d67-c572-7000-a63b-49466a581c16",
+            "Code": "P1C-F-OWN-09-MWZ2SX5H-1",
+            "StockItemId": "01a21d67-c7ad-7000-b38f-6baf7c6cc6b9",
+            "Stock": 100,
+            "Eligible": true
+          }
+        ],
+        "steps": [
+          {
+            "label": "precommit-fault",
+            "ok": false,
+            "error": "InvalidOperationException: injected-before-owner-commit"
+          },
+          {
+            "label": "after precommit",
+            "offers": [
+              {
+                "offer_id": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "fulfillment_responsibility": "Platform"
+              }
+            ],
+            "allocations": [],
+            "positions": [
+              {
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "StockItemId": "01a21d67-c7ad-7000-b38f-6baf7c6cc6b9",
+                "LocationId": "01a21d67-c572-7000-a63b-49466a581c16",
+                "OnHand": 100,
+                "Reserved": 0,
+                "UpdatedAt": "2026-11-27T14:27:50.3827380+00:00"
+              }
+            ],
+            "reservations": [],
+            "facts": [],
+            "consumptions": 0,
+            "heldReleases": 0
+          },
+          {
+            "phase": "postcommit-real",
+            "ok": true,
+            "code": null
+          },
+          {
+            "label": "postcommit-projection-fault",
+            "ok": false,
+            "error": "InvalidOperationException: injected-after-owner-commit"
+          },
+          {
+            "label": "after postcommit fault",
+            "offers": [
+              {
+                "offer_id": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "fulfillment_responsibility": "Platform"
+              }
+            ],
+            "allocations": [
+              {
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "Quantity": 20,
+                "Held": 0,
+                "Revision": "01a21d67c86c70009354476fdd44786f"
+              }
+            ],
+            "positions": [
+              {
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "StockItemId": "01a21d67-c7ad-7000-b38f-6baf7c6cc6b9",
+                "LocationId": "01a21d67-c572-7000-a63b-49466a581c16",
+                "OnHand": 100,
+                "Reserved": 0,
+                "UpdatedAt": "2026-11-27T14:27:50.3827380+00:00"
+              }
+            ],
+            "reservations": [],
+            "facts": [
+              {
+                "FactId": "01a21d67-c870-7000-8d01-1aed976fad6c",
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "StockItemId": null,
+                "LocationId": null,
+                "Kind": "AllocationChanged",
+                "OperationId": "888f04e1-901a-40bf-a5a4-c78de6680e58",
+                "OldAllocation": null,
+                "NewAllocation": 20,
+                "OldOnHand": null,
+                "NewOnHand": null,
+                "Reason": "seller-offered-quantity"
+              }
+            ],
+            "consumptions": 0,
+            "heldReleases": 0
+          },
+          {
+            "label": "replay",
+            "ok": true,
+            "value": {
+              "IsSuccess": true,
+              "code": null
+            }
+          },
+          {
+            "label": "after replay",
+            "offers": [
+              {
+                "offer_id": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "fulfillment_responsibility": "Platform"
+              }
+            ],
+            "allocations": [
+              {
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "Quantity": 20,
+                "Held": 0,
+                "Revision": "01a21d67c86c70009354476fdd44786f"
+              }
+            ],
+            "positions": [
+              {
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "StockItemId": "01a21d67-c7ad-7000-b38f-6baf7c6cc6b9",
+                "LocationId": "01a21d67-c572-7000-a63b-49466a581c16",
+                "OnHand": 100,
+                "Reserved": 0,
+                "UpdatedAt": "2026-11-27T14:27:50.3827380+00:00"
+              }
+            ],
+            "reservations": [],
+            "facts": [
+              {
+                "FactId": "01a21d67-c870-7000-8d01-1aed976fad6c",
+                "OfferId": "87f4df3c-e204-2452-355c-a68e7cae84c9",
+                "StockItemId": null,
+                "LocationId": null,
+                "Kind": "AllocationChanged",
+                "OperationId": "888f04e1-901a-40bf-a5a4-c78de6680e58",
+                "OldAllocation": null,
+                "NewAllocation": 20,
+                "OldOnHand": null,
+                "NewOnHand": null,
+                "Reason": "seller-offered-quantity"
+              }
+            ],
+            "consumptions": 0,
+            "heldReleases": 0
+          }
+        ],
+        "ok": true
+      }
+    }
+  ],
+  "status": "FAIL",
+  "preflight": {
+    "database": "tooba_alpha|local|local",
+    "backupSha256": "589f8c2a0cb525dca1238deee8c05e81bfaf71cab8a19b0862f4b5af74e68166",
+    "backupFile": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-final-20261127173245.dump"
+  },
+  "reason": "Error: real owner transaction commit fault was not reached\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:44:25)\n    at D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:697:3\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async callRun (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-cases.cjs:95:5)\n    at async D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:55:20\n    at async executeCases (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:26:22)\n    at async main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-run-cases.cjs:68:14)",
+  "afterCleanup": {
+    "offers": [],
+    "prices": [],
+    "history": [],
+    "positions": [],
+    "priceFacts": [],
+    "allocations": [],
+    "offerOutbox": [],
+    "priceOutbox": [],
+    "reservations": [],
+    "inventoryFacts": [],
+    "inventoryOutbox": []
+  }
+}
