@@ -23,6 +23,7 @@ import {
 } from "./model";
 import { offerErrorText, offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
 import { createOfferFormatters, offerLocaleFromAppLocale, type OfferFormatters, type OfferLocaleDefinition } from "./i18n";
+import { draftStorageKey, readDraft, writeDraft, discardDraft, draftVersion } from "./draft-recovery.ts";
 import { useOfferHistory } from "./use-offer-history.ts";
 import { createOfferActions } from "./offer-actions.ts";
 import { buildLocalDetail } from "./local-detail.ts";
@@ -55,17 +56,6 @@ export interface OfferWorkspaceProps {
   localeDefinition?: OfferLocaleDefinition;
   messages?: Partial<OfferWorkspaceMessages>;
 }
-type PersistedOfferWorkspace = {
-  draft?: Partial<OfferWorkspaceDraft>;
-  selectedSeller?: OfferSellerOption | null;
-  selectedProduct?: OfferProductOption | null;
-  selectedVariant?: OfferVariantOption | null;
-  responsibility?: OfferFulfillmentResponsibility | null;
-  shippingTypeId?: string;
-  selectedChannel?: string;
-  localInventory?: OfferLocalInventoryDraft[];
-  baseLastUpdatedAt?: string | null;
-};
 export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messages }: OfferWorkspaceProps) {
   const appLocale = useLocale();
   const offerLocale = localeDefinition ?? offerLocaleFromAppLocale(appLocale);
@@ -118,18 +108,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     adapter.onCancel();
   }
   const [saveNeedsReload, setSaveNeedsReload] = useState(false);
-  const persistKey = useMemo(() => {
-    const actor = typeof window === "undefined"
-      ? "ssr"
-      : adapter.role === "admin"
-        ? window.localStorage.getItem("tooba.adminActorUserId") ?? "anonymous"
-        : window.localStorage.getItem("tooba.sellerActorUserId") ?? "anonymous";
-    const tenant = typeof window === "undefined" ? "ssr" : window.localStorage.getItem("tooba.tenantId") ?? "default";
-    const owner = detail?.sellerPartyId ?? selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "owner";
-    const variant = detail?.catalogVariantId ?? selectedVariant?.catalogVariantId ?? "variant";
-    return `tooba:offer-workspace:${tenant}:${actor}:${adapter.role}:${adapter.mode}:${owner}:${variant}:${detail?.channel ?? selectedChannel}:${adapter.offerId ?? "new"}`;
-  }, [adapter.role, adapter.mode, adapter.offerId, adapter.fixedSeller?.sellerPartyId, detail?.sellerPartyId, detail?.catalogVariantId, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, selectedChannel]);
-  const restoredRef = useRef(false);
+  const persistKey = draftStorageKey(adapter, detail, selectedSeller, selectedVariant, selectedChannel);
+  const [restored, setRestored] = useState(false);
+  const loadedIdentity = useRef<string | null>(null);
+  const loadSequence = useRef(0);
   const [saveRetryable, setSaveRetryable] = useState(true);
   const [saveReloading, setSaveReloading] = useState(false);
   const [tabError, setTabError] = useState<{ tab: OfferTabId; code: string } | null>(null);
@@ -165,17 +147,32 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   }, []);
   const load = useCallback(async () => {
     if (!isEdit || !adapter.loadDetail) return;
-    setLoading(true);
+    const sequence = ++loadSequence.current;
+    if (!loadedIdentity.current) setLoading(true);
     setLoadError(null);
     setDenied(false);
     const result = await adapter.loadDetail();
+    if (sequence !== loadSequence.current) return;
     setLoading(false);
     if (!result.ok) {
       if (result.denied) setDenied(true);
       setLoadError(result.errorCode);
       return;
     }
-    applyLoadedDetail(result.detail);
+    const next = result.detail;
+    const identity = JSON.stringify([next.offerId, next.sellerPartyId, next.catalogVariantId, next.channel]);
+    if (loadedIdentity.current === identity) {
+      // Locale changes refresh presentation only, not the user's draft or write revisions.
+      setDetail(previous => previous ? { ...previous, productTitle: next.productTitle,
+        sellerDisplayName: next.sellerDisplayName, brandName: next.brandName,
+        variantLabel: next.variantLabel, productUnitName: next.productUnitName,
+        productUnitShortName: next.productUnitShortName,
+        inventoryLocations: previous.inventoryLocations.map(row => ({ ...row,
+          locationName: next.inventoryLocations.find(item => item.stockItemId === row.stockItemId)?.locationName ?? row.locationName })) } : next);
+    } else {
+      loadedIdentity.current = identity;
+      applyLoadedDetail(next);
+    }
   }, [adapter, isEdit, applyLoadedDetail]);
   const identityReady = adapter.role === "seller"
     ? Boolean(adapter.fixedSeller) && Boolean(selectedProduct) && Boolean(selectedVariant) && Boolean(selectedChannel)
@@ -280,23 +277,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     return () => { active = false; };
   }, [adapter, isEdit, selectedSeller?.sellerPartyId, responsibility]);
   useEffect(() => {
-    if (restoredRef.current) return;
-    if (isEdit && (!detail || loading)) return;
-    let stored: PersistedOfferWorkspace | null = null;
-    try {
-      const raw = window.sessionStorage.getItem(persistKey);
-      stored = raw ? JSON.parse(raw) as PersistedOfferWorkspace : null;
-    } catch {
-      stored = null;
-    }
-    if (stored && isEdit && detail?.lastUpdatedAt && stored.baseLastUpdatedAt && stored.baseLastUpdatedAt !== detail.lastUpdatedAt) {
-      try { window.sessionStorage.removeItem(persistKey); } catch { /* ignore */ }
-      stored = null;
-      setSaveNotice(t.reloaded);
-    }
+    if (restored || (isEdit && (!detail || loading))) return;
+    const stored = readDraft(persistKey, adapter);
     if (stored) {
-      const base = detail ? draftFromDetail(detail) : emptyDraft();
-      setDraft({ ...base, ...stored.draft });
+      setDraft({ ...(detail ? draftFromDetail(detail) : emptyDraft()), ...stored.draft });
       if (stored.selectedSeller) setSelectedSeller(stored.selectedSeller);
       if (stored.selectedProduct) setSelectedProduct(stored.selectedProduct);
       if (stored.selectedVariant) setSelectedVariant(stored.selectedVariant);
@@ -304,36 +288,25 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (stored.shippingTypeId !== undefined) setShippingTypeId(stored.shippingTypeId);
       if (stored.selectedChannel !== undefined) setSelectedChannel(stored.selectedChannel);
       if (stored.localInventory !== undefined) setLocalInventory(stored.localInventory);
+      if (isEdit && detail && stored.baseVersion !== draftVersion(detail)) {
+        // Preserve the draft, but never silently overwrite an intervening owner change.
+        setSaveNeedsReload(true);
+        setSaveRetryable(false);
+        showBlocking("error", t.saveErrorTitle, t.concurrentChange);
+      }
       setSaveNotice(t.draftRestored);
     }
-    restoredRef.current = true;
-  }, [detail, isEdit, loading, persistKey, t.draftRestored, t.reloaded]);
+    setRestored(true);
+  }, [detail, isEdit, loading, persistKey, restored, t, adapter]);
   useEffect(() => {
-    if (!restoredRef.current) return;
-    if (isEdit && !anyDirty) return;
-    try {
-      window.sessionStorage.setItem(persistKey, JSON.stringify({
-        draft,
-        selectedSeller,
-        selectedProduct,
-        selectedVariant,
-        responsibility,
-        shippingTypeId,
-        selectedChannel,
-        localInventory,
-        baseLastUpdatedAt: detail?.lastUpdatedAt ?? null,
-      }));
-    } catch {
-      // Session storage is an optional recovery aid, never a domain write.
-    }
-  }, [anyDirty, detail?.lastUpdatedAt, draft, isEdit, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId]);
-  function clearPersistedDraft() {
-    try {
-      window.sessionStorage.removeItem(persistKey);
-    } catch {
-      // ignore
-    }
-  }
+    if (!restored || saveNeedsReload) return;
+    if (!anyDirty) { discardDraft(persistKey, adapter); return; }
+    writeDraft(persistKey, adapter, {
+      draft, selectedSeller, selectedProduct, selectedVariant, responsibility, shippingTypeId,
+      selectedChannel, localInventory, baseVersion: detail ? draftVersion(detail) : undefined,
+    });
+  }, [anyDirty, detail, draft, restored, saveNeedsReload, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId, adapter]);
+  function clearPersistedDraft() { discardDraft(persistKey, adapter); }
   useEffect(() => {
     if (!adapter.loadShippingTypes) return;
     void adapter

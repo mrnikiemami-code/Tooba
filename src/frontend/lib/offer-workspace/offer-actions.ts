@@ -1,6 +1,6 @@
 ﻿import type { MutableRefObject } from "react";
 import { offerIntentScope, ownerWriteIntent } from "./owner-write-intent.ts";
-import { changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
+import { draftFromDetail, changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
@@ -103,7 +103,9 @@ export function createOfferActions(ctx: OfferActionsContext) {
   }
 
   async function reloadAfterUnknown() {
-    if (!ctx.adapter.loadDetail || ctx.saveReloading) return;
+    if (ctx.saveReloading) return;
+    if (!ctx.isEdit) { await runCreate(); return; }
+    if (!ctx.adapter.loadDetail || !ctx.detail) return;
     ctx.setSaveReloading(true);
     try {
       const result = await ctx.adapter.loadDetail();
@@ -111,8 +113,20 @@ export function createOfferActions(ctx: OfferActionsContext) {
         ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
         return;
       }
+      // Only merge fields whose server value is unchanged or already matches our intent.
+      const merged = reconcileDraft(ctx.detail, result.detail, ctx.draft);
+      const oldShipping = [ctx.detail.fulfillmentResponsibility, ctx.detail.fulfillmentShippingTypeId ?? ""];
+      const nextShipping = [result.detail.fulfillmentResponsibility, result.detail.fulfillmentShippingTypeId ?? ""];
+      const wantedShipping = [ctx.responsibility, ctx.shippingTypeId];
+      const shippingSafe = JSON.stringify(oldShipping) === JSON.stringify(nextShipping) || JSON.stringify(nextShipping) === JSON.stringify(wantedShipping);
+      if (!merged || !shippingSafe) {
+        ctx.showBlocking("error", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
+        return;
+      }
       applyServerDetail(result.detail);
+      ctx.setDraft(() => merged);
       ctx.setSaveNeedsReload(false);
+      ctx.setSaveRetryable(true);
       ctx.setSaveError(null);
       ctx.setSaveNotice(ctx.t.reloaded);
     } catch {
@@ -167,7 +181,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
     const expectedAmount = parseDecimal(ctx.draft.amount);
     const expectedInventory = new Map<string, number | null>();
     if (ctx.stockChanged) {
-      for (const row of ctx.detail.inventoryLocations) expectedInventory.set(row.stockItemId, parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]));
+      for (const row of changedInventoryRows(ctx.detail, ctx.draft)) expectedInventory.set(row.stockItemId, parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]));
     }
 
     try {
@@ -181,7 +195,6 @@ export function createOfferActions(ctx: OfferActionsContext) {
           return;
         }
         if (detailVersionChanged(ctx.detail, latest.detail)) {
-          applyServerDetail(latest.detail);
           ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
           ctx.setSaveNeedsReload(true);
           ctx.setSaveRetryable(false);
@@ -282,7 +295,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         }
         const expectedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
         const expectedMax = ctx.draft.maximumOrderQuantity.trim() ? parseDecimal(ctx.draft.maximumOrderQuantity) : null;
-        const expectedDays = ctx.draft.customReturnWindowDays.trim() ? Number.parseInt(ctx.draft.customReturnWindowDays, 10) : null;
+        const expectedDays = ctx.draft.returnPolicyChoice === "Custom" ? parseDecimal(ctx.draft.customReturnWindowDays) : null;
         const commercialMismatch = ctx.commercialChanged && (
           (verification.detail.sellerSku ?? null) !== (ctx.draft.sellerSku.trim() || null)
           || verification.detail.status !== ctx.draft.status
@@ -306,7 +319,6 @@ export function createOfferActions(ctx: OfferActionsContext) {
             return !actual || actual.onHand !== expected;
           }));
         if (mismatch) {
-          applyServerDetail(verification.detail);
           ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.saveUnknown);
           ctx.setSaveNeedsReload(true);
           ctx.setSaveRetryable(false);
@@ -372,7 +384,6 @@ export function createOfferActions(ctx: OfferActionsContext) {
     ctx.setSaveNeedsReload(false);
     ctx.setSaveRetryable(true);
     try {
-      const localDetail = ctx.detail;
       const createInput = {
         sellerPartyId: ctx.selectedSeller?.sellerPartyId ?? ctx.adapter.fixedSeller?.sellerPartyId,
         catalogVariantId: ctx.selectedVariant.catalogVariantId,
@@ -438,4 +449,25 @@ function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspac
     maximumOrderQuantity: parseDecimal(draft.maximumOrderQuantity),
     clearOrderQuantityLimits: draft.minimumOrderQuantity.trim() === "" && draft.maximumOrderQuantity.trim() === "",
   };
+}
+
+/** Three-way merge for unknown outcomes. A conflicting owner edit is never retried automatically. */
+export function reconcileDraft(previous: OfferWorkspaceDetail, latest: OfferWorkspaceDetail, desired: OfferWorkspaceDraft): OfferWorkspaceDraft | null {
+  if (previous.offerId !== latest.offerId || previous.sellerPartyId !== latest.sellerPartyId || previous.catalogVariantId !== latest.catalogVariantId || previous.channel !== latest.channel) return null;
+  const before = draftFromDetail(previous);
+  const after = draftFromDetail(latest);
+  const keys = ["sellerSku", "amount", "currency", "offeredQuantity", "returnPolicyChoice", "customReturnWindowDays", "minimumOrderQuantity", "maximumOrderQuantity", "status"] as const;
+  const merged = { ...after, inventoryOnHand: { ...after.inventoryOnHand } };
+  for (const key of keys) {
+    if (desired[key] === before[key]) continue;
+    if (after[key] !== before[key] && after[key] !== desired[key]) return null;
+    merged[key] = desired[key];
+  }
+  for (const [id, value] of Object.entries(desired.inventoryOnHand)) {
+    if (value === before.inventoryOnHand[id]) continue;
+    if (!(id in after.inventoryOnHand) || (after.inventoryOnHand[id] !== before.inventoryOnHand[id] && after.inventoryOnHand[id] !== value)) return null;
+    merged.inventoryOnHand[id] = value;
+  }
+  merged.inventoryReason = desired.inventoryReason;
+  return merged;
 }
