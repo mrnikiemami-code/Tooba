@@ -1,0 +1,234 @@
+{
+  "ceiling": [
+    {
+      "permissionId": "accesscontrol.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "AccessControl",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "accesscontrol.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "AccessControl",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "fulfillment.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "Fulfillment",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "fulfillment.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Fulfillment",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.cancel",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.detail",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.export",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.fulfill",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.handle",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.refund",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "order.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Order",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "product.create",
+      "enabled": false,
+      "delegable": true,
+      "module": "Product",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "product.edit",
+      "enabled": false,
+      "delegable": true,
+      "module": "Product",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "product.publish",
+      "enabled": false,
+      "delegable": true,
+      "module": "Product",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "product.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Product",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "promotion.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "Promotion",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "promotion.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Promotion",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "refund.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Refund",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "return.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "Return",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "return.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Return",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "review.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Review",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "seller.settings.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "Seller",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "seller.settings.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Seller",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "settlement.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Settlement",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "story.create",
+      "enabled": false,
+      "delegable": true,
+      "module": "Story",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "story.edit",
+      "enabled": false,
+      "delegable": true,
+      "module": "Story",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "story.submit",
+      "enabled": false,
+      "delegable": true,
+      "module": "Story",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "story.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Story",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "support.create",
+      "enabled": false,
+      "delegable": true,
+      "module": "Support",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "support.manage",
+      "enabled": false,
+      "delegable": true,
+      "module": "Support",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "support.reply",
+      "enabled": false,
+      "delegable": true,
+      "module": "Support",
+      "scopeKind": "GlobalWithinOwner"
+    },
+    {
+      "permissionId": "support.view",
+      "enabled": false,
+      "delegable": true,
+      "module": "Support",
+      "scopeKind": "GlobalWithinOwner"
+    }
+  ],
+  "roles": [],
+  "assignments": [],
+  "capturedAt": "2026-11-27T02:34:52.146Z",
+  "matchesBefore": true,
+  "missing": [],
+  "extra": []
+}
