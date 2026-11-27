@@ -21,7 +21,8 @@ function snapshot(seller,variant,ids){
   const predicate="offer_id IN ("+keys+")";
   const outbox=ids.map(x=>"strpos(payload::text,"+quote('"'+uuid(x)+'"')+")>0").join(" OR ");
   const rows=(schema,table,where)=>"(SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),'[]'::jsonb) FROM "+schema+"."+table+" t WHERE "+where+")";
-  return JSON.parse(sql("SELECT jsonb_build_object('offers',"+rows("offer","offers",tuple+" OR "+predicate)+",'history',"+rows("offer","offer_history",predicate)+",'offerOutbox',"+rows("offer","outbox_messages",outbox)+",'prices',"+rows("pricing","prices",predicate)+",'priceFacts',"+rows("pricing","offer_price_changes",predicate)+",'priceOutbox',"+rows("pricing","outbox_messages",outbox)+",'positions',"+rows("inventory","stock_positions",predicate)+",'inventoryFacts',"+rows("inventory","offer_inventory_changes",predicate)+",'allocations',"+rows("inventory","offer_allocations",predicate)+",'inventoryOutbox',"+rows("inventory","outbox_messages",outbox)+")"));
+  const messages=(schema)=>"(SELECT coalesce(jsonb_agg(payload ORDER BY payload::text),\'[]\'::jsonb) FROM "+schema+".outbox_messages WHERE "+outbox+")";
+  return JSON.parse(sql("SELECT jsonb_build_object('offers',"+rows("offer","offers",tuple+" OR "+predicate)+",'history',"+rows("offer","offer_history",predicate)+",'offerOutbox',"+messages("offer")+",'prices',"+rows("pricing","prices",predicate)+",'priceFacts',"+rows("pricing","offer_price_changes",predicate)+",'priceOutbox',"+messages("pricing")+",'positions',"+rows("inventory","stock_positions",predicate)+",'inventoryFacts',"+rows("inventory","offer_inventory_changes",predicate)+",'allocations',"+rows("inventory","offer_allocations",predicate)+",'inventoryOutbox',"+messages("inventory")+")"));
 }
 const noRows=x=>Object.values(x).every(a=>Array.isArray(a)&&a.length===0);
 function preflight(){
