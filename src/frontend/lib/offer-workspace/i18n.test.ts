@@ -40,8 +40,8 @@ test("an isolated third-language registry fixture changes direction, numbers and
   const messages = offerListMessagesFor("tr", { title: "Satıcı teklifleri", view: "Görüntüle" });
   assert.equal(messages.title, "Satıcı teklifleri");
   assert.equal(messages.view, "Görüntüle");
-  assert.equal(messages.product, "محصول");
-  assert.equal(channelLabel(messages, "Marketplace"), "بازارگاه");
+  assert.equal(messages.product, "Product");
+  assert.equal(channelLabel(messages, "Marketplace"), "Marketplace");
 });
 
 test("real channels and statuses are translated from contract values", () => {

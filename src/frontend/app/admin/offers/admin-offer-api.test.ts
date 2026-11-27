@@ -90,20 +90,20 @@ test("admin detail maps the real multi-position inventory and return contract", 
 test("admin price write rejects a mismatched server read-back", async () => {
   actor();
   const fetched = installFetch(detailPayload({ amount: 1000 }));
-  const result = await writeAdminOfferPrice("offer-1", { amount: 1500, currency: "IRR" });
+  const result = await writeAdminOfferPrice("offer-1", { amount: 1500, currency: "IRR", operationId: "11111111-1111-4111-8111-111111111111" }, "price-rev");
   fetched.restore();
   assert.equal(result.ok, false);
   if (!result.ok) assert.equal(result.errorCode, "admin.price.response_mismatch");
 });
 
-test("admin price write accepts a verified read-back and sends IR market", async () => {
+test("admin price write accepts a verified read-back, sends owner revision and operation ID, and does not invent market", async () => {
   actor();
   const fetched = installFetch(detailPayload({ amount: 1500 }));
-  const result = await writeAdminOfferPrice("offer-1", { amount: 1500, currency: "IRR" });
+  const result = await writeAdminOfferPrice("offer-1", { amount: 1500, currency: "IRR", operationId: "11111111-1111-4111-8111-111111111111" }, "price-rev");
   fetched.restore();
   assert.equal(result.ok, true);
   assert.equal(fetched.calls[0]?.method, "PUT");
-  assert.deepEqual(fetched.calls[0]?.body, { amount: 1500, currency: "IRR", market: "IR" });
+  assert.deepEqual(fetched.calls[0]?.body, { amount: 1500, currency: "IRR", expectedVersion: "price-rev", operationId: "11111111-1111-4111-8111-111111111111" });
 });
 
 test("admin inventory write targets one stock item and verifies on-hand", async () => {
@@ -119,10 +119,11 @@ test("admin inventory write targets one stock item and verifies on-hand", async 
     stockItemId: "stock-a",
     onHand: 14,
     reason: "count",
-  });
+    operationId: "11111111-1111-4111-8111-111111111111",
+  }, "stock-rev");
   fetched.restore();
   assert.equal(result.ok, true);
-  assert.deepEqual(fetched.calls[0]?.body, { onHand: 14, reason: "count", stockItemId: "stock-a" });
+  assert.deepEqual(fetched.calls[0]?.body, { onHand: 14, reason: "count", stockItemId: "stock-a", expectedVersion: "stock-rev", operationId: "11111111-1111-4111-8111-111111111111" });
 });
 
 test("admin patch sends only the supplied commercial patch", async () => {
@@ -169,4 +170,14 @@ test("admin fulfillment assigns explicit responsibility and validates the return
   });
   mismatch.restore();
   assert.equal(failed.ok, false);
+});
+
+test("missing owner revision or operation ID never dispatches a write", async () => {
+  actor();
+  const fetched = installFetch(detailPayload());
+  try {
+    assert.equal((await writeAdminOfferPrice("offer-1", { amount: 1, currency: "IRR" })).ok, false);
+    assert.equal((await writeAdminOfferInventory("offer-1", { onHand: 2, reason: "count", stockItemId: "stock-a" }, "stock-rev")).ok, false);
+    assert.equal(fetched.calls.length, 0);
+  } finally { fetched.restore(); }
 });

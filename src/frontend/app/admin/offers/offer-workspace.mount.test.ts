@@ -23,6 +23,11 @@ import type {
 } from "../../../lib/offer-workspace/types.ts";
 
 ensureDom();
+test.beforeEach(() => {
+  window.sessionStorage.clear();
+  window.localStorage.setItem("tooba.adminActorUserId", "actor-1");
+  window.localStorage.setItem("tooba.sellerActorUserId", "seller-actor-1");
+});
 
 function baseDetail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail {
   return {
@@ -54,9 +59,25 @@ function baseDetail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDet
     productUnitCode: "pcs",
     productUnitName: "عدد",
     productUnitShortName: "عدد",
+    offerRevision: "offer-rev",
+    priceRevision: "price-rev",
+    allocationRevision: "alloc-rev",
+    offeredQuantity: null,
+    allocationHeld: null,
+    revisions: { offer: "offer-rev", price: "price-rev", offeredQuantity: "alloc-rev" },
+    capabilities: { canEditPhysicalInventory: true, canEditOfferedQuantity: false, canAssignFulfillment: true, canEditShippingPolicy: true },
+    fulfillmentResponsibility: null,
+    fulfillmentShippingTypeId: null,
+    lastUpdatedAt: null,
+    variantCode: null,
+    variantLabel: null,
+    primaryMediaAssetId: null,
+    unitQuantityDecimalPlaces: 0,
+    unitQuantityStep: null,
+    unitRoundingMode: null,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "WH-A", onHand: 10, reserved: 2, available: 8 },
-      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "WH-B", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "WH-A", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-b", locationId: "loc-b", revision: "stock-rev", locationCode: "WH-B", onHand: 4, reserved: 0, available: 4 },
     ],
     ...over,
   };

@@ -49,8 +49,24 @@ function detail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail 
     productUnitCode: "pcs",
     productUnitName: "عدد",
     productUnitShortName: "عدد",
+    offerRevision: "offer-rev",
+    priceRevision: "price-rev",
+    allocationRevision: "alloc-rev",
+    offeredQuantity: null,
+    allocationHeld: null,
+    revisions: { offer: "offer-rev", price: "price-rev", offeredQuantity: "alloc-rev" },
+    capabilities: { canEditPhysicalInventory: true, canEditOfferedQuantity: false, canAssignFulfillment: true, canEditShippingPolicy: true },
+    fulfillmentResponsibility: null,
+    fulfillmentShippingTypeId: null,
+    lastUpdatedAt: null,
+    variantCode: null,
+    variantLabel: null,
+    primaryMediaAssetId: null,
+    unitQuantityDecimalPlaces: 0,
+    unitQuantityStep: null,
+    unitRoundingMode: null,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "WH-A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "WH-A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
     ],
     ...over,
   };
@@ -157,8 +173,8 @@ test("inventory partial save preserves the unsaved location draft and reason", (
   const base = detail({
     onHand: 10,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
-      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "A", locationName: "انبار الف", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-b", locationId: "loc-b", revision: "stock-rev", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
     ],
   });
   const draft = {
@@ -170,8 +186,8 @@ test("inventory partial save preserves the unsaved location draft and reason", (
   const firstSaved = detail({
     onHand: 13,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "A", locationName: "انبار الف", onHand: 12, reserved: 2, available: 10 },
-      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "A", locationName: "انبار الف", onHand: 12, reserved: 2, available: 10 },
+      { stockItemId: "stock-b", locationId: "loc-b", revision: "stock-rev", locationCode: "B", locationName: "انبار ب", onHand: 4, reserved: 0, available: 4 },
     ],
   });
   const afterFirst = applySavedInventoryDraft(draft, firstSaved, "stock-a");

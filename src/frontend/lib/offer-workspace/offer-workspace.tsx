@@ -110,6 +110,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [saveNeedsReload, setSaveNeedsReload] = useState(false);
   const persistKey = draftStorageKey(adapter, detail, selectedSeller, selectedVariant, selectedChannel);
   const [restored, setRestored] = useState(false);
+  const staleRestoredDraft = useRef(false);
   const loadedIdentity = useRef<string | null>(null);
   const loadSequence = useRef(0);
   const [saveRetryable, setSaveRetryable] = useState(true);
@@ -290,6 +291,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (stored.localInventory !== undefined) setLocalInventory(stored.localInventory);
       if (isEdit && detail && stored.baseVersion !== draftVersion(detail)) {
         // Preserve the draft, but never silently overwrite an intervening owner change.
+        staleRestoredDraft.current = true;
         setSaveNeedsReload(true);
         setSaveRetryable(false);
         showBlocking("error", t.saveErrorTitle, t.concurrentChange);
@@ -560,7 +562,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               {saveError}
               <div style={{ marginTop: 6 }}>
                 {isEdit && saveNeedsReload ? (
-                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void actions.reloadAfterUnknown()} disabled={saveReloading} data-testid="offer-save-reload">
+                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown())} disabled={saveReloading} data-testid="offer-save-reload">
                     {saveReloading ? t.loading : t.reloadState}
                   </button>
                 ) : saveRetryable ? (
@@ -602,7 +604,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 <a className={`${styles.btn} ${styles.btnPrimary}`} href={existingOfferHref} data-testid="offer-message-open-existing">{t.viewExistingOffer}</a>
               ) : null}
               {messageBox.kind === "reload" ? (
-                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void actions.reloadAfterUnknown(); }} disabled={saveReloading} data-testid="offer-message-reload">
+                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown()); }} disabled={saveReloading} data-testid="offer-message-reload">
                   {saveReloading ? t.loading : t.reloadState}
                 </button>
               ) : null}
