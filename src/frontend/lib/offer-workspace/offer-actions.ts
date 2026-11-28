@@ -361,8 +361,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
     }
     if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
-    if (ctx.priceChanged && (parsedAmount == null || validatePrice(ctx.draft.amount, ctx.draft.currency, ctx.currencies))) {
-      ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.validationAmount); return;
+    const priceError = validatePrice(ctx.draft.amount, ctx.draft.currency, ctx.currencies);
+    if (ctx.priceChanged && (parsedAmount == null || priceError)) {
+      const code = priceError ?? "offer.price.required";
+      ctx.setTabError({ tab: "pricing", code });
+      ctx.setActiveTab("pricing"); ctx.setSaveError(offerErrorText(ctx.t, code)); return;
     }
     const parsedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
     const parsedMax = ctx.draft.maximumOrderQuantity.trim() ? parseDecimal(ctx.draft.maximumOrderQuantity) : null;
