@@ -2,7 +2,7 @@
  * Pure Offer workspace model helpers: digit normalization, validation, dirty detection and
  * buyability derivation. No React, no network, no domain writes.
  */
-import type { OfferPriceView, OfferWorkspaceDetail } from "./types";
+import type { OfferCurrencyOption, OfferPriceView, OfferWorkspaceDetail } from "./types";
 
 export interface OfferWorkspaceDraft {
   sellerSku: string;
@@ -66,7 +66,7 @@ export function priceDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDr
 }
 
 /** Current authored row for the selected currency, or the primary detail price as fallback. */
-export function priceRowFor(detail: OfferWorkspaceDetail, currency: string): OfferPriceView | null {
+export function priceRowFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "priceRevision" | "revisions">, currency: string): OfferPriceView | null {
   const code = (currency || "").toUpperCase();
   const row = (detail.prices ?? []).find((item) => item.currency.toUpperCase() === code);
   if (row) return row;
@@ -83,9 +83,9 @@ export function priceRowFor(detail: OfferWorkspaceDetail, currency: string): Off
 }
 
 /** Revision used as CAS for the selected currency (independent per authored price row). */
-export function priceRevisionFor(detail: OfferWorkspaceDetail, currency: string): string | null {
+export function priceRevisionFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "priceRevision" | "revisions">, currency: string): string | null {
   const row = priceRowFor(detail, currency);
-  if (row?.revision) return row.revision;
+  if (row) return row.revision || null;
   if (detail.currency && detail.currency.toUpperCase() === (currency || "").toUpperCase()) {
     const primary = detail.revisions?.price ?? detail.priceRevision;
     if (primary) return primary;
@@ -125,11 +125,18 @@ export interface ValidationError {
   code: string;
 }
 
-export function validatePrice(amountText: string, currency: string): string | null {
+export function currencyDecimalPlaces(currency: string, currencies: OfferCurrencyOption[] = []): number {
+  return currencies.find((row) => row.code.toUpperCase() === currency.toUpperCase())?.decimalPlaces ?? (["IRR", "JPY", "KRW"].includes(currency.toUpperCase()) ? 0 : 2);
+}
+
+export function validatePrice(amountText: string, currency: string, currencies: OfferCurrencyOption[] = []): string | null {
   if (amountText.trim().length === 0) return null;
   const amount = parseDecimal(amountText);
-  if (amount == null || amount < 0) return "offer.price.invalid";
-  if (currency.toUpperCase() === "IRR" && !Number.isInteger(amount)) {
+  if (amount == null || amount < 0 || (currencies.length > 0 && !currencies.some(row => row.code.toUpperCase() === currency.toUpperCase()))) return "offer.price.invalid";
+  const raw = normalizeDigits(amountText).replace(/,/g, "").trim();
+  const fraction = /^(?:\+?\d*(?:\.(\d*))?)$/.exec(raw);
+  if (!fraction) return "offer.price.invalid";
+  if ((fraction[1] ?? "").replace(/0+$/, "").length > currencyDecimalPlaces(currency, currencies)) {
     return "offer.price.decimals_not_allowed";
   }
   return null;
@@ -191,9 +198,10 @@ export function validateConditions(
 export function validateDraft(
   detail: OfferWorkspaceDetail,
   draft: OfferWorkspaceDraft,
+  currencies: OfferCurrencyOption[] = [],
 ): ValidationError[] {
   const errors: ValidationError[] = [];
-  const priceError = priceDirty(detail, draft) ? validatePrice(draft.amount, draft.currency) : null;
+  const priceError = priceDirty(detail, draft) ? validatePrice(draft.amount, draft.currency, currencies) : null;
   if (priceError) errors.push({ tab: "pricing", code: priceError });
   const inventoryError = inventoryDirty(detail, draft) ? validateInventory(detail, draft) : null;
   if (inventoryError) errors.push({ tab: "inventory", code: inventoryError });
@@ -328,7 +336,7 @@ export function statusLabel(
 export function errorLabel(code: string, locale: "fa" | "en"): string {
   const table: Record<string, { fa: string; en: string }> = {
     "offer.price.invalid": { fa: "مبلغ نامعتبر است.", en: "Invalid amount." },
-    "offer.price.decimals_not_allowed": { fa: "ریال بدون اعشار است.", en: "IRR has no decimals." },
+    "offer.price.decimals_not_allowed": { fa: "تعداد اعشار مبلغ با ارز انتخابی سازگار نیست.", en: "The amount exceeds the selected currency precision." },
     "offer.inventory.invalid": { fa: "موجودی نامعتبر است.", en: "Invalid stock value." },
     "offer.inventory.below_reserved": {
       fa: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
