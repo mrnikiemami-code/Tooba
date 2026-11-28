@@ -21,6 +21,7 @@ export interface PricingTabProps {
   dirty: boolean;
   onAmountChange: (value: string) => void;
   onCurrencyChange: (code: string) => void;
+  onRemove?: () => void;
 }
 
 function normalizeAmountRaw(value: string, culture: string): string {
@@ -164,6 +165,7 @@ export function PricingTab(props: PricingTabProps) {
                 scale={scale}
                 disabled={unavailable}
               />
+              {props.onRemove && props.amount.trim() !== "" ? <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} disabled={unavailable} onClick={props.onRemove} data-testid="offer-price-remove">{t.pricingRemove}</button> : null}
               {scale === 0 ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
             </label>
           </div>
