@@ -39,7 +39,7 @@ export function parseDecimal(input: string | null | undefined): number | null {
 export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDraft {
   return {
     sellerSku: detail.sellerSku ?? "",
-    amount: (() => { const row = priceRowFor(detail, detail.currency); return row ? String(row.amount) : ""; })(),
+    amount: (() => { const row = priceRowFor(detail, detail.currency); return row && row.status !== "Retired" ? String(row.amount) : ""; })(),
     currency: detail.currency,
     inventoryOnHand: Object.fromEntries(
       detail.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)]),
@@ -60,7 +60,7 @@ export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDra
 export function priceDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
   if (draft.amount.trim() !== "" && parseDecimal(draft.amount) == null) return true;
   const row = priceRowFor(detail, draft.currency);
-  if (row) return parseDecimal(draft.amount) !== row.amount;
+  if (row) return row.status === "Retired" ? draft.amount.trim() !== "" : parseDecimal(draft.amount) !== row.amount;
   // A currency with no authored row becomes dirty once a non-empty amount is entered.
   return draft.amount.trim() !== "";
 }
@@ -168,7 +168,7 @@ export function validateInventory(
     if (value < row.reserved) return "offer.inventory.below_reserved";
     if (value > 0 && !quantityAligned(value, detail.unitQuantityDecimalPlaces ?? 0, detail.unitQuantityStep ?? null)) return "offer.inventory.step_invalid";
   }
-  if (draft.inventoryReason.trim().length === 0) return "offer.inventory.reason_required";
+  if (changed.some(row => row.requiresAdjustmentReason !== false) && draft.inventoryReason.trim().length === 0) return "offer.inventory.reason_required";
   return null;
 }
 
