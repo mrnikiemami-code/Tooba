@@ -750,7 +750,7 @@ test("duplicate lookup unavailable never submits; explicit retry can recover", a
   await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
   await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
   const submit = q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement;
-  await waitFor(() => !submit.disabled && /تلاش دوباره/.test(submit.textContent ?? ""));
+  await waitFor(() => checks >= 1 && !submit.disabled && /ذخیره پیش/.test(submit.textContent ?? ""));
   await click(submit);
   assert.equal(creates, 0);
   assert.match(q(tree.container, "[data-testid=offer-message-error]").textContent ?? "", /بررسی آفر موجود/);
@@ -762,4 +762,30 @@ test("duplicate lookup unavailable never submits; explicit retry can recover", a
   await click(submit);
   assert.equal(creates, 1);
   await tree.unmount();
+});
+
+test("new offer stages three independent currency amounts before one save", async () => {
+  const calls: unknown[] = [];
+  const adapter = createAdapter({ loadCurrencies: async () => ["IRR", "USD", "EUR"].map(code => ({ code, englishName: code, nativeName: code, decimalPlaces: code === "IRR" ? 0 : 2 })),
+    createAndSaveDraft: async input => { calls.push(input.prices); return { ok: true, offerId: "new-multi" }; } });
+  const tree = await mount(createElement(OfferWorkspace, { adapter }));
+  const { click, select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  try {
+    await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+    await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+    await click(q(tree.container, "[data-testid=offer-seller-dialog-option]"));
+    await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+    await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+    await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+    await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
+    for (const [code, amount] of [["IRR", "100000"], ["USD", "13.25"], ["EUR", "20.5"]]) {
+      await select(q(tree.container, "[data-testid=offer-price-currency-select]"), code!);
+      await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), amount!);
+    }
+    assert.equal(qq(tree.container, "[data-testid=offer-price-row]").length, 3);
+    await select(q(tree.container, "[data-testid=offer-price-currency-select]"), "IRR");
+    assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "100000");
+    await click(q(tree.container, "[data-testid=admin-offer-submit]"));
+    assert.deepEqual(calls, [[{currency:"IRR",amount:100000},{currency:"USD",amount:13.25},{currency:"EUR",amount:20.5}]]);
+  } finally { await tree.unmount(); }
 });
