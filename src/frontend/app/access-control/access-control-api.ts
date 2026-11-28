@@ -398,3 +398,8 @@ export function capabilityPermissionIds(effective: EffectiveAccess | null): Set<
   if (!effective) return new Set();
   return new Set(effective.permissions.filter((p) => !p.deniedByCeiling).map((p) => p.permissionId));
 }
+
+/** Write capability requires a non-ceiling-denied GlobalWithinOwner grant. */
+export function hasGlobalOwnerCapability(effective: EffectiveAccess | null, permissionId: string): boolean {
+  return effective?.permissions.some(grant => grant.permissionId === permissionId && !grant.deniedByCeiling && grant.scopeKind === 1) ?? false;
+}
