@@ -26,7 +26,7 @@ export function draftStorageKey(adapter: OfferWorkspaceAdapter, detail: OfferWor
   return prefix ? prefix + JSON.stringify([adapter.mode, detail?.sellerPartyId ?? seller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? "", detail?.catalogVariantId ?? variant?.catalogVariantId ?? "", detail?.channel ?? channel, adapter.offerId ?? "new"]) : null;
 }
 export function draftVersion(detail: OfferWorkspaceDetail) {
-  return JSON.stringify([detail.offerRevision, detail.priceRevision, detail.allocationRevision, detail.revisions, detail.inventoryLocations.map(row => [row.stockItemId, row.revision]).sort()]);
+  return JSON.stringify([detail.offerRevision, detail.priceRevision, detail.allocationRevision, detail.revisions, (detail.prices ?? []).map(row => [row.currency, row.revision]).sort(), detail.inventoryLocations.map(row => [row.stockItemId, row.revision]).sort()]);
 }
 export function readDraft(key: string | null, adapter: OfferWorkspaceAdapter): PersistedOfferWorkspace | null {
   const prefix = scope(adapter);
