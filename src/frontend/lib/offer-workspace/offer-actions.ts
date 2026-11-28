@@ -34,6 +34,7 @@ export interface OfferActionsContext {
   saveReloading: boolean;
   priceChanged: boolean;
   currencies?: OfferCurrencyOption[];
+  currencyReferenceUnavailable?: boolean;
   commercialChanged: boolean;
   stockChanged: boolean;
   offeredChanged: boolean;
@@ -149,6 +150,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
       return;
     }
+    if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const errors = validateDraft(ctx.detail, ctx.draft, ctx.currencies);
     if (errors.length > 0) {
       const first = errors[0]!;
@@ -357,6 +359,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setSaveRetryable(true);
       return;
     }
+    if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
     if (ctx.priceChanged && (parsedAmount == null || validatePrice(ctx.draft.amount, ctx.draft.currency, ctx.currencies))) {
       ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.validationAmount); return;
