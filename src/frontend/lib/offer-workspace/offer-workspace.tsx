@@ -24,7 +24,7 @@ import {
 } from "./model";
 import { offerErrorText, offerWorkspaceMessages, type OfferWorkspaceMessages } from "./messages";
 import { createOfferFormatters, offerLocaleFromAppLocale, type OfferFormatters, type OfferLocaleDefinition } from "./i18n";
-import { draftStorageKey, readDraft, writeDraft, discardDraft, draftVersion } from "./draft-recovery.ts";
+import { draftStorageKey, readDraft, writeDraft, discardDraft, discardCreateDrafts, draftVersion } from "./draft-recovery.ts";
 import { useOfferHistory } from "./use-offer-history.ts";
 import { createOfferActions } from "./offer-actions.ts";
 import { buildLocalDetail } from "./local-detail.ts";
@@ -33,6 +33,7 @@ import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
 import { InventoryTab } from "./inventory-tab";
 import { PricingTab } from "./pricing-tab";
+import { createPriceEntries, createPriceRows, switchCreateCurrency } from "./create-price-draft";
 import { useOfferCurrencies } from "./use-offer-currencies";
 import { ShippingTab } from "./shipping-tab";
 import { DirtyDot, StatusPill } from "./tab-shared";
@@ -195,7 +196,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   );
   const dirtyDetail = detail ?? localDetail;
   const commercialChanged = dirtyDetail ? commercialDirty(dirtyDetail, draft) : false;
-  const priceChanged = dirtyDetail ? priceDirty(dirtyDetail, draft) : false;
+  const priceChanged = isEdit ? Boolean(dirtyDetail && priceDirty(dirtyDetail, draft)) : Boolean(draft.amount.trim() || Object.keys(createPriceEntries(draft)).length);
   const stockChanged = detail ? inventoryDirty(detail, draft) : false;
   const offeredChanged = detail ? offeredQuantityDirty(detail, draft) : false;
   const shippingChanged = Boolean(
@@ -216,7 +217,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     || Boolean(selectedVariant)
     || draft.sellerSku.trim().length > 0
     || localInventory.some((row) => row.onHand.trim().length > 0)
-    || (localDetail ? priceDirty(localDetail, draft) || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
+    || (localDetail ? priceChanged || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
   );
   const anyDirty = isEdit
     ? commercialChanged || priceChanged || stockChanged || offeredChanged || shippingChanged
@@ -323,7 +324,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       selectedChannel, localInventory, baseVersion: detail ? draftVersion(detail) : undefined,
     });
   }, [anyDirty, detail, draft, restored, saveNeedsReload, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId, adapter]);
-  function clearPersistedDraft() { discardDraft(persistKey, adapter); }
+  function clearPersistedDraft() { if (!isEdit) { createCommitted.current = true; discardCreateDrafts(adapter); } else discardDraft(persistKey, adapter); }
   useEffect(() => {
     if (!adapter.loadShippingTypes) return;
     void adapter
@@ -431,7 +432,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
   const existingOfferId = messageBox?.offerId ?? activeConflict?.offerId;
-  const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : createReady && conflictState === "checking" ? t.conflictChecking : createReady && conflictState === "unavailable" ? t.retry : t.saveDraft;
+  const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
   function requestSave() {
     if (saveNeedsReload) { showBlocking("reload", t.saveErrorTitle, t.concurrentChange); return; }
     if (!isEdit && !activeConflict && conflictState !== "clear") { if (conflictState === "unavailable") { setConflictRetry(n => n + 1); showBlocking("error", t.saveErrorTitle, t.conflictUnavailable); } return; }
@@ -679,15 +680,17 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             t={t}
             format={format}
             detail={localDetail}
-            prices={localDetail.prices ?? []}
+            prices={isEdit ? localDetail.prices ?? [] : createPriceRows(draft)}
             currencies={currencies}
             currencyStatus={currencyReference.status} onRetryCurrencies={currencyReference.retry}
             amount={draft.amount}
             currency={draft.currency}
             dirty={priceChanged}
+            onAddCurrency={!isEdit && draft.currency && draft.amount.trim() && currencies.some(row => !Object.hasOwn(createPriceEntries(draft), row.code)) ? () => patchDraft(switchCreateCurrency(draft, "")) : undefined}
             onAmountChange={(value) => patchDraft({ amount: value })}
-            onRemove={isEdit && priceRowFor(localDetail, draft.currency)?.status !== "Retired" && priceRowFor(localDetail, draft.currency) ? () => patchDraft({ amount: "" }) : undefined}
+            onRemove={(!isEdit || (priceRowFor(localDetail, draft.currency)?.status !== "Retired" && priceRowFor(localDetail, draft.currency))) ? () => patchDraft({ amount: "" }) : undefined}
             onCurrencyChange={(code) => {
+              if (!isEdit) { patchDraft(switchCreateCurrency(draft, code)); return; }
               if (priceChanged && draft.currency) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
               const row = priceRowFor(localDetail, code);
               patchDraft({ currency: code, amount: row && row.status !== "Retired" ? String(row.amount) : draft.currency ? "" : draft.amount });
