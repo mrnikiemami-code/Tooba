@@ -165,7 +165,8 @@ public sealed record SellerOfferPriceWriteRequest(
     string? Currency,
     string? Market,
     string? ExpectedVersion = null,
-    Guid? OperationId = null);
+    Guid? OperationId = null,
+    bool Retire = false);
 
 /// <summary>
 /// فرمان تنظیم موجودی روی‌دست Offer از طریق Inventory؛ Product.Stock نیست.
