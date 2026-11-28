@@ -39,6 +39,10 @@ namespace Tooba.Pricing.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(3)")
                         .HasColumnName("currency");
 
+                    b.Property<bool>("Retired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("retired");
+
                     b.Property<decimal>("NewAmount")
                         .HasPrecision(19, 4)
                         .HasColumnType("numeric(19,4)")
