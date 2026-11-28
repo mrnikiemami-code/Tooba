@@ -12,7 +12,8 @@ public sealed record SetSellerOfferPrice(
     string? Market,
     string? ExpectedRevision = null,
     Guid? ActorUserId = null,
-    Guid OperationId = default);
+    Guid OperationId = default,
+    bool Retire = false);
 
 /// <summary>Committed owner receipt; revision and facts are from the same Pricing transaction.</summary>
 public sealed record SellerPriceWriteReceipt(
@@ -24,7 +25,8 @@ public sealed record SellerPriceWriteReceipt(
     DateTimeOffset OccurredAt,
     decimal? OldAmount,
     decimal NewAmount,
-    string Currency);
+    string Currency,
+    bool Retired = false);
 
 /// <summary>Latest base authoring record for an offer and currency, including its real status and write revision; not an effective quote.</summary>
 public sealed record SellerOfferPriceView(
