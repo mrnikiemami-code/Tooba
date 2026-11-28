@@ -1,0 +1,22 @@
+﻿{
+  "case": "R11-REF-03-missing-market",
+  "status": "PASS",
+  "executedBy": "architect-authored direct-market-probe (direct-market-probe/Program.cs)",
+  "directClosureScriptResult": "BLOCKED_OR_FAIL (direct-market-probe exit=null: bounded `dotnet run` 150000ms timeout during first build; no probe failure observed)",
+  "manualCommand": "dotnet build direct-market-probe/DirectMarketProbe.csproj (exit 0) then dotnet run --no-build --project direct-market-probe/DirectMarketProbe.csproj -- 2806d20e-d151-e95e-442b-a2acbb681a15 01a03826-97c0-7000-887d-ccb50e8caafe IR (exit 0)",
+  "probeOutput": {
+    "identity": "tooba_alpha|172.18.0.3/32|5432|1795063893.467474|on",
+    "offerId": "2806d20e-d151-e95e-442b-a2acbb681a15",
+    "positiveRows": 1,
+    "observations": [
+      { "context": "null", "clientMarketSupplied": false, "errorCode": "pricing.market.invalid", "readRows": 0 },
+      { "context": "null", "clientMarketSupplied": true, "errorCode": "pricing.market.invalid", "readRows": 0 },
+      { "context": "empty", "clientMarketSupplied": false, "errorCode": "pricing.market.invalid", "readRows": 0 },
+      { "context": "empty", "clientMarketSupplied": true, "errorCode": "pricing.market.invalid", "readRows": 0 }
+    ],
+    "pass": true
+  },
+  "readOnlyWitness": "identity ends with |on (transaction_read_only=on)",
+  "dataChange": "none (missing-market write returns pricing.market.invalid before mutation; probe connection read-only)",
+  "credentialsRecorded": false
+}
