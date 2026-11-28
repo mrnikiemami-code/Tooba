@@ -53,3 +53,17 @@ test("real channels and statuses are translated from contract values", () => {
   assert.equal(offerStatusLabel(fa, "Suspended"), "معلق");
   assert.equal(offerStatusLabel(en, "Draft"), "Draft");
 });
+
+import { offerErrorText, offerWorkspaceMessages } from "./messages.ts";
+import { offerWorkspaceMessagesRu } from "./messages-ru.ts";
+
+test("offer create authorization and precision errors have localized copy in registry resources", () => {
+  for (const t of [offerWorkspaceMessages.fa, offerWorkspaceMessages.en, offerWorkspaceMessagesRu]) {
+    assert.ok(t.offerCreatePermissionRequired.length > 0);
+    assert.equal(offerErrorText(t, "seller.authorization.denied"), t.denied);
+    assert.equal(offerErrorText(t, "offer.price.decimals_not_allowed"), t.validationDecimals);
+    assert.equal(offerErrorText(t, "offer.price.required"), t.priceRequired);
+  }
+  assert.notEqual(offerWorkspaceMessages.fa.offerCreatePermissionRequired, offerWorkspaceMessages.en.offerCreatePermissionRequired);
+  assert.notEqual(offerWorkspaceMessagesRu.offerCreatePermissionRequired, offerWorkspaceMessages.en.offerCreatePermissionRequired);
+});
