@@ -20,7 +20,8 @@ public sealed record SetOfferPriceCommand(
     string? ExpectedVersion = null,
     Guid? ActorUserId = null,
     Guid OperationId = default,
-    bool AdminSurface = false) : IRequest<Result<SellerOfferDetailPage>>;
+    bool AdminSurface = false,
+    bool Retire = false) : IRequest<Result<SellerOfferDetailPage>>;
 
 internal sealed class SetOfferPriceCommandHandler(
     IOfferStore store,
@@ -45,7 +46,8 @@ internal sealed class SetOfferPriceCommandHandler(
             request.Market,
             request.ExpectedVersion,
             request.ActorUserId,
-            request.OperationId), cancellationToken);
+            request.OperationId,
+            request.Retire), cancellationToken);
         if (write.IsFailure)
             return Result<SellerOfferDetailPage>.Failure(write.Errors);
 
