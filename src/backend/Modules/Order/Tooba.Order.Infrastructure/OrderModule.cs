@@ -137,6 +137,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<Application.Storefront.Ports.IStorefrontShippingDraftStore, Storefront.StorefrontShippingDraftStore>();
         services.AddScoped<Application.Storefront.Ports.IStorefrontPendingCheckoutStore, Storefront.StorefrontPendingCheckoutStore>();
         services.AddScoped<Application.Storefront.Services.StorefrontCheckoutService>();
+        services.AddScoped<Application.Storefront.Shipping.StorefrontOfferShippingRestrictions>();
         services.AddScoped<Application.Storefront.Services.StorefrontShippingService>();
 
         // TB-SHIPPING-CAPTURED-GROUP-PROJECTION-COMPOSER-218: یک سرویس فقط-خواندنی که فکت مالی

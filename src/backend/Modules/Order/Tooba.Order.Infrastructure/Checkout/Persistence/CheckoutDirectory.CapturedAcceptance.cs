@@ -93,10 +93,23 @@ public sealed partial class CheckoutDirectory
         } && stored.ShippingGroups.Any(group => group.AcceptedEvidence is not null);
         var revisionIntent = !string.IsNullOrWhiteSpace(command.ExpectedSelectionRevision);
 
-        // مسیر واقعاً قدیمی: هیچ نشانگر ذخیره‌شده، هیچ شاهد فراخوان و هیچ قصد capture — بدون خواندن
-        // هیچ ماژول بیرونی و با همان پلن ورودی.
+        // Legacy submission is also subject to current Offer eligibility, before inventory reservation.
+        // No captured evidence is fabricated and the existing group materializer remains authoritative.
         if (!storedCaptured && !callerSuppliedEvidence && !revisionIntent)
         {
+            if (_offerShippingRestrictions is not null)
+            {
+                var eligibility = await _offerShippingRestrictions.ResolveAsync(
+                    cart.Lines.Select(line => (line.LineId, line.OfferId, line.SellerPartyId)), cancellationToken);
+                var allowed = callerPlans.Count == 0
+                    ? eligibility.AllowsGroup(cart.Lines.Select(line => line.LineId), command.ShippingMethodCode)
+                    : callerPlans.All(plan => eligibility.AllowsGroup(plan.CartLineIds, plan.MethodCode));
+                if (!allowed)
+                {
+                    throw new ContractOperationException(StorefrontOrderErrors.ShippingMethodUnavailable);
+                }
+            }
+
             return new CapturedShippingAcceptance(callerPlans, cart.Version, null);
         }
 
@@ -838,6 +851,15 @@ public sealed partial class CheckoutDirectory
                 || assignment.SellerPartyId != group.SellerPartyId)
             {
                 throw new ContractOperationException(CapturedUnavailable);
+            }
+
+            // A saved capture can outlive a change to the Offer's selected method set. The current
+            // allowlist must still contain the exact immutable draft identity on every line.
+            if (!Enum.IsDefined(assignment.ShippingMode)
+                || (assignment.ShippingMode == OfferShippingSelectionMode.Specific
+                    && !(assignment.ShippingMethodIds ?? []).Contains(evidence.DraftId)))
+            {
+                throw new ContractOperationException(CapturedConflict);
             }
 
             // مسئولیت هر خط باید صریح و از مقادیر شناخته‌شده باشد؛ «نامعلوم» با خط بعدی جبران نمی‌شود.

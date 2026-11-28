@@ -29,6 +29,7 @@ using Tooba.Order.Application.ReservationCycle.Services;
 using Tooba.Order.Application.Seller.Policies;
 using Tooba.Order.Application.Storefront.Models;
 using Tooba.Order.Application.Storefront.Services;
+using Tooba.Order.Application.Storefront.Shipping;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Contracts;
@@ -78,6 +79,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
     // نبودشان در مسیر capture یعنی «در دسترس نیست»، نه پذیرش پیش‌فرض.
     internal readonly IAddressBookCheckoutLookup? _addressBook;
     internal readonly IShippingCatalogReader? _shippingCatalog;
+    internal readonly StorefrontOfferShippingRestrictions? _offerShippingRestrictions;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -115,7 +117,8 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         ICurrentEdition? edition = null,
         ICurrentTenant? tenant = null,
         IAddressBookCheckoutLookup? addressBook = null,
-        IShippingCatalogReader? shippingCatalog = null)
+        IShippingCatalogReader? shippingCatalog = null,
+        StorefrontOfferShippingRestrictions? offerShippingRestrictions = null)
     {
         _db = db;
         _guard = guard;
@@ -152,6 +155,7 @@ public sealed partial class CheckoutDirectory : ICheckoutDirectory
         _tenant = tenant;
         _addressBook = addressBook;
         _shippingCatalog = shippingCatalog;
+        _offerShippingRestrictions = offerShippingRestrictions;
     }
 
     /// <inheritdoc />
