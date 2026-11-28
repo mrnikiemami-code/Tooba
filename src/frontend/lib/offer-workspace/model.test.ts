@@ -21,6 +21,7 @@ import {
 } from "./model.ts";
 import type { OfferWorkspaceDetail } from "./types.ts";
 import { draftVersion } from "./draft-recovery.ts";
+import { reconcileDraft } from "./offer-actions.ts";
 import { parseOfferCurrencies } from "./currency-contract.ts";
 
 function detail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail {
@@ -248,4 +249,18 @@ test("currency reference decoder rejects missing precision and duplicate rows", 
   assert.throws(() => parseOfferCurrencies([{ ...usd, decimalPlaces: null }]));
   assert.throws(() => parseOfferCurrencies([usd, usd]));
   assert.throws(() => parseOfferCurrencies([{ ...usd, decimalPlaces: "2" }]));
+});
+
+test("unknown save recovery never overwrites a concurrent non-primary price", () => {
+  const usd = { priceId: "usd-id", currency: "USD", amount: 12, revision: "usd-r1", status: "Active" };
+  const before = detail({ prices: [usd] });
+  const desired = { ...draftFromDetail(before), currency: "USD", amount: "13" };
+  const concurrent = detail({ prices: [{ ...usd, amount: 14, revision: "usd-r2" }] });
+  assert.equal(reconcileDraft(before, concurrent, desired), null);
+  const committed = detail({ prices: [{ ...usd, amount: 13, revision: "usd-r2" }] });
+  assert.equal(reconcileDraft(before, committed, desired)?.amount, "13");
+  const unrelated = detail({ amount: 2000, priceRevision: "irr-r2", prices: [usd] });
+  const merged = reconcileDraft(before, unrelated, desired);
+  assert.equal(merged?.currency, "USD");
+  assert.equal(merged?.amount, "13");
 });
