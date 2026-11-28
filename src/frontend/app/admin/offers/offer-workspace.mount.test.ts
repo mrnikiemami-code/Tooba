@@ -226,7 +226,7 @@ test("empty edit inventory can provision an eligible position without discarding
   await click(q(tree.container, "[data-testid=offer-inventory-add-position]"));
   await waitFor(() => Boolean(tree.container.querySelector("[data-stock-item-id=stock-new]")));
   assert.equal(provisions, 1);
-  assert.equal((q(tree.container, "[data-testid=offer-inventory-input]") as HTMLInputElement).value, "0");
+  assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-inventory-input]") as HTMLInputElement).value), "0");
   await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
   assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "1500");
   assert.ok(tree.container.querySelector("[data-testid=offer-workspace-dirty]"));
@@ -566,7 +566,7 @@ test("partial inventory save keeps the failed location draft and retries only th
   assert.deepEqual(calls, ["stock-a", "stock-b"]);
   assert.match(tree.container.textContent ?? "", /بخشی از تغییرات ذخیره شد/);
   const freshRows = qq(tree.container, "[data-testid=offer-inventory-row]");
-  assert.equal((q(freshRows[1]!, "[data-testid=offer-inventory-input]") as HTMLInputElement).value, "9");
+  assert.equal(normalizeDigits((q(freshRows[1]!, "[data-testid=offer-inventory-input]") as HTMLInputElement).value), "9");
   assert.equal((q(tree.container, "[data-testid=offer-inventory-reason]") as HTMLTextAreaElement).value, "شمارش");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.deepEqual(calls, ["stock-a", "stock-b", "stock-b"]);
@@ -700,7 +700,7 @@ test("platform fulfillment shows offered quantity and locks physical/warehouse c
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   await click(q(tree.container, "[data-testid=offer-tab-button-inventory]"));
   const offered = q(tree.container, "[data-testid=offer-offered-quantity-input]") as HTMLInputElement;
-  assert.equal(offered.value, "20");
+  assert.equal(normalizeDigits(offered.value), "20");
   const physical = q(tree.container, "[data-testid=offer-inventory-input]") as HTMLInputElement;
   assert.equal(physical.disabled, true);
   await tree.unmount();
