@@ -55,6 +55,8 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   historyKindInventory: "Изменение запасов",
   historyKindAllocation: "Изменение предлагаемого количества",
   pricingTitle: "Цены",
+  pricingUnavailable: "Список разрешённых валют недоступен.",
+  loading: "Загрузка…",
   pricingCurrency: "Валюта",
   pricingAmount: "Сумма",
   pricingStatus: "Статус цены",
