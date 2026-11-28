@@ -155,7 +155,7 @@ async function createUI(f,p){
  check(d.sellerPartyId===f.seller.sellerPartyId&&d.catalogVariantId===f.variant.id&&d.channel===f.channel,"created detail identity mismatch");
  check(priceRow(d,"EUR")?.amount===20.5&&d.currency==="IRR"&&d.amount==null,"non-default create or primary mismatch");
  check(skuRows(f).length===1&&sqlPrices(f.id).length===1,"create SQL row count");
- f.initial=d;save();
+ f.initial={prices:d.prices.map(x=>({currency:x.currency,amount:x.amount,revision:x.revision})),amount:d.amount,currency:d.currency};save();
 }
 async function addUIPrice(f,p,c,amount){
  await pricing(p);await t(p,"offer-price-currency-select").selectOption(c);await t(p,"offer-price-input").fill(String(amount));
@@ -227,7 +227,13 @@ async function concurrent(f){
  check(n===1,"operation fact count wrong");return {statuses:[a.status,b.status],operationId,revision:arow.revision,before,after,factsForOperation:n};
 }
 function missingMarket(f){
- check(process.env.TOOBA_R11_CONNECTION,"TOOBA_R11_CONNECTION not available locally; market probe not run");
+ // Existing trusted DEV configuration only; never print or persist the connection string.
+ const override=process.env.Tooba__PostgreSQL__ConnectionReferences__tenant_alpha??process.env["Tooba__PostgreSQL__ConnectionReferences__tenant-alpha"];
+ if(!process.env.TOOBA_R11_CONNECTION){
+  const config=JSON.parse(fs.readFileSync(path.join(ROOT,"src/backend/Host/Tooba.Host/appsettings.Development.json"),"utf8").replace(/^\uFEFF/,""));
+  process.env.TOOBA_R11_CONNECTION=override||config.Tooba?.PostgreSQL?.ConnectionReferences?.["tenant-alpha"]||"";
+ }
+ check(process.env.TOOBA_R11_CONNECTION,"No existing local DEV connection; market probe not run");
  const market=sql("select market from pricing.prices where offer_id="+q(f.id)+" and qualifier_kind='Base' limit 1");
  check(market,"positive control has no market");
  const before=counts(f.id),prices=sqlPrices(f.id);
@@ -254,6 +260,17 @@ function cleanup(f){
  ];
  sql("BEGIN;"+statements.join(";")+";COMMIT;");
  const after=counts(id);check(Object.values(after).every(x=>Number(x)===0),"fixture residue remains");return {sku:f.sku,id,after};
+}
+async function prepareIndependentFixture(sellers){
+ const f=await discover("admin",sellers);f.sku="R11-DIRECT-probe-"+runId;
+ check(skuRows(f).length===0&&identityAbsent(f.seller.sellerPartyId,f.variant.id,f.channel)===0,"independent fixture already exists");
+ out.fixtures.push(f);save();
+ const created=await call("/v1/admin/offers",admin,"POST",{sellerPartyId:f.seller.sellerPartyId,catalogVariantId:f.variant.id,channel:f.channel,sellerSku:f.sku,status:"Draft",requestId:randomUUID()});
+ check(created.status===201,"independent fixture HTTP "+created.status);f.id=uuid(created.body.offerId);save();
+ for(const [currency,amount] of [["IRR",100000],["USD",13.25]]){
+  const r=await call("/v1/admin/offers/"+f.id+"/price",admin,"PUT",{currency,amount,expectedVersion:"absent",operationId:randomUUID()});check(r.status===200,"independent fixture price HTTP "+r.status);
+ }
+ const d=await detail(f);check(d.amount===100000&&priceRow(d,"USD")?.amount===13.25&&counts(f.id).priceFacts===2,"independent fixture readback mismatch");return f;
 }
 async function main(){
  save();
@@ -282,8 +299,9 @@ async function main(){
   save();check(PW,"existing Playwright not found");browser=await require(PW).chromium.launch({timeout:20000});
   await stage("R11-PRICE-01-admin",async()=>{a=await discover("admin",sellers);ap=await newPage(a);return verifyCreate(a,ap)});
   await stage("R11-PRICE-01-seller",async()=>{s=await discover("seller",sellers,true);sp=await newPage(s);return verifyCreate(s,sp)});
-  if(out.cases["R11-PRICE-01-admin"]?.status==="PASS"||out.cases["R11-PRICE-01-seller"]?.status==="PASS"){
-   const f=out.cases["R11-PRICE-01-admin"]?.status==="PASS"?a:s;
+  let f=out.cases["R11-PRICE-01-admin"]?.status==="PASS"?a:out.cases["R11-PRICE-01-seller"]?.status==="PASS"?s:null;
+  if(!f)await stage("independent-probe-fixture",async()=>{f=await prepareIndependentFixture(sellers);return {offerId:f.id,prices:sqlPrices(f.id)}});
+  if(f){
    await stage("R11-REF-03-missing-market",()=>missingMarket(f));
    await stage("R11-UAT-02-stock",()=>deniedStock(f,sellers.find(x=>x.sellerPartyId!==f.seller.sellerPartyId)));
    await stage("R11-PRICE-05-concurrent",()=>concurrent(f));
