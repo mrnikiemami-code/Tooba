@@ -114,6 +114,7 @@ export interface SellerOfferPrice {
 }
 
 export interface SellerInventoryLocation {
+  requiresAdjustmentReason?: boolean;
   stockItemId: string;
   locationId: string;
   locationCode: string;
@@ -532,6 +533,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
               reserved: asNumber(readProp(row, "reserved", "Reserved")),
               available: asNumber(readProp(row, "available", "Available")),
               revision: asNullableString(readProp(row, "revision", "Revision")),
+              requiresAdjustmentReason: readProp(row, "requiresAdjustmentReason", "RequiresAdjustmentReason") !== false,
             }))
             .filter((row) => row.stockItemId.length > 0)
         : [];
