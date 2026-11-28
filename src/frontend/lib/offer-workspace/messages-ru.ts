@@ -7,6 +7,8 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   productAdditionalInformation: "Дополнительная информация о продукте",
   denied: "Доступ запрещён",
   sellerSessionHint: "Продавец определяется текущим сеансом.",
+  offerCreatePermissionRequired: "У текущей учётной записи нет разрешения на создание предложений.",
+  dataUnavailable: "Данные этого раздела недоступны.",
   retry: "Повторить",
   priceRequired: "Введите сумму или отмените изменение цены. Пустая сумма не сохраняется как ноль.",
   titleCreate: "Новое предложение",
