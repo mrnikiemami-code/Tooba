@@ -253,6 +253,37 @@ test("inventory below reserved blocks save; valid adjust requires a reason and t
   await tree.unmount();
 });
 
+test("empty edit inventory can provision an eligible position without discarding an unsaved price", async () => {
+  const { click, setInputValue: set } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  let current = baseDetail({ onHand: 0, reserved: 0, availableUnits: 0, inventoryLocations: [] });
+  let provisions = 0;
+  const tree = await mountEdit({
+    loadDetail: async () => ({ ok: true, detail: current }),
+    loadInventoryLocations: async () => [{ locationId: "loc-new", code: "NEW", name: "انبار جدید" }],
+    provisionPosition: async locationId => {
+      assert.equal(locationId, "loc-new");
+      provisions++;
+      current = { ...current, inventoryLocations: [{ stockItemId: "stock-new", locationId, locationCode: "NEW", locationName: "انبار جدید", revision: "new-rev", onHand: 0, reserved: 0, available: 0 }] };
+      return { stockItemId: "stock-new" };
+    },
+  }, current);
+  await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
+  await set(q(tree.container, "[data-testid=offer-price-input]"), "1500");
+  await click(q(tree.container, "[data-testid=offer-tab-button-inventory]"));
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-inventory-location-select]")));
+  const select = q(tree.container, "[data-testid=offer-inventory-location-select]") as HTMLSelectElement;
+  const { setSelectValue } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await setSelectValue(select, "loc-new");
+  await click(q(tree.container, "[data-testid=offer-inventory-add-position]"));
+  await waitFor(() => Boolean(tree.container.querySelector("[data-stock-item-id=stock-new]")));
+  assert.equal(provisions, 1);
+  assert.equal((q(tree.container, "[data-testid=offer-inventory-input]") as HTMLInputElement).value, "0");
+  await click(q(tree.container, "[data-testid=offer-tab-button-pricing]"));
+  assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "1500");
+  assert.ok(tree.container.querySelector("[data-testid=offer-workspace-dirty]"));
+  await tree.unmount();
+});
+
 test("return policy hides the custom window unless Custom is selected", async () => {
   const tree = await mountEdit();
   const { click, setSelectValue: select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");

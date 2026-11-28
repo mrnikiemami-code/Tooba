@@ -9,6 +9,8 @@ import { OfferWorkspace } from "../../../../lib/offer-workspace";
 import type { OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import {
   assignAdminOfferFulfillment,
+  ensureAdminInventoryPosition,
+  loadAdminInventoryLocations,
   loadAdminOfferDetail,
   loadAdminOfferHistory,
   loadAdminProductVariants,
@@ -57,6 +59,8 @@ export default function AdminOfferDetailPage() {
       saveCommercial: (patch, version) => patchAdminOffer(offerId, patch, version),
       savePrice: (input, version) => writeAdminOfferPrice(offerId, input, version),
       saveInventory: (input, version) => writeAdminOfferInventory(offerId, input, version),
+      loadInventoryLocations: (sellerId, responsibility) => responsibility === "Platform" ? loadAdminInventoryLocations() : sellerId ? loadAdminInventoryLocations(sellerId) : Promise.resolve([]),
+      provisionPosition: locationId => ensureAdminInventoryPosition(offerId, locationId),
       saveFulfillment: (input, version) => assignAdminOfferFulfillment(offerId, input, version),
       saveOfferedQuantity: (quantity, version, operationId) => writeAdminOfferedQuantity(offerId, quantity, version, operationId),
       loadShippingTypes: () => loadAdminShippingTypes(),

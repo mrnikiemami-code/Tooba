@@ -438,7 +438,42 @@ export function createOfferActions(ctx: OfferActionsContext) {
     }
   }
 
-  return { runSave, runCreate, reloadAfterUnknown };
+  async function runProvisionPosition(locationId: string) {
+    const previous = ctx.detail;
+    if (!ctx.isEdit || !previous || !ctx.adapter.provisionPosition || !ctx.adapter.loadDetail || !locationId
+        || ctx.saving || ctx.saveRef.current || ctx.saveNeedsReload || previous.status === "Archived"
+        || previous.capabilities?.canEditPhysicalInventory !== true
+        || previous.inventoryLocations.some(row => row.locationId === locationId)) return;
+    ctx.saveRef.current = true;
+    ctx.setSaving(true);
+    ctx.setSaveNotice(null);
+    ctx.setSaveError(null);
+    ctx.setTabError(null);
+    try {
+      const latest = await ctx.adapter.loadDetail();
+      if (!latest.ok || detailVersionChanged(previous, latest.detail))
+        return finishSaveFailure("inventory", { errorCode: "concurrency.conflict" }, false);
+      const position = await ctx.adapter.provisionPosition(locationId);
+      const reread = await ctx.adapter.loadDetail();
+      if (!position || !reread.ok)
+        return finishSaveFailure("inventory", { errorCode: "offer.inventory.response_mismatch" }, false);
+      const next = reread.detail;
+      const row = next.inventoryLocations.find(item => item.locationId === locationId && item.stockItemId === position.stockItemId);
+      if (!row || !row.revision || row.onHand !== 0 || row.reserved !== 0
+          || detailVersionChanged(previous, { ...next, inventoryLocations: next.inventoryLocations.filter(item => item.stockItemId !== row.stockItemId) }))
+        return finishSaveFailure("inventory", { errorCode: "offer.inventory.response_mismatch" }, false);
+      ctx.setDetail(next);
+      ctx.setDraft(current => ({ ...current, inventoryOnHand: { ...current.inventoryOnHand, [row.stockItemId]: String(row.onHand) } }));
+      ctx.setSaveNotice(ctx.t.saved);
+    } catch {
+      finishSaveFailure("inventory", { errorCode: "host-unreachable" }, false);
+    } finally {
+      ctx.saveRef.current = false;
+      ctx.setSaving(false);
+    }
+  }
+
+  return { runSave, runCreate, reloadAfterUnknown, runProvisionPosition };
 }
 
 function buildCommercialPatch(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): OfferCommercialPatch {

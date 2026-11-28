@@ -10,6 +10,8 @@ import { OfferWorkspace, offerWorkspaceMessages } from "../../../../lib/offer-wo
 import type { OfferTabId, OfferWorkspaceAdapter } from "../../../../lib/offer-workspace";
 import { loadSellerReservationPolicy, readSellerPartyId } from "../../seller-api";
 import {
+  ensureSellerInventoryPosition,
+  loadSellerInventoryLocations,
   loadSellerOfferDetail,
   loadSellerOfferHistory,
   loadSellerProductVariants,
@@ -89,6 +91,8 @@ export default function VendorProductDetailPage() {
       saveCommercial: (patch, version) => patchSellerOffer(sellerPartyId, offerId, patch, version),
       savePrice: (input, version) => writeSellerOfferPrice(sellerPartyId, offerId, input, version),
       saveInventory: (input, version) => writeSellerOfferInventory(sellerPartyId, offerId, input, version),
+      loadInventoryLocations: () => loadSellerInventoryLocations(sellerPartyId),
+      provisionPosition: locationId => ensureSellerInventoryPosition(sellerPartyId, offerId, locationId),
       saveOfferedQuantity: (quantity, version, operationId) => writeSellerOfferedQuantity(sellerPartyId, offerId, quantity, version, operationId),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/vendor-panel/products")),

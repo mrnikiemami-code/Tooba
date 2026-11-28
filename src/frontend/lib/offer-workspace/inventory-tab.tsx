@@ -1,12 +1,13 @@
 ﻿"use client";
 
+import { useState } from "react";
 import { Warehouse } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferInventoryLocationOption, OfferLocalInventoryDraft, OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
-import { DirtyDot, Note, SectionTitle } from "./tab-shared";
+import { DirtyDot, SectionTitle } from "./tab-shared";
 
 export interface InventoryTabProps {
   t: OfferWorkspaceMessages;
@@ -19,6 +20,9 @@ export interface InventoryTabProps {
   onOfferedQuantityChange?: (value: string) => void;
   onOnHandChange: (stockItemId: string, value: string) => void;
   onReasonChange: (value: string) => void;
+  mode: "create" | "edit";
+  onProvision?: (locationId: string) => Promise<void>;
+  provisionDisabled?: boolean;
   localLocations?: OfferInventoryLocationOption[];
   localInventory?: OfferLocalInventoryDraft[];
   onLocalInventoryChange?: (locationId: string, patch: { onHand?: string }) => void;
@@ -30,18 +34,17 @@ export function InventoryTab(props: InventoryTabProps) {
   const totalReserved = detail.reserved;
   const totalAvailable = detail.availableUnits;
   const noPositions = detail.inventoryLocations.length === 0;
-  const preCreate = noPositions && Boolean(props.localLocations?.length && props.localInventory);
+  const preCreate = props.mode === "create" && noPositions && Boolean(props.localLocations?.length && props.localInventory);
 
   if (preCreate) {
     return (
       <div className={styles.stack} data-testid="offer-tab-inventory">
         <section className={styles.card}>
           <header className={styles.cardHd}>
-            <SectionTitle title={t.inventoryTitle} desc={t.inventoryDesc} />
+            <SectionTitle title={t.inventoryTitle} />
           </header>
           <div className={styles.cardBd}>
-            <Note tone="info">{t.inventoryProvisionNote}</Note>
-            <div className={styles.tableWrap} style={{ marginTop: 14 }}>
+            <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
@@ -93,7 +96,7 @@ export function InventoryTab(props: InventoryTabProps) {
     <div className={styles.stack} data-testid="offer-tab-inventory">
       <section className={styles.card}>
         <header className={styles.cardHd}>
-          <SectionTitle title={t.inventoryTitle} desc={t.inventoryDesc} />
+          <SectionTitle title={t.inventoryTitle} />
         </header>
         <div className={styles.cardBd}>
           <div className={styles.tiles} data-testid="offer-inventory-summary">
@@ -114,7 +117,6 @@ export function InventoryTab(props: InventoryTabProps) {
               <div className={styles.empty} data-testid="offer-inventory-empty">
                 <span className={styles.emptyIc}><Warehouse size={16} aria-hidden /></span>
                 <span className={styles.emptyT}>{t.inventoryEmpty}</span>
-                <span className={styles.emptyD}>{t.inventoryUnavailable}</span>
               </div>
             ) : (
               <div className={styles.tableWrap}>
@@ -166,7 +168,10 @@ export function InventoryTab(props: InventoryTabProps) {
             )}
           </div>
 
-          {detail.capabilities?.canEditPhysicalInventory === true ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+          {props.mode === "edit" && props.onProvision && detail.capabilities?.canEditPhysicalInventory === true && detail.status !== "Archived" ? (
+            <AddInventoryPosition t={t} locations={(props.localLocations ?? []).filter(location => !detail.inventoryLocations.some(row => row.locationId === location.locationId))} onProvision={props.onProvision} disabled={Boolean(props.provisionDisabled)} empty={noPositions} />
+          ) : null}
+          {detail.capabilities?.canEditPhysicalInventory === true && !noPositions ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
             <span className={styles.fieldLabel}>
               {t.inventoryReason}
               <DirtyDot show={props.dirty} label={t.dirtyTab} />
@@ -180,12 +185,32 @@ export function InventoryTab(props: InventoryTabProps) {
             <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
           </label> : null}
 
-          <div className={styles.stack} style={{ marginTop: 12 }}>
-            <Note>{t.inventoryReservedReadOnly}</Note>
-            <Note tone="warning">{t.inventoryUnavailable}</Note>
-          </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function AddInventoryPosition({ t, locations, onProvision, disabled, empty }: {
+  t: OfferWorkspaceMessages;
+  locations: OfferInventoryLocationOption[];
+  onProvision: (locationId: string) => Promise<void>;
+  disabled: boolean;
+  empty: boolean;
+}) {
+  const [selected, setSelected] = useState("");
+  const valid = locations.some(location => location.locationId === selected);
+  if (!locations.length) return empty ? <p className={styles.resultMeta}>{t.inventoryNoEligible}</p> : null;
+  return (
+    <div className={styles.row} style={{ marginTop: 14, alignItems: "end" }}>
+      <label className={styles.field} style={{ flex: "1 1 220px", maxWidth: 420 }}>
+        <span className={styles.fieldLabel}>{t.inventoryLocation}</span>
+        <select className={`${styles.ctl} ${styles.select}`} value={valid ? selected : ""} onChange={event => setSelected(event.target.value)} disabled={disabled} data-testid="offer-inventory-location-select">
+          <option value="">{t.select}</option>
+          {locations.map(location => <option key={location.locationId} value={location.locationId}>{location.name || location.code}</option>)}
+        </select>
+      </label>
+      <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} disabled={disabled || !valid} onClick={() => void onProvision(selected)} data-testid="offer-inventory-add-position">{t.inventoryAddLocation}</button>
     </div>
   );
 }

@@ -268,16 +268,18 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     return () => { active = false; };
   }, [adapter, isEdit]);
   useEffect(() => {
-    if (isEdit || !adapter.loadInventoryLocations) return;
-    let active = true;
     setInventoryLocations([]);
-    void adapter.loadInventoryLocations(selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId, responsibility).then((rows) => {
+    if (!adapter.loadInventoryLocations || (isEdit && (!detail || detail.capabilities?.canEditPhysicalInventory !== true || detail.status === "Archived"))) return;
+    let active = true;
+    const seller = isEdit ? detail?.sellerPartyId : selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId;
+    const owner = isEdit ? detail?.fulfillmentResponsibility : responsibility;
+    void adapter.loadInventoryLocations(seller, owner).then((rows) => {
       if (!active) return;
       setInventoryLocations(rows);
-      setLocalInventory((current) => rows.map((row) => current.find((item) => item.locationId === row.locationId) ?? { locationId: row.locationId, onHand: "", reason: "" }));
-    });
+      if (!isEdit) setLocalInventory((current) => rows.map((row) => current.find((item) => item.locationId === row.locationId) ?? { locationId: row.locationId, onHand: "", reason: "" }));
+    }).catch(() => { if (active) setInventoryLocations([]); });
     return () => { active = false; };
-  }, [adapter, isEdit, selectedSeller?.sellerPartyId, responsibility]);
+  }, [adapter, isEdit, selectedSeller?.sellerPartyId, responsibility, detail?.sellerPartyId, detail?.fulfillmentResponsibility, detail?.capabilities?.canEditPhysicalInventory, detail?.status]);
   useEffect(() => {
     if (restored || (isEdit && (!detail || loading))) return;
     const stored = readDraft(persistKey, adapter);
@@ -700,6 +702,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             onOfferedQuantityChange={(value) => patchDraft({ offeredQuantity: value })}
             onOnHandChange={(stockItemId, value) => patchDraft({ inventoryOnHand: { ...draft.inventoryOnHand, [stockItemId]: value } })}
             onReasonChange={(value) => patchDraft({ inventoryReason: value })}
+            mode={adapter.mode}
+            onProvision={isEdit && adapter.provisionPosition ? actions.runProvisionPosition : undefined}
+            provisionDisabled={saving || saveNeedsReload}
             localLocations={inventoryLocations}
             localInventory={localInventory}
             onLocalInventoryChange={(locationId, patch) => setLocalInventory((current) => current.map((row) => row.locationId === locationId ? { ...row, ...patch } : row))}

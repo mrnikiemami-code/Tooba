@@ -202,6 +202,7 @@ export interface OfferWorkspaceAdapter {
   loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
   loadChannels?: () => Promise<string[]>;
   loadInventoryLocations?: (sellerPartyId?: string, responsibility?: OfferFulfillmentResponsibility | null) => Promise<OfferInventoryLocationOption[]>;
+  provisionPosition?: (locationId: string) => Promise<{ stockItemId: string } | null>;
   loadHistory?: (page: number, pageSize: number) => Promise<OfferHistoryPage>;
   findActiveOffer?: (sellerPartyId: string, catalogVariantId: string, channel: string) => Promise<{ offerId: string } | null>;
   createDraft: (input: {
