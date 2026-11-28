@@ -83,7 +83,15 @@ function mapCeiling(raw: Record<string, unknown>): CeilingEntry {
   };
 }
 
-function mapEffective(raw: Record<string, unknown>): EffectiveAccess {
+/** Normalize the Host enum wire representation without granting authority for missing/unknown scopes. */
+export function parseEffectiveScopeKind(value: unknown): number {
+  if (value === "GlobalWithinOwner" || value === 1 || value === "1") return 1;
+  if (typeof value === "number" && Number.isInteger(value) && value >= 2 && value <= 7) return value;
+  if (typeof value === "string" && /^[2-7]$/.test(value)) return Number(value);
+  return -1;
+}
+
+export function mapEffective(raw: Record<string, unknown>): EffectiveAccess {
   const permissions = Array.isArray(raw.permissions) ? raw.permissions : [];
   return {
     userId: String(raw.userId),
@@ -93,7 +101,7 @@ function mapEffective(raw: Record<string, unknown>): EffectiveAccess {
       return {
         permissionId: String(row.permissionId),
         module: String(row.module ?? ""),
-        scopeKind: Number(row.scopeKind ?? 1),
+        scopeKind: parseEffectiveScopeKind(row.scopeKind),
         scopeResourceId: row.scopeResourceId == null ? null : String(row.scopeResourceId),
         scopeDisplayName: row.scopeDisplayName == null ? null : String(row.scopeDisplayName),
         inheritedViaRoleCodes: Array.isArray(row.inheritedViaRoleCodes)
