@@ -272,6 +272,32 @@ async function prepareIndependentFixture(sellers){
  }
  const d=await detail(f);check(d.amount===100000&&priceRow(d,"USD")?.amount===13.25&&counts(f.id).priceFacts===2,"independent fixture readback mismatch");return f;
 }
+function hostWitness(){
+ let dll=process.env.TOOBA_R11_HOST_DLL;
+ if(!dll&&process.platform==="win32"){
+  try{
+   const ps="$ids = @(Get-NetTCPConnection -LocalPort 5088 -State Listen -ErrorAction Stop | Select-Object -ExpandProperty OwningProcess -Unique); if ($ids.Count -eq 1) { $p=Get-CimInstance Win32_Process -Filter (\"ProcessId=\"+$ids[0]); $p | Select-Object ExecutablePath,CommandLine | ConvertTo-Json -Compress }";
+   const info=JSON.parse(exec("powershell.exe",["-NoProfile","-NonInteractive","-Command",ps],12000));
+   const matches=String(info.CommandLine||"").match(/(?:\"([A-Za-z]:[^\"]*Tooba\.Host\.dll)\"|([A-Za-z]:[^\s\"]*Tooba\.Host\.dll))/i);
+   if(matches)dll=matches[1]||matches[2];
+   else if(/Tooba\.Host\.exe$/i.test(info.ExecutablePath||""))dll=info.ExecutablePath.replace(/\.exe$/i,".dll");
+  }catch{}
+ }
+ return dll&&fs.existsSync(dll)?createHash("sha256").update(fs.readFileSync(dll)).digest("hex"):null;
+}
+function publishEvidence(){
+ check(exec("git",["branch","--show-current"])==="opencode/iso-agents-002","publication branch mismatch");
+ check(exec("git",["rev-parse","HEAD"])===out.identity.head,"HEAD changed during run");
+ check(!exec("git",["status","--porcelain","--untracked-files=no"]),"unrelated tracked or staged changes; result left local");
+ const relative=path.relative(ROOT,file).replaceAll("\\","/");
+ exec("git",["add","--",relative]);
+ check(exec("git",["diff","--cached","--name-only"])===relative,"unexpected staged files");
+ exec("git",["commit","-m","test(pricing): record direct R11 verification "+runId,"--",relative],60000);
+ const head=exec("git",["rev-parse","HEAD"]);
+ exec("git",["push","origin","HEAD:refs/heads/opencode/iso-agents-002"],90000);
+ const remote=exec("git",["ls-remote","origin","refs/heads/opencode/iso-agents-002"],60000).split(/\s+/)[0];
+ check(remote===head,"remote HEAD differs after push");console.log("REMOTE HEAD "+remote);
+}
 async function main(){
  save();
  let a,s,ap,sp;
@@ -284,7 +310,7 @@ async function main(){
   const buildFile=path.join(ROOT,"src/frontend/.next/BUILD_ID");
   out.identity.nextBuildId=fs.existsSync(buildFile)?fs.readFileSync(buildFile,"utf8").trim():null;
   check(out.identity.nextBuildId===expectedBuild,"Next build identity changed or absent");
-  out.identity.hostDll=process.env.TOOBA_R11_HOST_DLL&&fs.existsSync(process.env.TOOBA_R11_HOST_DLL)?createHash("sha256").update(fs.readFileSync(process.env.TOOBA_R11_HOST_DLL)).digest("hex"):null;
+  out.identity.hostDll=hostWitness();
   check(!out.identity.hostDll||out.identity.hostDll===expectedHost,"Host DLL identity changed");
   out.identity.database=sql(sqlIdentity);check(out.identity.database.startsWith("tooba_alpha|"),"wrong DB");
   check((await fetch(HOST+"/health",{signal:AbortSignal.timeout(10000)})).ok,"Host unhealthy");
@@ -321,6 +347,7 @@ async function main(){
   console.log("RESULT "+file);
   console.log(JSON.stringify({cases:Object.fromEntries(Object.entries(out.cases).map(([k,v])=>[k,v.status])),cleanup:out.cleanup.map(x=>x.status),preflightError:out.preflightError,identity:out.identity}));
  }
+ if(process.argv.includes("--publish")&&out.identity.head){try{publishEvidence()}catch(e){console.error("Evidence publication stopped; local result preserved. "+String(e.message).slice(0,300));process.exitCode=2;return}}
  process.exitCode=out.preflightError||out.cleanup.some(x=>x.status!=="PASS")||Object.values(out.cases).some(x=>x.status!=="PASS")?2:0;
 }
 main().catch(e=>{console.error(e.message);process.exitCode=2});
