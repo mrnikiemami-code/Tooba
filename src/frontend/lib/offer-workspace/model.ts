@@ -33,7 +33,7 @@ export function normalizeDigits(input: string): string {
 export function parseDecimal(input: string | null | undefined): number | null {
   if (input == null) return null;
   const text = normalizeDigits(input).replace(/,/g, "").trim();
-  if (text.length === 0) return null;
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) return null;
   const value = Number(text);
   return Number.isFinite(value) ? value : null;
 }
