@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { Truck } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type {
   OfferFulfillmentResponsibility,
@@ -58,10 +57,6 @@ export function ShippingTab(props: ShippingTabProps) {
                 </div>
               </div>
             </div>
-            <div style={{ marginTop: 12 }}>
-              <Note tone="info">{t.shippingAdminOnly}</Note>
-            </div>
-            <p className={styles.resultMeta} style={{ marginTop: 8 }}>{t.shippingServiceUnavailable}</p>
           </div>
         </section>
       </div>
@@ -91,7 +86,6 @@ export function ShippingTab(props: ShippingTabProps) {
                 <option value="Seller">{t.shippingSeller}</option>
                 <option value="Platform">{t.shippingPlatform}</option>
               </select>
-              <span className={styles.fieldHint}>{responsibilityLabel}</span>
             </label>
 
             <label className={styles.field}>
@@ -108,22 +102,15 @@ export function ShippingTab(props: ShippingTabProps) {
                   .filter((type) => type.isActive)
                   .map((type) => (
                     <option key={type.shippingTypeId} value={type.shippingTypeId}>
-                      {type.label} ({type.code})
+                      {type.label || type.code}
                     </option>
                   ))}
               </select>
               {props.typesError ? <span className={styles.fieldErr}>{props.typesError}</span> : null}
-              <span className={styles.fieldHint}>{detail.fulfillmentShippingTypeId ? t.shippingSaved : t.shippingUnassigned}</span>
             </label>
           </div>
 
           <div className={styles.stack} style={{ marginTop: 12 }}>
-            <Note tone="info">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Truck size={13} aria-hidden /> {t.shippingService}
-              </span>
-              <span style={{ display: "block" }}>{t.shippingServiceUnavailable}</span>
-            </Note>
             {props.notice ? <div data-testid="offer-shipping-notice"><Note tone="ok">{props.notice}</Note></div> : null}
             {props.error ? <div data-testid="offer-shipping-error"><Note tone="danger">{props.error}</Note></div> : null}
             {props.saving ? <p className={styles.resultMeta}>{t.saving}</p> : null}
