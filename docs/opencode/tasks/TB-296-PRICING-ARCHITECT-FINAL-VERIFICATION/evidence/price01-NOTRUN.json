@@ -1,0 +1,10 @@
+{
+  "case": "R11-PRICE-01",
+  "status": "NOT_RUN",
+  "requiredOracle": "Real browser UI for both roles; GET and PostgreSQL price/fact verification.",
+  "lastCommand": "node docs/opencode/tasks/TB-296-PRICING-ARCHITECT-FINAL-VERIFICATION/price01.cjs",
+  "phase": "admin create product picker after selecting seller B",
+  "error": "product option not found",
+  "detail": "Seller A has no free published variant (DB: no published product/variant without an existing seller-A offer), and selecting an already-offered variant surfaced the shared duplicate-active-offer dialog. Seller B has free published variants, but the create UI product picker did not expose the matching free product option across its paged dialog within the harness loop, so the create submit was never reached. No product code was changed. The failed attempt created no offer (verified cleanup).",
+  "notProductDefect": true
+}

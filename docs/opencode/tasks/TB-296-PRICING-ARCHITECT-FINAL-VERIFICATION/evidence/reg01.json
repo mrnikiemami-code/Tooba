@@ -1,0 +1,45 @@
+{
+  "case": "R11-REG-01",
+  "offerId": "000f3444-02fc-4907-a5d4-55e22194c2f1",
+  "primary": {
+    "amount": 5991492.87,
+    "currency": "IRR"
+  },
+  "paid": [
+    "Paid"
+  ],
+  "line": {
+    "qty": 1,
+    "unit": 5991492.87,
+    "offer": "000f3444-02fc-4907-a5d4-55e22194c2f1",
+    "currency": "IRR"
+  },
+  "pass": true,
+  "cleanup": {
+    "checkouts": 0,
+    "offerStatus": 200,
+    "stockBefore": {
+      "onHand": 200,
+      "reserved": 0,
+      "positions": [
+        {
+          "stock": "39126857-94cc-4077-a329-bb7706cf1635",
+          "onHand": 200,
+          "reserved": 0
+        }
+      ]
+    },
+    "stockAfter": {
+      "onHand": 200,
+      "reserved": 0,
+      "positions": [
+        {
+          "stock": "39126857-94cc-4077-a329-bb7706cf1635",
+          "onHand": 200,
+          "reserved": 0
+        }
+      ]
+    },
+    "reservations": 1
+  }
+}

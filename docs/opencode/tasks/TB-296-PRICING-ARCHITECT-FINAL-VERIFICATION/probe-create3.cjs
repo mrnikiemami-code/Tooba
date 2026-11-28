@@ -1,0 +1,11 @@
+﻿const fs=require("fs"),path=require("path");
+const PW=[path.resolve(__dirname,"../../../../src/frontend/node_modules/playwright"),"C:/Users/User/OpenCode-UI-Lab-20261122-064208/node_modules/playwright"].find(p=>fs.existsSync(p));
+(async()=>{const {chromium}=require(PW);const b=await chromium.launch();const c=await b.newContext({locale:"fa-IR",viewport:{width:1440,height:900}});await c.addInitScript(a=>localStorage.setItem("tooba.adminActorUserId",a),"01a036c2-970e-7000-8eb7-94bf5cc2d8db");const p=await c.newPage();await p.goto("http://127.0.0.1:3000/fa/admin/offers/new",{waitUntil:"load"});await p.waitForSelector("[data-testid=offer-workspace]",{timeout:30000});await p.waitForTimeout(1200);
+await p.click("[data-testid=offer-seller-picker-toggle]");await p.waitForTimeout(1000);await p.locator("[data-testid=offer-seller-dialog-option]").filter({hasText:"آرمان"}).first().click();await p.waitForTimeout(800);
+await p.click("[data-testid=offer-product-picker-toggle]");await p.waitForTimeout(1000);await p.locator("[data-testid=offer-product-dialog-option]").first().click();await p.waitForTimeout(1200);
+console.log("product dialog open",await p.locator("[data-testid=offer-product-dialog]").count());
+await p.click("[data-testid=offer-variant-picker-toggle]");await p.waitForTimeout(1200);console.log("variant dialog open",await p.locator("[data-testid=offer-variant-dialog]").count(),"options",await p.locator("[data-testid=offer-variant-option]").count());
+await p.locator("[data-testid=offer-variant-option]").first().click();await p.waitForTimeout(1200);
+console.log("after variant: dialog",await p.locator("[data-testid=offer-variant-dialog]").count(),"picker",(await p.locator("[data-testid=offer-variant-picker-toggle]").innerText().catch(()=>"ERR")).slice(0,80));
+const dialogs=await p.$$eval("dialog[open]",els=>els.map(e=>({cls:e.className,text:e.innerText.slice(0,80)})));console.log("open dialogs",JSON.stringify(dialogs));
+await b.close();})().catch(e=>{console.error(e);process.exit(1)});

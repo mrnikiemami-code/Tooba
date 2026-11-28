@@ -1,0 +1,20 @@
+{
+  "case": "R11-REF-03-no-active",
+  "offer": "2806d20e-d151-e95e-442b-a2acbb681a15",
+  "currencies": [],
+  "status": 400,
+  "errorCode": "pricing.currency.invalid",
+  "before": {
+    "facts": 1,
+    "outbox": 1,
+    "prices": 1
+  },
+  "after": {
+    "facts": 1,
+    "outbox": 1,
+    "prices": 1
+  },
+  "noActiveWrite": true,
+  "error": "pricing.currency.invalid",
+  "pass": true
+}

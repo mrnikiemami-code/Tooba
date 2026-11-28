@@ -1,0 +1,6 @@
+{
+  "case": "R11-REF-03",
+  "status": "PARTIAL",
+  "noActiveCurrencies": { "status": "PASS", "evidence": "evidence/ref03-no-active.json", "detail": "Registered all-inactive reference: /offers/currencies returned [], default-currency write returned 400 pricing.currency.invalid, zero price/fact/outbox change." },
+  "missingTrustedMarket": { "status": "NOT_RUN", "blocker": "The Host always supplies the trusted store market. The matrix oracle requires the existing Pricing integration provider / real PostgreSQL for an absent-market commerce context; no such provider exists in the repository, and creating a new Host/DB is forbidden." }
+}

@@ -1,0 +1,11 @@
+﻿const fs=require("fs");const {execFileSync}=require("child_process");
+const H="http://127.0.0.1:5088";const A={"X-Tooba-Dev-Actor-User-Id":"01a036c2-970e-7000-8eb7-94bf5cc2d8db"};
+const PSQL="D:/Users/User/source/repos/SarvNewVer-opencode-iso-002/docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-psql.exe";
+const psql=q=>execFileSync(PSQL,["-X","-qAt","-d","tooba_alpha","-c",q],{encoding:"utf8"}).trim();
+(async()=>{const dev=await(await fetch(H+"/v1/admin/dev-context")).json();A["X-Tooba-Dev-Actor-User-Id"]=dev.actorUserId;
+const cur=await(await fetch(H+"/v1/admin/offers/currencies",{headers:A})).json();
+const q=await(await fetch(H+"/v1/admin/offers/query",{method:"POST",headers:{...A,"Content-Type":"application/json"},body:JSON.stringify({page:1,pageSize:1,filters:[],sorts:[]})})).json();
+const offer=q.items[0].offerId;const counts=()=>JSON.parse(psql(`select jsonb_build_object('prices',(select count(*) from pricing.prices where offer_id='${offer}'),'facts',(select count(*) from pricing.offer_price_changes where offer_id='${offer}'),'outbox',(select count(*) from pricing.outbox_messages where strpos(payload::text,'${offer}')>0))`));
+const before=counts();const r=await fetch(H+"/v1/admin/offers/"+offer+"/price",{method:"PUT",headers:{...A,"Content-Type":"application/json"},body:JSON.stringify({amount:10,currency:"CAD",expectedVersion:"absent",operationId:crypto.randomUUID()})});const j=await r.json();const after=counts();
+const out={case:"R11-REF-02-inactive",offer,currencies:cur.map(x=>x.code),status:r.status,errorCode:j.errorCode,before,after,pass:!cur.some(x=>x.code==="CAD")&&r.status===400&&j.errorCode==="pricing.currency.invalid"&&JSON.stringify(before)===JSON.stringify(after)};
+fs.writeFileSync("docs/opencode/tasks/TB-296-PRICING-ARCHITECT-FINAL-VERIFICATION/evidence/ref02-inactive.json",JSON.stringify(out,null,2));console.log(JSON.stringify(out));})();

@@ -1,0 +1,128 @@
+{
+  "taskId": "TB-296-PRICING-ARCHITECT-FINAL-VERIFICATION",
+  "stage": "browser",
+  "cases": {
+    "R11-REF-04": {
+      "status": "PASS",
+      "disabled": {
+        "select": true,
+        "input": true
+      },
+      "options": [
+        "IRR",
+        "USD",
+        "EUR",
+        "AED",
+        "GBP",
+        "TRY",
+        "JPY",
+        "CNY",
+        "KRW"
+      ]
+    },
+    "R11-PREC-01": {
+      "status": "PASS",
+      "jpy": {
+        "priceId": "01a220b4-6709-7000-8743-766167ff2204",
+        "currency": "JPY",
+        "amount": 10,
+        "revision": "01a220b4670970008743766167ff2204:63931441823497270",
+        "status": "Active"
+      },
+      "usd": {
+        "priceId": "01a220b4-4647-7000-8854-0bd07f5421d3",
+        "currency": "USD",
+        "amount": 12.35,
+        "revision": "01a220b44647700088540bd07f5421d3:63931441827326625",
+        "status": "Active"
+      }
+    },
+    "R11-LOCALE-01": {
+      "status": "PASS",
+      "fa": {
+        "dir": "rtl",
+        "lang": "fa-IR",
+        "amount": "۱۰۰٬۰۰۰",
+        "heading": "قیمت‌گذاری"
+      },
+      "en": {
+        "dir": "ltr",
+        "lang": "en-US",
+        "text": "PricingCurrencyAmountPrice statusIRR Iranian Rial100,000 Iranian RialActiveJPY Japanese Yen10 Japanese YenActiveUSD US Dollar12.35 US DollarActiveCurrencyIRR — Iranian RialUSD — US DollarEUR — EuroAED — United Arab Emirates DirhamGBP — British PoundTRY — Turkish LiraJPY — Japanese YenCNY — Chinese YuanKRW — South Korean WonAmountThis currency has no decimals."
+      },
+      "ru": {
+        "dir": "ltr",
+        "lang": "ru-RU",
+        "amount": "12,35",
+        "text": "ЦеныВалютаСуммаСтатус ценыIRR иранский риал100 000 иранский риалАктивноJPY японская иена10 японская иенаАктивноUSD доллар США12,35 доллар СШААктивноВалютаIRR — иранский риалUSD — доллар СШАEUR — евроAED — дирхам ОАЭGBP — британский фунт стерлинговTRY — турецкая лираJPY — японская иенаCNY — китайский юаньKRW — южнокорейская вонаСуммаОсновная цена: 100 000 иранский риал"
+      }
+    },
+    "R11-LOCALE-02": {
+      "status": "PASS",
+      "serverUsd": 12.35,
+      "eur": 20.5
+    },
+    "R11-UAT-01": {
+      "status": "PASS",
+      "db": {
+        "onHand": 50,
+        "positions": 1
+      },
+      "inputValue": "50"
+    },
+    "R11-UAT-03": {
+      "status": "PASS",
+      "geomOffer": "2806d20e-d151-e95e-442b-a2acbb681a15",
+      "label": "رنگ (mobile): طلایی",
+      "geom": [
+        {
+          "width": 390,
+          "overflow": 0,
+          "dir": "rtl",
+          "headerCount": 1,
+          "fieldCount": 1,
+          "fieldText": "رنگ (mobile): طلایی  تنوع قفل",
+          "headers": [
+            "ارز",
+            "مبلغ",
+            "وضعیت قیمت"
+          ],
+          "box": {
+            "x": 16,
+            "y": 81,
+            "width": 358,
+            "height": 778.671875
+          }
+        },
+        {
+          "width": 1440,
+          "overflow": 0,
+          "dir": "rtl",
+          "headerCount": 1,
+          "fieldCount": 1,
+          "fieldText": "رنگ (mobile): طلایی  تنوع قفل",
+          "headers": [
+            "ارز",
+            "مبلغ",
+            "وضعیت قیمت"
+          ],
+          "box": {
+            "x": 32,
+            "y": 97,
+            "width": 1120,
+            "height": 500.40625
+          }
+        }
+      ]
+    }
+  },
+  "fixtures": [
+    "c7f70356-c225-f52e-1ee5-0012fb58c10f"
+  ],
+  "status": "PASS",
+  "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+  "cleanup": {
+    "offers": 0,
+    "prices": 0
+  }
+}

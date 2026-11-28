@@ -1,0 +1,52 @@
+{
+  "taskId": "TB-296-PRICING-ARCHITECT-FINAL-VERIFICATION",
+  "candidate": "4d30a21bff422676484df1943da6d05f694b0e86",
+  "productCandidate": "4f19708be3d980a22535fb446d3cfaa1a2ddfc9c",
+  "productCandidateEqualsHeadExceptDocs": true,
+  "baseBranch": "opencode/iso-agents-002",
+  "counts": { "PASS": 16, "PARTIAL": 1, "NOT_RUN": 1, "FAIL": 0, "total": 18 },
+  "cases": [
+    { "testId": "R11-REF-01", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-REF-02", "status": "PASS", "evidence": ["evidence/http-cases.json", "evidence/ref02-inactive.json"] },
+    { "testId": "R11-REF-03", "status": "PARTIAL", "evidence": ["evidence/ref03-no-active.json", "evidence/ref03-partial.json"], "notRunPart": "missing trusted market context (no existing Pricing integration provider; Host always supplies market)" },
+    { "testId": "R11-REF-04", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-PRICE-01", "status": "NOT_RUN", "evidence": ["evidence/price01-NOTRUN.json"], "blocker": "admin create UI product/variant selection could not reach create submit; no offer created; not a product defect" },
+    { "testId": "R11-PRICE-02", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-PRICE-03", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-PRICE-04", "status": "PASS", "evidence": ["evidence/price04.json"] },
+    { "testId": "R11-PRICE-05", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-PREC-01", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-PREC-02", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-LOCALE-01", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-LOCALE-02", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-UAT-01", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-UAT-02", "status": "PASS", "evidence": ["evidence/http-cases.json"] },
+    { "testId": "R11-UAT-03", "status": "PASS", "evidence": ["evidence/browser-cases.json"] },
+    { "testId": "R11-REG-01", "status": "PASS", "evidence": ["evidence/reg01.json"] },
+    { "testId": "R11-REG-02", "status": "PASS", "evidence": ["evidence/architecture.log", "evidence/openspec-strict.log", "evidence/acceptance-gate-selftest.log", "evidence/architect-review-gate-selftest.log"] }
+  ],
+  "tests": {
+    "offer": { "passed": 144, "failed": 0 },
+    "pricing": { "passed": 20, "failed": 0 },
+    "inventory": { "passed": 53, "failed": 0 },
+    "typecheck": { "exit": 0 },
+    "frontendModel": { "passed": 20, "failed": 0 },
+    "mount": { "passed": 29, "failed": 0 },
+    "i18n": { "passed": 20, "failed": 0 },
+    "architecture": { "exit": 1, "baselineSizeViolations": 27, "offerOwnedViolations": 0, "feFolderBaseline": true },
+    "openspecStrict": { "exit": 0 },
+    "acceptanceGateSelfTest": { "exit": 0 },
+    "architectReviewGateSelfTest": { "exit": 0 }
+  },
+  "identity": {
+    "host": "http://127.0.0.1:5088",
+    "hostDllSha256": "10098e16bfca69fa41a736609b2535aad8e911457db194ed916a112e4c379529",
+    "next": "http://127.0.0.1:3000",
+    "nextBuildId": "fzXq0vXgQ2zeCrG2p_IBW",
+    "database": "tooba_alpha",
+    "configSha256": "063fd0d074d12bda390048dedc1e9b8cd0eb0cae6c726570b3a77d402f073e86",
+    "migration": "not required (no schema change)",
+    "p1cResidue": { "offers": 0, "carts": 0 }
+  },
+  "productChanges": 0
+}

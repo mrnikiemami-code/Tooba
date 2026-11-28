@@ -1,0 +1,25 @@
+{
+  "case": "R11-PRICE-04",
+  "offerId": "caeac45d-1f2a-7929-0c37-c8db7efbe93b",
+  "scenarios": [
+    {
+      "name": "conflict",
+      "errorText": "این آفر توسط نشست دیگری تغییر کرده است. ابتدا وضعیت را بازخوانی کنید؛ تغییرات شما حفظ می‌شود.\n\nبستن",
+      "draftAmount": "۱۳",
+      "serverUsd": 14,
+      "pass": true
+    },
+    {
+      "name": "identical+irr",
+      "error": 0,
+      "draftAmount": "۱۳",
+      "serverUsd": 13,
+      "serverIrr": 2000,
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "cleanup": {
+    "offers": 0
+  }
+}

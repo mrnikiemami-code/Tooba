@@ -1,0 +1,199 @@
+{
+  "taskId": "TB-296-PRICING-ARCHITECT-FINAL-VERIFICATION",
+  "stage": "http",
+  "cases": {
+    "R11-REF-01": {
+      "status": "PASS",
+      "admin": [
+        {
+          "code": "IRR",
+          "englishName": "Iranian Rial",
+          "nativeName": "ریال",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "USD",
+          "englishName": "US Dollar",
+          "nativeName": "دلار آمریکا",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "EUR",
+          "englishName": "Euro",
+          "nativeName": "یورو",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "AED",
+          "englishName": "UAE Dirham",
+          "nativeName": "درهم امارات",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "GBP",
+          "englishName": "Pound Sterling",
+          "nativeName": "پوند",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "TRY",
+          "englishName": "Turkish Lira",
+          "nativeName": "لیر ترکیه",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "JPY",
+          "englishName": "Japanese Yen",
+          "nativeName": "ین ژاپن",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "CNY",
+          "englishName": "Chinese Yuan",
+          "nativeName": "یوان چین",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "KRW",
+          "englishName": "South Korean Won",
+          "nativeName": "وون کره",
+          "decimalPlaces": 0
+        }
+      ],
+      "seller": [
+        {
+          "code": "IRR",
+          "englishName": "Iranian Rial",
+          "nativeName": "ریال",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "USD",
+          "englishName": "US Dollar",
+          "nativeName": "دلار آمریکا",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "EUR",
+          "englishName": "Euro",
+          "nativeName": "یورو",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "AED",
+          "englishName": "UAE Dirham",
+          "nativeName": "درهم امارات",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "GBP",
+          "englishName": "Pound Sterling",
+          "nativeName": "پوند",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "TRY",
+          "englishName": "Turkish Lira",
+          "nativeName": "لیر ترکیه",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "JPY",
+          "englishName": "Japanese Yen",
+          "nativeName": "ین ژاپن",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "CNY",
+          "englishName": "Chinese Yuan",
+          "nativeName": "یوان چین",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "KRW",
+          "englishName": "South Korean Won",
+          "nativeName": "وون کره",
+          "decimalPlaces": 0
+        }
+      ]
+    },
+    "R11-REF-02": {
+      "status": "PASS",
+      "unknown": {
+        "type": "about:blank",
+        "title": "کد ارز نامعتبر است.",
+        "status": 400,
+        "instance": "/v1/admin/offers/6fded189-6deb-5051-fbbc-ead8b38d6af8/price",
+        "errorCode": "pricing.currency.invalid",
+        "traceId": "7eeb1514112afb3dc4e6f42347111cb3",
+        "correlationId": "e01c9895f28d4ffd92fc31db02a3c10c",
+        "requestId": "0HNQD230KV0ME:00000003"
+      },
+      "tmn": {
+        "type": "about:blank",
+        "title": "واحد نمایش را به‌جای کد ارز ذخیره نکنید.",
+        "status": 400,
+        "instance": "/v1/admin/offers/6fded189-6deb-5051-fbbc-ead8b38d6af8/price",
+        "errorCode": "pricing.currency.display_unit",
+        "traceId": "ea8f3b35e158d836ad248b8921cacd1c",
+        "correlationId": "763edfc53a7d4755881bf356e3a3ef9b",
+        "requestId": "0HNQD230KV0MF:00000003"
+      },
+      "before": {
+        "facts": 0,
+        "outbox": 0,
+        "prices": 0,
+        "history": 1
+      },
+      "after": {
+        "facts": 0,
+        "outbox": 0,
+        "prices": 0,
+        "history": 1
+      }
+    },
+    "R11-PRICE-02": {
+      "status": "PASS",
+      "winAmount": 13,
+      "irrRevisionStable": true,
+      "usdFacts": 2
+    },
+    "R11-PRICE-05": {
+      "status": "PASS",
+      "factForOperation": 1
+    },
+    "R11-PREC-02": {
+      "status": "PASS",
+      "price": 100001,
+      "factNew": 100001,
+      "facts": 1
+    },
+    "R11-PRICE-03": {
+      "status": "PASS",
+      "authoringStatus": "Retired",
+      "quote": 100001,
+      "deniedCode": "pricing.overlap"
+    },
+    "R11-UAT-02": {
+      "status": "PASS",
+      "otherSeller": 403,
+      "mismatched": 403,
+      "before": {
+        "facts": 6,
+        "outbox": 2,
+        "prices": 3,
+        "history": 1
+      },
+      "after": {
+        "facts": 6,
+        "outbox": 2,
+        "prices": 3,
+        "history": 1
+      }
+    }
+  },
+  "fixtures": [
+    "6fded189-6deb-5051-fbbc-ead8b38d6af8"
+  ],
+  "status": "PASS"
+}
