@@ -14,5 +14,10 @@
 .chipCode { font-size: 10px; color: var(--ow-muted, #6b7280); margin-inline-start: 4px; }
 .chipRemove { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; min-height: 22px; margin-inline-start: 4px; border: 0; border-radius: 999px; background: transparent; color: var(--ow-danger, #b91c1c); cursor: pointer; }
 .chipRemove:hover { background: color-mix(in srgb, var(--ow-danger, #b91c1c) 12%, transparent); }
-.methodPicker { position: relative; max-width: 420px; }
-.pickerPlus { position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ow-muted, #6b7280); }
+.methodPicker { position: relative; width: 100%; min-width: 0; }
+
+/* The shared Offer card clips decorative content by default; this interactive popup must escape it. */
+.previewCard.previewCard { overflow: visible; }
+.seg:disabled, .segActive:disabled { opacity: .5; cursor: not-allowed; }
+.chips:empty { display: none; }
+.chipRemove:focus-visible { outline: 2px solid var(--ow-accent); outline-offset: 2px; }
