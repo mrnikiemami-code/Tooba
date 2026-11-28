@@ -1,4 +1,5 @@
 ﻿import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
+import { parseOfferCurrencies } from "../../../lib/offer-workspace/currency-contract.ts";
 ﻿import type { GridServerQuery } from "../../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
@@ -249,21 +250,7 @@ export async function loadAdminOfferCurrencies(): Promise<AdminOfferCurrencyOpti
     const response = await fetch("/v1/admin/offers/currencies", { headers: headers() });
     if (!response.ok) return [];
     const body = await response.json().catch(() => null);
-    if (!Array.isArray(body)) return [];
-    return body
-      .map((row) => {
-        const item = record(row);
-        if (!item) return null;
-        const code = text(prop(item, "code", "Code"));
-        if (!code) return null;
-        return {
-          code,
-          englishName: text(prop(item, "englishName", "EnglishName"), code),
-          nativeName: text(prop(item, "nativeName", "NativeName"), code),
-          decimalPlaces: number(prop(item, "decimalPlaces", "DecimalPlaces")),
-        };
-      })
-      .filter((row): row is AdminOfferCurrencyOption => row != null);
+    return parseOfferCurrencies(body);
   } catch {
     return [];
   }
