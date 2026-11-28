@@ -26,6 +26,8 @@ export interface InventoryTabProps {
   localLocations?: OfferInventoryLocationOption[];
   localInventory?: OfferLocalInventoryDraft[];
   onLocalInventoryChange?: (locationId: string, patch: { onHand?: string }) => void;
+  onLocalInventoryAdd?: (locationId: string) => void;
+  onLocalInventoryRemove?: (locationId: string) => void;
 }
 
 export function InventoryTab(props: InventoryTabProps) {
@@ -34,7 +36,8 @@ export function InventoryTab(props: InventoryTabProps) {
   const totalReserved = detail.reserved;
   const totalAvailable = detail.availableUnits;
   const noPositions = detail.inventoryLocations.length === 0;
-  const preCreate = props.mode === "create" && noPositions && Boolean(props.localLocations?.length && props.localInventory);
+  const preCreate = props.mode === "create" && noPositions;
+  const selectedLocations = (props.localLocations ?? []).filter(location => props.localInventory?.some(row => row.locationId === location.locationId));
 
   if (preCreate) {
     return (
@@ -44,7 +47,7 @@ export function InventoryTab(props: InventoryTabProps) {
             <SectionTitle title={t.inventoryTitle} />
           </header>
           <div className={styles.cardBd}>
-            <div className={styles.tableWrap}>
+            {selectedLocations.length > 0 ? <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
@@ -55,13 +58,14 @@ export function InventoryTab(props: InventoryTabProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(props.localLocations ?? []).map((location) => {
+                  {selectedLocations.map((location) => {
                     const draft = props.localInventory?.find((row) => row.locationId === location.locationId);
                     return (
                       <tr key={location.locationId} data-testid="offer-inventory-row" data-location-id={location.locationId}>
                         <td data-label={t.inventoryLocation}>
                           <span style={{ display: "block", fontWeight: 600 }}>{location.name || location.code}</span>
                           <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{location.code}</span>
+                          <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => props.onLocalInventoryRemove?.(location.locationId)} data-testid="offer-inventory-remove-draft">{t.cancel}</button>
                         </td>
                         <td data-label={t.inventoryOnHand}>
                           <input
@@ -81,12 +85,13 @@ export function InventoryTab(props: InventoryTabProps) {
                   })}
                 </tbody>
               </table>
-            </div>
-            <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+            </div> : <div className={styles.empty} data-testid="offer-inventory-empty"><span className={styles.emptyIc}><Warehouse size={16} aria-hidden /></span><span className={styles.emptyT}>{t.inventoryEmpty}</span></div>}
+            <AddInventoryPosition t={t} locations={(props.localLocations ?? []).filter(location => !selectedLocations.some(row => row.locationId === location.locationId))} onProvision={async locationId => { props.onLocalInventoryAdd?.(locationId); }} disabled={Boolean(props.provisionDisabled)} empty={selectedLocations.length === 0} />
+            {selectedLocations.length > 0 ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
               <span className={styles.fieldLabel}>{t.inventoryReason}</span>
               <input className={styles.ctl} value={props.reason} onChange={(event) => props.onReasonChange(event.target.value)} data-testid="offer-inventory-reason" />
               <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
-            </label>
+            </label> : null}
           </div>
         </section>
       </div>
@@ -199,18 +204,22 @@ function AddInventoryPosition({ t, locations, onProvision, disabled, empty }: {
   empty: boolean;
 }) {
   const [selected, setSelected] = useState("");
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLocaleLowerCase();
+  const filtered = locations.filter(location => `${location.name} ${location.code}`.toLocaleLowerCase().includes(query) || location.locationId === selected);
   const valid = locations.some(location => location.locationId === selected);
   if (!locations.length) return empty ? <p className={styles.resultMeta}>{t.inventoryNoEligible}</p> : null;
   return (
     <div className={styles.row} style={{ marginTop: 14, alignItems: "end" }}>
       <label className={styles.field} style={{ flex: "1 1 220px", maxWidth: 420 }}>
         <span className={styles.fieldLabel}>{t.inventoryLocation}</span>
+        <input type="search" className={styles.ctl} aria-label={`${t.search} ${t.inventoryLocation}`} placeholder={t.search} value={search} onChange={event => setSearch(event.target.value)} disabled={disabled} data-testid="offer-inventory-location-search" />
         <select className={`${styles.ctl} ${styles.select}`} value={valid ? selected : ""} onChange={event => setSelected(event.target.value)} disabled={disabled} data-testid="offer-inventory-location-select">
           <option value="">{t.select}</option>
-          {locations.map(location => <option key={location.locationId} value={location.locationId}>{location.name || location.code}</option>)}
+          {filtered.map(location => <option key={location.locationId} value={location.locationId}>{location.name && location.code ? `${location.name} — ${location.code}` : location.name || location.code}</option>)}
         </select>
       </label>
-      <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} disabled={disabled || !valid} onClick={() => void onProvision(selected)} data-testid="offer-inventory-add-position">{t.inventoryAddLocation}</button>
+      <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} disabled={disabled || !valid} onClick={() => void onProvision(selected).then(() => { setSelected(""); setSearch(""); })} data-testid="offer-inventory-add-position">{t.inventoryAddLocation}</button>
     </div>
   );
 }
