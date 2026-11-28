@@ -32,6 +32,7 @@ function historyKind(t: OfferWorkspaceMessages, kind: string): string {
     case "Created": return t.historyKindCreated;
     case "CommercialChanged": return t.historyKindCommercial;
     case "PriceChanged": return t.historyKindPrice;
+    case "PriceRetired": return t.historyKindPriceRetired;
     case "InventoryChanged": return t.historyKindInventory;
     case "AllocationChanged": return t.historyKindAllocation;
     case "FulfillmentChanged": return t.historyKindFulfillment;
