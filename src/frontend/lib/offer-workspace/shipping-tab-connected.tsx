@@ -37,7 +37,7 @@ interface ShippingTabConnectedProps {
 
 /**
  * Presentation-only adapter between the workspace state and the approved Shipping tab. Owner/type changes
- * clear the specific set and return to Automatic so a stale method can never be carried across a scope change.
+ * clear the old method set without widening Specific to Automatic. Only an explicit mode action widens it.
  */
 export function ShippingTabConnected(props: ShippingTabConnectedProps) {
   return (
@@ -59,7 +59,6 @@ export function ShippingTabConnected(props: ShippingTabConnectedProps) {
       error={props.error}
       onResponsibilityChange={(value) => {
         props.setResponsibility(value);
-        props.setMode("Automatic");
         props.setSelectedMethodIds([]);
         props.setNotice(null);
         props.setError(null);
@@ -67,7 +66,6 @@ export function ShippingTabConnected(props: ShippingTabConnectedProps) {
       }}
       onShippingTypeChange={(value) => {
         props.setShippingTypeId(value);
-        props.setMode("Automatic");
         props.setSelectedMethodIds([]);
         props.setNotice(null);
         props.setError(null);

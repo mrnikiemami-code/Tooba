@@ -44,6 +44,7 @@ export interface OfferActionsContext {
   shippingTypeId: string;
   shippingMode: import("./types.ts").OfferShippingSelectionMode;
   shippingMethodIds: string[];
+  shippingReferenceBlocked?: boolean;
   setDraft: (updater: (current: OfferWorkspaceDraft) => OfferWorkspaceDraft) => void;
   setDetail: (detail: OfferWorkspaceDetail) => void;
   setSaving: (value: boolean) => void;
@@ -159,6 +160,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
       return;
     }
+    if (ctx.shippingChanged && ctx.shippingReferenceBlocked) { ctx.setActiveTab("shipping"); ctx.showBlocking("error", ctx.t.saveErrorTitle, ctx.t.shippingMethodsError); return; }
     if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const errors = validateDraft(ctx.detail, ctx.draft, ctx.currencies);
     if (errors.length > 0) {
@@ -387,6 +389,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setSaveRetryable(true);
       return;
     }
+    if (ctx.adapter.role === "admin" && ctx.shippingReferenceBlocked) { ctx.setActiveTab("shipping"); ctx.showBlocking("error", ctx.t.saveErrorTitle, ctx.t.shippingMethodsError); return; }
     if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
     const pendingPrices = validateCreatePrices(ctx.draft, ctx.currencies ?? []);

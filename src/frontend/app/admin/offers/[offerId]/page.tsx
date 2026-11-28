@@ -14,7 +14,7 @@ import {
   loadAdminOfferCurrencies,
   loadAdminOfferDetail,
   loadAdminOfferHistory,
-  loadAdminOfferShippingMethods,
+  loadAdminShippingMethodOptions,
   loadAdminProductVariants,
   loadAdminShippingTypes,
   patchAdminOffer,
@@ -67,10 +67,8 @@ export default function AdminOfferDetailPage() {
       saveFulfillment: (input, version) => assignAdminOfferFulfillment(offerId, input, version),
       saveOfferedQuantity: (quantity, version, operationId) => writeAdminOfferedQuantity(offerId, quantity, version, operationId),
       loadShippingTypes: () => loadAdminShippingTypes(),
-      loadShippingMethodOptions: async (input) => {
-        const page = await loadAdminOfferShippingMethods(input.offerId ?? offerId);
-        return page ? { ...page, responsibility: page.responsibility ?? input.responsibility } : null;
-      },
+      loadShippingMethodOptions: (input) =>
+        loadAdminShippingMethodOptions(input.sellerPartyId ?? null, input.responsibility, input.shippingTypeId, offerLocale.code),
       onCreated: () => undefined,
       onCancel: () => router.push(localizePath("/admin/offers")),
     }),

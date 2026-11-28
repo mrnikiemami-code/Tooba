@@ -88,7 +88,7 @@ export default function AdminCreateOfferPage() {
         findAdminActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadShippingTypes: () => loadAdminShippingTypes(),
       loadShippingMethodOptions: (input) =>
-        loadAdminShippingMethodOptions(input.sellerPartyId ?? null, input.responsibility, input.shippingTypeId),
+        loadAdminShippingMethodOptions(input.sellerPartyId ?? null, input.responsibility, input.shippingTypeId, offerLocale.code),
       loadChannels: () => loadAdminAllowedOfferChannels(),
       loadCurrencies: () => loadAdminOfferCurrencies(),
       loadInventoryLocations: (sellerId, responsibility) => responsibility === "Platform" ? loadAdminInventoryLocations() : sellerId ? loadAdminInventoryLocations(sellerId) : Promise.resolve([]),

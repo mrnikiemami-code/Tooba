@@ -519,33 +519,34 @@ export interface AdminShippingMethodOptionsPage {
   methods: AdminShippingMethodOptionRow[];
 }
 
-function mapShippingMethodsPage(value: unknown): AdminShippingMethodOptionsPage | null {
+export function mapShippingMethodsPage(value: unknown): AdminShippingMethodOptionsPage | null {
   const item = record(value);
-  if (!item) return null;
-  const responsibility = text(prop(item, "responsibility", "Responsibility"));
+  if (!item || Array.isArray(value)) return null;
+  const responsibility = prop(item, "responsibility", "Responsibility") ?? null;
+  const typeId = prop(item, "shippingTypeId", "ShippingTypeId") ?? null;
+  const mode = prop(item, "mode", "Mode");
   const rawMethods = prop(item, "methods", "Methods");
-  const methods = Array.isArray(rawMethods)
-    ? rawMethods.flatMap((raw): AdminShippingMethodOptionRow[] => {
-        const row = record(raw);
-        if (!row) return [];
-        const methodId = text(prop(row, "methodId", "MethodId"));
-        if (!methodId) return [];
-        return [{
-          methodId,
-          serviceCode: text(prop(row, "serviceCode", "ServiceCode")),
-          optionCode: prop(row, "optionCode", "OptionCode") == null ? null : text(prop(row, "optionCode", "OptionCode")),
-          label: text(prop(row, "label", "Label"), text(prop(row, "serviceCode", "ServiceCode"))),
-        }];
-      })
-    : [];
   const rawSelected = prop(item, "selectedMethodIds", "SelectedMethodIds");
-  return {
-    responsibility: responsibility === "Seller" || responsibility === "Platform" ? responsibility : null,
-    shippingTypeId: prop(item, "shippingTypeId", "ShippingTypeId") == null ? null : text(prop(item, "shippingTypeId", "ShippingTypeId")),
-    mode: text(prop(item, "mode", "Mode")) === "Specific" ? "Specific" : "Automatic",
-    selectedMethodIds: Array.isArray(rawSelected) ? rawSelected.filter((x): x is string => typeof x === "string") : [],
-    methods,
-  };
+  if ((responsibility !== null && responsibility !== "Seller" && responsibility !== "Platform")
+      || (typeId !== null && typeof typeId !== "string")
+      || (mode !== "Automatic" && mode !== "Specific")
+      || !Array.isArray(rawMethods) || !Array.isArray(rawSelected)
+      || !rawSelected.every((id): id is string => typeof id === "string" && id.length > 0)
+      || new Set(rawSelected).size !== rawSelected.length) return null;
+  const methods: AdminShippingMethodOptionRow[] = [];
+  for (const raw of rawMethods) {
+    const row = record(raw);
+    if (!row || Array.isArray(raw)) return null;
+    const methodId = prop(row, "methodId", "MethodId");
+    const serviceCode = prop(row, "serviceCode", "ServiceCode");
+    const optionCode = prop(row, "optionCode", "OptionCode") ?? null;
+    const label = prop(row, "label", "Label");
+    if (typeof methodId !== "string" || !methodId || typeof serviceCode !== "string" || !serviceCode
+        || typeof label !== "string" || !label || (optionCode !== null && typeof optionCode !== "string")) return null;
+    methods.push({ methodId, serviceCode, optionCode, label });
+  }
+  if (new Set(methods.map(row => row.methodId)).size !== methods.length) return null;
+  return { responsibility, shippingTypeId: typeId, mode, selectedMethodIds: rawSelected, methods };
 }
 
 export async function loadAdminOfferShippingMethods(offerId: string): Promise<AdminShippingMethodOptionsPage | null> {
@@ -563,6 +564,7 @@ export async function loadAdminShippingMethodOptions(
   sellerPartyId: string | null,
   responsibility: "Seller" | "Platform" | null,
   shippingTypeId: string | null,
+  languageCode: string,
 ): Promise<AdminShippingMethodOptionsPage | null> {
   try {
     await prepareAdminDevActor();
@@ -570,7 +572,7 @@ export async function loadAdminShippingMethodOptions(
     if (responsibility) params.set("responsibility", responsibility);
     if (shippingTypeId) params.set("shippingTypeId", shippingTypeId);
     if (sellerPartyId) params.set("sellerPartyId", sellerPartyId);
-    params.set("language", typeof document !== "undefined" ? document.documentElement.lang || "fa" : "fa");
+    params.set("language", languageCode);
     const response = await fetch(`/v1/admin/offers/shipping-methods?${params.toString()}`, { headers: headers() });
     if (!response.ok) return null;
     return mapShippingMethodsPage(await response.json());

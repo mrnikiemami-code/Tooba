@@ -40,6 +40,7 @@ export function useOfferShippingMethods(args: {
       return;
     }
     let active = true;
+    setOptions([]);
     setLoading(true);
     setError(null);
     void loader({
@@ -50,7 +51,7 @@ export function useOfferShippingMethods(args: {
     })
       .then((page) => {
         if (!active) return;
-        if (!page) {
+        if (!page || page.responsibility !== responsibility || page.shippingTypeId !== shippingTypeId) {
           setOptions([]);
           setError(errorMessage);
         } else {

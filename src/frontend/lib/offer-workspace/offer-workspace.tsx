@@ -389,7 +389,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const actions = createOfferActions({
     adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory, currencies, currencyReferenceUnavailable: currencyReference.status === "loading" || currencyReference.status === "unavailable",
     createReady: createReady && !createCommitted.current, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
-    priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId, shippingMode, shippingMethodIds,
+    priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId, shippingMode, shippingMethodIds, shippingReferenceBlocked: shippingMode === "Specific" && (!responsibility || !shippingTypeId || shippingMethodsLoading || !!shippingMethodsError || shippingMethodIds.length === 0 || shippingMethodIds.some(id => !shippingMethodOptions.some(option => option.methodId === id))),
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
     setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
     setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
