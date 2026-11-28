@@ -1,5 +1,6 @@
-﻿import type { OfferFulfillmentResponsibility } from "../../lib/offer-workspace/types.ts";
+﻿import type { OfferFulfillmentResponsibility, OfferPriceView } from "../../lib/offer-workspace/types.ts";
 import { ownerWriteIntent } from "../../lib/offer-workspace/owner-write-intent.ts";
+import { priceRowFor, priceRevisionFor } from "../../lib/offer-workspace/model.ts";
 
 export interface OfferCreateAndApplyInput {
   sellerPartyId?: string;
@@ -25,6 +26,8 @@ export interface OfferCreateAndApplyDetail {
   channel: string;
   amount: number | null;
   currency: string;
+  prices?: OfferPriceView[];
+  priceRevision?: string | null;
   returnPolicyChoice: string;
   customReturnWindowDays: number | null;
   minimumOrderQuantity: number | null;
@@ -64,9 +67,8 @@ function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyIn
     && detail.status === "Draft"
     && detail.catalogVariantId === input.catalogVariantId
     && (detail.sellerSku ?? null) === input.sellerSku
-    && sameNumber(detail.amount, input.amount)
+    && sameNumber(priceRowFor(detail, input.currency || detail.currency)?.amount ?? null, input.amount)
     && detail.channel === input.channel
-    && (!input.currency || detail.currency === input.currency)
     && detail.returnPolicyChoice === input.returnPolicyChoice
     && sameNumber(detail.customReturnWindowDays, input.customReturnWindowDays)
     && sameNumber(detail.minimumOrderQuantity, input.minimumOrderQuantity)
@@ -113,14 +115,14 @@ export async function createAndApplyOffer(
     const currency = input.currency || current.currency;
     if (input.amount != null && !currency) return partial("offer.price.invalid");
     if (input.amount != null && currency === "IRR" && !Number.isInteger(input.amount)) return partial("offer.price.decimals_not_allowed");
-    if (input.amount != null && (current.amount !== input.amount || current.currency !== currency)) {
-      const revision = current.revisions?.price;
+    if (input.amount != null && priceRowFor(current, currency)?.amount !== input.amount) {
+      const revision = priceRevisionFor(current, currency);
       if (!revision) return partial("concurrency.conflict");
       const intent = ownerWriteIntent(transport.scope + ":price:" + offerId, revision, [input.amount, currency]);
       const price = await transport.savePrice(offerId, input.amount, currency, revision, intent.operationId);
       if (!price.ok) return partial(price.errorCode);
       current = await read();
-      if (current.amount !== input.amount || current.currency !== currency) return partial("offer.create.response_mismatch");
+      if (priceRowFor(current, currency)?.amount !== input.amount) return partial("offer.create.response_mismatch");
       intent.clear();
     }
     for (const position of input.inventory) {
