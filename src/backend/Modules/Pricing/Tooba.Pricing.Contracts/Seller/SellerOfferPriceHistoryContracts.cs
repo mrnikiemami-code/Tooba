@@ -11,7 +11,8 @@ public sealed record SellerPriceChangeFact(
     decimal? OldAmount,
     decimal NewAmount,
     string Currency,
-    string Revision);
+    string Revision,
+    bool Retired = false);
 
 /// <summary>Current owner revision and committed amount for one Offer.</summary>
 public sealed record SellerPriceRevision(string Revision, Guid PriceId, decimal Amount, string Currency, DateTimeOffset OccurredAt);
