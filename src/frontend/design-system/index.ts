@@ -93,3 +93,6 @@ export type {
   AdminFormModeKind,
   AdminFormModeState,
 } from "./admin-form-mode";
+
+export { SearchableSelect } from "./primitives/searchable-select";
+export type { SearchableSelectOption } from "./primitives/searchable-select";
