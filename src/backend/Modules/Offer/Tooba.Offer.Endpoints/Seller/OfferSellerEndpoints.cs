@@ -113,7 +113,7 @@ public static class OfferSellerEndpoints
         var result = await sender.Send(
             new FindActiveOfferQuery(sellerId, catalogVariantId, resolved), token);
         // Explicit successful absence: do not let a nullable JSON body become an ambiguous empty response.
-        return !result.IsFailure && result.Value is null ? Microsoft.AspNetCore.Http.Results.NoContent() : api.From(result);
+        return !result.IsFailure && result.Value is null ? api.From(Tooba.BuildingBlocks.Results.Result.Success()) : api.From(result);
     }
 
     private static async Task<IResult> CreateOfferAsync(
