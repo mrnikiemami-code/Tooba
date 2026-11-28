@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { discardCreateDrafts } from "../../../lib/offer-workspace/draft-recovery";
 import { useOfferWriteAccess } from "./use-offer-write-access";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, Plus } from "lucide-react";
@@ -222,6 +223,7 @@ export default function VendorProductsPage() {
         </div>
         {createAccess === "allowed" ? <Link
           href={localizePath("/vendor-panel/products/new")}
+          onClick={() => discardCreateDrafts({ role: "seller", fixedSeller: { sellerPartyId: sellerPartyId ?? "", displayName: "" } })}
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
           data-testid="seller-create-offer"
         >
