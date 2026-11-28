@@ -218,9 +218,11 @@ test("empty edit inventory can provision an eligible position without discarding
   await set(q(tree.container, "[data-testid=offer-price-input]"), "1500");
   await click(q(tree.container, "[data-testid=offer-tab-button-inventory]"));
   await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-inventory-location-select]")));
-  const select = q(tree.container, "[data-testid=offer-inventory-location-select]") as HTMLSelectElement;
-  const { setSelectValue } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
-  await setSelectValue(select, "loc-new");
+  assert.equal(tree.container.querySelector("[data-testid=offer-inventory-location-select-search]"), null);
+  await click(q(tree.container, "[data-testid=offer-inventory-location-select]"));
+  await set(q(tree.container, "[data-testid=offer-inventory-location-select-search]"), "NEW");
+  await click(q(tree.container, "[data-testid=offer-inventory-location-select-option][data-value=loc-new]"));
+  assert.equal(tree.container.querySelector("[data-testid=offer-inventory-location-select-search]"), null);
   await click(q(tree.container, "[data-testid=offer-inventory-add-position]"));
   await waitFor(() => Boolean(tree.container.querySelector("[data-stock-item-id=stock-new]")));
   assert.equal(provisions, 1);
@@ -769,7 +771,7 @@ test("new offer stages three independent currency amounts before one save", asyn
   const adapter = createAdapter({ loadCurrencies: async () => ["IRR", "USD", "EUR"].map(code => ({ code, englishName: code, nativeName: code, decimalPlaces: code === "IRR" ? 0 : 2 })),
     createAndSaveDraft: async input => { calls.push(input.prices); return { ok: true, offerId: "new-multi" }; } });
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
-  const { click, select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  const { click, setSelectValue: select } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   try {
     await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
     await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
@@ -783,9 +785,12 @@ test("new offer stages three independent currency amounts before one save", asyn
       await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), amount!);
     }
     assert.equal(qq(tree.container, "[data-testid=offer-price-row]").length, 3);
+    await click(q(tree.container, '[data-testid=offer-price-remove][data-currency="USD"]'));
+    assert.equal(qq(tree.container, "[data-testid=offer-price-row]").length, 2);
+    await select(q(tree.container, "[data-testid=offer-price-currency-select]"), "USD"); await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "13.25");
     await select(q(tree.container, "[data-testid=offer-price-currency-select]"), "IRR");
     assert.equal(normalizeDigits((q(tree.container, "[data-testid=offer-price-input]") as HTMLInputElement).value).replace(/[٬,]/g, ""), "100000");
     await click(q(tree.container, "[data-testid=admin-offer-submit]"));
-    assert.deepEqual(calls, [[{currency:"IRR",amount:100000},{currency:"USD",amount:13.25},{currency:"EUR",amount:20.5}]]);
+    assert.deepEqual(calls, [[{currency:"IRR",amount:100000},{currency:"EUR",amount:20.5},{currency:"USD",amount:13.25}]]);
   } finally { await tree.unmount(); }
 });
