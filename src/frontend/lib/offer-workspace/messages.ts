@@ -89,6 +89,7 @@ export interface OfferWorkspaceMessages {
   pricingStatus: string;
   pricingRetired: string;
   pricingRemove: string;
+  pricingAddCurrency: string;
   pricingRemoveConfirm: string;
   historyKindPriceRetired: string;
   conflictUnavailable: string;
@@ -322,6 +323,7 @@ const fa: OfferWorkspaceMessages = {
   pricingStatus: "وضعیت قیمت",
   pricingRetired: "غیرفعال",
   pricingRemove: "حذف قیمت",
+  pricingAddCurrency: "افزودن ارز دیگر",
   pricingRemoveConfirm: "قیمت این ارز از فروش خارج شود؟ سابقه قیمت حفظ می‌شود.",
   historyKindPriceRetired: "حذف قیمت",
   conflictUnavailable: "بررسی آفر موجود ممکن نیست. دوباره تلاش کنید.",
@@ -556,6 +558,7 @@ const en: OfferWorkspaceMessages = {
   pricingStatus: "Price status",
   pricingRetired: "Retired",
   pricingRemove: "Remove price",
+  pricingAddCurrency: "Add another currency",
   pricingRemoveConfirm: "Remove this currency price from sale? Its history will be retained.",
   historyKindPriceRetired: "Price removed",
   conflictUnavailable: "Could not check for an existing offer. Retry.",
