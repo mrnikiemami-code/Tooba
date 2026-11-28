@@ -602,7 +602,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           messageBox ? (
             <>
               {(messageBox.kind === "duplicate" || messageBox.offerId) && existingOfferId ? (
-                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { if (messageBox.kind === "duplicate") { createCommitted.current = true; clearPersistedDraft(); } adapter.onCreated(existingOfferId); }} data-testid="offer-message-open-existing">{t.viewExistingOffer}</button>
+                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { if (!isEdit) { createCommitted.current = true; clearPersistedDraft(); } adapter.onCreated(existingOfferId); }} data-testid="offer-message-open-existing">{t.viewExistingOffer}</button>
               ) : null}
               {messageBox.kind === "reload" ? (
                 <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown()); }} disabled={saveReloading} data-testid="offer-message-reload">
