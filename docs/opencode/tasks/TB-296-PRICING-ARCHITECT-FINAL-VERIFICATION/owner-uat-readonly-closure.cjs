@@ -18,7 +18,7 @@ async function get(route,headers={},language="fa-IR"){
 const headers=(actor,seller)=>({"X-Tooba-Dev-Actor-User-Id":actor,...(seller?{"X-Tooba-Seller-Party-Id":seller}:{})});
 async function stage(name,fn){try{out.cases[name]={status:"PASS",...await fn()}}catch(e){out.cases[name]={status:"FAIL",error:String(e.message).slice(0,900)}}save()}
 async function findExisting(role,actor,seller,language){
- const h=headers(actor,seller.sellerPartyId),base=role==="admin"?"/v1/admin/catalog/products":"/v1/seller/catalog-products";
+ const h=headers(actor,role==="seller"?seller.sellerPartyId:undefined),base=role==="admin"?"/v1/admin/catalog/products":"/v1/seller/catalog-products";
  const ids=JSON.parse(sql("select coalesce(jsonb_agg(offer_id),'[]') from (select o.offer_id from offer.offers o join catalog.variants v on v.variant_id=o.catalog_variant_id join catalog.products p on p.product_id=v.product_id where o.seller_party_id="+quote(seller.sellerPartyId)+" and o.channel='Marketplace' and o.status<>'Archived' and v.status='Published' and p.status='Published' order by o.offer_id limit 40) s"));
  for(const id of ids){
   const d=await get("/v1/"+role+"/offers/"+id,h,language);
@@ -27,7 +27,7 @@ async function findExisting(role,actor,seller,language){
   if(search.status!==200||search.body?.items?.filter(y=>y.title===x.productTitle).length!==1||!search.body.items.some(y=>y.productId===x.productId))continue;
   const v=await get(base+"/"+x.productId+"/variants?locale="+encodeURIComponent(language),h,language);
   if(v.status!==200||!Array.isArray(v.body)||!v.body.some(y=>y.catalogVariantId===x.catalogVariantId&&y.catalogCode===x.variantCode))continue;
-  return x;
+  return {...x,publishedVariantCount:v.body.filter(y=>y.status==="Published").length};
  }
  throw Error("No exact visible existing tuple found for "+role);
 }
@@ -47,7 +47,7 @@ async function selectIdentity(p,role,seller,d,locale){
  const o=t(p,"offer-product-dialog-option").filter({has:p.getByText(d.productTitle,{exact:true})});await o.first().waitFor();check(await o.count()===1,"product ambiguous");await o.click();
  // A sole variant is auto-selected by the shared picker; otherwise choose the exact code.
  const duplicate=t(p,"offer-message-duplicate");
- if(!await duplicate.isVisible()){
+ if(d.publishedVariantCount!==1){
   const toggle=t(p,"offer-variant-picker-toggle");await toggle.click();
   const opt=t(p,"offer-variant-option").filter({has:p.getByText(d.variantCode,{exact:true})});
   await opt.first().waitFor();check(await opt.count()===1,"variant ambiguous");await opt.click();
@@ -83,10 +83,31 @@ async function main(){
      const expected="/"+locale+base+d.offerId;
      await Promise.all([p.waitForURL(u=>u.pathname===expected),t(p,"offer-message-open-existing").click()]);
      await t(p,"offer-workspace").waitFor();check(out.writeAttempts===0,"unexpected write attempted");
-     return {role,locale,offerId:d.offerId,variant:d.catalogVariantId,from:pre,to:new URL(p.url()).pathname};
+     const result={role,locale,offerId:d.offerId,variant:d.catalogVariantId,from:pre,to:new URL(p.url()).pathname};
+     if(role==="admin")await stage("warehouse-positive-name-code",async()=>{
+      await t(p,"offer-tab-button-inventory").click();
+      const search=t(p,"offer-inventory-location-search"),picker=t(p,"offer-inventory-location-select");
+      await search.waitFor();
+      const options=async()=>picker.locator("option").evaluateAll(rows=>rows.filter(x=>x.value).map(x=>({id:x.value,label:x.textContent.trim()})));
+      const before=await options();check(before.length>=2,"insufficient eligible distinct warehouses");
+      const target=before.find(x=>x.label.includes(" — "));check(target,"missing warehouse code");
+      const [name,code]=target.label.split(" — ");
+      check(name&&code,"invalid warehouse label");
+      const results=[];
+      for(const needle of [name,code]){
+       await search.fill(needle);
+       const filtered=await options();
+       check(filtered.some(x=>x.id===target.id)&&filtered.every(x=>x.label.toLocaleLowerCase().includes(needle.toLocaleLowerCase())),"positive warehouse search mismatch");
+       results.push({needle,matched:filtered.map(x=>x.id)});
+      }
+      await search.fill("R11-NO-MATCH-"+out.runId);check((await options()).length===0,"negative search returned a warehouse");
+      await search.fill("");check((await options()).length===before.length,"clearing search did not restore choices");
+      return {before:before.length,results};
+     });
+     return result;
     }finally{await ctx.close()}
    });
   }
- }catch(e){out.error=String(e.message).slice(0,800)}finally{if(browser)await browser.close();out.status=!out.error&&out.writeAttempts===0&&Object.keys(out.cases).length===2&&Object.values(out.cases).every(x=>x.status==="PASS")?"PASS":"BLOCKED";save();console.log(JSON.stringify(out));process.exitCode=out.status==="PASS"?0:2}
+ }catch(e){out.error=String(e.message).slice(0,800)}finally{if(browser)await browser.close();out.status=!out.error&&out.writeAttempts===0&&Object.keys(out.cases).length===3&&Object.values(out.cases).every(x=>x.status==="PASS")?"PASS":"BLOCKED";save();console.log(JSON.stringify(out));process.exitCode=out.status==="PASS"?0:2}
 }
 main().catch(e=>{console.error(e.message);process.exitCode=2});
