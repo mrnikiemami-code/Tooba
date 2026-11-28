@@ -48,8 +48,8 @@ export function baseDetail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorks
     unitQuantityStep: null,
     unitRoundingMode: null,
     inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "WH-A", onHand: 10, reserved: 2, available: 8 },
-      { stockItemId: "stock-b", locationId: "loc-b", revision: "stock-rev", locationCode: "WH-B", onHand: 4, reserved: 0, available: 4 },
+      { stockItemId: "stock-a", locationId: "loc-a", locationCode: "WH-A", locationName: "WH-A", revision: "stock-rev", onHand: 10, reserved: 2, available: 8 },
+      { stockItemId: "stock-b", locationId: "loc-b", locationCode: "WH-B", locationName: "WH-B", revision: "stock-rev", onHand: 4, reserved: 0, available: 4 },
     ],
     ...over,
   };

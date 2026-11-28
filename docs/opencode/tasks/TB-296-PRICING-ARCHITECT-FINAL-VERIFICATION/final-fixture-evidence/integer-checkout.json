@@ -1,0 +1,146 @@
+{
+  "id": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+  "sku": "R11-CHECKOUT-8c508293-db69-490a-8f59-632bf7543eb6",
+  "attempts": {
+    "create": 201,
+    "price": 200,
+    "inventory": 200,
+    "activate": 200,
+    "payment": "Succeeded"
+  },
+  "cart": {
+    "id": "01a22213-ee56-7000-a0bd-9a7928273a72",
+    "version": 3,
+    "baseline": [
+      {
+        "currency": "IRR",
+        "subtotalExclusiveOfTax": 100000
+      }
+    ],
+    "afterSecondary": [
+      {
+        "currency": "IRR",
+        "subtotalExclusiveOfTax": 100000
+      }
+    ]
+  },
+  "order": {
+    "state": {
+      "lines": [
+        {
+          "id": "01a22213-f40a-7000-ad11-d02f9e362686",
+          "qty": 1,
+          "offer": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+          "reservation": "01a22213-f55c-7000-94b7-9e0a724e6b6b"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "CommittedPaid",
+          "expires": "2026-11-28T12:15:22.622428+00:00",
+          "reservations": "01a22213-f55c-7000-94b7-9e0a724e6b6b"
+        }
+      ],
+      "payments": [
+        {
+          "id": "01a22213-faea-7000-8c1a-99b26ddaa591",
+          "status": "Succeeded",
+          "provider": "fake"
+        }
+      ],
+      "sellerOrders": [
+        {
+          "id": "01a22213-f3e3-7000-a4db-d15cadbb5bd8",
+          "status": "Paid",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "line": {
+      "qty": 1,
+      "tax": 9000,
+      "unit": 100000,
+      "total": 100000,
+      "currency": "IRR"
+    }
+  },
+  "tax": {
+    "initial": {
+      "action": "inspect",
+      "dbIdentity": "tooba_alpha|1795063893.467474",
+      "offerId": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+      "sku": "R11-CHECKOUT-8c508293-db69-490a-8f59-632bf7543eb6",
+      "categoryId": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "before": null,
+      "after": null,
+      "effectiveRuleCount": 1,
+      "pass": true
+    },
+    "attached": {
+      "action": "attach",
+      "dbIdentity": "tooba_alpha|1795063893.467474",
+      "offerId": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+      "sku": "R11-CHECKOUT-8c508293-db69-490a-8f59-632bf7543eb6",
+      "categoryId": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "before": null,
+      "after": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "effectiveRuleCount": 1,
+      "pass": true
+    },
+    "detached": {
+      "action": "detach",
+      "dbIdentity": "tooba_alpha|1795063893.467474",
+      "offerId": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+      "sku": "R11-CHECKOUT-8c508293-db69-490a-8f59-632bf7543eb6",
+      "categoryId": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "before": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "after": null,
+      "effectiveRuleCount": 1,
+      "pass": true
+    },
+    "after": {
+      "action": "inspect",
+      "dbIdentity": "tooba_alpha|1795063893.467474",
+      "offerId": "038f141e-174b-3c6d-e06c-e4ac3ca5e98a",
+      "sku": "R11-CHECKOUT-8c508293-db69-490a-8f59-632bf7543eb6",
+      "categoryId": "01a030d1-4182-7000-b7a7-486c95a37e83",
+      "before": null,
+      "after": null,
+      "effectiveRuleCount": 1,
+      "pass": true
+    }
+  },
+  "customer": "01a22213-eb1c-7000-b980-14a3ee237111",
+  "checkoutId": "01a22213-f39e-7000-a7d3-275826996961",
+  "prices": [
+    {
+      "priceId": "01a22213-f157-7000-b629-9d3f41a852ad",
+      "currency": "EUR",
+      "amount": 20.5,
+      "revision": "01a22213f1577000b6299d3f41a852ad:63931464862031626",
+      "status": "Active"
+    },
+    {
+      "priceId": "01a22213-d3a7-7000-a941-60073ac311bf",
+      "currency": "IRR",
+      "amount": 100000,
+      "revision": "01a22213d3a77000a94160073ac311bf:63931464854426689",
+      "status": "Active"
+    },
+    {
+      "priceId": "01a22213-f103-7000-aa3c-25eb9f212dbd",
+      "currency": "USD",
+      "amount": 13.25,
+      "revision": "01a22213f1037000aa3c25eb9f212dbd:63931464861954600",
+      "status": "Active"
+    }
+  ],
+  "pass": true,
+  "cleanup": {
+    "offers": 0,
+    "prices": 0,
+    "classification": 0
+  },
+  "status": "PASS"
+}
