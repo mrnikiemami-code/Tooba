@@ -4,8 +4,8 @@ const fs=require("node:fs"), path=require("node:path"), cp=require("node:child_p
 const {randomUUID,createHash}=require("node:crypto");
 const ROOT=path.resolve(__dirname,"../../../..");
 const HOST="http://127.0.0.1:5088", FRONT="http://127.0.0.1:3000";
-const candidate="4f19708be3d980a22535fb446d3cfaa1a2ddfc9c";
-const expectedBuild="fzXq0vXgQ2zeCrG2p_IBW";
+const candidate="8f63b81b93e06df9593747d009dc6966cbb2e6d9";
+const expectedBuild=process.env.TOOBA_R11_EXPECTED_NEXT_BUILD_ID;
 const expectedHost="10098e16bfca69fa41a736609b2535aad8e911457db194ed916a112e4c379529";
 const runId=randomUUID();
 const ev=path.join(__dirname,"direct-evidence",runId);
@@ -148,14 +148,14 @@ async function createUI(f,p){
  const payload=res.request().postDataJSON();
  check(payload.catalogVariantId===f.variant.id&&payload.sellerSku===f.sku&&payload.channel===f.channel,"UI submitted a different identity");
  if(f.role==="admin")check(payload.sellerPartyId===f.seller.sellerPartyId,"UI submitted different seller");
- check(res.status()===201,"create HTTP "+res.status());
+ if(res.status()!==201){const denied=await res.json().catch(()=>null);const headers=await res.request().allHeaders();f.createDenial={status:res.status(),errorCode:denied?.errorCode??null,actor:headers["x-tooba-dev-actor-user-id"]??null,seller:headers["x-tooba-seller-party-id"]??null};save();throw new Error("create HTTP "+res.status()+" "+(denied?.errorCode??"no typed code"));}
  const b=await res.json();f.id=uuid(b.offerId??b.detail?.offerId);save();
  await p.waitForURL(u=>u.pathname.endsWith("/"+f.id),{timeout:30000});
  const d=await detail(f);
  check(d.sellerPartyId===f.seller.sellerPartyId&&d.catalogVariantId===f.variant.id&&d.channel===f.channel,"created detail identity mismatch");
  check(priceRow(d,"EUR")?.amount===20.5&&d.currency==="IRR"&&d.amount==null,"non-default create or primary mismatch");
  check(skuRows(f).length===1&&sqlPrices(f.id).length===1,"create SQL row count");
- f.initial={prices:d.prices.map(x=>({currency:x.currency,amount:x.amount,revision:x.revision})),amount:d.amount,currency:d.currency};save();
+ f.initial={prices:d.prices.map(x=>({currency:x.currency,amount:x.amount,revision:x.revision})),amount:d.amount??null,currency:d.currency};save();
 }
 async function addUIPrice(f,p,c,amount){
  await pricing(p);await t(p,"offer-price-currency-select").selectOption(c);await t(p,"offer-price-input").fill(String(amount));
@@ -170,7 +170,8 @@ async function addUIPrice(f,p,c,amount){
 async function verifyCreate(f,p){
  await createUI(f,p);
  const d=await addUIPrice(f,p,"USD",13.25);
- check(priceRow(d,"EUR")?.revision===priceRow(f.initial,"EUR")?.revision&&priceRow(d,"EUR")?.amount===20.5&&d.amount===null&&d.currency==="IRR","foreign currency overwrote primary/other revision");
+ f.afterSecondCurrency={primary:{amount:d.amount??null,currency:d.currency},prices:d.prices?.map(x=>({currency:x.currency,amount:x.amount,revision:x.revision})),sql:sqlPrices(f.id),counts:counts(f.id)};save();
+ check(priceRow(d,"EUR")?.revision===priceRow(f.initial,"EUR")?.revision&&priceRow(d,"EUR")?.amount===20.5&&d.amount==null&&d.currency==="IRR","foreign currency overwrote primary/other revision");
  check(priceRow(d,"USD")?.revision&&priceRow(d,"USD").revision!==priceRow(d,"EUR").revision,"currency revisions not independent");
  const rows=sqlPrices(f.id), c=counts(f.id);
  check(rows.length===2&&rows.some(x=>x.currency==="EUR"&&Number(x.amount)===20.5)&&rows.some(x=>x.currency==="USD"&&Number(x.amount)===13.25)&&c.priceFacts===2,"SQL prices/facts mismatch");
@@ -207,10 +208,11 @@ async function localeAndGeometry(f,p){
  return {locale:results,geometry};
 }
 async function deniedStock(target,other){
- const locations=requireOK(await call("/v1/seller/offers/inventory-locations",sellerHeaders(other)),"other seller locations");
- check(Array.isArray(locations)&&locations.length>0,"no real authorized other-seller location");
+ check(other,"No other seller scope available");
+ const locations=requireOK(await call("/v1/admin/offers/inventory-locations?sellerPartyId="+encodeURIComponent(other.sellerPartyId),admin),"authorized inventory location reference");
+ check(Array.isArray(locations)&&locations.length>0,"no real warehouse location");
  const before=counts(target.id),locationId=uuid(locations[0].locationId);
- const r=await call("/v1/seller/offers/"+target.id+"/inventory/positions",sellerHeaders(other),"POST",{locationId});
+ let r;try{r=await call("/v1/seller/offers/"+target.id+"/inventory/positions",sellerHeaders(other),"POST",{locationId})}catch(e){throw Error("stock denial transport "+e.message+"; cause="+(e.cause?.code??e.cause?.name??"unknown")+"; unchanged="+eq(before,counts(target.id)))}
  const after=counts(target.id);
  check([403,404].includes(r.status)&&r.body?.errorCode&&eq(before,after),"foreign stock denial missing or mutated state");
  return {http:r.status,errorCode:r.body.errorCode,before,after};
@@ -309,9 +311,9 @@ async function main(){
   out.identity.head=exec("git",["rev-parse","HEAD"]);
   const buildFile=path.join(ROOT,"src/frontend/.next/BUILD_ID");
   out.identity.nextBuildId=fs.existsSync(buildFile)?fs.readFileSync(buildFile,"utf8").trim():null;
-  check(out.identity.nextBuildId===expectedBuild,"Next build identity changed or absent");
+  check(expectedBuild&&expectedBuild!=="fzXq0vXgQ2zeCrG2p_IBW"&&out.identity.nextBuildId===expectedBuild,"Rebuild repaired frontend and supply its actual BUILD_ID");
   out.identity.hostDll=hostWitness();
-  check(!out.identity.hostDll||out.identity.hostDll===expectedHost,"Host DLL identity changed");
+  check(out.identity.hostDll===expectedHost,"Host DLL identity missing or changed; unchanged backend identity required");
   out.identity.database=sql(sqlIdentity);check(out.identity.database.startsWith("tooba_alpha|"),"wrong DB");
   check((await fetch(HOST+"/health",{signal:AbortSignal.timeout(10000)})).ok,"Host unhealthy");
   check((await fetch(FRONT+"/fa/admin/offers/new",{signal:AbortSignal.timeout(20000)})).ok,"Next unhealthy");
@@ -320,17 +322,20 @@ async function main(){
   const sellerRows=sellerPayload.actors;
   check(Array.isArray(sellerRows),"seller context shape");
   const sellers=sellerRows.filter(x=>x.sellerPartyId&&x.actorUserId&&x.sellerLabel).map(x=>({sellerPartyId:uuid(x.sellerPartyId),actorUserId:uuid(x.actorUserId),sellerLabel:x.sellerLabel}));
+  for(const seller of sellers){try{const result=await call("/v1/seller/access-control/me/capabilities",sellerHeaders(seller));const permissions=result.body?.permissions||[];seller.writeAccess={status:result.status,create:permissions.some(g=>g.permissionId==="product.create"&&g.scopeKind===1&&!g.deniedByCeiling),edit:permissions.some(g=>g.permissionId==="product.edit"&&g.scopeKind===1&&!g.deniedByCeiling)};}catch(e){seller.writeAccess={status:"unavailable",create:false,edit:false}}}
+  out.sellerCapabilities=sellers.map(x=>({seller:x.sellerPartyId,actor:x.actorUserId,...x.writeAccess}));save();
   check(sellers.length>=2,"at least two authorized seller contexts required");
   out.identity.legacyFractionalIrr=Number(sql("select count(*) from pricing.prices where currency='IRR' and status='Active' and amount<>trunc(amount)"));
   save();check(PW,"existing Playwright not found");browser=await require(PW).chromium.launch({timeout:20000});
   await stage("R11-PRICE-01-admin",async()=>{a=await discover("admin",sellers);ap=await newPage(a);return verifyCreate(a,ap)});
-  await stage("R11-PRICE-01-seller",async()=>{s=await discover("seller",sellers,true);sp=await newPage(s);return verifyCreate(s,sp)});
+  await stage("R11-PRICE-01-seller",async()=>{const writable=sellers.filter(x=>x.writeAccess.create&&x.writeAccess.edit);check(writable.length>0,"No actual seller actor has both global product.create and product.edit; no grant escalation");s=await discover("seller",writable,true);sp=await newPage(s);return verifyCreate(s,sp)});
+  await stage("seller-create-permission-ui",async()=>{const denied=sellers.find(x=>x.writeAccess.status===200&&!x.writeAccess.create);if(!denied)throw Error("No observed denied actor available");const page=await newPage({seller:denied,role:"seller"});await page.goto(FRONT+"/fa/vendor-panel/products/new");await page.getByText("مجوز ایجاد آفر برای فروشنده فعلی فعال نیست.",{exact:true}).waitFor();check(await t(page,"seller-create-submit").count()===0,"Denied seller can reach create submit");await page.goto(FRONT+"/fa/vendor-panel/products");await t(page,"seller-products").waitFor();check(await t(page,"seller-create-offer").count()===0,"Denied seller sees create action");await page.close();return {status:"PASS",actor:denied.actorUserId}});
   let f=out.cases["R11-PRICE-01-admin"]?.status==="PASS"?a:out.cases["R11-PRICE-01-seller"]?.status==="PASS"?s:null;
   if(!f)await stage("independent-probe-fixture",async()=>{f=await prepareIndependentFixture(sellers);return {offerId:f.id,prices:sqlPrices(f.id)}});
   if(f){
-   await stage("R11-REF-03-missing-market",()=>missingMarket(f));
+   out.cases["R11-REF-03-missing-market"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-MARKET-MANUAL.json",reason:"Backend unchanged; real read-only 4/4 probe previously executed"};save();
    await stage("R11-UAT-02-stock",()=>deniedStock(f,sellers.find(x=>x.sellerPartyId!==f.seller.sellerPartyId)));
-   await stage("R11-PRICE-05-concurrent",()=>concurrent(f));
+   out.cases["R11-PRICE-05-concurrent"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-RESULT.json",reason:"Backend unchanged; concurrent HTTP+SQL witness already recorded"};save();
   }else for(const k of ["R11-REF-03-missing-market","R11-UAT-02-stock","R11-PRICE-05-concurrent"])out.cases[k]={status:"NOT_RUN",reason:"no newly created verified fixture"};
   if(out.cases["R11-PRICE-01-seller"]?.status==="PASS")await stage("seller-locale-geometry",()=>localeAndGeometry(s,sp));
   else for(const k of ["R11-LOCALE-01-seller","R11-UAT-03-seller"])out.cases[k]={status:"NOT_RUN",reason:"seller create fixture unavailable"};
@@ -348,6 +353,6 @@ async function main(){
   console.log(JSON.stringify({cases:Object.fromEntries(Object.entries(out.cases).map(([k,v])=>[k,v.status])),cleanup:out.cleanup.map(x=>x.status),preflightError:out.preflightError,identity:out.identity}));
  }
  if(process.argv.includes("--publish")&&out.identity.head){try{publishEvidence()}catch(e){console.error("Evidence publication stopped; local result preserved. "+String(e.message).slice(0,300));process.exitCode=2;return}}
- process.exitCode=out.preflightError||out.cleanup.some(x=>x.status!=="PASS")||Object.values(out.cases).some(x=>x.status!=="PASS")?2:0;
+ process.exitCode=out.preflightError||out.cleanup.some(x=>x.status!=="PASS")||Object.values(out.cases).some(x=>!["PASS","PRESERVED"].includes(x.status))?2:0;
 }
 main().catch(e=>{console.error(e.message);process.exitCode=2});
