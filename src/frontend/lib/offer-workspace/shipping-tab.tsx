@@ -226,6 +226,7 @@ export function ShippingTab(props: ShippingTabProps) {
                   searchLabel={t.shippingSearchMethod}
                   emptyLabel={t.shippingNoMethodResults}
                   disabled={!addOptions.length || props.methodsLoading}
+                  fitViewport
                   testId="offer-shipping-method-picker"
                 />
               </div>

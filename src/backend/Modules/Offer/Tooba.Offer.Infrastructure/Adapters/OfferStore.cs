@@ -283,7 +283,7 @@ public sealed partial class OfferStore(OfferDbContext db)
                 offer.FulfillmentResponsibility,
                 offer.FulfillmentShippingTypeId,
                 offer.ShippingSelectionMode,
-                MethodId = (Guid?)method.MethodId,
+                MethodId = method == null ? (Guid?)null : method.MethodId,
             }).ToListAsync(cancellationToken);
 
         foreach (var group in rows.GroupBy(row => row.OfferId))
