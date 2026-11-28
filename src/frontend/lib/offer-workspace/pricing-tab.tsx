@@ -121,7 +121,7 @@ export function PricingTab(props: PricingTabProps) {
                         {format.money(row.amount, row.currency)}
                       </td>
                       <td data-label={t.pricingStatus}>
-                        <span className={`${styles.pill} ${styles.pillOk}`}>{t.lifecycleActive}</span>
+                        <span className={`${styles.pill} ${row.status === "Active" ? styles.pillOk : styles.pillNeutral}`}>{row.status === "Active" ? t.lifecycleActive : row.status === "Draft" ? t.lifecycleDraft : row.status === "Retired" ? t.pricingRetired : "—"}</span>
                       </td>
                     </tr>
                   ))}
