@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Warehouse } from "lucide-react";
+import { SearchableSelect } from "../../design-system";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferInventoryLocationOption, OfferLocalInventoryDraft, OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
@@ -42,7 +43,7 @@ export function InventoryTab(props: InventoryTabProps) {
   if (preCreate) {
     return (
       <div className={styles.stack} data-testid="offer-tab-inventory">
-        <section className={styles.card}>
+        <section className={styles.card} style={{ overflow: "visible" }}>
           <header className={styles.cardHd}>
             <SectionTitle title={t.inventoryTitle} />
           </header>
@@ -94,7 +95,7 @@ export function InventoryTab(props: InventoryTabProps) {
   }
   return (
     <div className={styles.stack} data-testid="offer-tab-inventory">
-      <section className={styles.card}>
+      <section className={styles.card} style={{ overflow: "visible" }}>
         <header className={styles.cardHd}>
           <SectionTitle title={t.inventoryTitle} />
         </header>
@@ -199,22 +200,19 @@ function AddInventoryPosition({ t, locations, onProvision, disabled, empty }: {
   empty: boolean;
 }) {
   const [selected, setSelected] = useState("");
-  const [search, setSearch] = useState("");
-  const query = search.trim().toLocaleLowerCase();
-  const filtered = locations.filter(location => `${location.name} ${location.code}`.toLocaleLowerCase().includes(query) || location.locationId === selected);
   const valid = locations.some(location => location.locationId === selected);
   if (!locations.length) return empty ? <p className={styles.resultMeta}>{t.inventoryNoEligible}</p> : null;
   return (
     <div className={styles.row} style={{ marginTop: 14, alignItems: "end" }}>
-      <label className={styles.field} style={{ flex: "1 1 220px", maxWidth: 420 }}>
+      <div className={styles.field} style={{ flex: "1 1 220px", maxWidth: 420 }}>
         <span className={styles.fieldLabel}>{t.inventoryLocation}</span>
-        <input type="search" className={styles.ctl} aria-label={`${t.search} ${t.inventoryLocation}`} placeholder={t.search} value={search} onChange={event => setSearch(event.target.value)} disabled={disabled} data-testid="offer-inventory-location-search" />
-        <select className={`${styles.ctl} ${styles.select}`} value={valid ? selected : ""} onChange={event => setSelected(event.target.value)} disabled={disabled} data-testid="offer-inventory-location-select">
-          <option value="">{t.select}</option>
-          {filtered.map(location => <option key={location.locationId} value={location.locationId}>{location.name && location.code ? `${location.name} — ${location.code}` : location.name || location.code}</option>)}
-        </select>
-      </label>
-      <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} disabled={disabled || !valid} onClick={() => void onProvision(selected).then(() => { setSelected(""); setSearch(""); })} data-testid="offer-inventory-add-position">{t.inventoryAddLocation}</button>
+        <SearchableSelect
+          label={t.inventoryLocation} placeholder={t.select} searchLabel={t.search} emptyLabel={t.noResults}
+          options={locations.map(location => ({ value: location.locationId, label: location.name && location.code ? location.name + " — " + location.code : location.name || location.code }))}
+          value={valid ? selected : ""} onChange={setSelected} disabled={disabled} testId="offer-inventory-location-select"
+        />
+      </div>
+      <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} disabled={disabled || !valid} onClick={() => void onProvision(selected).then(() => { setSelected(""); })} data-testid="offer-inventory-add-position">{t.inventoryAddLocation}</button>
     </div>
   );
 }
