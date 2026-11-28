@@ -81,7 +81,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         };
       }
       const saved = priceRowFor(next, current.currency);
-      return { ...current, amount: saved ? String(saved.amount) : "", currency: current.currency || next.currency };
+      return { ...current, amount: saved && saved.status !== "Retired" ? String(saved.amount) : "", currency: current.currency || next.currency };
     });
   }
 
@@ -160,7 +160,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.setSaveRetryable(true);
       return;
     }
-    if (ctx.priceChanged && ctx.draft.amount.trim().length === 0) {
+    if (ctx.priceChanged && ctx.draft.amount.trim().length === 0 && !priceRowFor(ctx.detail, ctx.draft.currency)) {
       ctx.setTabError({ tab: "pricing", code: "offer.price.required" });
       ctx.setActiveTab("pricing");
       ctx.setSaveError(ctx.t.priceRequired);
@@ -185,6 +185,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
     let savedAny = false;
     let current = ctx.detail;
     const expectedAmount = parseDecimal(ctx.draft.amount);
+    const retirePrice = ctx.priceChanged && ctx.draft.amount.trim() === "";
+    const priceMatches = (next: OfferWorkspaceDetail) => {
+      const row = priceRowFor(next, ctx.draft.currency);
+      return retirePrice ? row?.status === "Retired" && (next.currency !== ctx.draft.currency || next.amount == null) : row?.status !== "Retired" && (row?.amount ?? null) === expectedAmount;
+    };
     const expectedInventory = new Map<string, number | null>();
     if (ctx.stockChanged) {
       for (const row of changedInventoryRows(ctx.detail, ctx.draft)) expectedInventory.set(row.stockItemId, parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId]));
@@ -219,7 +224,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       }
 
       if (ctx.priceChanged) {
-        if (expectedAmount == null) {
+        if (expectedAmount == null && !retirePrice) {
           ctx.setActiveTab("pricing");
           ctx.setSaveError(ctx.t.validationAmount);
           ctx.setSaveRetryable(true);
@@ -228,9 +233,9 @@ export function createOfferActions(ctx: OfferActionsContext) {
         const revision = priceRevisionFor(current, ctx.draft.currency);
         if (!revision) return finishSaveFailure("pricing", { errorCode: "concurrency.conflict" }, savedAny);
         const intent = ownerWriteIntent(scope + ":price", revision, [expectedAmount, ctx.draft.currency]);
-        const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency, operationId: intent.operationId }, revision);
+        const result = await ctx.adapter.savePrice({ amount: expectedAmount ?? 0, retire: retirePrice, currency: ctx.draft.currency, operationId: intent.operationId }, revision);
         if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
-        if ((priceRowFor(result.detail, ctx.draft.currency)?.amount ?? null) !== expectedAmount) return finishSaveFailure("pricing", { errorCode: "offer.price.response_mismatch" }, savedAny);
+        if (!priceMatches(result.detail)) return finishSaveFailure("pricing", { errorCode: "offer.price.response_mismatch" }, savedAny);
         intent.clear(); current = result.detail;
         applySavedDetail(result.detail, "price");
         savedAny = true;
@@ -262,7 +267,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           const revision = current.inventoryLocations.find((item) => item.stockItemId === row.stockItemId)?.revision;
           if (!revision) return finishSaveFailure("inventory", { errorCode: "concurrency.conflict" }, savedAny);
           const onHand = parseDecimal(ctx.draft.inventoryOnHand[row.stockItemId])!;
-          const reason = ctx.draft.inventoryReason.trim();
+          const reason = row.requiresAdjustmentReason === false ? "" : ctx.draft.inventoryReason.trim();
           const intent = ownerWriteIntent(scope + ":physical:" + row.stockItemId, revision, [onHand, reason]);
           const result = await ctx.adapter.saveInventory({ stockItemId: row.stockItemId, onHand, reason, operationId: intent.operationId }, revision);
           if (!result.ok) return finishSaveFailure("inventory", result, savedAny);
@@ -316,7 +321,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           || verification.detail.channel !== ctx.detail.channel
           || commercialMismatch
           || (ctx.offeredChanged && verification.detail.offeredQuantity !== parseDecimal(ctx.draft.offeredQuantity))
-          || (ctx.priceChanged && (priceRowFor(verification.detail, ctx.draft.currency)?.amount ?? null) !== expectedAmount)
+          || (ctx.priceChanged && !priceMatches(verification.detail))
           || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
             const expected = expectedInventory.get(row.stockItemId);
@@ -381,11 +386,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
     if (inventoryInputs.some((row) => row.parsed == null || row.parsed < 0 || (row.parsed > 0 && !quantityAligned(row.parsed, dp, step)))) {
       ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationStep); return;
     }
-    if ((parsedMin != null && parsedMax != null && parsedMin > parsedMax) || (ctx.draft.returnPolicyChoice === "Custom" && (!Number.isInteger(parseDecimal(ctx.draft.customReturnWindowDays)) || (parseDecimal(ctx.draft.customReturnWindowDays) ?? 0) <= 0))) {
-      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationReturnWindow); return;
+    if (parsedMin != null && parsedMax != null && parsedMin > parsedMax) {
+      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationQtyOrder); return;
     }
-    if (inventoryInputs.length > 0 && !ctx.draft.inventoryReason.trim()) {
-      ctx.setActiveTab("inventory"); ctx.setSaveError(ctx.t.validationReason); return;
+    if (ctx.draft.returnPolicyChoice === "Custom" && (!Number.isInteger(parseDecimal(ctx.draft.customReturnWindowDays)) || (parseDecimal(ctx.draft.customReturnWindowDays) ?? 0) <= 0)) {
+      ctx.setActiveTab("conditions"); ctx.setSaveError(ctx.t.validationReturnWindow); return;
     }
     ctx.saveRef.current = true;
     ctx.setSaving(true);
@@ -399,7 +404,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         catalogVariantId: ctx.selectedVariant.catalogVariantId,
         sellerSku: ctx.draft.sellerSku.trim() || null,
         channel: ctx.selectedChannel,
-        inventory: inventoryInputs.map((row) => ({ locationId: row.locationId, onHand: row.parsed!, reason: ctx.draft.inventoryReason.trim() })),
+        inventory: inventoryInputs.map((row) => ({ locationId: row.locationId, onHand: row.parsed!, reason: "" })),
         amount: parsedAmount,
         currency: ctx.draft.currency,
         returnPolicyChoice: ctx.draft.returnPolicyChoice,
@@ -514,15 +519,15 @@ export function reconcileDraft(previous: OfferWorkspaceDetail, latest: OfferWork
   const previousPrice = priceRowFor(previous, desired.currency);
   const latestPrice = priceRowFor(latest, desired.currency);
   const wantedAmount = parseDecimal(desired.amount);
-  const priceChanged = desired.amount.trim() !== "" ? wantedAmount !== (previousPrice?.amount ?? null) || wantedAmount == null : previousPrice != null;
+  const priceChanged = desired.amount.trim() !== "" ? previousPrice?.status === "Retired" || wantedAmount !== (previousPrice?.amount ?? null) || wantedAmount == null : previousPrice != null && previousPrice.status !== "Retired";
   if (priceChanged) {
     if ((previousPrice?.revision ?? null) !== (latestPrice?.revision ?? null)
-        && (wantedAmount == null || latestPrice?.amount !== wantedAmount)) return null;
+        && (desired.amount.trim() === "" ? latestPrice?.status !== "Retired" : wantedAmount == null || latestPrice?.status === "Retired" || latestPrice?.amount !== wantedAmount)) return null;
     merged.currency = desired.currency;
     merged.amount = desired.amount;
   } else if (desired.currency) {
     merged.currency = desired.currency;
-    merged.amount = latestPrice ? String(latestPrice.amount) : "";
+    merged.amount = latestPrice && latestPrice.status !== "Retired" ? String(latestPrice.amount) : "";
   }
   for (const [id, value] of Object.entries(desired.inventoryOnHand)) {
     if (value === before.inventoryOnHand[id]) continue;
