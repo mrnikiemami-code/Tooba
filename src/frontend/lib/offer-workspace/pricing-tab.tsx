@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { BadgeCheck, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
@@ -83,12 +83,11 @@ export function PricingTab(props: PricingTabProps) {
   const amount = detail.amount;
   const legacyDecimals = amount != null && currency.toUpperCase() === "IRR" && !Number.isInteger(amount);
   const parsed = parseDecimal(props.amount);
-  const preview = parsed != null && parsed >= 0 ? format.money(parsed, currency) : null;
   return (
     <div className={styles.stack} data-testid="offer-tab-pricing">
       <section className={styles.card}>
         <header className={styles.cardHd}>
-          <SectionTitle title={t.pricingTitle} desc={t.pricingDesc} />
+          <SectionTitle title={t.pricingTitle} />
         </header>
         <div className={styles.cardBd}>
           <div className={styles.tableWrap}>
@@ -97,23 +96,19 @@ export function PricingTab(props: PricingTabProps) {
                 <tr>
                   <th>{t.pricingCurrency}</th>
                   <th>{t.pricingAmount}</th>
-                  <th>{t.market}</th>
                   <th>{t.channel}</th>
                   <th>{t.pricingType}</th>
                   <th>{t.pricingStatus}</th>
-                  <th>{t.pricingValidity}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr data-testid="offer-price-row">
                   <td data-label={t.pricingCurrency}>
-                    <span className={styles.chip} dir="ltr">{currency}</span>{" "}
-                    <span className={styles.resultMeta}>{format.currencyName(currency)}</span>
+                    {currency ? <><span className={styles.chip} dir="ltr">{currency}</span>{" "}<span className={styles.resultMeta}>{format.currencyName(currency)}</span></> : t.pricingStoreCurrency}
                   </td>
                   <td data-label={t.pricingAmount} className={`${styles.numCell} ${styles.strongCell}`}>
                     {amount == null ? "—" : format.money(amount, currency)}
                   </td>
-                  <td data-label={t.market}>{"—"}</td>
                   <td data-label={t.channel}>{detail.channel === "Marketplace" ? t.channelMarketplace : detail.channel || "—"}</td>
                   <td data-label={t.pricingType}>{t.pricingTypeBase}</td>
                   <td data-label={t.pricingStatus}>
@@ -121,7 +116,6 @@ export function PricingTab(props: PricingTabProps) {
                       {amount == null ? "—" : t.lifecycleActive}
                     </span>
                   </td>
-                  <td data-label={t.pricingValidity}>—</td>
                 </tr>
               </tbody>
             </table>
@@ -139,30 +133,22 @@ export function PricingTab(props: PricingTabProps) {
                 format={format}
                 invalid={parsed != null && parsed < 0}
               />
-              <span className={styles.fieldHint}>{t.pricingNoDecimals}</span>
+              {currency.toUpperCase() === "IRR" ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
             </label>
             <div className={styles.field}>
               <span className={styles.fieldLabel}>{t.pricingCurrency}</span>
               <div className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span dir="ltr">{currency}</span>
-                <span className={styles.resultMeta}>· {format.currencyName(currency)}</span>
+                {currency ? <><span dir="ltr">{currency}</span><span className={styles.resultMeta}>· {format.currencyName(currency)}</span></> : t.pricingStoreCurrency}
               </div>
-              <span className={styles.fieldHint}>{t.pricingCurrent}</span>
             </div>
           </div>
 
-          {preview ? (
-            <p className={styles.resultMeta} style={{ marginTop: 8 }} data-testid="offer-price-preview">
-              <BadgeCheck size={12} aria-hidden /> {preview}
-            </p>
-          ) : null}
           {legacyDecimals ? (
             <div className={`${styles.banner} ${styles.bannerWarn}`} style={{ marginTop: 12 }}>
               <Info size={14} aria-hidden />
               <div>{t.pricingLegacyDecimals}</div>
             </div>
           ) : null}
-          <p className={styles.resultMeta} style={{ marginTop: 12 }}>{t.pricingUnavailable}</p>
         </div>
       </section>
     </div>

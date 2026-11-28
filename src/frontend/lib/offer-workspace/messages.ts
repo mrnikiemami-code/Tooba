@@ -88,6 +88,7 @@ export interface OfferWorkspaceMessages {
   pricingStatus: string;
   pricingValidity: string;
   pricingCurrent: string;
+  pricingStoreCurrency: string;
   pricingNoDecimals: string;
   pricingLegacyDecimals: string;
   pricingUnavailable: string;
@@ -138,6 +139,7 @@ export interface OfferWorkspaceMessages {
   precision: string;
   step: string;
   rounding: string;
+  roundingNearest: string;
   unitHint: string;
   lifecycle: string;
   lifecycleDraft: string;
@@ -307,6 +309,7 @@ const fa: OfferWorkspaceMessages = {
   pricingStatus: "وضعیت قیمت",
   pricingValidity: "اعتبار",
   pricingCurrent: "قیمت جاری",
+  pricingStoreCurrency: "ارز پیش‌فرض فروشگاه",
   pricingNoDecimals: "مبلغ ریال بدون اعشار است.",
   pricingLegacyDecimals: "این قیمت اعشار دارد؛ تا زمانی که آن را تغییر ندهید، مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
   pricingUnavailable: "ثبت قیمت برای بازارها و ارزهای دیگر از این صفحه در دسترس نیست.",
@@ -357,6 +360,7 @@ const fa: OfferWorkspaceMessages = {
   precision: "دقت اعشار",
   step: "گام",
   rounding: "روش گرد کردن",
+  roundingNearest: "نزدیک‌ترین مقدار",
   unitHint: "واحد، دقت اعشار، گام و گرد کردن از محصول خوانده می‌شود.",
   lifecycle: "وضعیت آفر",
   lifecycleDraft: "پیش‌نویس",
@@ -527,6 +531,7 @@ const en: OfferWorkspaceMessages = {
   pricingStatus: "Price status",
   pricingValidity: "Validity",
   pricingCurrent: "Current price",
+  pricingStoreCurrency: "Store default currency",
   pricingNoDecimals: "IRR has no decimals.",
   pricingLegacyDecimals: "This price has decimals; the stored value stays untouched until you change it.",
   pricingUnavailable: "Recording prices for other markets and currencies is not available on this screen.",
@@ -577,6 +582,7 @@ const en: OfferWorkspaceMessages = {
   precision: "Decimal precision",
   step: "Step",
   rounding: "Rounding",
+  roundingNearest: "Nearest",
   unitHint: "Unit, decimal precision, step and rounding come from the product.",
   lifecycle: "Offer status",
   lifecycleDraft: "Draft",

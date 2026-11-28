@@ -155,7 +155,7 @@ function CreateIdentity(props: IdentityTabProps) {
 
   const variantDisabled = !selectedProduct || variantLoading;
   const variantButtonLabel = selectedVariant
-    ? (selectedVariant.displayLabel || t.variantUnnamed)
+    ? (variantTitle(selectedVariant, t))
     : !selectedProduct
       ? t.chooseProductFirst
       : variantLoading
@@ -225,7 +225,7 @@ function CreateIdentity(props: IdentityTabProps) {
                   onOpen={() => setVariantOpen(true)}
                   disabled={variantDisabled}
                   testId="offer-variant-picker-toggle"
-                  detail={selectedVariant?.axisLabels.length ? selectedVariant.axisLabels.map((axis) => `${axis.name}: ${axis.value}`).join(" · ") : selectedVariant?.catalogCode ?? undefined}
+                  detail={selectedVariant ? distinctVariantAxes(selectedVariant) || selectedVariant.catalogCode || undefined : undefined}
                 />
                 {autoSelected ? <span className={styles.fieldHint}>{t.singleVariantAuto}</span> : <span className={styles.fieldHint}>{t.variantHint}</span>}
                 {variantError ? <span className={styles.fieldErr}>{variantError}</span> : null}
@@ -254,7 +254,7 @@ function CreateIdentity(props: IdentityTabProps) {
           format={format}
           sellerName={props.fixedSeller?.displayName || props.selectedSeller?.displayName}
           productName={selectedProduct?.title}
-          variantLabel={selectedVariant ? (selectedVariant.displayLabel || t.variantUnnamed) : undefined}
+          variantLabel={selectedVariant ? (variantTitle(selectedVariant, t)) : undefined}
           recordCreated={false}
         />
         <HistoryHint t={t} />
@@ -586,6 +586,19 @@ function ProductDialog({ t, format, open, onClose, selected, onSelect, searchPro
   );
 }
 
+function variantAxes(variant: OfferVariantOption) {
+  return variant.axisLabels.map((axis) => `${axis.name}: ${axis.value}`).join(" · ");
+}
+
+function variantTitle(variant: OfferVariantOption, t: OfferWorkspaceMessages) {
+  return variant.displayLabel.trim() || variantAxes(variant) || t.variantUnnamed;
+}
+
+function distinctVariantAxes(variant: OfferVariantOption) {
+  const axes = variantAxes(variant);
+  return variant.displayLabel.trim() && axes.trim() !== variant.displayLabel.trim() ? axes : "";
+}
+
 function VariantDialog({ t, open, onClose, selected, variants, loading, error, onSelect, onRetry }: {
   t: OfferWorkspaceMessages;
   open: boolean;
@@ -618,14 +631,12 @@ function VariantDialog({ t, open, onClose, selected, variants, loading, error, o
                 aria-pressed={active}
                 onClick={() => onSelect(variant)}
                 className={styles.btn}
-                style={{ width: "100%", justifyContent: "space-between", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined, height: "auto", padding: "10px 12px" }}
+                style={{ width: "100%", justifyContent: "space-between", borderRadius: 0, borderInline: 0, borderTop: 0, background: active ? "var(--ow-accent-soft)" : undefined, height: "auto", padding: "10px 12px", whiteSpace: "normal", overflowWrap: "anywhere" }}
                 data-testid="offer-variant-option"
               >
                 <span style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2, textAlign: "start" }}>
-                  <span style={{ fontWeight: 600 }}>{variant.displayLabel || t.variantUnnamed}</span>
-                  {variant.axisLabels.length > 0 ? (
-                    <span className={styles.fieldHint}>{variant.axisLabels.map((axis) => `${axis.name}: ${axis.value}`).join(" · ")}</span>
-                  ) : null}
+                  <span style={{ fontWeight: 600 }}>{variantTitle(variant, t)}</span>
+                  {distinctVariantAxes(variant) ? <span className={styles.fieldHint}>{distinctVariantAxes(variant)}</span> : null}
                   {variant.catalogCode ? <span className={styles.fieldHint} dir="ltr">{variant.catalogCode}</span> : null}
                 </span>
                 {active ? <Check size={14} aria-hidden /> : null}

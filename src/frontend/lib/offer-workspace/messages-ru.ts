@@ -54,6 +54,8 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   historyKindPrice: "Изменение цены",
   historyKindInventory: "Изменение запасов",
   historyKindAllocation: "Изменение предлагаемого количества",
+  pricingStoreCurrency: "Валюта магазина по умолчанию",
+  roundingNearest: "До ближайшего значения",
   inventoryOfferedQuantity: "Предлагаемое количество",
   inventoryOfferedHint: "Включает зарезервированные единицы и не меняет физический остаток.",
   inventoryAllocationExceedsPhysical: "Предлагаемое количество не должно превышать физический остаток.",

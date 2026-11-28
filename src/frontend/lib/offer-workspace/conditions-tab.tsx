@@ -1,13 +1,13 @@
 ﻿"use client";
 
 import type { ReactNode } from "react";
-import { ShieldCheck, Undo2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferWorkspaceDetail } from "./types";
 import { allowedStatuses, deriveBuyability, statusLabel } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
-import { DirtyDot, Note, SectionTitle } from "./tab-shared";
+import { DirtyDot, SectionTitle } from "./tab-shared";
 
 export interface ConditionsTabProps {
   t: OfferWorkspaceMessages;
@@ -42,14 +42,14 @@ export function ConditionsTab(props: ConditionsTabProps) {
     <div className={styles.stack} data-testid="offer-tab-conditions">
       <section className={styles.card}>
         <header className={styles.cardHd}>
-          <SectionTitle title={t.quantityTitle} desc={t.unitHint} />
+          <SectionTitle title={t.quantityTitle} />
         </header>
         <div className={styles.cardBd}>
           <div className={styles.tilesFour}>
             <Tile label={t.unit} value={detail.productUnitName ?? detail.productUnitCode ?? "—"} />
             <Tile label={t.precision} value={format.integer(detail.unitQuantityDecimalPlaces)} />
             <Tile label={t.step} value={detail.unitQuantityStep != null ? format.number(detail.unitQuantityStep, detail.unitQuantityDecimalPlaces) : "—"} />
-            <Tile label={t.rounding} value={detail.unitRoundingMode ?? "—"} />
+            <Tile label={t.rounding} value={detail.unitRoundingMode === "Nearest" ? t.roundingNearest : detail.unitRoundingMode ?? "—"} />
           </div>
           <div className={styles.formGrid} style={{ marginTop: 14 }}>
             <label className={styles.field}>
@@ -80,7 +80,7 @@ export function ConditionsTab(props: ConditionsTabProps) {
 
       <section className={styles.card}>
         <header className={styles.cardHd}>
-          <SectionTitle title={t.returnPolicy} desc={t.returnPolicyDesc} />
+          <SectionTitle title={t.returnPolicy} />
         </header>
         <div className={styles.cardBd}>
           <label className={styles.field} style={{ maxWidth: 460 }}>
@@ -101,7 +101,7 @@ export function ConditionsTab(props: ConditionsTabProps) {
             </select>
             <span className={styles.fieldHint}>
               {detail.sellerCanOverrideReturnPolicy
-                ? `${t.returnWindowHint}: ${detail.defaultReturnWindowDays} · ${detail.minReturnWindowDays}–${detail.maxReturnWindowDays}`
+                ? props.returnPolicyChoice === "Custom" ? `${format.integer(detail.minReturnWindowDays)}–${format.integer(detail.maxReturnWindowDays)}` : props.returnPolicyChoice === "Default" ? `${t.returnWindowHint}: ${format.integer(detail.defaultReturnWindowDays)}` : ""
                 : t.returnSellerCannotOverride}
             </span>
           </label>
@@ -118,9 +118,6 @@ export function ConditionsTab(props: ConditionsTabProps) {
               />
             </label>
           ) : null}
-          <div style={{ marginTop: 12 }}>
-            <Note tone="info"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Undo2 size={13} aria-hidden /> {t.returnWindowHint}: {detail.defaultReturnWindowDays}</span></Note>
-          </div>
         </div>
       </section>
 

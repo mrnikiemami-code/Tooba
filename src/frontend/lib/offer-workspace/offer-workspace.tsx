@@ -490,9 +490,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               <span className={styles.priceCap}>{t.priceSummary}</span>
               {detail?.amount != null ? (
                 <span className={styles.priceRow}>
-                  <span className={styles.priceMkt}>{format.regionName("IR")}</span>
                   <span className={styles.priceAmt}>{format.money(detail.amount, detail.currency)}</span>
-                  <span className={styles.priceCur} dir="ltr">{detail.currency || "IRR"}</span>
+                  {detail.currency ? <span className={styles.priceCur} dir="ltr">{detail.currency}</span> : null}
                 </span>
               ) : (
                 <span className={styles.priceEmpty}>{t.priceEmpty}</span>
