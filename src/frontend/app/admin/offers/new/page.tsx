@@ -14,6 +14,7 @@ import {
   ensureAdminInventoryPosition,
   findAdminActiveOffer,
   loadAdminAllowedOfferChannels,
+  loadAdminOfferCurrencies,
   loadAdminInventoryLocations,
   loadAdminOfferDetail,
   loadAdminShippingTypes,
@@ -86,6 +87,7 @@ export default function AdminCreateOfferPage() {
         findAdminActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadShippingTypes: () => loadAdminShippingTypes(),
       loadChannels: () => loadAdminAllowedOfferChannels(),
+      loadCurrencies: () => loadAdminOfferCurrencies(),
       loadInventoryLocations: (sellerId, responsibility) => responsibility === "Platform" ? loadAdminInventoryLocations() : sellerId ? loadAdminInventoryLocations(sellerId) : Promise.resolve([]),
       createAndSaveDraft: async (input) => {
         const scope = offerIntentScope("admin", input.sellerPartyId ?? "", input.catalogVariantId, input.channel);
