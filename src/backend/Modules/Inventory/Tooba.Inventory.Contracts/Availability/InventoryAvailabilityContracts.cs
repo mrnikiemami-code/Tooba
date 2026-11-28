@@ -9,7 +9,8 @@ public sealed record LocationAvailability(
     decimal OnHand,
     decimal Reserved,
     decimal Available,
-    string? Revision = null);
+    string? Revision = null,
+    bool RequiresAdjustmentReason = true);
 
 /// <summary>Aggregated Offer availability for the current Tenant.</summary>
 public sealed record InventoryAvailability(
