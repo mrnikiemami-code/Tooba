@@ -12,12 +12,15 @@ import {
   normalizeDigits,
   parseDecimal,
   priceDirty,
+  priceRevisionFor,
+  priceRowFor,
   validateConditions,
   validateDraft,
   validateInventory,
   validatePrice,
 } from "./model.ts";
 import type { OfferWorkspaceDetail } from "./types.ts";
+import { draftVersion } from "./draft-recovery.ts";
 
 function detail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail {
   return {
@@ -209,4 +212,31 @@ test("quantity step and precision reject unaligned values", () => {
   assert.equal(validateConditions(base, { ...draftFromDetail(base), minimumOrderQuantity: "1.3" }), "offer.qty.step_invalid");
   assert.equal(validateConditions(base, { ...draftFromDetail(base), minimumOrderQuantity: "1.5" }), null);
   assert.equal(validateInventory(base, { ...draftFromDetail(base), inventoryOnHand: { "stock-a": "2.3", "stock-b": "4" }, inventoryReason: "شمارش" }), "offer.inventory.step_invalid");
+});
+
+test("reference scale validates each selected currency before writing", () => {
+  const currencies = [
+    { code: "IRR", englishName: "Rial", nativeName: "ریال", decimalPlaces: 0 },
+    { code: "USD", englishName: "Dollar", nativeName: "Dollar", decimalPlaces: 2 },
+    { code: "JPY", englishName: "Yen", nativeName: "Yen", decimalPlaces: 0 },
+  ];
+  assert.equal(validatePrice("12.345", "USD", currencies), "offer.price.decimals_not_allowed");
+  assert.equal(validatePrice("۱۲٫۳۴", "USD", currencies), null);
+  assert.equal(validatePrice("10.1", "JPY", currencies), "offer.price.decimals_not_allowed");
+  assert.equal(validatePrice("10.00", "JPY", currencies), null);
+  assert.equal(validatePrice("10", "ZZZ", currencies), "offer.price.invalid");
+  assert.equal(validatePrice("10", "", currencies), "offer.price.invalid");
+});
+
+test("currency-specific revisions and persisted drafts detect non-primary edits", () => {
+  const usd = { priceId: "usd-id", currency: "USD", amount: 12.34, revision: "usd-rev", status: "Active" };
+  const base = detail({ prices: [usd] });
+  assert.equal(priceRowFor(base, "USD")?.amount, 12.34);
+  assert.equal(priceRevisionFor(base, "USD"), "usd-rev");
+  assert.equal(priceRevisionFor(base, "EUR"), "absent");
+  assert.equal(priceRevisionFor(base, "USD"), "usd-rev");
+  assert.equal(priceRevisionFor(detail({ prices: [{ ...usd, revision: "" }] }), "USD"), null);
+  const updated = detail({ prices: [{ ...usd, revision: "usd-rev-2" }] });
+  assert.notEqual(draftVersion(base), draftVersion(updated));
+  assert.equal(detailVersionChanged(base, updated), true);
 });
