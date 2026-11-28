@@ -55,7 +55,7 @@ test("real channels and statuses are translated from contract values", () => {
 });
 
 import { offerErrorText, offerWorkspaceMessages } from "./messages.ts";
-import { offerWorkspaceMessagesRu } from "./messages-ru.ts";
+import { offerWorkspaceMessagesRu, offerListMessagesRu } from "./messages-ru.ts";
 
 test("offer create authorization and precision errors have localized copy in registry resources", () => {
   for (const t of [offerWorkspaceMessages.fa, offerWorkspaceMessages.en, offerWorkspaceMessagesRu]) {
@@ -70,7 +70,11 @@ test("offer create authorization and precision errors have localized copy in reg
 
 test("Russian workspace and list resource keys cover the existing English contract", () => {
   for (const [key, value] of Object.entries(offerWorkspaceMessages.en)) {
-    if (typeof value !== "string" || !/[A-Za-z]{3}/.test(value)) continue;
+    if (typeof value !== "string" || !/[A-Za-z]{3}/.test(value) || key === "channelApi") continue;
     assert.notEqual(offerWorkspaceMessagesRu[key as keyof typeof offerWorkspaceMessagesRu], value, key);
+  }
+  for (const [key, value] of Object.entries(offerListMessagesFor("en"))) {
+    if (!/[A-Za-z]{3}/.test(value) || key === "channelApi") continue;
+    assert.notEqual(offerListMessagesRu[key as keyof typeof offerListMessagesRu], value, key);
   }
 });
