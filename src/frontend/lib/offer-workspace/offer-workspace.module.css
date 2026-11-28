@@ -1135,3 +1135,10 @@
 .historySummary { font-size: 13px; color: var(--ow-fg); }
 .historyMeta { font-size: 11.5px; color: var(--ow-muted); }
 .historyDelta { font-size: 11.5px; color: var(--ow-ink-2); overflow-wrap: anywhere; }
+
+/* Row actions use logical inline-end (left in RTL, right in LTR). */
+.table .tableAction { text-align: end; width: 1%; white-space: nowrap; }
+@media (max-width: 768px) {
+  .table .tableAction { width: 100%; justify-content: flex-end; }
+  .table .tableAction::before { display: none; }
+}
