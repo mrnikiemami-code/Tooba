@@ -54,6 +54,7 @@ export interface OfferWorkspaceMessages {
   channelPolicyPending: string;
   sellerHint: string;
   sellerSessionHint: string;
+  offerCreatePermissionRequired: string;
   productAdditionalInformation: string;
   sellerRequired: string;
   productRequired: string;
@@ -282,6 +283,7 @@ const fa: OfferWorkspaceMessages = {
   channelPolicyPending: "کانال فعلی سامانه؛ سیاست انتخاب کانال هنوز از سوی دامنه تعیین نشده و به‌صورت انتخاب کاربر نمایش داده نمی‌شود.",
   sellerHint: "جست‌وجو بر اساس نام یا کد فروشنده، با صفحه‌بندی سروری.",
   sellerSessionHint: "هویت فروشنده از نشست شما خوانده می‌شود.",
+  offerCreatePermissionRequired: "مجوز ایجاد آفر برای فروشنده فعلی فعال نیست.",
   productAdditionalInformation: "اطلاعات تکمیلی محصول",
   sellerRequired: "فروشنده را انتخاب کنید.",
   productRequired: "محصول را از کاتالوگ انتخاب کنید.",
@@ -511,6 +513,7 @@ const en: OfferWorkspaceMessages = {
   channelPolicyPending: "Current system channel; the owning domain has not yet decided a selectable channel policy.",
   sellerHint: "Search by seller name or code with server paging.",
   sellerSessionHint: "The seller identity comes from your session.",
+  offerCreatePermissionRequired: "The current seller account does not have permission to create offers.",
   productAdditionalInformation: "Additional product information",
   sellerRequired: "Choose a seller.",
   productRequired: "Choose a product from the catalogue.",
@@ -742,6 +745,8 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
       return t.sellerSession;
     case "host-unreachable":
       return t.dataUnavailable;
+    case "seller.authorization.denied":
+    case "admin.authorization.denied":
     case "denied":
       return t.denied;
     default:
