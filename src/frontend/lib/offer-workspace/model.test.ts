@@ -21,6 +21,7 @@ import {
 } from "./model.ts";
 import type { OfferWorkspaceDetail } from "./types.ts";
 import { draftVersion } from "./draft-recovery.ts";
+import { parseOfferCurrencies } from "./currency-contract.ts";
 
 function detail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail {
   return {
@@ -239,4 +240,12 @@ test("currency-specific revisions and persisted drafts detect non-primary edits"
   const updated = detail({ prices: [{ ...usd, revision: "usd-rev-2" }] });
   assert.notEqual(draftVersion(base), draftVersion(updated));
   assert.equal(detailVersionChanged(base, updated), true);
+});
+
+test("currency reference decoder rejects missing precision and duplicate rows", () => {
+  const usd = { code: "USD", englishName: "Dollar", nativeName: "Dollar", decimalPlaces: 2 };
+  assert.deepEqual(parseOfferCurrencies([usd]), [usd]);
+  assert.throws(() => parseOfferCurrencies([{ ...usd, decimalPlaces: null }]));
+  assert.throws(() => parseOfferCurrencies([usd, usd]));
+  assert.throws(() => parseOfferCurrencies([{ ...usd, decimalPlaces: "2" }]));
 });
