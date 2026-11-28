@@ -35,8 +35,6 @@ public sealed partial class InventoryDirectory
             return Result.Failure(new SemanticError(InventoryErrorCodes.PositionIdRequired));
         if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
             return Result.Failure(new SemanticError(InventoryErrorCodes.PositionRevisionConflict));
-        if (string.IsNullOrWhiteSpace(request.Reason))
-            return Result.Failure(new SemanticError(InventoryErrorCodes.AdjustmentReasonRequired));
 
         var selected = await _db.Positions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StockItemId == stockItemId && x.OfferId == request.OfferId, cancellationToken);
@@ -49,7 +47,8 @@ public sealed partial class InventoryDirectory
             return Result.Failure(new SemanticError(InventoryErrorCodes.LocationNotEligible));
 
         var operationId = request.OperationId;
-        var reason = request.Reason.Trim();
+        var reasonProvided = !string.IsNullOrWhiteSpace(request.Reason);
+        var reason = reasonProvided ? request.Reason!.Trim() : "inventory.initial_stock";
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         await LockOfferAllocationAsync(request.OfferId, cancellationToken);
@@ -84,6 +83,10 @@ public sealed partial class InventoryDirectory
             .SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
         if (!RevisionMatches(current.UpdatedAt, request.ExpectedRevision))
             return Result.Failure(new SemanticError(InventoryErrorCodes.PositionRevisionConflict));
+        if (!reasonProvided && (!IsPristinePosition(current)
+            || await _db.OfferInventoryChanges.AsNoTracking().AnyAsync(x => x.StockItemId == stockItemId, cancellationToken)
+            || await _db.Reservations.AsNoTracking().AnyAsync(x => x.StockItemId == stockItemId, cancellationToken)))
+            return Result.Failure(new SemanticError(InventoryErrorCodes.AdjustmentReasonRequired));
         if (request.OnHand < current.Reserved)
             return Result.Failure(new SemanticError(InventoryErrorCodes.AdjustmentQuantityExceeds));
 
@@ -129,6 +132,10 @@ public sealed partial class InventoryDirectory
         await transaction.CommitAsync(cancellationToken);
         return Result.Success();
     }
+
+    // Zero alone never proves initialization; even a returned-to-zero position has prior movement.
+    private static bool IsPristinePosition(StockPosition position) =>
+        position.OnHand == 0 && position.Reserved == 0 && position.CreatedAt == position.UpdatedAt;
 
     private bool CanAdjustPhysicalLocation(InventoryLocation location, OfferReference offer, bool adminPhysicalAdjustment)
     {
