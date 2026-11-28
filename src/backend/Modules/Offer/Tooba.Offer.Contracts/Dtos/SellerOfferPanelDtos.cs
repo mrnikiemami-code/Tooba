@@ -112,7 +112,8 @@ public sealed record SellerOfferInventoryLocation(
     decimal OnHand,
     decimal Reserved,
     decimal Available,
-    string? Revision = null);
+    string? Revision = null,
+    bool RequiresAdjustmentReason = true);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.
