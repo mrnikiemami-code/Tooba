@@ -1,0 +1,52 @@
+{
+  "head": "x",
+  "cases": {
+    "fresh-new-empty": {
+      "status": "PASS",
+      "seller": "انتخاب",
+      "product": "انتخاب",
+      "variant": "ابتدا محصول را انتخاب کنید.",
+      "sku": "",
+      "prices": 0,
+      "inventory": 0
+    },
+    "repeat-new-and-back": {
+      "status": "PASS",
+      "s1": {
+        "seller": "انتخاب",
+        "product": "انتخاب",
+        "variant": "ابتدا محصول را انتخاب کنید.",
+        "sku": "",
+        "prices": 0,
+        "inventory": 0
+      },
+      "s2": {
+        "seller": "انتخاب",
+        "product": "انتخاب",
+        "variant": "ابتدا محصول را انتخاب کنید.",
+        "sku": "",
+        "prices": 0,
+        "inventory": 0
+      }
+    },
+    "multicurrency-one-save": {
+      "status": "FAIL",
+      "error": "page.waitForURL: Timeout 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================"
+    },
+    "duplicate-dismiss-reopen-navigate": {
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-message-duplicate') to be visible\u001b[22m\n"
+    },
+    "locale-recovery-and-new-clears": {
+      "status": "FAIL",
+      "error": "locator.inputValue: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-seller-sku')\u001b[22m\n"
+    },
+    "lookup-error-fail-closed": {
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-message-error') to be visible\u001b[22m\n"
+    }
+  },
+  "created": null,
+  "cleanup": null,
+  "status": "FAIL"
+}
