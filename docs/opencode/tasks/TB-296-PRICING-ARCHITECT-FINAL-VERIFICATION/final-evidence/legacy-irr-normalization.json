@@ -1,0 +1,11 @@
+﻿{
+  "action": "legacy fractional IRR normalization",
+  "policy": "ROUND(amount::numeric) per existing Pricing rounding (integer scale for IRR)",
+  "scope": "All pricing.prices rows with currency=IRR and amount<>trunc(amount)",
+  "beforeCensus": { "totalFractional": 2310, "byMarketChannelQualifier": [{"market":"IR","channel":"Marketplace","qualifier":"Base","count":2310}], "demoFractional": 2307, "nonDemo": 3, "nonDemoProducts": [{"slug":"tb-p07-t036-r1-70e28843","note":"prior-task test product; also DEV/test data"}, {"slug":"tb-p07-t036-r1-70e28843"}, {"slug":"tb-p07-t036-r1-70e28843"}] },
+  "afterCensus": { "totalFractional": 0 },
+  "historicalFacts": "0 fractional in offer_price_changes (all already integer); 2 order_lines with fractional unit_price_snapshot preserved",
+  "authorizedBy": "Architect audit: normalize verified demo prices using existing Pricing rounding policy; preserve historical orders and financial facts.",
+  "productCandidate": "322ec85a68893b9f5af9da763d8af7791a90c059",
+  "headBeforeNormalization": "07c5d3fe289c4b09adddc8746a41115d24d01255"
+}
