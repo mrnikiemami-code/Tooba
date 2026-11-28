@@ -14,6 +14,7 @@ import {
   ensureSellerInventoryPosition,
   findSellerActiveOffer,
   loadSellerAllowedOfferChannels,
+  loadSellerOfferCurrencies,
   loadSellerInventoryLocations,
   loadSellerOfferDetail,
   loadSellerProductVariants,
@@ -72,6 +73,7 @@ export default function VendorCreateOfferPage() {
       findActiveOffer: async (_sellerId, catalogVariantId, channel) =>
         findSellerActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadChannels: () => loadSellerAllowedOfferChannels(sellerPartyId),
+      loadCurrencies: () => loadSellerOfferCurrencies(sellerPartyId),
       loadInventoryLocations: () => loadSellerInventoryLocations(sellerPartyId),
       createAndSaveDraft: async (input) => {
         const scope = offerIntentScope("seller", sellerPartyId, input.catalogVariantId, input.channel);
