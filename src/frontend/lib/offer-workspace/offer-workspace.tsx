@@ -89,7 +89,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const history = useOfferHistory(adapter, isEdit, activeTab, detail);
   const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm"; title: string; text: string; offerId?: string } | null>(null);
   useEffect(() => {
@@ -103,6 +102,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   function showBlocking(kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) {
     setMessageBox({ kind, title, text, offerId });
   }
+  function setSaveError(value: string | null) { if (value) showBlocking("error", t.saveErrorTitle, value); }
   function handleCancel() {
     if (anyDirty) {
       showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText);
@@ -423,7 +423,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
   const existingOfferId = messageBox?.offerId ?? activeConflict?.offerId;
-  const saveLabel = isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
+  const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
     : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
@@ -508,8 +508,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
-                onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-                disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady))}
+                onClick={() => { if (saveNeedsReload) showBlocking("reload", t.saveErrorTitle, t.concurrentChange); else void (isEdit ? actions.runSave() : actions.runCreate()); }}
+                disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
                 data-offer-save="true"
                 data-testid={saveTestId}
               >
@@ -541,6 +541,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                   role="tab"
                   aria-selected={selected}
                   aria-controls={`offer-pane-${tab}`}
+                  aria-invalid={tabError?.tab === tab || undefined}
                   aria-disabled={disabled}
                   disabled={disabled}
                   title={disabled ? (identityReady ? t.tabNeedsCreate : t.tabLocked) : undefined}
@@ -560,31 +561,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       </header>
 
       <main className={styles.page} data-testid={`offer-tab-panel-${activeTab}`} id={`offer-pane-${activeTab}`} role="tabpanel" aria-labelledby={`offer-tab-${activeTab}`}>
-        {tabError ? (
-          <div className={styles.fieldErr} role="alert" data-testid="offer-tab-error" style={{ marginBottom: 10 }}>
-            {t.perTabError} {offerErrorText(t, tabError.code)}
-          </div>
-        ) : null}
-        {saveError ? (
-          <div className={`${styles.banner} ${styles.bannerDanger}`} role="alert" data-testid="offer-save-error" style={{ marginBottom: 12 }}>
-            <AlertTriangle size={15} aria-hidden />
-            <div style={{ flex: 1 }}>
-              <span className={styles.bannerTitle}>{t.saveErrorTitle}</span>
-              {saveError}
-              <div style={{ marginTop: 6 }}>
-                {isEdit && saveNeedsReload ? (
-                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown())} disabled={saveReloading} data-testid="offer-save-reload">
-                    {saveReloading ? t.loading : t.reloadState}
-                  </button>
-                ) : saveRetryable ? (
-                  <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())} disabled={saving} data-testid="offer-save-retry">
-                    {t.retry}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        ) : null}
         {renderTab()}
       </main>
 
@@ -592,8 +568,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         <button
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-          disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady))}
+          onClick={() => { if (saveNeedsReload) showBlocking("reload", t.saveErrorTitle, t.concurrentChange); else void (isEdit ? actions.runSave() : actions.runCreate()); }}
+          disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
           data-offer-save="true"
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
@@ -618,6 +594,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown()); }} disabled={saveReloading} data-testid="offer-message-reload">
                   {saveReloading ? t.loading : t.reloadState}
                 </button>
+              ) : null}
+              {messageBox.kind === "error" && saveRetryable && !messageBox.offerId && !saveNeedsReload ? (
+                <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} onClick={() => { setMessageBox(null); void (isEdit ? actions.runSave() : actions.runCreate()); }} disabled={saving} data-testid="offer-save-retry">{t.retry}</button>
               ) : null}
               {messageBox.kind === "confirm" ? (
                 <>
