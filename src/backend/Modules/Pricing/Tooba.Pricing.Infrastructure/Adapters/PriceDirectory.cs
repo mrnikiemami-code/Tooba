@@ -93,7 +93,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.Amount < 0)
+        if (request.Amount < 0 || (request.Retire && (request.Amount != 0 || string.IsNullOrWhiteSpace(request.Currency))))
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.AmountInvalid));
 
         var offer = await FindOfferAsync(request.OfferId, cancellationToken);
@@ -120,13 +120,13 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
             return Result.Failure<SellerPriceWriteReceipt>(currencyError!);
         currency = currencyCode.Value;
-        if (_currencyReference is not null)
+        if (!request.Retire && _currencyReference is not null)
         {
             // A registered reference is authoritative even when no currencies are active.
             if (!await _currencyReference.IsActiveAsync(currency, cancellationToken))
                 return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
         }
-        else if (_storeCommerce is not null
+        else if (!request.Retire && _storeCommerce is not null && _currencyReference is null
                  && !string.Equals(currency, storeCurrency, StringComparison.OrdinalIgnoreCase))
         {
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
@@ -147,7 +147,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
         if (replay is not null)
         {
-            if (replay.OfferId != request.OfferId || replay.NewAmount != normalizedAmount
+            if (replay.OfferId != request.OfferId || replay.Retired != request.Retire || (!request.Retire && replay.NewAmount != normalizedAmount)
                 || replay.ActorUserId != request.ActorUserId
                 || !string.Equals(replay.Currency, currency, StringComparison.Ordinal)
                 || !await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == replay.PriceId
@@ -172,7 +172,16 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             now = existing.UpdatedAt.AddTicks(10);
         AuthoredPrice price;
         decimal? oldAmount;
-        if (existing is null || existing.Status == PriceStatus.Retired)
+        if (request.Retire)
+        {
+            if (existing is null || existing.Status == PriceStatus.Retired
+                || await _db.Prices.AsNoTracking().AnyAsync(x => x.OfferId == request.OfferId && x.Market == market && x.Channel == channel && x.Currency == currency && x.QualifierKind == PriceQualifierKind.Base && x.PriceId != existing.PriceId && x.Status != PriceStatus.Retired, cancellationToken))
+                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
+            price = existing;
+            oldAmount = price.Amount;
+            price.Expire(now);
+        }
+        else if (existing is null || existing.Status == PriceStatus.Retired)
         {
             if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, Guid.Empty, cancellationToken))
                 return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.Overlap));
@@ -202,6 +211,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             OccurredAt = now,
             OldAmount = oldAmount,
             NewAmount = price.Amount,
+            Retired = request.Retire,
             Currency = currency,
             Revision = PriceRevision(price),
         };
@@ -222,7 +232,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             await transaction.RollbackAsync(cancellationToken);
             var raced = await _db.PriceChanges.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
-            if (raced is not null && raced.OfferId == request.OfferId && raced.NewAmount == normalizedAmount
+            if (raced is not null && raced.OfferId == request.OfferId && raced.Retired == request.Retire && (request.Retire || raced.NewAmount == normalizedAmount)
                 && raced.ActorUserId == request.ActorUserId
                 && string.Equals(raced.Currency, currency, StringComparison.Ordinal)
                 && await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == raced.PriceId
@@ -242,7 +252,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .Where(x => x.OfferId == offerId)
             .OrderBy(x => x.OccurredAt).ThenBy(x => x.FactId)
             .Select(x => new SellerPriceChangeFact(x.FactId, x.OfferId, x.PriceId, x.OperationId,
-                x.ActorUserId, x.OccurredAt, x.OldAmount, x.NewAmount, x.Currency, x.Revision))
+                x.ActorUserId, x.OccurredAt, x.OldAmount, x.NewAmount, x.Currency, x.Revision, x.Retired))
             .ToListAsync(cancellationToken);
 
     /// <inheritdoc />
@@ -300,7 +310,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
     private static SellerPriceWriteReceipt ToReceipt(PriceChangeFact fact) =>
         new(fact.PriceId, fact.OfferId, fact.Revision, fact.OperationId, fact.ActorUserId,
-            fact.OccurredAt, fact.OldAmount, fact.NewAmount, fact.Currency);
+            fact.OccurredAt, fact.OldAmount, fact.NewAmount, fact.Currency, fact.Retired);
 
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, PriceQuote>> ResolvePricesBatchAsync(
