@@ -286,12 +286,13 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .Where(x => x.OfferId == offerId
                         && x.Market == market
                         && x.Channel == channel
-                        && x.QualifierKind == PriceQualifierKind.Base
-                        && x.Status == PriceStatus.Active)
+                        && x.QualifierKind == PriceQualifierKind.Base)
             .ToListAsync(cancellationToken);
+        // Authoring projection must select exactly the same row as SetPriceAsync and GetRevisionAsync.
+        // Effective quote selection is a separate Pricing read path and remains unchanged.
         return rows
             .GroupBy(x => x.Currency, StringComparer.Ordinal)
-            .Select(group => group.OrderByDescending(x => x.ValidFrom).ThenByDescending(x => x.PriceId).First())
+            .Select(group => group.OrderByDescending(x => x.PriceId).First())
             .OrderBy(x => x.Currency, StringComparer.Ordinal)
             .Select(x => new SellerOfferPriceView(x.PriceId, x.Currency, x.Amount, PriceRevision(x), x.Status.ToString()))
             .ToArray();
