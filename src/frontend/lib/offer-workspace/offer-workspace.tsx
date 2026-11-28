@@ -623,7 +623,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                   </button>
                 </>
               ) : (
-                <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setMessageBox(null)}>
+                <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setMessageBox(null)} data-testid="offer-message-dismiss">
                   {t.close}
                 </button>
               )}
