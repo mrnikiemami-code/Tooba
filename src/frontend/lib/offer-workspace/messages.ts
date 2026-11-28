@@ -88,6 +88,10 @@ export interface OfferWorkspaceMessages {
   pricingTypeBase: string;
   pricingStatus: string;
   pricingRetired: string;
+  pricingRemove: string;
+  pricingRemoveConfirm: string;
+  historyKindPriceRetired: string;
+  conflictUnavailable: string;
   pricingValidity: string;
   pricingCurrent: string;
   pricingStoreCurrency: string;
@@ -317,6 +321,10 @@ const fa: OfferWorkspaceMessages = {
   pricingTypeBase: "پایه",
   pricingStatus: "وضعیت قیمت",
   pricingRetired: "غیرفعال",
+  pricingRemove: "حذف قیمت",
+  pricingRemoveConfirm: "قیمت این ارز از فروش خارج شود؟ سابقه قیمت حفظ می‌شود.",
+  historyKindPriceRetired: "حذف قیمت",
+  conflictUnavailable: "بررسی آفر موجود ممکن نیست. دوباره تلاش کنید.",
   pricingValidity: "اعتبار",
   pricingCurrent: "قیمت جاری",
   pricingStoreCurrency: "ارز پیش‌فرض فروشگاه",
@@ -438,8 +446,8 @@ const fa: OfferWorkspaceMessages = {
   noResults: "نتیجه‌ای پیدا نشد.",
   pickerError: "خواندن فهرست ممکن نشد.",
   createNeedsIdentity: "ابتدا فروشنده، محصول و تنوع را انتخاب کنید.",
-  duplicateActiveTitle: "آفر فعال برای این محصول وجود دارد",
-  duplicateActive: "برای این فروشنده، محصول و کانال یک آفر فعال ثبت شده است. برای جلوگیری از آفر تکراری، همان آفر را باز کنید.",
+  duplicateActiveTitle: "آفر موجود است",
+  duplicateActive: "برای این فروشنده، تنوع و کانال قبلاً آفر ثبت شده است. آفر موجود را باز کنید یا انتخاب را تغییر دهید.",
   viewExistingOffer: "مشاهده آفر موجود",
   conflictChecking: "بررسی آفر موجود…",
   validationAmount: "مبلغ نامعتبر است.",
@@ -547,6 +555,10 @@ const en: OfferWorkspaceMessages = {
   pricingTypeBase: "Base",
   pricingStatus: "Price status",
   pricingRetired: "Retired",
+  pricingRemove: "Remove price",
+  pricingRemoveConfirm: "Remove this currency price from sale? Its history will be retained.",
+  historyKindPriceRetired: "Price removed",
+  conflictUnavailable: "Could not check for an existing offer. Retry.",
   pricingValidity: "Validity",
   pricingCurrent: "Current price",
   pricingStoreCurrency: "Store default currency",
@@ -668,8 +680,8 @@ const en: OfferWorkspaceMessages = {
   noResults: "No result found.",
   pickerError: "The list could not be read.",
   createNeedsIdentity: "Choose seller, product and variant first.",
-  duplicateActiveTitle: "An active offer already exists",
-  duplicateActive: "An active offer already exists for this seller, product and channel. Open it instead of creating a duplicate.",
+  duplicateActiveTitle: "An offer already exists",
+  duplicateActive: "An offer already exists for this seller, variant and channel. Open it or change the selection.",
   viewExistingOffer: "View existing offer",
   conflictChecking: "Checking existing offer…",
   validationAmount: "Invalid amount.",
