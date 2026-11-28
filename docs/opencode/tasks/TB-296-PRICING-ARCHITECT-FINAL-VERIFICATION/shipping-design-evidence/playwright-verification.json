@@ -1,0 +1,98 @@
+{
+  "task": "TB-296-OFFER-SHIPPING-DESIGN-VERIFY",
+  "build": "DPVucS4nqh6ZqFce4emB8",
+  "cases": {
+    "dropdown-visibility": {
+      "status": "PASS",
+      "trigger": {
+        "x": 47,
+        "y": 328.890625,
+        "width": 1346,
+        "height": 44
+      },
+      "popup": {
+        "x": 47,
+        "y": 376.890625,
+        "width": 1346,
+        "height": 290
+      },
+      "options": [
+        "truck",
+        "light-truck",
+        "freight",
+        "dedicated",
+        "scheduled"
+      ]
+    },
+    "internal-search-name-and-code": {
+      "status": "PASS",
+      "byName": [
+        "truck"
+      ],
+      "byCode": [
+        "freight"
+      ]
+    },
+    "add-remove-multiple": {
+      "status": "PASS",
+      "chips": 2
+    },
+    "owner-filter": {
+      "status": "PASS",
+      "seller": [
+        "seller-truck"
+      ],
+      "platform": [
+        "truck",
+        "light-truck",
+        "freight",
+        "dedicated",
+        "scheduled"
+      ]
+    },
+    "type-filter": {
+      "status": "PASS",
+      "normal": [
+        "post"
+      ],
+      "plus": [
+        "plus-delivery"
+      ],
+      "extra-heavy": [
+        "extra-truck"
+      ],
+      "grocery": [
+        "grocery-delivery"
+      ]
+    },
+    "rtl": {
+      "status": "PASS",
+      "fa": {
+        "dir": "rtl",
+        "lang": "fa"
+      },
+      "en": {
+        "dir": "ltr"
+      }
+    },
+    "mobile-390": {
+      "status": "PASS",
+      "overflow": 0,
+      "popup": {
+        "x": 25,
+        "y": 566.1875,
+        "width": 340,
+        "height": 290
+      },
+      "opts": [
+        "truck",
+        "light-truck",
+        "freight",
+        "dedicated",
+        "scheduled"
+      ],
+      "chip": 1
+    }
+  },
+  "status": "PASS"
+}
