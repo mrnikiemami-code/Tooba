@@ -280,7 +280,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     void adapter.loadInventoryLocations(seller, owner).then((rows) => {
       if (!active) return;
       setInventoryLocations(rows);
-      if (!isEdit) setLocalInventory((current) => rows.map((row) => current.find((item) => item.locationId === row.locationId) ?? { locationId: row.locationId, onHand: "", reason: "" }));
+      if (!isEdit) setLocalInventory((current) => current.filter(item => rows.some(row => row.locationId === item.locationId)));
     }).catch(() => { if (active) setInventoryLocations([]); });
     return () => { active = false; };
   }, [adapter, isEdit, selectedSeller?.sellerPartyId, responsibility, detail?.sellerPartyId, detail?.fulfillmentResponsibility, detail?.capabilities?.canEditPhysicalInventory, detail?.status]);
@@ -698,6 +698,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             provisionDisabled={saving || saveNeedsReload}
             localLocations={inventoryLocations}
             localInventory={localInventory}
+            onLocalInventoryAdd={(locationId) => setLocalInventory(current => current.some(row => row.locationId === locationId) || !inventoryLocations.some(row => row.locationId === locationId) ? current : [...current, { locationId, onHand: "", reason: "" }])}
+            onLocalInventoryRemove={(locationId) => setLocalInventory(current => current.filter(row => row.locationId !== locationId))}
             onLocalInventoryChange={(locationId, patch) => setLocalInventory((current) => current.map((row) => row.locationId === locationId ? { ...row, ...patch } : row))}
           />
         );
