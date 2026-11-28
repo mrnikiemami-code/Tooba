@@ -80,6 +80,7 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   pricingPrimaryPrefix: "Основная цена",
   roundingNearest: "До ближайшего значения",
   inventoryAddLocation: "Добавить склад",
+  inventoryRemoveLocation: "Удалить склад",
   inventoryNoEligible: "Нет доступных складов для выбора.",
   inventoryOfferedQuantity: "Предлагаемое количество",
   inventoryOfferedHint: "Включает зарезервированные единицы и не меняет физический остаток.",
