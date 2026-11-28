@@ -27,6 +27,7 @@ export interface OfferInventoryLocation {
   reserved: number;
   available: number;
   revision: string | null;
+  requiresAdjustmentReason?: boolean;
 }
 
 /** One current base authored price for this offer and currency (Pricing-owned truth). */
@@ -246,7 +247,7 @@ export interface OfferWorkspaceAdapter {
     inventory: Array<{ locationId: string; onHand: number; reason: string }>;
   }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
   saveCommercial: (patch: OfferCommercialPatch, expectedVersion?: string) => Promise<OfferMutationResult>;
-  savePrice: (input: { amount: number; currency: string; operationId?: string }, expectedVersion?: string) => Promise<OfferMutationResult>;
+  savePrice: (input: { amount: number; currency: string; operationId?: string; retire?: boolean }, expectedVersion?: string) => Promise<OfferMutationResult>;
   saveInventory: (input: {
     stockItemId: string;
     onHand: number;
