@@ -191,10 +191,10 @@ public static class OfferSellerEndpoints
         CancellationToken token)
     {
         var (actorUserId, sellerId) = await authorizer.RequireEditAsync(context, token);
-        if (body.Amount is not decimal amount)
+        if ((!body.Retire && body.Amount is null) || (body.Retire && (body.Amount is not null || string.IsNullOrWhiteSpace(body.Currency))))
             return api.FromFailure(new SemanticError(OfferErrorCodes.PriceAmountRequired));
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, sellerId, amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty), token);
+            offerId, sellerId, body.Amount ?? 0m, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, Retire: body.Retire), token);
         return api.From(result);
     }
 
