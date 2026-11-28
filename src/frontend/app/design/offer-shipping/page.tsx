@@ -1,10 +1,11 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
-import { Check, Plus, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, X } from "lucide-react";
 import { SearchableSelect, type SearchableSelectOption } from "../../../design-system/primitives/searchable-select";
 import styles from "../../../lib/offer-workspace/offer-workspace.module.css";
 import pv from "./shipping-preview.module.css";
+import { loadActiveRegistryLanguages, resolveRegistryLanguage, type RegistryLocaleDefinition } from "../../../lib/i18n/registry-locale-model";
 
 type Locale = "fa" | "en" | "ru";
 type Mode = "auto" | "specific";
@@ -42,36 +43,59 @@ const copy = {
   },
 } as const;
 
+// Isolated design fixtures; never persisted or used as operational method identities.
 const shippingTypes = [
-  { value: "t-post", label: { fa: "پست", en: "Post", ru: "Почта" } },
-  { value: "t-courier", label: { fa: "پیک", en: "Courier", ru: "Курьер" } },
-  { value: "t-freight", label: { fa: "باربری", en: "Freight", ru: "Грузоперевозка" } },
+  { value: "normal", label: { fa: "عادی", en: "Standard", ru: "Обычная" } },
+  { value: "plus", label: { fa: "پلاس", en: "Plus", ru: "Плюс" } },
+  { value: "heavy", label: { fa: "سنگین", en: "Heavy", ru: "Тяжёлая" } },
+  { value: "extra-heavy", label: { fa: "فوق سنگین", en: "Extra heavy", ru: "Сверхтяжёлая" } },
+  { value: "grocery", label: { fa: "سوپرمارکتی", en: "Grocery", ru: "Продукты" } },
 ];
-
 const methods = [
-  { value: "m-post-express", type: "t-post", code: "POST-EXP", label: { fa: "پست پیشتاز", en: "Post Express", ru: "Экспресс-почта" } },
-  { value: "m-post-ordinary", type: "t-post", code: "POST-ORD", label: { fa: "پست عادی", en: "Ordinary Post", ru: "Обычная почта" } },
-  { value: "m-tipax", type: "t-post", code: "TIPAX", label: { fa: "تیپاکس", en: "Tipax", ru: "Tipax" } },
-  { value: "m-city-courier", type: "t-courier", code: "CITY-BIKE", label: { fa: "پیک درون‌شهری", en: "City courier", ru: "Городской курьер" } },
-  { value: "m-freight", type: "t-freight", code: "FREIGHT", label: { fa: "باربری سراسری", en: "Nationwide freight", ru: "Междугородняя доставка" } },
+  { value: "truck", type: "heavy", owner: "Platform", code: "TRUCK", label: { fa: "ارسال با کامیون", en: "Truck", ru: "Грузовик" } },
+  { value: "light-truck", type: "heavy", owner: "Platform", code: "LIGHT-TRUCK", label: { fa: "ارسال با خاور", en: "Light truck", ru: "Малый грузовик" } },
+  { value: "freight", type: "heavy", owner: "Platform", code: "FREIGHT", label: { fa: "ارسال باربری", en: "Freight", ru: "Грузоперевозка" } },
+  { value: "dedicated", type: "heavy", owner: "Platform", code: "DEDICATED", label: { fa: "ارسال اختصاصی", en: "Dedicated", ru: "Выделенная доставка" } },
+  { value: "scheduled", type: "heavy", owner: "Platform", code: "SCHEDULED", label: { fa: "ارسال زمان‌بندی‌شده", en: "Scheduled", ru: "По расписанию" } },
+  { value: "seller-truck", type: "heavy", owner: "Seller", code: "SELLER-TRUCK", label: { fa: "کامیون فروشنده", en: "Seller truck", ru: "Грузовик продавца" } },
+  { value: "extra-truck", type: "extra-heavy", owner: "Platform", code: "EXTRA-TRUCK", label: { fa: "کامیون فوق سنگین", en: "Extra heavy truck", ru: "Сверхтяжёлый грузовик" } },
+  { value: "post", type: "normal", owner: "Platform", code: "POST", label: { fa: "پست پیشتاز", en: "Express post", ru: "Экспресс-почта" } },
+  { value: "plus-delivery", type: "plus", owner: "Platform", code: "PLUS", label: { fa: "ارسال پلاس", en: "Plus delivery", ru: "Доставка плюс" } },
+  { value: "grocery-delivery", type: "grocery", owner: "Platform", code: "GROCERY", label: { fa: "ارسال فوری سوپرمارکتی", en: "Grocery delivery", ru: "Доставка продуктов" } },
 ];
 
 export default function OfferShippingDesignPreview() {
-  const [locale, setLocale] = useState<Locale>("fa");
+  const [languages, setLanguages] = useState<RegistryLocaleDefinition[]>([]);
+  const [requested, setRequested] = useState<string | null>(null);
+  const [registryError, setRegistryError] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const prefix = window.location.pathname.split("/").filter(Boolean)[0];
+    setRequested(prefix === "design" ? null : prefix);
+    void loadActiveRegistryLanguages().then(rows => { if (live) setLanguages(rows); })
+      .catch(() => { if (live) setRegistryError(true); });
+    return () => { live = false; };
+  }, []);
+  const definition = resolveRegistryLanguage(languages, requested);
+  const locale: Locale = definition?.language === "ru" ? "ru" : definition?.language === "fa" || (!definition && requested !== "en" && requested !== "ru") ? "fa" : "en";
   const t = copy[locale];
   const [responsibility, setResponsibility] = useState<"Seller" | "Platform" | "">("Platform");
-  const [type, setType] = useState("t-post");
+  const [type, setType] = useState("heavy");
   const [mode, setMode] = useState<Mode>("specific");
-  const [selected, setSelected] = useState<string[]>(["m-post-express", "m-tipax"]);
-  const options = useMemo(() => methods.filter(m => m.type === type), [type]);
-  const selectedRows = selected.map(id => methods.find(m => m.value === id)).filter(Boolean) as typeof methods;
+  const [selected, setSelected] = useState<string[]>([]);
+  const ready = Boolean(responsibility && type);
+  const options = useMemo(() => methods.filter(m => m.type === type && m.owner === responsibility), [type, responsibility]);
+  const selectedRows = options.filter(m => selected.includes(m.value));
   const addOptions: SearchableSelectOption[] = options
     .filter(m => !selected.includes(m.value))
-    .map(m => ({ value: m.value, label: `${locale === "fa" ? m.label.fa : locale === "en" ? m.label.en : m.label.ru} — ${m.code}`, searchText: `${m.label.fa} ${m.label.en} ${m.code}` }));
-  const typeLabel = shippingTypes.find(x => x.value === type)?.label[locale] ?? "";
+    .map(m => ({ value: m.value, label: m.label[locale], searchText: `${m.label.fa} ${m.label.en} ${m.label.ru} ${m.code}` }));
+  const emptySelected = ready && mode === "specific" && !selectedRows.length;
+  const validation = locale === "fa" ? "حداقل یک روش ارسال انتخاب کنید." : locale === "ru" ? "Выберите хотя бы один способ." : "Select at least one shipping method.";
+  const noEligible = locale === "fa" ? "روش ارسال مجازی وجود ندارد." : locale === "ru" ? "Нет доступных способов." : "No eligible shipping methods.";
+  const registryUnavailable = locale === "fa" ? "فهرست زبان‌ها در دسترس نیست." : locale === "ru" ? "Языки недоступны." : "Language registry unavailable.";
 
   return (
-    <div className={styles.root} dir={t.dir} data-testid="shipping-design-preview">
+    <div className={styles.root} dir={definition?.direction ?? t.dir} data-testid="shipping-design-preview">
       <header className={styles.stickyHead}>
         <div className={pv.headRow}>
           <div className={pv.headTexts}>
@@ -80,20 +104,21 @@ export default function OfferShippingDesignPreview() {
           </div>
           <div className={pv.actions}>
             <span className={styles.resultMeta}>{t.locale}</span>
-            {(["fa", "en", "ru"] as Locale[]).map(code => (
-              <button key={code} type="button" className={`${styles.btn} ${styles.btnSm} ${code === locale ? styles.btnPrimary : styles.btnQuiet}`} onClick={() => setLocale(code)}>{code.toUpperCase()}</button>
+            {languages.map(row => (
+              <button key={row.code} type="button" className={`${styles.btn} ${styles.btnSm} ${row.code === definition?.code ? styles.btnPrimary : styles.btnQuiet}`} onClick={() => setRequested(row.urlPrefix)}>{row.nativeName}</button>
             ))}
+            {registryError ? <span role="status">{registryUnavailable}</span> : null}
           </div>
         </div>
       </header>
       <main className={styles.page}>
         <div className={styles.stack} data-testid="offer-tab-shipping">
-          <section className={styles.card}>
-            <header className={styles.cardHd}><h2 className={pv.cardTitle}>{t.title}</h2><p className={pv.cardDesc}>{t.desc}</p></header>
+          <section className={`${styles.card} ${pv.previewCard}`}>
+            <header className={styles.cardHd}><h2 className={pv.cardTitle}>{t.title}</h2></header>
             <div className={styles.cardBd}>
               <div className={styles.formGrid}>
                 <label className={styles.field}><span className={styles.fieldLabel}>{t.responsibility}</span>
-                  <select className={`${styles.ctl} ${styles.select}`} value={responsibility} onChange={e => setResponsibility(e.target.value as typeof responsibility)} data-testid="preview-responsibility">
+                  <select className={`${styles.ctl} ${styles.select}`} value={responsibility} onChange={e => { setResponsibility(e.target.value as typeof responsibility); setType(""); setSelected([]); }} data-testid="preview-responsibility">
                     <option value="">{t.unassigned}</option><option value="Seller">{t.seller}</option><option value="Platform">{t.platform}</option>
                   </select>
                 </label>
@@ -108,30 +133,29 @@ export default function OfferShippingDesignPreview() {
               <div className={styles.field} style={{ marginTop: 16 }}>
                 <span className={styles.fieldLabel}>{t.mode}</span>
                 <div className={pv.segmented} data-testid="preview-mode">
-                  <button type="button" className={mode === "auto" ? pv.segActive : pv.seg} onClick={() => setMode("auto")}>
+                  <button type="button" className={mode === "auto" ? pv.segActive : pv.seg} disabled={!ready} aria-pressed={mode === "auto"} onClick={() => { setMode("auto"); setSelected([]); }}>
                     {mode === "auto" ? <Check size={14} aria-hidden /> : null}<span><strong>{t.auto}</strong><small>{t.autoHint}</small></span>
                   </button>
-                  <button type="button" className={mode === "specific" ? pv.segActive : pv.seg} onClick={() => setMode("specific")}>
+                  <button type="button" className={mode === "specific" ? pv.segActive : pv.seg} disabled={!ready} aria-pressed={mode === "specific"} onClick={() => setMode("specific")}>
                     {mode === "specific" ? <Check size={14} aria-hidden /> : null}<span><strong>{t.specific}</strong><small>{t.specificHint}</small></span>
                   </button>
                 </div>
               </div>
 
-              {mode === "auto" ? <p className={styles.resultMeta} data-testid="preview-auto-note">{t.locked} ({t.choose}: {typeLabel})</p> : (
+              {!ready || mode === "auto" ? null : (
                 <div className={styles.field} style={{ marginTop: 14 }}>
                   <span className={styles.fieldLabel}>{t.methods}</span>
                   <div className={pv.chips} data-testid="preview-selected-methods">
-                    {selectedRows.length === 0 ? <span className={styles.resultMeta}>{t.none}</span> : selectedRows.map(m => (
+                    {selectedRows.map(m => (
                       <span key={m.value} className={styles.chip}>{m.label[locale]} <span className={pv.chipCode} dir="ltr">{m.code}</span>
                         <button type="button" aria-label={`${t.remove} ${m.label[locale]}`} className={pv.chipRemove} onClick={() => setSelected(list => list.filter(x => x !== m.value))} data-testid={`preview-remove-${m.value}`}><X size={12} aria-hidden /></button>
                       </span>
                     ))}
                   </div>
                   <div className={pv.methodPicker}>
-                    <SearchableSelect options={addOptions} value="" onChange={v => setSelected(list => [...list, v])} label={t.addMethod} placeholder={t.addMethod} searchLabel={t.search} emptyLabel={t.noResults} disabled={!addOptions.length} testId="preview-method-picker" />
-                    <Plus size={15} aria-hidden className={pv.pickerPlus} />
+                    <SearchableSelect options={addOptions} value="" onChange={v => setSelected(list => options.some(row => row.value === v) && !list.includes(v) ? [...list, v] : list)} label={t.addMethod} placeholder={t.addMethod} searchLabel={t.search} emptyLabel={t.noResults} disabled={!addOptions.length} testId="preview-method-picker" />
                   </div>
-                  <p className={styles.fieldHint}>{t.note}</p>
+                  {!options.length ? <p className={styles.fieldHint} role="status">{noEligible}</p> : emptySelected ? <p className={styles.fieldErr} role="status">{validation}</p> : null}
                 </div>
               )}
             </div>
