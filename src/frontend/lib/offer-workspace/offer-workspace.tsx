@@ -228,7 +228,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   }, [anyDirty]);
   useEffect(() => {
     const variantId = selectedVariant?.catalogVariantId;
-    if (isEdit || !adapter.findActiveOffer || !variantId) {
+    if (isEdit || !adapter.findActiveOffer || !variantId || !selectedChannel) {
       setActiveConflict(null);
       return;
     }
@@ -422,8 +422,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const sellerName = detail?.sellerDisplayName || selectedSeller?.displayName || adapter.fixedSeller?.displayName || (adapter.role === "seller" ? t.sellerSession : t.notSelected);
   const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
-  const existingOfferHref = activeConflict ? (adapter.role === "admin" ? `/admin/offers/${activeConflict.offerId}` : `/vendor-panel/products/${activeConflict.offerId}`) : messageBox?.offerId ? (adapter.role === "admin" ? `/admin/offers/${messageBox.offerId}` : `/vendor-panel/products/${messageBox.offerId}`) : null;
-  const saveLabel = isEdit ? t.save : t.saveDraft;
+  const existingOfferId = messageBox?.offerId ?? activeConflict?.offerId;
+  const saveLabel = isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
     : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
@@ -509,7 +509,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
                 onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-                disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady || Boolean(activeConflict)))}
+                disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady))}
                 data-offer-save="true"
                 data-testid={saveTestId}
               >
@@ -593,7 +593,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={() => void (isEdit ? actions.runSave() : actions.runCreate())}
-          disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady || Boolean(activeConflict)))}
+          disabled={saving || saveNeedsReload || (!isEdit && (createCommitted.current || !createReady))}
           data-offer-save="true"
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
@@ -611,8 +611,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         actions={
           messageBox ? (
             <>
-              {(messageBox.kind === "duplicate" || messageBox.offerId) && existingOfferHref ? (
-                <a className={`${styles.btn} ${styles.btnPrimary}`} href={existingOfferHref} data-testid="offer-message-open-existing">{t.viewExistingOffer}</a>
+              {(messageBox.kind === "duplicate" || messageBox.offerId) && existingOfferId ? (
+                <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { if (messageBox.kind === "duplicate") { createCommitted.current = true; clearPersistedDraft(); } adapter.onCreated(existingOfferId); }} data-testid="offer-message-open-existing">{t.viewExistingOffer}</button>
               ) : null}
               {messageBox.kind === "reload" ? (
                 <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void (staleRestoredDraft.current ? showBlocking("confirm", t.dirtyExitTitle, t.dirtyExitText) : actions.reloadAfterUnknown()); }} disabled={saveReloading} data-testid="offer-message-reload">
@@ -651,10 +651,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           onSellerSkuChange={(value) => patchDraft({ sellerSku: value })}
           fixedSeller={adapter.fixedSeller}
           selectedSeller={selectedSeller}
-          onSelectSeller={setSelectedSeller}
+          onSelectSeller={(seller) => { setActiveConflict(null); setSelectedSeller(seller); }}
           channels={channels}
           selectedChannel={selectedChannel}
-          onSelectChannel={setSelectedChannel}
+          onSelectChannel={(channel) => { setActiveConflict(null); setSelectedChannel(channel); }}
           inventoryLocations={inventoryLocations}
           localInventory={localInventory}
           onLocalInventoryChange={(locationId, patch) => setLocalInventory((current) => current.map((row) => row.locationId === locationId ? { ...row, ...patch } : row))}
