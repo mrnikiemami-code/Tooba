@@ -264,3 +264,13 @@ test("unknown save recovery never overwrites a concurrent non-primary price", ()
   assert.equal(merged?.currency, "USD");
   assert.equal(merged?.amount, "13");
 });
+
+test("authoring revision and status remain distinct from the effective store quote", () => {
+  const retired = { priceId: "retired-id", currency: "IRR", amount: 900, revision: "retired-r", status: "Retired" };
+  const base = detail({ amount: null, prices: [retired] });
+  const draft = draftFromDetail(base);
+  assert.equal(draft.amount, "900");
+  assert.equal(priceDirty(base, draft), false);
+  assert.equal(priceRevisionFor(base, "IRR"), "retired-r");
+  assert.equal(deriveBuyability(base).buyable, false);
+});
