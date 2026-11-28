@@ -8,6 +8,7 @@ import { allowedStatuses, deriveBuyability, statusLabel } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
 import { DirtyDot, SectionTitle } from "./tab-shared";
+import { QuantityInput } from "./quantity-input";
 
 export interface ConditionsTabProps {
   t: OfferWorkspaceMessages;
@@ -54,25 +55,11 @@ export function ConditionsTab(props: ConditionsTabProps) {
           <div className={styles.formGrid} style={{ marginTop: 14 }}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>{t.minQty}</span>
-              <input
-                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
-                value={props.minimumOrderQuantity}
-                onChange={(event) => props.onMinQtyChange(event.target.value)}
-                inputMode="decimal"
-                dir="ltr"
-                data-testid="offer-min-qty"
-              />
+              <QuantityInput value={props.minimumOrderQuantity} onChange={props.onMinQtyChange} scale={detail.unitQuantityDecimalPlaces} format={format} testId="offer-min-qty" />
             </label>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>{t.maxQty}</span>
-              <input
-                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
-                value={props.maximumOrderQuantity}
-                onChange={(event) => props.onMaxQtyChange(event.target.value)}
-                inputMode="decimal"
-                dir="ltr"
-                data-testid="offer-max-qty"
-              />
+              <QuantityInput value={props.maximumOrderQuantity} onChange={props.onMaxQtyChange} scale={detail.unitQuantityDecimalPlaces} format={format} testId="offer-max-qty" />
             </label>
           </div>
         </div>
@@ -108,14 +95,7 @@ export function ConditionsTab(props: ConditionsTabProps) {
           {props.returnPolicyChoice === "Custom" ? (
             <label className={styles.field} style={{ marginTop: 10, maxWidth: 460 }}>
               <span className={styles.fieldLabel}>{t.returnCustomDays}</span>
-              <input
-                className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
-                value={props.customReturnWindowDays}
-                onChange={(event) => props.onCustomReturnWindowChange(event.target.value)}
-                inputMode="numeric"
-                dir="ltr"
-                data-testid="offer-custom-return-days"
-              />
+              <QuantityInput value={props.customReturnWindowDays} onChange={props.onCustomReturnWindowChange} scale={0} format={format} testId="offer-custom-return-days" />
             </label>
           ) : null}
         </div>
