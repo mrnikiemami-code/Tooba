@@ -9,6 +9,7 @@ export interface OfferCreateAndApplyInput {
   channel: string;
   amount: number | null;
   currency: string;
+  prices?: Array<{ currency: string; amount: number }>;
   returnPolicyChoice: string;
   customReturnWindowDays: number | null;
   minimumOrderQuantity: number | null;
@@ -67,7 +68,7 @@ function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyIn
     && detail.status === "Draft"
     && detail.catalogVariantId === input.catalogVariantId
     && (detail.sellerSku ?? null) === input.sellerSku
-    && sameNumber(priceRowFor(detail, input.currency || detail.currency)?.amount ?? null, input.amount)
+    && (input.prices ? input.prices.every(({ currency, amount }) => priceMatches(detail, currency, amount)) : sameNumber(priceRowFor(detail, input.currency || detail.currency)?.amount ?? null, input.amount))
     && detail.channel === input.channel
     && detail.returnPolicyChoice === input.returnPolicyChoice
     && sameNumber(detail.customReturnWindowDays, input.customReturnWindowDays)
@@ -78,11 +79,19 @@ function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyIn
     && input.inventory.every((position) => detail.inventoryLocations.some((row) => row.locationId === position.locationId && row.onHand === position.onHand));
 }
 
+function priceMatches(detail: OfferCreateAndApplyDetail, currency: string, amount: number) {
+  const row = priceRowFor(detail, currency);
+  return row != null && row.status !== "Retired" && row.amount === amount;
+}
+
 /** Shared create-and-apply use case; route pages provide only role-specific transport. */
 export async function createAndApplyOffer(
   transport: OfferCreateAndApplyTransport,
   input: OfferCreateAndApplyInput,
 ): Promise<OfferCreateAndApplyResult> {
+  if (input.prices && (new Set(input.prices.map(row => row.currency.toUpperCase())).size !== input.prices.length
+    || input.prices.some(row => !row.currency.trim() || !Number.isFinite(row.amount) || row.amount < 0 || (row.currency.toUpperCase() === "IRR" && !Number.isInteger(row.amount)))))
+    return { ok: false, errorCode: "offer.price.invalid" };
   const created = await transport.create();
   if (!created.ok) return created;
   const offerId = created.offerId;
@@ -113,16 +122,19 @@ export async function createAndApplyOffer(
         return partial("offer.create.response_mismatch");
     }
     const currency = input.currency || current.currency;
-    if (input.amount != null && !currency) return partial("offer.price.invalid");
-    if (input.amount != null && currency === "IRR" && !Number.isInteger(input.amount)) return partial("offer.price.decimals_not_allowed");
-    if (input.amount != null && priceRowFor(current, currency)?.amount !== input.amount) {
-      const revision = priceRevisionFor(current, currency);
+    const intendedPrices = input.prices ?? (input.amount == null ? [] : [{ currency, amount: input.amount }]);
+    for (const entry of intendedPrices) {
+      const code = entry.currency.toUpperCase();
+      if (!code) return partial("offer.price.invalid");
+      if (code === "IRR" && !Number.isInteger(entry.amount)) return partial("offer.price.decimals_not_allowed");
+      if (priceMatches(current, code, entry.amount)) continue;
+      const revision = priceRevisionFor(current, code);
       if (!revision) return partial("concurrency.conflict");
-      const intent = ownerWriteIntent(transport.scope + ":price:" + offerId, revision, [input.amount, currency]);
-      const price = await transport.savePrice(offerId, input.amount, currency, revision, intent.operationId);
+      const intent = ownerWriteIntent(transport.scope + ":price:" + offerId + ":" + code, revision, [entry.amount, code]);
+      const price = await transport.savePrice(offerId, entry.amount, code, revision, intent.operationId);
       if (!price.ok) return partial(price.errorCode);
       current = await read();
-      if (priceRowFor(current, currency)?.amount !== input.amount) return partial("offer.create.response_mismatch");
+      if (!priceMatches(current, code, entry.amount)) return partial("offer.create.response_mismatch");
       intent.clear();
     }
     for (const position of input.inventory) {
