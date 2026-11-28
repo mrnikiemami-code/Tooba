@@ -691,9 +691,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             dirty={priceChanged}
             onAmountChange={(value) => patchDraft({ amount: value })}
             onCurrencyChange={(code) => {
-              if (priceChanged) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
+              if (priceChanged && draft.currency) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
               const row = priceRowFor(localDetail, code);
-              patchDraft({ currency: code, amount: row ? String(row.amount) : "" });
+              patchDraft({ currency: code, amount: row ? String(row.amount) : draft.currency ? "" : draft.amount });
             }}
           />
         );
