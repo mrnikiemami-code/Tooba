@@ -4,7 +4,7 @@ const fs=require("node:fs"), path=require("node:path"), cp=require("node:child_p
 const {randomUUID,createHash}=require("node:crypto");
 const ROOT=path.resolve(__dirname,"../../../..");
 const HOST="http://127.0.0.1:5088", FRONT="http://127.0.0.1:3000";
-const candidate="8f63b81b93e06df9593747d009dc6966cbb2e6d9";
+const candidate="322ec85a68893b9f5af9da763d8af7791a90c059";
 const expectedBuild=process.env.TOOBA_R11_EXPECTED_NEXT_BUILD_ID;
 const expectedHost="10098e16bfca69fa41a736609b2535aad8e911457db194ed916a112e4c379529";
 const runId=randomUUID();
