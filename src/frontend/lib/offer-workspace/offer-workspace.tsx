@@ -686,7 +686,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             amount={draft.amount}
             currency={draft.currency}
             dirty={priceChanged}
-            onAddCurrency={!isEdit && draft.currency && draft.amount.trim() && currencies.some(row => !Object.hasOwn(createPriceEntries(draft), row.code)) ? () => patchDraft(switchCreateCurrency(draft, "")) : undefined}
+            onAddCurrency={!isEdit && draft.currency && draft.amount.trim() && currencies.some(row => !Object.prototype.hasOwnProperty.call(createPriceEntries(draft), row.code)) ? () => patchDraft(switchCreateCurrency(draft, "")) : undefined}
             onAmountChange={(value) => patchDraft({ amount: value })}
             onRemove={(!isEdit || (priceRowFor(localDetail, draft.currency)?.status !== "Retired" && priceRowFor(localDetail, draft.currency))) ? () => patchDraft({ amount: "" }) : undefined}
             onCurrencyChange={(code) => {
