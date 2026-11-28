@@ -81,7 +81,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [selectedProduct, setSelectedProduct] = useState<OfferProductOption | null>(null);
   const [selectedChannel, setSelectedChannel] = useState("");
   const [channels, setChannels] = useState<string[]>([]);
-  const currencies = useOfferCurrencies(adapter);
+  const currencyReference = useOfferCurrencies(adapter);
+  const currencies = currencyReference.rows;
   const [inventoryLocations, setInventoryLocations] = useState<OfferInventoryLocationOption[]>([]);
   const [localInventory, setLocalInventory] = useState<OfferLocalInventoryDraft[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
@@ -354,7 +355,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setSaveError(null);
   }
   const actions = createOfferActions({
-    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory, currencies,
+    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory, currencies, currencyReferenceUnavailable: currencyReference.status === "loading" || currencyReference.status === "unavailable",
     createReady: createReady && !createCommitted.current, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
     priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
@@ -686,6 +687,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             detail={localDetail}
             prices={localDetail.prices ?? []}
             currencies={currencies}
+            currencyStatus={currencyReference.status} onRetryCurrencies={currencyReference.retry}
             amount={draft.amount}
             currency={draft.currency}
             dirty={priceChanged}
