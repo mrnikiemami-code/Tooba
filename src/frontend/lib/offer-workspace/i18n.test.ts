@@ -67,3 +67,10 @@ test("offer create authorization and precision errors have localized copy in reg
   assert.notEqual(offerWorkspaceMessages.fa.offerCreatePermissionRequired, offerWorkspaceMessages.en.offerCreatePermissionRequired);
   assert.notEqual(offerWorkspaceMessagesRu.offerCreatePermissionRequired, offerWorkspaceMessages.en.offerCreatePermissionRequired);
 });
+
+test("Russian workspace and list resource keys cover the existing English contract", () => {
+  for (const [key, value] of Object.entries(offerWorkspaceMessages.en)) {
+    if (typeof value !== "string" || !/[A-Za-z]{3}/.test(value)) continue;
+    assert.notEqual(offerWorkspaceMessagesRu[key as keyof typeof offerWorkspaceMessagesRu], value, key);
+  }
+});
