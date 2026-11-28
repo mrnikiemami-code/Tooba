@@ -40,11 +40,11 @@ internal sealed class GetOfferHistoryHandler(
             items.Add(new OfferHistoryItem(
                 fact.OfferId,
                 fact.OccurredAt,
-                "PriceChanged",
+                fact.Retired ? "PriceRetired" : "PriceChanged",
                 fact.ActorUserId,
-                "PriceChanged",
+                fact.Retired ? "PriceRetired" : "PriceChanged",
                 fact.OldAmount is null ? null : FormattableString.Invariant($"amount={fact.OldAmount};currency={fact.Currency}"),
-                FormattableString.Invariant($"amount={fact.NewAmount};currency={fact.Currency}"), fact.FactId, fact.PriceId));
+                fact.Retired ? null : FormattableString.Invariant($"amount={fact.NewAmount};currency={fact.Currency}"), fact.FactId, fact.PriceId));
         }
         foreach (var fact in await inventoryHistory.ListAsync(request.OfferId, cancellationToken))
         {
