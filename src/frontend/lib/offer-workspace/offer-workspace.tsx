@@ -88,6 +88,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
   const history = useOfferHistory(adapter, isEdit, activeTab, detail);
   const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
+  const [conflictCheck, setConflictCheck] = useState<{ key: string; state: "checking" | "clear" | "existing" | "unavailable" } | null>(null);
+  const [conflictRetry, setConflictRetry] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm" | "retire"; title: string; text: string; offerId?: string } | null>(null);
@@ -203,6 +205,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         (shippingTypeId || null) !== (dirtyDetail.fulfillmentShippingTypeId ?? null)),
   );
   const createReady = identityReady;
+  const conflictKey = JSON.stringify([selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, selectedChannel]);
+  const conflictState = !adapter.findActiveOffer ? "clear" : conflictCheck?.key === conflictKey ? conflictCheck.state : "checking";
   const preCreateTabs = adapter.role === "admin"
     ? new Set<OfferTabId>(["pricing", "conditions", "shipping", ...(inventoryLocations.length ? ["inventory" as OfferTabId] : [])])
     : new Set<OfferTabId>(["pricing", "conditions", ...(inventoryLocations.length ? ["inventory" as OfferTabId] : [])]);
@@ -240,19 +244,23 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       return;
     }
     let active = true;
+    setActiveConflict(null);
+    setConflictCheck({ key: conflictKey, state: "checking" });
     void adapter.findActiveOffer(sellerId, variantId, selectedChannel)
       .then((result) => {
         if (!active) return;
         setActiveConflict(result);
+        setConflictCheck({ key: conflictKey, state: result ? "existing" : "clear" });
         })
       .catch(() => {
         if (!active) return;
         setActiveConflict(null);
+        setConflictCheck({ key: conflictKey, state: "unavailable" });
         });
     return () => {
       active = false;
     };
-  }, [adapter, isEdit, selectedChannel, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId]);
+  }, [adapter, isEdit, selectedChannel, selectedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, conflictKey, conflictRetry]);
   useEffect(() => {
     if (!isEdit && activeConflict) {
       showBlocking("duplicate", t.duplicateActiveTitle, t.duplicateActive);
@@ -423,9 +431,10 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const mediaId = detail?.primaryMediaAssetId ?? selectedProduct?.primaryMediaAssetId ?? selectedVariant?.primaryMediaAssetId ?? null;
   const currentStatus = detail ? draft.status : "Draft";
   const existingOfferId = messageBox?.offerId ?? activeConflict?.offerId;
-  const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
+  const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : createReady && conflictState === "checking" ? t.conflictChecking : createReady && conflictState === "unavailable" ? t.retry : t.saveDraft;
   function requestSave() {
     if (saveNeedsReload) { showBlocking("reload", t.saveErrorTitle, t.concurrentChange); return; }
+    if (!isEdit && !activeConflict && conflictState !== "clear") { if (conflictState === "unavailable") { setConflictRetry(n => n + 1); showBlocking("error", t.saveErrorTitle, t.conflictUnavailable); } return; }
     if (isEdit && priceChanged && draft.amount.trim() === "") { showBlocking("retire", t.pricingRemove, t.pricingRemoveConfirm); return; }
     void (isEdit ? actions.runSave() : actions.runCreate());
   }
@@ -514,7 +523,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
                 onClick={requestSave}
-                disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
+                disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady || (!activeConflict && conflictState === "checking")))}
                 data-offer-save="true"
                 data-testid={saveTestId}
               >
@@ -574,7 +583,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={requestSave}
-          disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
+          disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady || (!activeConflict && conflictState === "checking")))}
           data-offer-save="true"
         >
           <Check size={14} aria-hidden /> {saving ? t.saving : saveLabel}
