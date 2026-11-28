@@ -86,9 +86,10 @@ async function main(){
      const result={role,locale,offerId:d.offerId,variant:d.catalogVariantId,from:pre,to:new URL(p.url()).pathname};
      if(role==="admin")await stage("warehouse-positive-name-code",async()=>{
       await t(p,"offer-tab-button-inventory").click();
-      const search=t(p,"offer-inventory-location-search"),picker=t(p,"offer-inventory-location-select");
-      await search.waitFor();
-      const options=async()=>picker.locator("option").evaluateAll(rows=>rows.filter(x=>x.value).map(x=>({id:x.value,label:x.textContent.trim()})));
+      const picker=t(p,"offer-inventory-location-select"), search=t(p,"offer-inventory-location-select-search");
+      check(await search.count()===0,"search visible outside closed combo");
+      await picker.click(); await search.waitFor();
+      const options=async()=>p.getByTestId("offer-inventory-location-select-option").evaluateAll(rows=>rows.map(x=>({id:x.dataset.value,label:x.textContent.trim()})));
       const before=await options();check(before.length>=2,"insufficient eligible distinct warehouses");
       const target=before.find(x=>x.label.includes(" — "));check(target,"missing warehouse code");
       const [name,code]=target.label.split(" — ");
@@ -102,6 +103,7 @@ async function main(){
       }
       await search.fill("R11-NO-MATCH-"+out.runId);check((await options()).length===0,"negative search returned a warehouse");
       await search.fill("");check((await options()).length===before.length,"clearing search did not restore choices");
+      await search.press("Escape");check(await search.count()===0,"Escape did not close popup");
       return {before:before.length,results};
      });
      return result;
