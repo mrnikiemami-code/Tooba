@@ -318,7 +318,7 @@ const fa: OfferWorkspaceMessages = {
   pricingStoreCurrency: "ارز پیش‌فرض فروشگاه",
   pricingNoDecimals: "این ارز بدون اعشار است.",
   pricingLegacyDecimals: "این قیمت اعشار دارد؛ تا زمانی که آن را تغییر ندهید، مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
-  pricingUnavailable: "ثبت قیمت برای بازارها و ارزهای دیگر از این صفحه در دسترس نیست.",
+  pricingUnavailable: "فهرست ارزهای مجاز در دسترس نیست.",
   pricingSelectCurrency: "انتخاب ارز",
   pricingSaveBeforeSwitch: "ابتدا قیمت فعلی را ذخیره کنید یا تغییر آن را برگردانید.",
   pricingNoPrices: "هنوز قیمتی برای این آفر ثبت نشده است.",
@@ -546,7 +546,7 @@ const en: OfferWorkspaceMessages = {
   pricingStoreCurrency: "Store default currency",
   pricingNoDecimals: "This currency has no decimals.",
   pricingLegacyDecimals: "This price has decimals; the stored value stays untouched until you change it.",
-  pricingUnavailable: "Recording prices for other markets and currencies is not available on this screen.",
+  pricingUnavailable: "The authorized currency list is unavailable.",
   pricingSelectCurrency: "Select currency",
   pricingSaveBeforeSwitch: "Save or revert the current price before switching currencies.",
   pricingNoPrices: "No price has been recorded for this offer yet.",
@@ -692,8 +692,12 @@ export function offerErrorText(t: OfferWorkspaceMessages, code: string): string 
     case "offer.price.amount_required":
     case "offer.price.required":
       return t.priceRequired;
+    case "pricing.amount.invalid":
     case "offer.price.invalid":
       return t.validationAmount;
+    case "pricing.currency.invalid":
+    case "pricing.currency.display_unit":
+      return t.pricingUnavailable;
     case "offer.price.decimals_not_allowed":
       return t.validationDecimals;
     case "offer.inventory.invalid":
