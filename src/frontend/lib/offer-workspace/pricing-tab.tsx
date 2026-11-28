@@ -14,6 +14,8 @@ export interface PricingTabProps {
   detail: OfferWorkspaceDetail;
   prices: OfferPriceView[];
   currencies: OfferCurrencyOption[];
+  currencyStatus?: "legacy" | "loading" | "ready" | "unavailable";
+  onRetryCurrencies?: () => void;
   amount: string;
   currency: string;
   dirty: boolean;
@@ -49,7 +51,7 @@ function positionAfterNumeric(display: string, count: number): number {
   return display.length;
 }
 
-function AmountInput({ value, onChange, format, invalid, scale }: { value: string; onChange: (value: string) => void; format: OfferFormatters; invalid: boolean; scale: number }) {
+function AmountInput({ value, onChange, format, invalid, scale, disabled }: { value: string; onChange: (value: string) => void; format: OfferFormatters; invalid: boolean; scale: number; disabled?: boolean }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pendingCaret = useRef<number | null>(null);
   const display = format.amountInput(value);
@@ -74,6 +76,7 @@ function AmountInput({ value, onChange, format, invalid, scale }: { value: strin
         pendingCaret.current = numericCount(node.value.slice(0, caret));
         onChange(normalizeAmountRaw(node.value, format.locale.culture));
       }}
+      disabled={disabled}
       inputMode={scale === 0 ? "numeric" : "decimal"}
       autoComplete="off"
       dir="ltr"
@@ -87,6 +90,7 @@ export function PricingTab(props: PricingTabProps) {
   const { t, format, detail, prices, currencies } = props;
   const selected = (props.currency || detail.currency || "").toUpperCase();
   const scale = currencyDecimalPlaces(selected, currencies);
+  const unavailable = props.currencyStatus === "loading" || props.currencyStatus === "unavailable";
   return (
     <div className={styles.stack} data-testid="offer-tab-pricing">
       <section className={styles.card}>
@@ -126,12 +130,16 @@ export function PricingTab(props: PricingTabProps) {
             </div>
           )}
 
+          {props.currencyStatus === "unavailable" ? (
+            <div role="alert" className={styles.resultMeta}>{t.pricingUnavailable}{" "}<button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={props.onRetryCurrencies}>{t.retry}</button></div>
+          ) : props.currencyStatus === "loading" ? <p className={styles.resultMeta} role="status">{t.loading}</p> : null}
           <div className={`${styles.formGrid}`} style={{ marginTop: 14, maxWidth: 560 }}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>{t.pricingCurrency}</span>
               <select
                 className={styles.ctl}
                 value={selected}
+                disabled={unavailable}
                 onChange={(event) => props.onCurrencyChange(event.target.value)}
                 dir="auto"
                 data-testid="offer-price-currency-select"
@@ -154,6 +162,7 @@ export function PricingTab(props: PricingTabProps) {
                 format={format}
                 invalid={validatePrice(props.amount, selected, currencies) != null}
                 scale={scale}
+                disabled={unavailable}
               />
               {scale === 0 ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
             </label>
