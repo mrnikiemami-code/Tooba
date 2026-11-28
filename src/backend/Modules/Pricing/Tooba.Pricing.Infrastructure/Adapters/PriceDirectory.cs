@@ -117,8 +117,9 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         // not only the store default. Without the reference (direct construction tests) preserve the
         // historical single-currency restriction.
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? storeCurrency : request.Currency.Trim();
-        if (string.IsNullOrWhiteSpace(currency))
-            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
+        if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
+            return Result.Failure<SellerPriceWriteReceipt>(currencyError!);
+        currency = currencyCode.Value;
         if (_currencyReference is not null)
         {
             // A registered reference is authoritative even when no currencies are active.
@@ -132,10 +133,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         }
         if (!MarketCode.TryParse(market, out var marketCode, out var marketError))
             return Result.Failure<SellerPriceWriteReceipt>(marketError!);
-        if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
-            return Result.Failure<SellerPriceWriteReceipt>(currencyError!);
         market = marketCode.Value;
-        currency = currencyCode.Value;
         var normalizedAmount = Money.Create(request.Amount, currency).Amount;
         var channel = ToPriceChannel(offer.Channel);
         if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
