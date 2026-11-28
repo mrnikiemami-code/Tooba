@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferCurrencyOption, OfferPriceView, OfferWorkspaceDetail } from "./types";
-import { parseDecimal } from "./model";
+import { currencyDecimalPlaces, validatePrice } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
 import { DirtyDot, SectionTitle } from "./tab-shared";
@@ -21,8 +21,12 @@ export interface PricingTabProps {
   onCurrencyChange: (code: string) => void;
 }
 
-function normalizeAmountRaw(value: string): string {
-  return value
+function normalizeAmountRaw(value: string, culture: string): string {
+  const parts = new Intl.NumberFormat(culture).formatToParts(12345.6);
+  const group = parts.find(part => part.type === "group")?.value;
+  const decimal = parts.find(part => part.type === "decimal")?.value;
+  const ungrouped = group ? value.split(group).join("") : value;
+  return (decimal && decimal !== "." ? ungrouped.replace(decimal, ".") : ungrouped)
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
     .replace(/[٬,\s]/g, "")
@@ -45,7 +49,7 @@ function positionAfterNumeric(display: string, count: number): number {
   return display.length;
 }
 
-function AmountInput({ value, onChange, format, invalid }: { value: string; onChange: (value: string) => void; format: OfferFormatters; invalid: boolean }) {
+function AmountInput({ value, onChange, format, invalid, scale }: { value: string; onChange: (value: string) => void; format: OfferFormatters; invalid: boolean; scale: number }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pendingCaret = useRef<number | null>(null);
   const display = format.amountInput(value);
@@ -68,9 +72,9 @@ function AmountInput({ value, onChange, format, invalid }: { value: string; onCh
         const node = event.currentTarget;
         const caret = node.selectionStart ?? node.value.length;
         pendingCaret.current = numericCount(node.value.slice(0, caret));
-        onChange(normalizeAmountRaw(node.value));
+        onChange(normalizeAmountRaw(node.value, format.locale.culture));
       }}
-      inputMode="decimal"
+      inputMode={scale === 0 ? "numeric" : "decimal"}
       autoComplete="off"
       dir="ltr"
       aria-invalid={invalid}
@@ -82,9 +86,7 @@ function AmountInput({ value, onChange, format, invalid }: { value: string; onCh
 export function PricingTab(props: PricingTabProps) {
   const { t, format, detail, prices, currencies } = props;
   const selected = (props.currency || detail.currency || "").toUpperCase();
-  const parsed = parseDecimal(props.amount);
-  const selectedCurrency = currencies.find((row) => row.code.toUpperCase() === selected);
-  const scale = selectedCurrency?.decimalPlaces ?? (selected === "IRR" ? 0 : 2);
+  const scale = currencyDecimalPlaces(selected, currencies);
   return (
     <div className={styles.stack} data-testid="offer-tab-pricing">
       <section className={styles.card}>
@@ -135,7 +137,7 @@ export function PricingTab(props: PricingTabProps) {
                 data-testid="offer-price-currency-select"
                 aria-label={t.pricingSelectCurrency}
               >
-                {currencies.length === 0 ? <option value={selected}>{selected || t.pricingStoreCurrency}</option> : null}
+                {currencies.length === 0 || !currencies.some(row => row.code === selected) ? <option value={selected}>{selected || t.pricingSelectCurrency}</option> : null}
                 {currencies.map((row) => (
                   <option key={row.code} value={row.code}>{row.code} — {format.currencyName(row.code) || row.englishName}</option>
                 ))}
@@ -150,7 +152,8 @@ export function PricingTab(props: PricingTabProps) {
                 value={props.amount}
                 onChange={props.onAmountChange}
                 format={format}
-                invalid={parsed != null && (parsed < 0 || (scale === 0 && !Number.isInteger(parsed)))}
+                invalid={validatePrice(props.amount, selected, currencies) != null}
+                scale={scale}
               />
               {scale === 0 ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
             </label>
