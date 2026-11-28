@@ -86,6 +86,7 @@ export interface OfferWorkspaceMessages {
   pricingType: string;
   pricingTypeBase: string;
   pricingStatus: string;
+  pricingRetired: string;
   pricingValidity: string;
   pricingCurrent: string;
   pricingStoreCurrency: string;
@@ -313,6 +314,7 @@ const fa: OfferWorkspaceMessages = {
   pricingType: "نوع قیمت",
   pricingTypeBase: "پایه",
   pricingStatus: "وضعیت قیمت",
+  pricingRetired: "غیرفعال",
   pricingValidity: "اعتبار",
   pricingCurrent: "قیمت جاری",
   pricingStoreCurrency: "ارز پیش‌فرض فروشگاه",
@@ -541,6 +543,7 @@ const en: OfferWorkspaceMessages = {
   pricingType: "Price type",
   pricingTypeBase: "Base",
   pricingStatus: "Price status",
+  pricingRetired: "Retired",
   pricingValidity: "Validity",
   pricingCurrent: "Current price",
   pricingStoreCurrency: "Store default currency",
