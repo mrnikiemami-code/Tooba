@@ -201,7 +201,7 @@ export async function loadSellerOfferCurrencies(sellerPartyId: string): Promise<
 export async function writeSellerOfferPrice(
   sellerPartyId: string,
   offerId: string,
-  input: { amount: number; currency?: string | null; market?: string | null; operationId?: string },
+  input: { amount: number; currency?: string | null; market?: string | null; operationId?: string; retire?: boolean },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
@@ -210,7 +210,8 @@ export async function writeSellerOfferPrice(
       method: "PUT",
       headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
       body: JSON.stringify({
-        amount: input.amount,
+        amount: input.retire ? null : input.amount,
+        retire: input.retire || undefined,
         currency: input.currency ?? undefined,
         market: input.market ?? undefined,
         expectedVersion,
@@ -226,7 +227,7 @@ export async function writeSellerOfferPrice(
     }
     const detail = mapSellerOfferDetail(await readJson(response));
     const written = detail?.prices?.find((row) => row.currency.toUpperCase() === (input.currency ?? "").toUpperCase());
-    const amountOk = written ? written.amount === input.amount : (detail?.amount === input.amount && (!input.currency || detail.currency === input.currency));
+    const amountOk = input.retire ? written?.status === "Retired" && (detail?.currency !== input.currency || detail?.amount == null) : written ? written.status !== "Retired" && written.amount === input.amount : (detail?.amount === input.amount && (!input.currency || detail.currency === input.currency));
     if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || !amountOk) {
       return { ok: false, errorCode: "seller.price.response_mismatch" };
     }
@@ -269,7 +270,7 @@ export async function writeSellerOfferInventory(
       headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
       body: JSON.stringify({
         onHand: input.onHand,
-        reason: input.reason ?? undefined,
+        reason: input.reason?.trim() || undefined,
         stockItemId: input.stockItemId ?? undefined,
         expectedVersion,
         operationId: input.operationId,
