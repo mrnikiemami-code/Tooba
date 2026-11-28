@@ -12,7 +12,9 @@ export type PersistedOfferWorkspace = {
   baseVersion?: string;
 };
 
-function scope(adapter: OfferWorkspaceAdapter) {
+type DraftScope = Pick<OfferWorkspaceAdapter, "role" | "fixedSeller">;
+
+function scope(adapter: DraftScope) {
   if (typeof window === "undefined") return null;
   try {
     const actor = window.localStorage.getItem(adapter.role === "admin" ? "tooba.adminActorUserId" : "tooba.sellerActorUserId");
@@ -59,4 +61,17 @@ export function discardDraft(key: string | null, adapter: OfferWorkspaceAdapter)
     storage.removeItem(key);
     if (adapter.mode === "create" && storage.getItem(prefix + "latest-create") === key) storage.removeItem(prefix + "latest-create");
   } catch { /* Storage may be disabled. */ }
+}
+
+/** Explicit New starts a new form; reload or language navigation does not call this. */
+export function discardCreateDrafts(adapter: DraftScope) {
+  const prefix = scope(adapter);
+  if (!prefix) return;
+  try {
+    const storage = window.sessionStorage;
+    const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i));
+    for (const key of keys) {
+      if (key === prefix + "latest-create" || key?.startsWith(prefix + '["create",')) storage.removeItem(key);
+    }
+  } catch { /* Optional local recovery. */ }
 }
