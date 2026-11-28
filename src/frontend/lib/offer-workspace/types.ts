@@ -238,6 +238,7 @@ export interface OfferWorkspaceAdapter {
     channel: string;
     amount: number | null;
     currency: string;
+    prices?: Array<{ currency: string; amount: number }>;
     returnPolicyChoice: string;
     customReturnWindowDays: number | null;
     minimumOrderQuantity: number | null;
