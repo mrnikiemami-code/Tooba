@@ -22,7 +22,8 @@ public sealed record SellerInventoryPosition(
     decimal OnHand,
     decimal Reserved,
     decimal Available,
-    string? Revision = null);
+    string? Revision = null,
+    bool RequiresAdjustmentReason = true);
 
 /// <summary>Inventory-owned seller stock write request.</summary>
 public sealed record SetSellerOfferInventory(
