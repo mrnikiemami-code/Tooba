@@ -66,6 +66,7 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   lifecycleDraft: "Черновик",
   pricingRetired: "Выведена из действия",
   pricingRemove: "Удалить цену",
+  pricingAddCurrency: "Добавить другую валюту",
   pricingRemoveConfirm: "Снять цену в этой валюте с продажи? История сохранится.",
   historyKindPriceRetired: "Цена снята с продажи",
   conflictUnavailable: "Не удалось проверить существующее предложение. Повторите попытку.",
