@@ -2,6 +2,7 @@
 import { offerIntentScope, ownerWriteIntent } from "./owner-write-intent.ts";
 import { draftFromDetail, changedInventoryRows, detailVersionChanged, parseDecimal, priceRevisionFor, priceRowFor, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
+import { validateCreatePrices } from "./create-price-draft.ts";
 import type {
   OfferCommercialPatch,
   OfferCurrencyOption,
@@ -366,9 +367,9 @@ export function createOfferActions(ctx: OfferActionsContext) {
     }
     if (ctx.priceChanged && ctx.currencyReferenceUnavailable) { ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.pricingUnavailable); return; }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
-    const priceError = validatePrice(ctx.draft.amount, ctx.draft.currency, ctx.currencies);
-    if (ctx.priceChanged && (parsedAmount == null || priceError)) {
-      const code = priceError ?? "offer.price.required";
+    const pendingPrices = validateCreatePrices(ctx.draft, ctx.currencies ?? []);
+    if (pendingPrices.error) {
+      const code = pendingPrices.error;
       ctx.setTabError({ tab: "pricing", code });
       ctx.setActiveTab("pricing"); ctx.setSaveError(offerErrorText(ctx.t, code)); return;
     }
@@ -407,6 +408,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
         inventory: inventoryInputs.map((row) => ({ locationId: row.locationId, onHand: row.parsed!, reason: "" })),
         amount: parsedAmount,
         currency: ctx.draft.currency,
+        prices: pendingPrices.prices,
         returnPolicyChoice: ctx.draft.returnPolicyChoice,
         customReturnWindowDays: ctx.draft.returnPolicyChoice === "Custom" ? parseDecimal(ctx.draft.customReturnWindowDays) : null,
         minimumOrderQuantity: parseDecimal(ctx.draft.minimumOrderQuantity),
