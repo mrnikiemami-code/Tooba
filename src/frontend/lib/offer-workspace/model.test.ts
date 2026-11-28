@@ -269,7 +269,8 @@ test("authoring revision and status remain distinct from the effective store quo
   const retired = { priceId: "retired-id", currency: "IRR", amount: 900, revision: "retired-r", status: "Retired" };
   const base = detail({ amount: null, prices: [retired] });
   const draft = draftFromDetail(base);
-  assert.equal(draft.amount, "900");
+  assert.equal(draft.amount, "");
+  assert.equal(priceDirty(base, { ...draft, amount: "900" }), true);
   assert.equal(priceDirty(base, draft), false);
   assert.equal(priceRevisionFor(base, "IRR"), "retired-r");
   assert.equal(deriveBuyability(base).buyable, false);
