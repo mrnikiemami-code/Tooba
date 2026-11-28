@@ -110,8 +110,10 @@ public static class OfferSellerEndpoints
     {
         var (_, sellerId) = await authorizer.RequireAuthorizedAsync(context, token);
         var resolved = OfferChannelRequestResolver.ResolveOptional(channel, storeCommerce.Current?.SalesChannel);
-        return api.From(await sender.Send(
-            new FindActiveOfferQuery(sellerId, catalogVariantId, resolved), token));
+        var result = await sender.Send(
+            new FindActiveOfferQuery(sellerId, catalogVariantId, resolved), token);
+        // Explicit successful absence: do not let a nullable JSON body become an ambiguous empty response.
+        return !result.IsFailure && result.Value is null ? Microsoft.AspNetCore.Http.Results.NoContent() : api.From(result);
     }
 
     private static async Task<IResult> CreateOfferAsync(
