@@ -177,8 +177,8 @@ async function verifyCreate(f,p){
  check(rows.length===2&&rows.some(x=>x.currency==="EUR"&&Number(x.amount)===20.5)&&rows.some(x=>x.currency==="USD"&&Number(x.amount)===13.25)&&c.priceFacts===2,"SQL prices/facts mismatch");
  return {role:f.role,offerId:f.id,selected:f.variant.id,rows,counts:c,primary:{amount:d.amount,currency:d.currency},revisions:d.prices.map(x=>({currency:x.currency,revision:x.revision}))};
 }
-async function localeAndGeometry(f,p){
- const priced=await addUIPrice(f,p,"IRR",100000);
+async function localeAndGeometry(f,p,seeded=false){
+ const priced=seeded?await detail(f):await addUIPrice(f,p,"IRR",100000);
  check(priced.amount===100000,"primary integer seed failed");
  const results=[];
  for(const [locale,code,dir,label] of [["fa","fa-IR","rtl","قیمت‌گذاری"],["en","en-US","ltr","Pricing"],["ru","ru-RU","ltr","Цены"]]){
@@ -263,8 +263,8 @@ function cleanup(f){
  sql("BEGIN;"+statements.join(";")+";COMMIT;");
  const after=counts(id);check(Object.values(after).every(x=>Number(x)===0),"fixture residue remains");return {sku:f.sku,id,after};
 }
-async function prepareIndependentFixture(sellers){
- const f=await discover("admin",sellers);f.sku="R11-DIRECT-probe-"+runId;
+async function prepareIndependentFixture(sellers,needMulti=false,suffix="probe"){
+ const f=await discover("admin",sellers,needMulti);f.sku="R11-DIRECT-"+suffix+"-"+runId;
  check(skuRows(f).length===0&&identityAbsent(f.seller.sellerPartyId,f.variant.id,f.channel)===0,"independent fixture already exists");
  out.fixtures.push(f);save();
  const created=await call("/v1/admin/offers",admin,"POST",{sellerPartyId:f.seller.sellerPartyId,catalogVariantId:f.variant.id,channel:f.channel,sellerSku:f.sku,status:"Draft",requestId:randomUUID()});
@@ -326,19 +326,26 @@ async function main(){
   out.sellerCapabilities=sellers.map(x=>({seller:x.sellerPartyId,actor:x.actorUserId,...x.writeAccess}));save();
   check(sellers.length>=2,"at least two authorized seller contexts required");
   out.identity.legacyFractionalIrr=Number(sql("select count(*) from pricing.prices where currency='IRR' and status='Active' and amount<>trunc(amount)"));
+  out.legacyFractionalBreakdown=json("select coalesce(jsonb_agg(to_jsonb(s) order by s.market,s.channel,s.qualifier_kind),'[]'::jsonb) from (select market,channel,qualifier_kind,count(*) as count,min(amount) as minimum,max(amount) as maximum from pricing.prices where currency='IRR' and status='Active' and amount<>trunc(amount) group by market,channel,qualifier_kind) s");
   save();check(PW,"existing Playwright not found");browser=await require(PW).chromium.launch({timeout:20000});
   await stage("R11-PRICE-01-admin",async()=>{a=await discover("admin",sellers);ap=await newPage(a);return verifyCreate(a,ap)});
   await stage("R11-PRICE-01-seller",async()=>{const writable=sellers.filter(x=>x.writeAccess.create&&x.writeAccess.edit);check(writable.length>0,"No actual seller actor has both global product.create and product.edit; no grant escalation");s=await discover("seller",writable,true);sp=await newPage(s);return verifyCreate(s,sp)});
   await stage("seller-create-permission-ui",async()=>{const denied=sellers.find(x=>x.writeAccess.status===200&&!x.writeAccess.create);if(!denied)throw Error("No observed denied actor available");const page=await newPage({seller:denied,role:"seller"});await page.goto(FRONT+"/fa/vendor-panel/products/new");await page.getByText("مجوز ایجاد آفر برای فروشنده فعلی فعال نیست.",{exact:true}).waitFor();check(await t(page,"seller-create-submit").count()===0,"Denied seller can reach create submit");await page.goto(FRONT+"/fa/vendor-panel/products");await t(page,"seller-products").waitFor();check(await t(page,"seller-create-offer").count()===0,"Denied seller sees create action");await page.close();return {status:"PASS",actor:denied.actorUserId}});
+  out.cases["R11-REF-03-missing-market"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-MARKET-MANUAL.json",reason:"Backend unchanged; real read-only 4/4 probe previously executed"};
+  out.cases["R11-PRICE-05-concurrent"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-RESULT.json",reason:"Backend unchanged; concurrent HTTP+SQL witness already recorded"};save();
   let f=out.cases["R11-PRICE-01-admin"]?.status==="PASS"?a:out.cases["R11-PRICE-01-seller"]?.status==="PASS"?s:null;
   if(!f)await stage("independent-probe-fixture",async()=>{f=await prepareIndependentFixture(sellers);return {offerId:f.id,prices:sqlPrices(f.id)}});
   if(f){
-   out.cases["R11-REF-03-missing-market"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-MARKET-MANUAL.json",reason:"Backend unchanged; real read-only 4/4 probe previously executed"};save();
-   await stage("R11-UAT-02-stock",()=>deniedStock(f,sellers.find(x=>x.sellerPartyId!==f.seller.sellerPartyId)));
-   out.cases["R11-PRICE-05-concurrent"]={status:"PRESERVED",evidence:"direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-RESULT.json",reason:"Backend unchanged; concurrent HTTP+SQL witness already recorded"};save();
-  }else for(const k of ["R11-REF-03-missing-market","R11-UAT-02-stock","R11-PRICE-05-concurrent"])out.cases[k]={status:"NOT_RUN",reason:"no newly created verified fixture"};
+   await stage("R11-UAT-02-stock",()=>deniedStock(f,sellers.find(x=>x.sellerPartyId!==f.seller.sellerPartyId&&x.writeAccess.edit)));
+  }else out.cases["R11-UAT-02-stock"]={status:"NOT_RUN",reason:"no newly created verified fixture"};
   if(out.cases["R11-PRICE-01-seller"]?.status==="PASS")await stage("seller-locale-geometry",()=>localeAndGeometry(s,sp));
-  else for(const k of ["R11-LOCALE-01-seller","R11-UAT-03-seller"])out.cases[k]={status:"NOT_RUN",reason:"seller create fixture unavailable"};
+  else await stage("seller-locale-geometry",async()=>{
+   const readers=sellers.filter(x=>x.writeAccess.status===200);
+   check(readers.length>0,"No verified seller scope available for read-only locale test");
+   const owned=await prepareIndependentFixture(readers,true,"locale");
+   const view={...owned,role:"seller"};const page=await newPage(view);await page.goto(uiPath(view,"fa",view.id));await t(page,"offer-workspace").waitFor();
+   return localeAndGeometry(view,page,true);
+  });
   // Checkout requires its own isolated buyable fixture and proven owner-side cleanup.
   // Do not mutate a legacy active offer or delete paid order records from this runner.
   out.cases["R11-REG-01-new-currency-checkout"]={status:"NOT_RUN",reason:"separate isolated checkout proof required; existing paid-order fixture cleanup not assumed safe"};
