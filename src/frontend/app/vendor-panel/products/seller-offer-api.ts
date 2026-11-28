@@ -426,12 +426,15 @@ export async function findSellerActiveOffer(
     const response = await fetch(`/v1/seller/offers/active-listing?${params.toString()}`, {
       headers: sellerHeaders(sellerPartyId, currentActor()),
     });
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error("offer.duplicate_lookup.unavailable");
+    if (response.status === 204) return null;
     const item = await readJson(response);
+    if (item === null) return null;
     const offerId = item && typeof item === "object" ? asString(readProp(item as Record<string, unknown>, "offerId", "OfferId")) : "";
-    return offerId ? { offerId } : null;
+    if (!offerId) throw new Error("offer.duplicate_lookup.unavailable");
+    return { offerId };
   } catch {
-    return null;
+    throw new Error("offer.duplicate_lookup.unavailable");
   }
 }
 
