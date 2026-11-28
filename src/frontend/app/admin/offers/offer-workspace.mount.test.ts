@@ -215,7 +215,8 @@ test("IRR price with decimals is invalid and never calls the price writer", asyn
   await setInputValue(q(tree.container, "[data-testid=offer-price-input]"), "1.5");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.equal(tree.calls.price, 0);
-  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /اعشار/);
+  assert.match(q(tree.container, "[data-testid=offer-message-error]").textContent ?? "", /اعشار/);
+  assert.equal(tree.container.querySelector("[data-testid=offer-save-error]"), null);
   await tree.unmount();
 });
 
@@ -239,12 +240,14 @@ test("inventory below reserved blocks save; valid adjust requires a reason and t
   await set(input, "1");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.equal(tree.calls.inventory, 0);
-  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /رزرو/);
+  assert.match(q(tree.container, "[data-testid=offer-message-error]").textContent ?? "", /رزرو/);
+  await click(q(tree.container, "[data-testid=offer-message-dismiss]"));
 
   await set(input, "12");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.equal(tree.calls.inventory, 0);
-  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /دلیل/);
+  assert.match(q(tree.container, "[data-testid=offer-message-error]").textContent ?? "", /دلیل/);
+  await click(q(tree.container, "[data-testid=offer-message-dismiss]"));
 
   await set(q(tree.container, "[data-testid=offer-inventory-reason]"), "شمارش انبار");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
@@ -542,7 +545,8 @@ test("a product without sellable variants shows a clear message", async () => {
 
 test("existing active listing is explained and linked before create", async () => {
   window.sessionStorage.clear();
-  const adapter = createAdapter({ findActiveOffer: async () => ({ offerId: "existing-offer" }) });
+  let navigated = ""; let creates = 0;
+  const adapter = createAdapter({ findActiveOffer: async () => ({ offerId: "existing-offer" }), onCreated: id => { navigated = id; }, createDraft: async () => { creates++; return { ok: false, errorCode: "unexpected" }; } });
   const tree = await mount(createElement(OfferWorkspace, { adapter }));
   const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
   await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
@@ -552,9 +556,17 @@ test("existing active listing is explained and linked before create", async () =
   await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
   await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
   await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-message-duplicate]")));
-  const link = q(tree.container, "[data-testid=offer-message-duplicate] a") as HTMLAnchorElement;
-  assert.equal(link.getAttribute("href"), "/admin/offers/existing-offer");
-  assert.equal((q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement).disabled, true);
+  assert.equal(navigated, "");
+  await click(q(tree.container, "[data-testid=offer-message-dismiss]"));
+  assert.equal(tree.container.querySelector("[data-testid=offer-message-duplicate]"), null);
+  const submit = q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement;
+  assert.equal(submit.disabled, false);
+  assert.match(submit.textContent ?? "", /مشاهده آفر موجود/);
+  await click(submit);
+  await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-message-duplicate]")));
+  await click(q(tree.container, "[data-testid=offer-message-open-existing]"));
+  assert.equal(navigated, "existing-offer");
+  assert.equal(creates, 0);
   await tree.unmount();
 });
 
@@ -572,7 +584,10 @@ test("formatted amount input normalizes Persian digits and never turns empty int
   await setInputValue(input, "");
   await click(q(tree.container, "[data-testid=admin-offer-save]"));
   assert.equal(tree.calls.price, 1);
-  assert.match(q(tree.container, "[data-testid=offer-save-error]").textContent ?? "", /مبلغ را وارد کنید/);
+  assert.match(q(tree.container, "[data-testid=offer-message-retire]").textContent ?? "", /حذف قیمت/);
+  await click(q(tree.container, "[data-testid=offer-message-dismiss]"));
+  assert.equal(tree.calls.price, 1);
+  assert.equal(tree.current().amount, 1234567);
   await tree.unmount();
 });
 
@@ -720,9 +735,9 @@ test("partial create keeps the created Draft recoverable through MessageBox", as
   await waitFor(() => /ظرفیت:/.test(tree.container.textContent ?? ""));
   await click(q(tree.container, "[data-testid=admin-offer-submit]"));
   await waitFor(() => Boolean(tree.container.querySelector("[data-testid=offer-message-error]")));
-  const link = q(tree.container, "[data-testid=offer-message-error] a") as HTMLAnchorElement;
-  assert.equal(link.getAttribute("href"), "/admin/offers/offer-partial");
   assert.equal(navigated, "");
+  await click(q(tree.container, "[data-testid=offer-message-open-existing]"));
+  assert.equal(navigated, "offer-partial");
   await tree.unmount();
 });
 
@@ -773,4 +788,34 @@ test("committed create clears scoped recovery before navigation and never restor
     assert.equal((q(second.container, "[data-testid=offer-seller-sku]") as HTMLInputElement).value, "");
     assert.equal((q(second.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement).disabled, true);
   } finally { await second.unmount(); }
+});
+
+
+test("duplicate lookup unavailable never submits; explicit retry can recover", async () => {
+  let unavailable = true; let creates = 0; let checks = 0;
+  const adapter = createAdapter({
+    findActiveOffer: async () => { checks++; if (unavailable) throw Error("transport"); return null; },
+    createDraft: async () => { creates++; return { ok: true, offerId: "offer-recovered" }; },
+  });
+  const tree = await mount(createElement(OfferWorkspace, { adapter }));
+  const { click } = await import("../../../features/order-carrier-execution/test-dom-harness.ts");
+  await click(q(tree.container, "[data-testid=offer-seller-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-seller-dialog-option]").length === 1);
+  await click(q(tree.container, "[data-testid=offer-seller-dialog-option]"));
+  await click(q(tree.container, "[data-testid=offer-product-picker-toggle]"));
+  await waitFor(() => qq(tree.container, "[data-testid=offer-product-dialog-option]").length === 3);
+  await click(qq(tree.container, "[data-testid=offer-product-dialog-option]")[1]!);
+  const submit = q(tree.container, "[data-testid=admin-offer-submit]") as HTMLButtonElement;
+  await waitFor(() => !submit.disabled && /تلاش دوباره/.test(submit.textContent ?? ""));
+  await click(submit);
+  assert.equal(creates, 0);
+  assert.match(q(tree.container, "[data-testid=offer-message-error]").textContent ?? "", /بررسی آفر موجود/);
+  unavailable = false;
+  await click(q(tree.container, "[data-testid=offer-message-dismiss]"));
+  await click(submit);
+  await waitFor(() => checks >= 2 && !submit.disabled && /ذخیره پیش/.test(submit.textContent ?? ""));
+  assert.equal(creates, 0);
+  await click(submit);
+  assert.equal(creates, 1);
+  await tree.unmount();
 });
