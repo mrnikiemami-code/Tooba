@@ -354,7 +354,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setSaveError(null);
   }
   const actions = createOfferActions({
-    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory,
+    adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory, currencies,
     createReady: createReady && !createCommitted.current, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
     priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
@@ -691,6 +691,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             dirty={priceChanged}
             onAmountChange={(value) => patchDraft({ amount: value })}
             onCurrencyChange={(code) => {
+              if (priceChanged) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
               const row = priceRowFor(localDetail, code);
               patchDraft({ currency: code, amount: row ? String(row.amount) : "" });
             }}
