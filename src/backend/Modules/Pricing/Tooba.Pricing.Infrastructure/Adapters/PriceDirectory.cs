@@ -41,6 +41,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
     private readonly IIdGenerator _ids;
     private readonly IModuleCallTracer _tracer;
     private readonly ICurrentStoreCommerceContext? _storeCommerce;
+    private readonly ICurrencyReferenceReader? _currencyReference;
 
     /// <summary>Binds the directory to the Pricing schema and the Offer lookup contract.</summary>
     public PriceDirectory(
@@ -50,7 +51,8 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         IClock? clock = null,
         IIdGenerator? ids = null,
         IModuleCallTracer? tracer = null,
-        ICurrentStoreCommerceContext? storeCommerce = null)
+        ICurrentStoreCommerceContext? storeCommerce = null,
+        ICurrencyReferenceReader? currencyReference = null)
     {
         _db = db;
         _guard = guard;
@@ -59,6 +61,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         _ids = ids ?? new UuidV7IdGenerator();
         _tracer = tracer ?? new ModuleCallTracer();
         _storeCommerce = storeCommerce;
+        _currencyReference = currencyReference;
     }
 
     /// <inheritdoc />
@@ -97,13 +100,46 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
         if (offer is null || offer.SellerPartyId != request.SellerPartyId)
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(OfferErrorCodes.NotFound));
 
-        var market = string.IsNullOrWhiteSpace(request.Market) ? _storeCommerce?.Current?.Market : request.Market.Trim();
-        var currency = string.IsNullOrWhiteSpace(request.Currency) ? _storeCommerce?.Current?.DefaultCurrency : request.Currency.Trim();
-        if (_storeCommerce is not null && (string.IsNullOrWhiteSpace(_storeCommerce.Current?.Market)
-            || string.IsNullOrWhiteSpace(_storeCommerce.Current?.DefaultCurrency)
-            || !string.Equals(market, _storeCommerce.Current.Market, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(currency, _storeCommerce.Current.DefaultCurrency, StringComparison.OrdinalIgnoreCase)))
+        var storeMarket = _storeCommerce?.Current?.Market;
+        var storeCurrency = _storeCommerce?.Current?.DefaultCurrency;
+        if (_storeCommerce is not null && (string.IsNullOrWhiteSpace(storeMarket)
+            || string.IsNullOrWhiteSpace(storeCurrency)))
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
+
+        // Market stays the trusted store market; the client no longer supplies it. A supplied value
+        // is accepted only when it equals the trusted store market (backward-compatible rejection).
+        var market = string.IsNullOrWhiteSpace(request.Market) ? storeMarket : request.Market.Trim();
+        if (string.IsNullOrWhiteSpace(market)
+            || (_storeCommerce is not null && !string.Equals(market, storeMarket, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
+
+        // Currency is an authored dimension: any ACTIVE authoritative system currency is accepted,
+        // not only the store default. Without the reference (direct construction tests) preserve the
+        // historical single-currency restriction.
+        var currency = string.IsNullOrWhiteSpace(request.Currency) ? storeCurrency : request.Currency.Trim();
+        if (string.IsNullOrWhiteSpace(currency))
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
+        if (_currencyReference is not null)
+        {
+            // An explicitly configured reference enables multi-currency; an empty reference means
+            // multi-currency is not configured and preserves the historical single-currency restriction.
+            var active = await _currencyReference.ListActiveAsync(cancellationToken);
+            if (active.Count > 0)
+            {
+                if (!await _currencyReference.IsActiveAsync(currency, cancellationToken))
+                    return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
+            }
+            else if (_storeCommerce is not null
+                     && !string.Equals(currency, storeCurrency, StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
+            }
+        }
+        else if (_storeCommerce is not null
+                 && !string.Equals(currency, storeCurrency, StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
+        }
         if (!MarketCode.TryParse(market, out var marketCode, out var marketError))
             return Result.Failure<SellerPriceWriteReceipt>(marketError!);
         if (!CurrencyCode.TryParse(currency, out var currencyCode, out var currencyError))
@@ -242,6 +278,36 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
     private static string PriceRevision(AuthoredPrice price) =>
         FormattableString.Invariant($"{price.PriceId:N}:{price.UpdatedAt.UtcTicks / 10}");
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SellerOfferPriceView>> ListBasePricesAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        var offer = await FindOfferAsync(offerId, cancellationToken);
+        if (offer is null)
+        {
+            return [];
+        }
+
+        var channel = ToPriceChannel(offer.Channel);
+        var market = _storeCommerce?.Current?.Market?.Trim().ToUpperInvariant();
+        var query = _db.Prices.AsNoTracking()
+            .Where(x => x.OfferId == offerId
+                        && x.Channel == channel
+                        && x.QualifierKind == PriceQualifierKind.Base
+                        && x.Status == PriceStatus.Active);
+        if (!string.IsNullOrWhiteSpace(market))
+        {
+            query = query.Where(x => x.Market == market);
+        }
+
+        var rows = await query.ToListAsync(cancellationToken);
+        return rows
+            .GroupBy(x => x.Currency, StringComparer.Ordinal)
+            .Select(group => group.OrderByDescending(x => x.ValidFrom).ThenByDescending(x => x.PriceId).First())
+            .OrderBy(x => x.Currency, StringComparer.Ordinal)
+            .Select(x => new SellerOfferPriceView(x.PriceId, x.Currency, x.Amount, PriceRevision(x), x.Status.ToString()))
+            .ToArray();
+    }
 
     private static SellerPriceWriteReceipt ToReceipt(PriceChangeFact fact) =>
         new(fact.PriceId, fact.OfferId, fact.Revision, fact.OperationId, fact.ActorUserId,

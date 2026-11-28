@@ -12,6 +12,7 @@ import { loadSellerReservationPolicy, readSellerPartyId } from "../../seller-api
 import {
   ensureSellerInventoryPosition,
   loadSellerInventoryLocations,
+  loadSellerOfferCurrencies,
   loadSellerOfferDetail,
   loadSellerOfferHistory,
   loadSellerProductVariants,
@@ -90,6 +91,7 @@ export default function VendorProductDetailPage() {
       createDraft: async () => ({ ok: false, errorCode: "offer.workspace.edit_mode" }),
       saveCommercial: (patch, version) => patchSellerOffer(sellerPartyId, offerId, patch, version),
       savePrice: (input, version) => writeSellerOfferPrice(sellerPartyId, offerId, input, version),
+      loadCurrencies: () => loadSellerOfferCurrencies(sellerPartyId),
       saveInventory: (input, version) => writeSellerOfferInventory(sellerPartyId, offerId, input, version),
       loadInventoryLocations: () => loadSellerInventoryLocations(sellerPartyId),
       provisionPosition: locationId => ensureSellerInventoryPosition(sellerPartyId, offerId, locationId),

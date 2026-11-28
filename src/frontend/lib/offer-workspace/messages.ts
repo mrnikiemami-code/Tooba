@@ -92,6 +92,9 @@ export interface OfferWorkspaceMessages {
   pricingNoDecimals: string;
   pricingLegacyDecimals: string;
   pricingUnavailable: string;
+  pricingSelectCurrency: string;
+  pricingNoPrices: string;
+  pricingPrimaryPrefix: string;
   discountsTitle: string;
   discountsDesc: string;
   discountsEmpty: string;
@@ -315,6 +318,9 @@ const fa: OfferWorkspaceMessages = {
   pricingNoDecimals: "مبلغ ریال بدون اعشار است.",
   pricingLegacyDecimals: "این قیمت اعشار دارد؛ تا زمانی که آن را تغییر ندهید، مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
   pricingUnavailable: "ثبت قیمت برای بازارها و ارزهای دیگر از این صفحه در دسترس نیست.",
+  pricingSelectCurrency: "انتخاب ارز",
+  pricingNoPrices: "هنوز قیمتی برای این آفر ثبت نشده است.",
+  pricingPrimaryPrefix: "قیمت پایه",
   discountsTitle: "تخفیفات",
   discountsDesc: "تخفیف‌های مرتبط با این آفر و شرایط اعمال آن‌ها.",
   discountsEmpty: "تخفیفی برای این آفر ثبت نشده است.",
@@ -539,6 +545,9 @@ const en: OfferWorkspaceMessages = {
   pricingNoDecimals: "IRR has no decimals.",
   pricingLegacyDecimals: "This price has decimals; the stored value stays untouched until you change it.",
   pricingUnavailable: "Recording prices for other markets and currencies is not available on this screen.",
+  pricingSelectCurrency: "Select currency",
+  pricingNoPrices: "No price has been recorded for this offer yet.",
+  pricingPrimaryPrefix: "Primary price",
   discountsTitle: "Discounts",
   discountsDesc: "Discounts related to this offer and their conditions.",
   discountsEmpty: "No discount is recorded for this offer.",

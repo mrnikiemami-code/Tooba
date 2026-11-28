@@ -1,0 +1,17 @@
+﻿19df7f4e0a953c2ce3e8126bc2591f59684dcf3b198731c8b8a6c788b7a8e259  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/offer-tests.log
+1d74e29b3e51ada41eadf6f01d62b35fd8acc0f3ad29b99d73ab8bbf8c2a4973  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/attempts/connected-verification.pre-fix-pass.json
+2708be578e03e792e308e41c26495572a8aa7654cb654bca2c5ccccc7c8ef761  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/impeccable-detect.json
+3ac063984ac4e2245fb4cc2f7c6e5a59125b9eb616dfd5926c952317eb1564b9  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/typecheck.log
+520ace9485389c2a6bad815d3082e4a1e859204c0bab22a996825daf12c1baf2  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/attempts/connected-verification.attempt1-fail.json
+5682e9c46b33e32f11112c509b296e43b25d502eb69462dd9c45b6cc8f04c341  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/frontend-model-tests.log
+568e1de8c2679e37cc3897f17dfc6e3371eb75490da05997df03b032c5a39207  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/pricing-tests.log
+5f5149dd8ca4afba57a14029e6a6f157bd9f86e76f2f91c3f3a3ec868ea9da84  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/i18n-tests.log
+75c5a2a891769903eb5dbe467294d84a1f4ce1bd2f9756d720db8d42a9e6e00d  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/evidence-identity.json
+8bc230d5bf56dad0c31681e956bae439863edbd3ffcdd9320c619ac52768485d  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/connected-verification.json
+90e0970b63dc38196622b9acf7ebe3a99b3509545eefbfcdc21acda060b6456b  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/attempts/connected-verification.pre-refactor-pass.json
+aa0be65a3b5134a2c1c8a2d1872e3fa4f4f859568de741e381878ab8c09ae90b  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/architecture.log
+aaee49c965fe4beb7bc3e3b8383b754f51b85412e26d232cb57163c038e24296  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/mount-tests.log
+bffcc482629ce8ef7d85a9c7ce9888509badd170d1f043422b405682104bfb85  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/openspec-strict.log
+c696c8197101fdf7634e1b5d5d5a38408c40ddce22fec7dbd8785df138fd86ca  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/build-identity.log
+dca77a3cf0ab385e54bc463ffa494b9816486698d19a5fdc47bf70713de030d5  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/attempts/connected-verification.attempt2-fail.json
+ed6d8ec5b4a4a61ff40b42a20024d56ba553115fdc615313bb9460df4719675f  docs/opencode/tasks/TB-296-PRICING-FINAL-UAT-CLOSURE/evidence/attempts/connected-verification.attempt3-fail.json

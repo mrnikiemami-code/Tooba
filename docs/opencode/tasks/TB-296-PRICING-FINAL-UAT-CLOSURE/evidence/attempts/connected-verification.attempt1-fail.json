@@ -1,0 +1,724 @@
+{
+  "taskId": "TB-296-PRICING-FINAL-UAT-CLOSURE",
+  "requests": [
+    {
+      "label": "currencies",
+      "status": 200,
+      "body": [
+        {
+          "code": "IRR",
+          "englishName": "Iranian Rial",
+          "nativeName": "ریال",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "USD",
+          "englishName": "US Dollar",
+          "nativeName": "دلار آمریکا",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "EUR",
+          "englishName": "Euro",
+          "nativeName": "یورو",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "AED",
+          "englishName": "UAE Dirham",
+          "nativeName": "درهم امارات",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "GBP",
+          "englishName": "Pound Sterling",
+          "nativeName": "پوند",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "TRY",
+          "englishName": "Turkish Lira",
+          "nativeName": "لیر ترکیه",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "JPY",
+          "englishName": "Japanese Yen",
+          "nativeName": "ین ژاپن",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "CNY",
+          "englishName": "Chinese Yuan",
+          "nativeName": "یوان چین",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "KRW",
+          "englishName": "South Korean Won",
+          "nativeName": "وون کره",
+          "decimalPlaces": 0
+        }
+      ]
+    },
+    {
+      "label": "seller-currencies",
+      "status": 200,
+      "body": [
+        {
+          "code": "IRR",
+          "englishName": "Iranian Rial",
+          "nativeName": "ریال",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "USD",
+          "englishName": "US Dollar",
+          "nativeName": "دلار آمریکا",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "EUR",
+          "englishName": "Euro",
+          "nativeName": "یورو",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "AED",
+          "englishName": "UAE Dirham",
+          "nativeName": "درهم امارات",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "GBP",
+          "englishName": "Pound Sterling",
+          "nativeName": "پوند",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "TRY",
+          "englishName": "Turkish Lira",
+          "nativeName": "لیر ترکیه",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "JPY",
+          "englishName": "Japanese Yen",
+          "nativeName": "ین ژاپن",
+          "decimalPlaces": 0
+        },
+        {
+          "code": "CNY",
+          "englishName": "Chinese Yuan",
+          "nativeName": "یوان چین",
+          "decimalPlaces": 2
+        },
+        {
+          "code": "KRW",
+          "englishName": "South Korean Won",
+          "nativeName": "وون کره",
+          "decimalPlaces": 0
+        }
+      ]
+    },
+    {
+      "label": "create-offer",
+      "status": 201,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.1646118+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-28T04:30:27.1646118+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646118+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "prices": []
+      }
+    },
+    {
+      "label": "detail-empty",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "absent",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "absent",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "prices": []
+      }
+    },
+    {
+      "label": "write-irr",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100000,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "prices": [
+          {
+            "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+            "currency": "IRR",
+            "amount": 100000,
+            "revision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "label": "write-usd",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100000,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "prices": [
+          {
+            "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+            "currency": "IRR",
+            "amount": 100000,
+            "revision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+            "status": "Active"
+          },
+          {
+            "priceId": "01a2206b-3825-7000-b71f-9cbd20a3c312",
+            "currency": "USD",
+            "amount": 12.34,
+            "revision": "01a2206b38257000b71f9cbd20a3c312:63931437027364623",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "label": "update-usd",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100000,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "prices": [
+          {
+            "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+            "currency": "IRR",
+            "amount": 100000,
+            "revision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+            "status": "Active"
+          },
+          {
+            "priceId": "01a2206b-3825-7000-b71f-9cbd20a3c312",
+            "currency": "USD",
+            "amount": 13.5,
+            "revision": "01a2206b38257000b71f9cbd20a3c312:63931437027425249",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "label": "stale-usd",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "Conflict",
+        "status": 409,
+        "instance": "/v1/admin/offers/154cb687-bf0d-ec79-672a-704ad79a1c61/price",
+        "errorCode": "concurrency.conflict",
+        "traceId": "b5adf4ea746bdc54f9d784e1f13be156",
+        "correlationId": "6b1b1c57b97348c09a6b69fda39f990b",
+        "requestId": "0HNQD10MBQOJE:00000005"
+      }
+    },
+    {
+      "label": "irr-fractional",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100001,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "prices": [
+          {
+            "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+            "currency": "IRR",
+            "amount": 100001,
+            "revision": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+            "status": "Active"
+          },
+          {
+            "priceId": "01a2206b-3825-7000-b71f-9cbd20a3c312",
+            "currency": "USD",
+            "amount": 13.5,
+            "revision": "01a2206b38257000b71f9cbd20a3c312:63931437027425249",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "label": "locations",
+      "status": 200,
+      "body": [
+        {
+          "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+          "code": "WH-ACC-ACC-DEMO",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a0440a-5c48-7000-b995-232803e19be5",
+          "code": "WH-ACC-BOOK",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a0440a-5bbe-7000-b5b5-60f90286cfa9",
+          "code": "WH-ACC-MOB",
+          "name": "انبار دمو ACC"
+        },
+        {
+          "locationId": "01a03826-97d7-7000-b41f-e6d22fce9ef4",
+          "code": "WH-DEMO-MSH",
+          "name": "انبار نمایشی مشهد"
+        },
+        {
+          "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+          "code": "WH-DEMO-THR",
+          "name": "انبار نمایشی تهران"
+        },
+        {
+          "locationId": "01a030d1-41e1-7000-a814-107a0daaf184",
+          "code": "WH-ISF",
+          "name": "انبار اصفهان"
+        },
+        {
+          "locationId": "01a030d1-41ef-7000-a0d7-bb03ec8b2ddc",
+          "code": "WH-KSH",
+          "name": "انبار فروشنده ب"
+        },
+        {
+          "locationId": "01a04569-de22-7000-856a-b4433ab1e70b",
+          "code": "WH-SCHEMA-MOBILE",
+          "name": "انبار schema موبایل"
+        },
+        {
+          "locationId": "01a030d1-41d3-7000-956b-80e9ed968e0d",
+          "code": "WH-THR",
+          "name": "انبار تهران"
+        }
+      ]
+    },
+    {
+      "label": "provision",
+      "status": 200,
+      "body": {
+        "stockItemId": "01a2206b-3914-7000-b679-90c36d561fcd",
+        "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "onHand": 0,
+        "reserved": 0,
+        "revision": "2026-11-28T04:30:27.6048622+00:00"
+      }
+    },
+    {
+      "label": "detail-provisioned",
+      "status": 200,
+      "body": {
+        "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "productId": "01a05388-89d9-7000-8092-c4307c20f73a",
+        "productTitle": "آدیداس شلوار مردانه مدل 2",
+        "brandName": "آدیداس",
+        "sellerSku": "P1C-PRICING-4914b3ba-7b8e-45a7-962c-8648b628cb97",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100001,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "01a2206b-3914-7000-b679-90c36d561fcd",
+            "locationId": "01a04402-79ef-7000-bac7-522a8dcab501",
+            "locationCode": "WH-ACC-ACC-DEMO",
+            "locationName": "انبار دمو ACC",
+            "onHand": 0,
+            "reserved": 0,
+            "available": 0,
+            "revision": "2026-11-28T04:30:27.6048620+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-fashion-men-men-pants-2-8",
+        "primaryMediaAssetId": "01a09329-6be2-7000-b798-51d2789ffc06",
+        "lastUpdatedAt": "2026-11-28T04:30:27.164611+00:00",
+        "variantLabel": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+        "offerRevision": "2026-11-28T04:30:27.1646110+00:00",
+        "revisions": {
+          "offer": "2026-11-28T04:30:27.1646110+00:00",
+          "price": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "prices": [
+          {
+            "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+            "currency": "IRR",
+            "amount": 100001,
+            "revision": "01a2206b37e17000a6e8671651e89924:63931437027540682",
+            "status": "Active"
+          },
+          {
+            "priceId": "01a2206b-3825-7000-b71f-9cbd20a3c312",
+            "currency": "USD",
+            "amount": 13.5,
+            "revision": "01a2206b38257000b71f9cbd20a3c312:63931437027425249",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "sql": [],
+  "status": "FAIL",
+  "currencies": [
+    {
+      "code": "IRR",
+      "englishName": "Iranian Rial",
+      "nativeName": "ریال",
+      "decimalPlaces": 0
+    },
+    {
+      "code": "USD",
+      "englishName": "US Dollar",
+      "nativeName": "دلار آمریکا",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "EUR",
+      "englishName": "Euro",
+      "nativeName": "یورو",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "AED",
+      "englishName": "UAE Dirham",
+      "nativeName": "درهم امارات",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "GBP",
+      "englishName": "Pound Sterling",
+      "nativeName": "پوند",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "TRY",
+      "englishName": "Turkish Lira",
+      "nativeName": "لیر ترکیه",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "JPY",
+      "englishName": "Japanese Yen",
+      "nativeName": "ین ژاپن",
+      "decimalPlaces": 0
+    },
+    {
+      "code": "CNY",
+      "englishName": "Chinese Yuan",
+      "nativeName": "یوان چین",
+      "decimalPlaces": 2
+    },
+    {
+      "code": "KRW",
+      "englishName": "South Korean Won",
+      "nativeName": "وون کره",
+      "decimalPlaces": 0
+    }
+  ],
+  "offerId": "154cb687-bf0d-ec79-672a-704ad79a1c61",
+  "afterSecondCurrency": {
+    "primary": {
+      "amount": 100000,
+      "currency": "IRR"
+    },
+    "prices": [
+      {
+        "priceId": "01a2206b-37e1-7000-a6e8-671651e89924",
+        "currency": "IRR",
+        "amount": 100000,
+        "revision": "01a2206b37e17000a6e8671651e89924:63931437027294018",
+        "status": "Active"
+      },
+      {
+        "priceId": "01a2206b-3825-7000-b71f-9cbd20a3c312",
+        "currency": "USD",
+        "amount": 12.34,
+        "revision": "01a2206b38257000b71f9cbd20a3c312:63931437027364623",
+        "status": "Active"
+      }
+    ]
+  },
+  "reason": "Error: Command failed: D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-psql.exe -X -qAt -v ON_ERROR_STOP=1 -d tooba_alpha -c SELECT coalesce(jsonb_agg(jsonb_build_object('currency',currency,'amount',amount,'status',status) ORDER BY currency),'[]'::jsonb) FROM pricing.prices WHERE offer_id='154cb687-bf0d-ec79-672a-704ad79a1c61' AND qualifier_kind=0\nERROR:  operator does not exist: character varying = integer\nLINE 1: ...='154cb687-bf0d-ec79-672a-704ad79a1c61' AND qualifier_kind=0\n                                                                     ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\n\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execFileSync (node:child_process:961:15)\n    at psql (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-PRICING-FINAL-UAT-CLOSURE\\pricing-uat-verify.cjs:24:10)\n    at psqlJson (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-PRICING-FINAL-UAT-CLOSURE\\pricing-uat-verify.cjs:26:42)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-PRICING-FINAL-UAT-CLOSURE\\pricing-uat-verify.cjs:146:23)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

@@ -1,4 +1,4 @@
-import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
+﻿import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
 ﻿import type { GridServerQuery } from "../../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { ADMIN_ACTOR_STORAGE_KEY, ADMIN_DEV_ACTOR_HEADER, adminRequestHeaders } from "../../../lib/admin/admin-result.ts";
@@ -142,6 +142,26 @@ function mapInventoryLocations(value: unknown): OfferInventoryLocation[] {
     .filter((row) => row.stockItemId.length > 0);
 }
 
+
+function mapPrices(value: unknown): Array<{ priceId: string; currency: string; amount: number; revision: string; status: string }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((row) => {
+      const item = record(row);
+      if (!item) return null;
+      const currency = text(prop(item, "currency", "Currency"));
+      const amount = nullableNumber(prop(item, "amount", "Amount"));
+      if (!currency || amount == null) return null;
+      return {
+        priceId: text(prop(item, "priceId", "PriceId")),
+        currency,
+        amount,
+        revision: text(prop(item, "revision", "Revision")),
+        status: text(prop(item, "status", "Status")),
+      };
+    })
+    .filter((row): row is { priceId: string; currency: string; amount: number; revision: string; status: string } => row != null);
+}
 function mapRevisions(item: Record<string, unknown>) {
   const raw = record(prop(item, "revisions", "Revisions"));
   if (!raw) return null;
@@ -210,9 +230,43 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
     allocationHeld: nullableNumber(prop(item, "allocationHeld", "AllocationHeld")),
     allocationRevision: prop(item, "allocationRevision", "AllocationRevision") == null ? null : text(prop(item, "allocationRevision", "AllocationRevision")),
     revisions: mapRevisions(item),
+    prices: mapPrices(prop(item, "prices", "Prices")),
     capabilities: mapCapabilities(item),
 
   };
+}
+
+export interface AdminOfferCurrencyOption {
+  code: string;
+  englishName: string;
+  nativeName: string;
+  decimalPlaces: number;
+}
+
+export async function loadAdminOfferCurrencies(): Promise<AdminOfferCurrencyOption[]> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch("/v1/admin/offers/currencies", { headers: headers() });
+    if (!response.ok) return [];
+    const body = await response.json().catch(() => null);
+    if (!Array.isArray(body)) return [];
+    return body
+      .map((row) => {
+        const item = record(row);
+        if (!item) return null;
+        const code = text(prop(item, "code", "Code"));
+        if (!code) return null;
+        return {
+          code,
+          englishName: text(prop(item, "englishName", "EnglishName"), code),
+          nativeName: text(prop(item, "nativeName", "NativeName"), code),
+          decimalPlaces: number(prop(item, "decimalPlaces", "DecimalPlaces")),
+        };
+      })
+      .filter((row): row is AdminOfferCurrencyOption => row != null);
+  } catch {
+    return [];
+  }
 }
 
 export async function loadAdminOfferDetail(offerId: string): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
@@ -339,7 +393,9 @@ export async function writeAdminOfferPrice(
       return { ok: false, errorCode: body?.errorCode ?? "admin.price.write-failed" };
     }
     const detail = mapAdminOfferDetail(await response.json());
-    if (!detail || detail.offerId !== offerId || detail.amount !== input.amount || (currency !== undefined && detail.currency !== currency)) {
+    const written = detail?.prices?.find((row) => row.currency.toUpperCase() === (currency ?? "").toUpperCase());
+    const amountOk = written ? written.amount === input.amount : (detail?.amount === input.amount && (currency === undefined || detail.currency === currency));
+    if (!detail || detail.offerId !== offerId || !amountOk) {
       return { ok: false, errorCode: "admin.price.response_mismatch" };
     }
     return { ok: true, detail };

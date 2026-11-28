@@ -1,6 +1,6 @@
 ﻿import type { MutableRefObject } from "react";
 import { offerIntentScope, ownerWriteIntent } from "./owner-write-intent.ts";
-import { draftFromDetail, changedInventoryRows, detailVersionChanged, parseDecimal, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
+import { draftFromDetail, changedInventoryRows, detailVersionChanged, parseDecimal, priceRevisionFor, priceRowFor, quantityAligned, validateDraft, validatePrice, type OfferWorkspaceDraft } from "./model.ts";
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
@@ -77,7 +77,8 @@ export function createOfferActions(ctx: OfferActionsContext) {
           maximumOrderQuantity: next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "",
         };
       }
-      return { ...current, amount: next.amount != null ? String(next.amount) : "", currency: next.currency };
+      const saved = priceRowFor(next, current.currency);
+      return { ...current, amount: saved ? String(saved.amount) : "", currency: current.currency || next.currency };
     });
   }
 
@@ -220,12 +221,12 @@ export function createOfferActions(ctx: OfferActionsContext) {
           ctx.setSaveRetryable(true);
           return;
         }
-        const revision = current.revisions?.price ?? current.priceRevision;
+        const revision = priceRevisionFor(current, ctx.draft.currency);
         if (!revision) return finishSaveFailure("pricing", { errorCode: "concurrency.conflict" }, savedAny);
         const intent = ownerWriteIntent(scope + ":price", revision, [expectedAmount, ctx.draft.currency]);
         const result = await ctx.adapter.savePrice({ amount: expectedAmount, currency: ctx.draft.currency, operationId: intent.operationId }, revision);
         if (!result.ok) return finishSaveFailure("pricing", result, savedAny);
-        if (result.detail.amount !== expectedAmount || result.detail.currency !== ctx.draft.currency) return finishSaveFailure("pricing", { errorCode: "offer.price.response_mismatch" }, savedAny);
+        if ((priceRowFor(result.detail, ctx.draft.currency)?.amount ?? null) !== expectedAmount) return finishSaveFailure("pricing", { errorCode: "offer.price.response_mismatch" }, savedAny);
         intent.clear(); current = result.detail;
         applySavedDetail(result.detail, "price");
         savedAny = true;
@@ -311,7 +312,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
           || verification.detail.channel !== ctx.detail.channel
           || commercialMismatch
           || (ctx.offeredChanged && verification.detail.offeredQuantity !== parseDecimal(ctx.draft.offeredQuantity))
-          || (ctx.priceChanged && (verification.detail.amount !== expectedAmount || verification.detail.currency !== ctx.draft.currency))
+          || (ctx.priceChanged && (priceRowFor(verification.detail, ctx.draft.currency)?.amount ?? null) !== expectedAmount)
           || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
             const expected = expectedInventory.get(row.stockItemId);

@@ -29,6 +29,23 @@ export interface OfferInventoryLocation {
   revision: string | null;
 }
 
+/** One current base authored price for this offer and currency (Pricing-owned truth). */
+export interface OfferPriceView {
+  priceId: string;
+  currency: string;
+  amount: number;
+  revision: string;
+  status: string;
+}
+
+/** One active system currency from the authoritative Pricing currency reference. */
+export interface OfferCurrencyOption {
+  code: string;
+  englishName: string;
+  nativeName: string;
+  decimalPlaces: number;
+}
+
 /** Normalized detail used by both admin and seller workspace routes. */
 export interface OfferWorkspaceDetail {
   offerId: string;
@@ -75,6 +92,7 @@ export interface OfferWorkspaceDetail {
   allocationHeld: number | null;
   allocationRevision: string | null;
   revisions: { offer: string; price: string; offeredQuantity: string } | null;
+  prices?: OfferPriceView[];
   capabilities: {
     canEditPhysicalInventory: boolean;
     canEditOfferedQuantity: boolean;
@@ -201,6 +219,7 @@ export interface OfferWorkspaceAdapter {
   searchProducts: (search: string, page: number) => Promise<OfferPickerPage<OfferProductOption>>;
   loadProductVariants: (productId: string) => Promise<OfferVariantOption[]>;
   loadChannels?: () => Promise<string[]>;
+  loadCurrencies?: () => Promise<OfferCurrencyOption[]>;
   loadInventoryLocations?: (sellerPartyId?: string, responsibility?: OfferFulfillmentResponsibility | null) => Promise<OfferInventoryLocationOption[]>;
   provisionPosition?: (locationId: string) => Promise<{ stockItemId: string } | null>;
   loadHistory?: (page: number, pageSize: number) => Promise<OfferHistoryPage>;

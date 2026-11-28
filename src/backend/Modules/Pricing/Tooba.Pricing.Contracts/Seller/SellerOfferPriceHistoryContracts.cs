@@ -23,4 +23,9 @@ public interface IOfferPriceHistoryReader
     Task<IReadOnlyList<SellerPriceChangeFact>> ListAsync(Guid offerId, CancellationToken cancellationToken);
     /// <summary>Returns the current owner revision and committed amount for one Offer.</summary>
     Task<SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Current base authored prices for one Offer, one row per currency (store market/channel).
+    /// </summary>
+    Task<IReadOnlyList<SellerOfferPriceView>> ListBasePricesAsync(Guid offerId, CancellationToken cancellationToken);
 }

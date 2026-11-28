@@ -39,6 +39,8 @@ public sealed class PricingModule : IToobaModule
         services.AddSingleton<IErrorCatalogContributor, PricingErrorCatalogContributor>();
         services.AddSingleton<IErrorResourceSet, PricingErrorResourceSet>();
         services.AddScoped<IPricingUseCaseGuard, OpenPricingUseCaseGuard>();
+        services.Configure<PricingCurrenciesOptions>(configuration.GetSection(PricingCurrenciesOptions.SectionName));
+        services.AddSingleton<ICurrencyReferenceReader, SystemCurrencyReference>();
         services.AddScoped<IPriceDirectory, PriceDirectory>();
         services.AddScoped<IPricingDevelopmentSeedGateway, PricingDevelopmentSeedGateway>();
         services.AddScoped<IPriceLookupGateway>(sp => (PriceDirectory)sp.GetRequiredService<IPriceDirectory>());

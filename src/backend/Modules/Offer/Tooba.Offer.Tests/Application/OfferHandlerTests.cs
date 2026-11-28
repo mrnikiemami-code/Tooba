@@ -210,6 +210,8 @@ public sealed class OfferHandlerTests
             Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>([]);
         public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
             Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
+        public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerOfferPriceView>> ListBasePricesAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerOfferPriceView>>([]);
     }
 
     private sealed class FixedEdition(ToobaEdition edition) : ICurrentEdition

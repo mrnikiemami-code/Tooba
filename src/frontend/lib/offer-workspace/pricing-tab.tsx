@@ -1,9 +1,8 @@
 ﻿"use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { Info } from "lucide-react";
 import type { OfferWorkspaceMessages } from "./messages";
-import type { OfferWorkspaceDetail } from "./types";
+import type { OfferCurrencyOption, OfferPriceView, OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
 import type { OfferFormatters } from "./i18n";
 import styles from "./offer-workspace.module.css";
@@ -13,10 +12,13 @@ export interface PricingTabProps {
   t: OfferWorkspaceMessages;
   format: OfferFormatters;
   detail: OfferWorkspaceDetail;
+  prices: OfferPriceView[];
+  currencies: OfferCurrencyOption[];
   amount: string;
   currency: string;
   dirty: boolean;
   onAmountChange: (value: string) => void;
+  onCurrencyChange: (code: string) => void;
 }
 
 function normalizeAmountRaw(value: string): string {
@@ -78,11 +80,11 @@ function AmountInput({ value, onChange, format, invalid }: { value: string; onCh
 }
 
 export function PricingTab(props: PricingTabProps) {
-  const { t, format, detail } = props;
-  const currency = detail.currency || props.currency;
-  const amount = detail.amount;
-  const legacyDecimals = amount != null && currency.toUpperCase() === "IRR" && !Number.isInteger(amount);
+  const { t, format, detail, prices, currencies } = props;
+  const selected = (props.currency || detail.currency || "").toUpperCase();
   const parsed = parseDecimal(props.amount);
+  const selectedCurrency = currencies.find((row) => row.code.toUpperCase() === selected);
+  const scale = selectedCurrency?.decimalPlaces ?? (selected === "IRR" ? 0 : 2);
   return (
     <div className={styles.stack} data-testid="offer-tab-pricing">
       <section className={styles.card}>
@@ -90,38 +92,55 @@ export function PricingTab(props: PricingTabProps) {
           <SectionTitle title={t.pricingTitle} />
         </header>
         <div className={styles.cardBd}>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{t.pricingCurrency}</th>
-                  <th>{t.pricingAmount}</th>
-                  <th>{t.channel}</th>
-                  <th>{t.pricingType}</th>
-                  <th>{t.pricingStatus}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-testid="offer-price-row">
-                  <td data-label={t.pricingCurrency}>
-                    {currency ? <><span className={styles.chip} dir="ltr">{currency}</span>{" "}<span className={styles.resultMeta}>{format.currencyName(currency)}</span></> : t.pricingStoreCurrency}
-                  </td>
-                  <td data-label={t.pricingAmount} className={`${styles.numCell} ${styles.strongCell}`}>
-                    {amount == null ? "—" : format.money(amount, currency)}
-                  </td>
-                  <td data-label={t.channel}>{detail.channel === "Marketplace" ? t.channelMarketplace : detail.channel || "—"}</td>
-                  <td data-label={t.pricingType}>{t.pricingTypeBase}</td>
-                  <td data-label={t.pricingStatus}>
-                    <span className={`${styles.pill} ${amount == null ? styles.pillNeutral : styles.pillOk}`}>
-                      {amount == null ? "—" : t.lifecycleActive}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {prices.length === 0 ? (
+            <p className={styles.resultMeta} data-testid="offer-price-empty">{t.pricingNoPrices}</p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>{t.pricingCurrency}</th>
+                    <th>{t.pricingAmount}</th>
+                    <th>{t.pricingStatus}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prices.map((row) => (
+                    <tr key={row.currency} data-testid="offer-price-row" data-currency={row.currency}>
+                      <td data-label={t.pricingCurrency}>
+                        <span className={styles.chip} dir="ltr">{row.currency}</span>{" "}
+                        <span className={styles.resultMeta}>{format.currencyName(row.currency)}</span>
+                      </td>
+                      <td data-label={t.pricingAmount} className={`${styles.numCell} ${styles.strongCell}`}>
+                        {format.money(row.amount, row.currency)}
+                      </td>
+                      <td data-label={t.pricingStatus}>
+                        <span className={`${styles.pill} ${styles.pillOk}`}>{t.lifecycleActive}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div className={`${styles.formGrid}`} style={{ marginTop: 14, maxWidth: 560 }}>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{t.pricingCurrency}</span>
+              <select
+                className={styles.ctl}
+                value={selected}
+                onChange={(event) => props.onCurrencyChange(event.target.value)}
+                dir="auto"
+                data-testid="offer-price-currency-select"
+                aria-label={t.pricingSelectCurrency}
+              >
+                {currencies.length === 0 ? <option value={selected}>{selected || t.pricingStoreCurrency}</option> : null}
+                {currencies.map((row) => (
+                  <option key={row.code} value={row.code}>{row.code} — {format.currencyName(row.code) || row.englishName}</option>
+                ))}
+              </select>
+            </label>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>
                 {t.pricingAmount}
@@ -131,23 +150,16 @@ export function PricingTab(props: PricingTabProps) {
                 value={props.amount}
                 onChange={props.onAmountChange}
                 format={format}
-                invalid={parsed != null && parsed < 0}
+                invalid={parsed != null && (parsed < 0 || (scale === 0 && !Number.isInteger(parsed)))}
               />
-              {currency.toUpperCase() === "IRR" ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
+              {scale === 0 ? <span className={styles.fieldHint}>{t.pricingNoDecimals}</span> : null}
             </label>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>{t.pricingCurrency}</span>
-              <div className={`${styles.ctl} ${styles.ctlReadonly}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {currency ? <><span dir="ltr">{currency}</span><span className={styles.resultMeta}>· {format.currencyName(currency)}</span></> : t.pricingStoreCurrency}
-              </div>
-            </div>
           </div>
 
-          {legacyDecimals ? (
-            <div className={`${styles.banner} ${styles.bannerWarn}`} style={{ marginTop: 12 }}>
-              <Info size={14} aria-hidden />
-              <div>{t.pricingLegacyDecimals}</div>
-            </div>
+          {detail.amount != null && detail.currency && selected !== detail.currency.toUpperCase() ? (
+            <p className={styles.resultMeta} style={{ marginTop: 8 }} data-testid="offer-price-primary">
+              {t.pricingPrimaryPrefix}: {format.money(detail.amount, detail.currency)}
+            </p>
           ) : null}
         </div>
       </section>

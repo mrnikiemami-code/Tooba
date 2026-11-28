@@ -96,12 +96,21 @@ export interface SellerOfferDetail {
   allocationHeld: number | null;
   allocationRevision: string | null;
   revisions: { offer: string; price: string; offeredQuantity: string } | null;
+  prices?: SellerOfferPrice[];
   capabilities: {
     canEditPhysicalInventory: boolean;
     canEditOfferedQuantity: boolean;
     canAssignFulfillment: boolean;
     canEditShippingPolicy: boolean;
   } | null;
+}
+
+export interface SellerOfferPrice {
+  priceId: string;
+  currency: string;
+  amount: number;
+  revision: string;
+  status: string;
 }
 
 export interface SellerInventoryLocation {
@@ -431,6 +440,26 @@ function mapSellerRevisions(item: Record<string, unknown>) {
   const r = raw as Record<string, unknown>;
   return { offer: asString(readProp(r, "offer", "Offer")), price: asString(readProp(r, "price", "Price")), offeredQuantity: asString(readProp(r, "offeredQuantity", "OfferedQuantity")) };
 }
+function mapSellerPrices(item: Record<string, unknown>): SellerOfferPrice[] {
+  const raw = readProp(item, "prices", "Prices");
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const r = row as Record<string, unknown>;
+      const currency = asString(readProp(r, "currency", "Currency"));
+      const amount = asNullableNumber(readProp(r, "amount", "Amount"));
+      if (!currency || amount == null) return null;
+      return {
+        priceId: asString(readProp(r, "priceId", "PriceId")),
+        currency,
+        amount,
+        revision: asString(readProp(r, "revision", "Revision")),
+        status: asString(readProp(r, "status", "Status")),
+      };
+    })
+    .filter((row): row is SellerOfferPrice => row != null);
+}
 function mapSellerCapabilities(item: Record<string, unknown>) {
   const raw = readProp(item, "capabilities", "Capabilities");
   if (!raw || typeof raw !== "object") return null;
@@ -524,6 +553,7 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     allocationHeld: asNullableNumber(readProp(item, "allocationHeld", "AllocationHeld")),
     allocationRevision: asNullableString(readProp(item, "allocationRevision", "AllocationRevision")),
     revisions: mapSellerRevisions(item),
+    prices: mapSellerPrices(item),
     capabilities: mapSellerCapabilities(item),
   };
 }

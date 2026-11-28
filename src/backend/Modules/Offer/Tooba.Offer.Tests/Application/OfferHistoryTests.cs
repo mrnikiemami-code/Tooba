@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Tooba.Fulfillment.Contracts.Shipping;
 using Tooba.Order.Contracts.Fulfillment;
 using Tooba.Offer.Application.Offers.Commands.AssignOfferFulfillment;
@@ -388,6 +388,8 @@ public sealed class OfferHistoryTests
             Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerPriceChangeFact>>(facts ?? []);
         public Task<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?> GetRevisionAsync(Guid offerId, CancellationToken cancellationToken) =>
             Task.FromResult<Tooba.Pricing.Contracts.Seller.SellerPriceRevision?>(null);
+        public Task<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerOfferPriceView>> ListBasePricesAsync(Guid offerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Tooba.Pricing.Contracts.Seller.SellerOfferPriceView>>([]);
     }
 
     private sealed class FakeInventoryHistory(IReadOnlyList<OfferInventoryChangeFact>? facts = null) : Tooba.Inventory.Contracts.Seller.IOfferInventoryHistoryReader

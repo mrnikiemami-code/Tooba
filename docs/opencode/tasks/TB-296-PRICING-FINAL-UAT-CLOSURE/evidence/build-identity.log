@@ -1,0 +1,16 @@
+# Build identity record (factual summary of executed commands; raw stdout was not rerun)
+# Executed in D:\Users\User\source\repos\SarvNewVer-opencode-iso-002
+#
+# Host publish (final): dotnet publish src/backend/Host/Tooba.Host/Tooba.Host.csproj -c Debug -o .tmp-pricing-uat-host
+#   exit 0
+#   served binary: .tmp-pricing-uat-host/Tooba.Host.exe
+#   Tooba.Host.dll SHA-256: 9cfa5704c13bf25ef3b5fdcde252ad7e5698eefc18960519e3056a7dcbe04b01
+#
+# Next build (final): npm --prefix src/frontend run build
+#   exit 0 (Compiled successfully)
+#   src/frontend/.next/BUILD_ID: W-3-77C9w6xVvHN646JnG
+#
+# Host process: 5088 (PID 24328), Development, existing tooba_alpha DB
+# Next process: 3000 (PID 20536), existing build
+#
+# Migration: not required (no schema change). Host startup schema migration ran unchanged.

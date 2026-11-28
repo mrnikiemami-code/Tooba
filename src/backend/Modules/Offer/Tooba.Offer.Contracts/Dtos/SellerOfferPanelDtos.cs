@@ -85,7 +85,23 @@ public sealed record SellerOfferDetailPage(
     string? OfferRevision = null,
     OfferRevisions? Revisions = null,
     OfferCapabilities? Capabilities = null,
-    Guid? PriceId = null);
+    Guid? PriceId = null,
+    IReadOnlyList<OfferPriceView>? Prices = null);
+
+/// <summary>One current base authored price for this offer and currency.</summary>
+public sealed record OfferPriceView(
+    Guid PriceId,
+    string Currency,
+    decimal Amount,
+    string Revision,
+    string Status);
+
+/// <summary>One selectable active system currency from the authoritative reference.</summary>
+public sealed record OfferCurrencyOption(
+    string Code,
+    string EnglishName,
+    string NativeName,
+    int DecimalPlaces);
 
 /// <summary>یک موقعیت انبار قابل ویرایش برای همان آفر.</summary>
 public sealed record SellerOfferInventoryLocation(

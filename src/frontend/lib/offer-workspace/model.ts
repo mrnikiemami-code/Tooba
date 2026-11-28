@@ -2,7 +2,7 @@
  * Pure Offer workspace model helpers: digit normalization, validation, dirty detection and
  * buyability derivation. No React, no network, no domain writes.
  */
-import type { OfferWorkspaceDetail } from "./types";
+import type { OfferPriceView, OfferWorkspaceDetail } from "./types";
 
 export interface OfferWorkspaceDraft {
   sellerSku: string;
@@ -58,7 +58,40 @@ export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDra
 }
 
 export function priceDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
-  return (draft.amount.trim() !== "" && parseDecimal(draft.amount) == null) || parseDecimal(draft.amount) !== detail.amount || (draft.currency !== detail.currency && draft.amount.trim() !== "");
+  if (draft.amount.trim() !== "" && parseDecimal(draft.amount) == null) return true;
+  const row = priceRowFor(detail, draft.currency);
+  if (row) return parseDecimal(draft.amount) !== row.amount;
+  // A currency with no authored row becomes dirty once a non-empty amount is entered.
+  return draft.amount.trim() !== "";
+}
+
+/** Current authored row for the selected currency, or the primary detail price as fallback. */
+export function priceRowFor(detail: OfferWorkspaceDetail, currency: string): OfferPriceView | null {
+  const code = (currency || "").toUpperCase();
+  const row = (detail.prices ?? []).find((item) => item.currency.toUpperCase() === code);
+  if (row) return row;
+  if (detail.currency && detail.currency.toUpperCase() === code && detail.amount != null) {
+    return {
+      priceId: "",
+      currency: detail.currency,
+      amount: detail.amount,
+      revision: detail.priceRevision ?? detail.revisions?.price ?? "",
+      status: "",
+    };
+  }
+  return null;
+}
+
+/** Revision used as CAS for the selected currency (independent per authored price row). */
+export function priceRevisionFor(detail: OfferWorkspaceDetail, currency: string): string | null {
+  const row = priceRowFor(detail, currency);
+  if (row?.revision) return row.revision;
+  if (detail.currency && detail.currency.toUpperCase() === (currency || "").toUpperCase()) {
+    const primary = detail.revisions?.price ?? detail.priceRevision;
+    if (primary) return primary;
+  }
+  // Pricing expects the literal CAS sentinel "absent" when the currency has no authored row yet.
+  return "absent";
 }
 
 export function commercialDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDraft): boolean {
@@ -369,6 +402,7 @@ export function detailVersionChanged(current: OfferWorkspaceDetail, latest: Offe
     || current.maximumOrderQuantity !== latest.maximumOrderQuantity
     || current.amount !== latest.amount
     || current.currency !== latest.currency
+    || JSON.stringify(current.prices ?? []) !== JSON.stringify(latest.prices ?? [])
     || current.onHand !== latest.onHand
     || current.reserved !== latest.reserved
     || current.fulfillmentResponsibility !== latest.fulfillmentResponsibility

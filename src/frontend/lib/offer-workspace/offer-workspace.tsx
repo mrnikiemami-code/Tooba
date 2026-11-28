@@ -17,6 +17,7 @@ import {
   offeredQuantityDirty,
   parseDecimal,
   priceDirty,
+  priceRowFor,
   statusLabel,
   validateDraft,
   type OfferWorkspaceDraft,
@@ -32,6 +33,7 @@ import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
 import { InventoryTab } from "./inventory-tab";
 import { PricingTab } from "./pricing-tab";
+import { useOfferCurrencies } from "./use-offer-currencies";
 import { ShippingTab } from "./shipping-tab";
 import { DirtyDot, StatusPill } from "./tab-shared";
 import styles from "./offer-workspace.module.css";
@@ -79,6 +81,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [selectedProduct, setSelectedProduct] = useState<OfferProductOption | null>(null);
   const [selectedChannel, setSelectedChannel] = useState("");
   const [channels, setChannels] = useState<string[]>([]);
+  const currencies = useOfferCurrencies(adapter);
   const [inventoryLocations, setInventoryLocations] = useState<OfferInventoryLocationOption[]>([]);
   const [localInventory, setLocalInventory] = useState<OfferLocalInventoryDraft[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<OfferVariantOption | null>(null);
@@ -681,10 +684,16 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             t={t}
             format={format}
             detail={localDetail}
+            prices={localDetail.prices ?? []}
+            currencies={currencies}
             amount={draft.amount}
             currency={draft.currency}
             dirty={priceChanged}
             onAmountChange={(value) => patchDraft({ amount: value })}
+            onCurrencyChange={(code) => {
+              const row = priceRowFor(localDetail, code);
+              patchDraft({ currency: code, amount: row ? String(row.amount) : "" });
+            }}
           />
         );
       case "discounts":

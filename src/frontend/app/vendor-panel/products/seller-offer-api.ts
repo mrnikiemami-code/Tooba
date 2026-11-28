@@ -1,4 +1,4 @@
-import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
+﻿import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
 ﻿import type { HostReadSource, SellerOfferDetail } from "../seller-api.ts";
 import { sellerHeaders, readJson, currentActor, isDeniedStatus, readProp, asString, asNullableString, asNumber, asNullableNumber, mapSellerOfferDetail } from "../seller-api.ts";
 
@@ -175,6 +175,41 @@ export async function createSellerOffer(
   }
 }
 
+export interface SellerOfferCurrencyOption {
+  code: string;
+  englishName: string;
+  nativeName: string;
+  decimalPlaces: number;
+}
+
+/** فعال‌ترین ارزهای مرجع سیستم برای انتخابگر قیمت فروشنده. */
+export async function loadSellerOfferCurrencies(sellerPartyId: string): Promise<SellerOfferCurrencyOption[]> {
+  try {
+    const response = await fetch("/v1/seller/offers/currencies", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (!response.ok) return [];
+    const body = await readJson(response);
+    if (!Array.isArray(body)) return [];
+    return body
+      .map((row) => {
+        if (!row || typeof row !== "object") return null;
+        const r = row as Record<string, unknown>;
+        const code = asString(readProp(r, "code", "Code"));
+        if (!code) return null;
+        return {
+          code,
+          englishName: asString(readProp(r, "englishName", "EnglishName"), code),
+          nativeName: asString(readProp(r, "nativeName", "NativeName"), code),
+          decimalPlaces: asNumber(readProp(r, "decimalPlaces", "DecimalPlaces")),
+        };
+      })
+      .filter((row): row is SellerOfferCurrencyOption => row != null);
+  } catch {
+    return [];
+  }
+}
+
 /** نوشتن مبلغ بدون مالیات روی Offer خود فروشنده از طریق Pricing. */
 export async function writeSellerOfferPrice(
   sellerPartyId: string,
@@ -203,7 +238,9 @@ export async function writeSellerOfferPrice(
       return { ok: false, errorCode: body?.errorCode ?? "seller.price.write-failed" };
     }
     const detail = mapSellerOfferDetail(await readJson(response));
-    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || detail.amount !== input.amount || (input.currency && detail.currency !== input.currency)) {
+    const written = detail?.prices?.find((row) => row.currency.toUpperCase() === (input.currency ?? "").toUpperCase());
+    const amountOk = written ? written.amount === input.amount : (detail?.amount === input.amount && (!input.currency || detail.currency === input.currency));
+    if (!detail || detail.offerId !== offerId || detail.sellerPartyId !== sellerPartyId || !amountOk) {
       return { ok: false, errorCode: "seller.price.response_mismatch" };
     }
     return { ok: true, detail };

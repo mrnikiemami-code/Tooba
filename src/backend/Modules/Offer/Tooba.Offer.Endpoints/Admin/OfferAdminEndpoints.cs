@@ -14,6 +14,7 @@ using Tooba.Offer.Application.Offers.Commands.SetOfferPrice;
 using Tooba.Offer.Application.Offers.Commands.UpdateOffer;
 using Tooba.Offer.Application.Offers.Queries.FindActiveOffer;
 using Tooba.Offer.Application.Offers.Queries.GetAllowedOfferChannels;
+using Tooba.Offer.Application.Offers.Queries.GetOfferCurrencies;
 using Tooba.Offer.Application.Offers.Queries.GetOffer;
 using Tooba.Offer.Application.Offers.Queries.GetOfferHistory;
 using Tooba.Offer.Application.Offers.Queries.QueryOffers;
@@ -32,6 +33,7 @@ public static class OfferAdminEndpoints
         ArgumentNullException.ThrowIfNull(group);
         group.MapPost("/offers/query", QueryAsync);
         group.MapGet("/offers/allowed-channels", AllowedChannelsAsync);
+        group.MapGet("/offers/currencies", CurrenciesAsync);
         group.MapGet("/offers/active-listing", FindActiveAsync);
         group.MapPost("/offers", CreateAsync);
         group.MapGet("/offers/{offerId:guid}", GetAsync);
@@ -67,6 +69,17 @@ public static class OfferAdminEndpoints
         return api.From(await sender.Send(new GetAllowedOfferChannelsQuery(), token));
     }
 
+
+    private static async Task<IResult> CurrenciesAsync(
+        ISender sender,
+        IOfferAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken token)
+    {
+        await authorizer.RequireViewAsync(context, token);
+        return api.From(await sender.Send(new GetOfferCurrenciesQuery(), token));
+    }
     private static async Task<IResult> FindActiveAsync(
         Guid sellerPartyId,
         Guid catalogVariantId,

@@ -93,6 +93,10 @@ public sealed class OfferReadModelComposer(
         var assignments = await fulfillmentAssignments.GetAssignmentsAsync([offer.OfferId], cancellationToken);
         assignments.TryGetValue(offer.OfferId, out var fulfillment);
         var priceRevision = await priceHistory.GetRevisionAsync(offer.OfferId, cancellationToken);
+        var priceRows = await priceHistory.ListBasePricesAsync(offer.OfferId, cancellationToken);
+        var prices = priceRows
+            .Select(row => new OfferPriceView(row.PriceId, row.Currency, row.Amount, row.Revision, row.Status))
+            .ToArray();
         return new SellerOfferDetailPage(
             offer.OfferId, offer.SellerPartyId, seller?.DisplayName ?? string.Empty,
             offer.CatalogVariantId, product?.ProductId, product?.ProductTitle ?? string.Empty,
@@ -143,7 +147,8 @@ public sealed class OfferReadModelComposer(
                     && fulfillment?.Responsibility == OfferFulfillmentResponsibility.Platform,
                 adminSurface,
                 adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller),
-            price?.PriceId);
+            price?.PriceId,
+            prices);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

@@ -26,6 +26,14 @@ public sealed record SellerPriceWriteReceipt(
     decimal NewAmount,
     string Currency);
 
+/// <summary>One current base authored price for an offer and currency.</summary>
+public sealed record SellerOfferPriceView(
+    Guid PriceId,
+    string Currency,
+    decimal Amount,
+    string Revision,
+    string Status);
+
 /// <summary>Pricing-owned boundary for seller offer pricing.</summary>
 public interface ISellerOfferPricingGateway
 {

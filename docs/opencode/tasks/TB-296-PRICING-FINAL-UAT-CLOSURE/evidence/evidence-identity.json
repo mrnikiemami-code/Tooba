@@ -1,0 +1,42 @@
+{
+  "taskId": "TB-296-PRICING-FINAL-UAT-CLOSURE",
+  "branch": "opencode/iso-agents-002",
+  "baseHead": "1d777e2e0590581c5ab256901d9d7ce06a325f3a",
+  "baseHeadInspected": true,
+  "requestedCommitInspected": "1d777e2e",
+  "served": {
+    "host": "http://127.0.0.1:5088",
+    "hostBinary": ".tmp-pricing-uat-host/Tooba.Host.exe",
+    "hostDllSha256": "9cfa5704c13bf25ef3b5fdcde252ad7e5698eefc18960519e3056a7dcbe04b01",
+    "hostPid": 24328,
+    "next": "http://127.0.0.1:3000",
+    "nextBuildId": "W-3-77C9w6xVvHN646JnG",
+    "nextPid": 20536,
+    "database": "tooba_alpha",
+    "databaseContainer": "postgres-db"
+  },
+  "configuration": {
+    "authoritativeCurrencyConfig": "Pricing:Currencies (Pricing-owned commercial config)",
+    "currencies": ["IRR", "USD", "EUR", "AED", "GBP", "TRY", "JPY", "CNY", "KRW"],
+    "irrDecimalPlaces": 0,
+    "usdDecimalPlaces": 2,
+    "migrationRequired": false,
+    "migrationReason": "No schema/DDL change: the existing pricing.prices (offer_id, market, channel, currency, qualifier_kind, valid_from) key already stores one base row per currency. Host startup migration ran unchanged against tooba_alpha."
+  },
+  "verification": {
+    "offerTests": { "exit": 0, "passed": 144, "failed": 0 },
+    "pricingTests": { "exit": 0, "passed": 18, "failed": 0 },
+    "typecheck": { "exit": 0 },
+    "frontendModel": { "exit": 0, "passed": 15, "failed": 0 },
+    "mount": { "exit": 0, "passed": 29, "failed": 0 },
+    "i18n": { "exit": 0, "passed": 20, "failed": 0 },
+    "architecture": { "exit": 1, "baselineSizeViolations": 27, "offerOwnedViolations": 0 },
+    "openspecStrict": { "exit": 0, "change": "offer-multicurrency-pricing-296-r11" },
+    "impeccableDetector": { "exit": 0, "findings": 0 },
+    "connected": "PASS",
+    "connectedEvidence": "evidence/connected-verification.json",
+    "fixtureCleanup": { "offers": 0, "prices": 0, "facts": 0, "positions": 0 }
+  },
+  "productChanges": true,
+  "screenshots": 0
+}
