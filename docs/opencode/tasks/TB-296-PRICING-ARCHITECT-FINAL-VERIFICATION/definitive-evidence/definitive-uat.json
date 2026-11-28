@@ -30,12 +30,37 @@
       }
     },
     "multicurrency-one-save": {
-      "status": "FAIL",
-      "error": "page.waitForURL: Timeout 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================"
+      "status": "PASS",
+      "offerId": "2f55fe4d-5bc4-9462-3bde-2a59cc7b26a3",
+      "staged": [
+        "IRR",
+        "USD",
+        "EUR"
+      ],
+      "readback": [
+        {
+          "currency": "EUR",
+          "amount": 20.5,
+          "revision": "01a222d64d8370009f8fad503e156ee1:63931477599618511",
+          "status": "Active"
+        },
+        {
+          "currency": "IRR",
+          "amount": 100000,
+          "revision": "01a222d64cf37000a15ad406c230cb04:63931477599474770",
+          "status": "Active"
+        },
+        {
+          "currency": "USD",
+          "amount": 13.25,
+          "revision": "01a222d64d417000b32709ee8d267c58:63931477599553250",
+          "status": "Active"
+        }
+      ]
     },
     "duplicate-dismiss-reopen-navigate": {
-      "status": "FAIL",
-      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-message-duplicate') to be visible\u001b[22m\n"
+      "status": "PASS",
+      "id": "2f55fe4d-5bc4-9462-3bde-2a59cc7b26a3"
     },
     "locale-recovery-and-new-clears": {
       "status": "FAIL",
@@ -46,7 +71,10 @@
       "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-message-error') to be visible\u001b[22m\n"
     }
   },
-  "created": null,
-  "cleanup": null,
+  "created": "2f55fe4d-5bc4-9462-3bde-2a59cc7b26a3",
+  "cleanup": {
+    "offers": 0,
+    "prices": 0
+  },
   "status": "FAIL"
 }

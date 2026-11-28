@@ -1,0 +1,22 @@
+{
+  "runId": "fcd6c5d8-097b-4f95-b649-f8c415f29a0a",
+  "cases": {
+    "duplicate-admin": {
+      "status": "FAIL",
+      "error": "product ambiguous"
+    },
+    "duplicate-seller": {
+      "status": "PASS",
+      "role": "seller",
+      "locale": "fa",
+      "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+      "variant": "01a05388-1c80-7000-baf7-af1487e24bdf",
+      "from": "http://127.0.0.1:3000/fa/vendor-panel/products/new?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+      "to": "/fa/vendor-panel/products/005e50c2-c260-4cb3-994c-8179e2d5213b"
+    }
+  },
+  "writeAttempts": 0,
+  "status": "BLOCKED",
+  "head": "00cc92b35a0ad49083f8c1269841f67e63ce5c12",
+  "database": "tooba_alpha"
+}
