@@ -87,11 +87,6 @@ export function InventoryTab(props: InventoryTabProps) {
               </table>
             </div> : <div className={styles.empty} data-testid="offer-inventory-empty"><span className={styles.emptyIc}><Warehouse size={16} aria-hidden /></span><span className={styles.emptyT}>{t.inventoryEmpty}</span></div>}
             <AddInventoryPosition t={t} locations={(props.localLocations ?? []).filter(location => !selectedLocations.some(row => row.locationId === location.locationId))} onProvision={async locationId => { props.onLocalInventoryAdd?.(locationId); }} disabled={Boolean(props.provisionDisabled)} empty={selectedLocations.length === 0} />
-            {selectedLocations.length > 0 ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
-              <span className={styles.fieldLabel}>{t.inventoryReason}</span>
-              <input className={styles.ctl} value={props.reason} onChange={(event) => props.onReasonChange(event.target.value)} data-testid="offer-inventory-reason" />
-              <span className={styles.fieldHint}>{t.inventoryReasonHint}</span>
-            </label> : null}
           </div>
         </section>
       </div>
@@ -176,7 +171,7 @@ export function InventoryTab(props: InventoryTabProps) {
           {props.mode === "edit" && props.onProvision && detail.capabilities?.canEditPhysicalInventory === true && detail.status !== "Archived" ? (
             <AddInventoryPosition t={t} locations={(props.localLocations ?? []).filter(location => !detail.inventoryLocations.some(row => row.locationId === location.locationId))} onProvision={props.onProvision} disabled={Boolean(props.provisionDisabled)} empty={noPositions} />
           ) : null}
-          {detail.capabilities?.canEditPhysicalInventory === true && !noPositions ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
+          {detail.capabilities?.canEditPhysicalInventory === true && detail.inventoryLocations.some(row => row.requiresAdjustmentReason !== false && parseDecimal(props.onHand[row.stockItemId]) !== row.onHand) ? <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
             <span className={styles.fieldLabel}>
               {t.inventoryReason}
               <DirtyDot show={props.dirty} label={t.dirtyTab} />
