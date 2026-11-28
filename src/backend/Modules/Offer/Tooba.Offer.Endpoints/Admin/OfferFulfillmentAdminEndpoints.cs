@@ -174,6 +174,7 @@ public static class OfferFulfillmentBodyReader
             Guid? shippingTypeId = null;
             string? expectedVersion = null;
             var modeSupplied = false;
+            var methodIdsSupplied = false;
             OfferShippingSelectionMode? mode = null;
             IReadOnlyList<Guid>? methodIds = null;
 
@@ -197,16 +198,20 @@ public static class OfferFulfillmentBodyReader
                 else if (string.Equals(property.Name, "shippingMode", StringComparison.OrdinalIgnoreCase)
                          || string.Equals(property.Name, "mode", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (modeSupplied) throw Malformed();
                     modeSupplied = true;
                     mode = ReadOptionalShippingMode(property.Value);
                 }
                 else if (string.Equals(property.Name, "shippingMethodIds", StringComparison.OrdinalIgnoreCase)
                          || string.Equals(property.Name, "methodIds", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (methodIdsSupplied) throw Malformed();
+                    methodIdsSupplied = true;
                     methodIds = ReadGuidArray(property.Value);
                 }
             }
 
+            if (methodIdsSupplied && !modeSupplied) throw Malformed();
             return new OfferFulfillmentAssignmentBody(
                 supplied, responsibility, shippingTypeId, expectedVersion, modeSupplied, mode, methodIds);
         }
@@ -229,13 +234,8 @@ public static class OfferFulfillmentBodyReader
         return parsed;
     }
 
-    private static IReadOnlyList<Guid>? ReadGuidArray(JsonElement element)
+    private static IReadOnlyList<Guid> ReadGuidArray(JsonElement element)
     {
-        if (element.ValueKind == JsonValueKind.Null)
-        {
-            return null;
-        }
-
         if (element.ValueKind != JsonValueKind.Array)
         {
             throw Malformed();

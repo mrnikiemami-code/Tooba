@@ -85,7 +85,8 @@ internal sealed class AssignOfferFulfillmentHandler(
             return OfferReadModelComposer.NotFound<OfferReference>();
         }
 
-        var versionError = OfferVersionGuard.Check(offer.UpdatedAt, request.ExpectedVersion);
+        var versionError = OfferVersionGuard.Check(
+            offer.UpdatedAt, request.ShippingModeSupplied ? request.ExpectedVersion ?? string.Empty : request.ExpectedVersion);
         if (versionError is not null)
         {
             return Result.Failure<OfferReference>(versionError);
@@ -113,11 +114,21 @@ internal sealed class AssignOfferFulfillmentHandler(
 
         DomainShippingMode? targetMode = null;
         IReadOnlyList<Guid> targetMethodIds = [];
+        if (!request.ShippingModeSupplied && (request.ShippingMode is not null || request.ShippingMethodIds is not null))
+        {
+            return Result.Failure<OfferReference>(new SemanticError(OfferErrorCodes.FulfillmentBodyMalformed));
+        }
+
         if (request.ShippingModeSupplied)
         {
-            if (request.ShippingMode is null)
+            if (request.ShippingMode is null || !Enum.IsDefined(request.ShippingMode.Value))
             {
                 return Result.Failure<OfferReference>(new SemanticError(OfferErrorCodes.FulfillmentBodyMalformed));
+            }
+
+            if (shippingMethods is null)
+            {
+                return Result.Failure<OfferReference>(new SemanticError(OfferErrorCodes.ShippingMethodUnavailable));
             }
 
             targetMode = (DomainShippingMode)(int)request.ShippingMode.Value;
@@ -208,10 +219,18 @@ internal sealed class AssignOfferFulfillmentHandler(
             offer.FulfillmentResponsibility, offer.FulfillmentShippingTypeId,
             currentMode, currentMethodIds);
 
+        // PostgreSQL stores microseconds. Even a link-only change must advance the owning
+        // Offer row's revision, so its existing xmin concurrency token participates in SaveChanges.
+        var mutationTime = clock.UtcNow;
+        if (mutationTime.UtcTicks / 10 <= offer.UpdatedAt.UtcTicks / 10)
+        {
+            mutationTime = offer.UpdatedAt.AddTicks(10);
+        }
+
         var assignment = offer.AssignFulfillment(
             requestedResponsibility,
             request.ShippingTypeId,
-            clock.UtcNow);
+            mutationTime);
         if (assignment.IsFailure)
         {
             return Result.Failure<OfferReference>(assignment.Errors);
@@ -219,7 +238,7 @@ internal sealed class AssignOfferFulfillmentHandler(
 
         if (targetMode is not null)
         {
-            var modeResult = offer.AssignShippingSelectionMode(targetMode, clock.UtcNow);
+            var modeResult = offer.AssignShippingSelectionMode(targetMode, mutationTime);
             if (modeResult.IsFailure)
             {
                 return Result.Failure<OfferReference>(modeResult.Errors);
@@ -233,7 +252,7 @@ internal sealed class AssignOfferFulfillmentHandler(
         else if (requestedResponsibility is null)
         {
             // Clearing the assignment also clears any selection; no link can outlive its assignment.
-            offer.AssignShippingSelectionMode(null, clock.UtcNow);
+            offer.AssignShippingSelectionMode(null, mutationTime);
             if (shippingMethods is not null)
             {
                 await shippingMethods.ReplaceMethodIdsAsync(offer.OfferId, [], cancellationToken);
@@ -249,7 +268,7 @@ internal sealed class AssignOfferFulfillmentHandler(
             OfferHistorySummaries.CreateEntry(
                 ids.NewId(),
                 offer.OfferId,
-                clock.UtcNow,
+                mutationTime,
                 OfferHistorySummaries.FulfillmentChanged,
                 OfferHistorySummaries.FulfillmentChanged,
                 previous,

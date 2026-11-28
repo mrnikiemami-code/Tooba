@@ -23,50 +23,50 @@ export function useOfferShippingMethods(args: {
   errorMessage: string;
 }) {
   const { adapter, isEdit, sellerPartyId, responsibility, shippingTypeId, errorMessage } = args;
-  const [options, setOptions] = useState<OfferShippingMethodOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const scope = JSON.stringify([isEdit, adapter.offerId, sellerPartyId, responsibility, shippingTypeId]);
+  const [result, setResult] = useState<{
+    scope: string;
+    adapter: typeof adapter;
+    options: OfferShippingMethodOption[];
+    error: string | null;
+  } | null>(null);
 
   useEffect(() => {
     const loader = adapter.loadShippingMethodOptions;
-    if (!loader || adapter.role !== "admin") {
-      setOptions([]);
-      return;
-    }
-    if (!responsibility || !shippingTypeId) {
-      setOptions([]);
-      setLoading(false);
-      setError(null);
+    if (adapter.role !== "admin" || !responsibility || !shippingTypeId) {
+      setResult(null);
       return;
     }
     let active = true;
-    setOptions([]);
-    setLoading(true);
-    setError(null);
-    void loader({
-      offerId: isEdit ? adapter.offerId : undefined,
-      sellerPartyId,
-      responsibility,
-      shippingTypeId,
-    })
-      .then((page) => {
-        if (!active) return;
+    setResult(null);
+    const finish = (options: OfferShippingMethodOption[], error: string | null) => {
+      if (active) setResult({ scope, adapter, options, error });
+    };
+    if (!loader) {
+      finish([], errorMessage);
+    } else {
+      void loader({
+        offerId: isEdit ? adapter.offerId : undefined,
+        sellerPartyId,
+        responsibility,
+        shippingTypeId,
+      }).then(page => {
         if (!page || page.responsibility !== responsibility || page.shippingTypeId !== shippingTypeId) {
-          setOptions([]);
-          setError(errorMessage);
+          finish([], errorMessage);
         } else {
-          setOptions(page.methods);
+          finish(page.methods, null);
         }
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!active) return;
-        setOptions([]);
-        setError(errorMessage);
-        setLoading(false);
-      });
+      }).catch(() => finish([], errorMessage));
+    }
     return () => { active = false; };
-  }, [adapter, isEdit, sellerPartyId, responsibility, shippingTypeId, errorMessage]);
+  }, [adapter, isEdit, sellerPartyId, responsibility, shippingTypeId, scope, errorMessage]);
 
-  return { options, loading, error };
+  // A previous scope's options must not be selectable for even the render before an effect runs.
+  if (adapter.role !== "admin" || !responsibility || !shippingTypeId) {
+    return { options: [], loading: false, error: null };
+  }
+  if (!result || result.scope !== scope || result.adapter !== adapter) {
+    return { options: [], loading: true, error: null };
+  }
+  return { options: result.options, loading: false, error: result.error };
 }

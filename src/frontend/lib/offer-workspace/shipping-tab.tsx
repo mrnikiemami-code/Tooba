@@ -167,7 +167,7 @@ export function ShippingTab(props: ShippingTabProps) {
               <button
                 type="button"
                 className={props.mode === "Automatic" ? tab.segActive : tab.seg}
-                disabled={!ready}
+                disabled={!ready && props.mode !== "Specific"}
                 aria-pressed={props.mode === "Automatic"}
                 data-testid="offer-shipping-mode-auto"
                 onClick={() => props.onModeChange("Automatic")}

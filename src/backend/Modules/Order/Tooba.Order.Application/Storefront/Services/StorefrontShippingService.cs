@@ -824,7 +824,9 @@ public sealed class StorefrontShippingService
                             group.Lines.Select(x => x.CartLineId).ToArray(),
                             group.ServiceCode,
                             group.OptionCode,
-                            group.OriginContext))
+                            group.OriginContext,
+                            group.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
+                            group.SelectedDeliveryTimeWindow))
                         .ToArray()),
             guestSecret,
             cancellationToken);

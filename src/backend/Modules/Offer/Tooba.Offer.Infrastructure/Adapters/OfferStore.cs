@@ -267,33 +267,30 @@ public sealed partial class OfferStore(OfferDbContext db)
             return result;
         }
 
-        // One batch read for the distinct real ids of the cart: never a per-line round trip, and a missing row
-        // simply does not appear (the consumer must refuse it instead of inventing a default).
+        // One SQL statement for mode, owner/type and links. Two separate read-committed
+        // queries could combine an old Automatic mode with a newer Specific link set.
         var ids = offerIds.Distinct().ToArray();
-        var rows = await db.Offers.AsNoTracking()
-            .Where(x => ids.Contains(x.OfferId))
-            .Select(x => new
+        var rows = await (
+            from offer in db.Offers.AsNoTracking()
+            where ids.Contains(offer.OfferId)
+            join method in db.OfferShippingMethods.AsNoTracking()
+                on offer.OfferId equals method.OfferId into links
+            from method in links.DefaultIfEmpty()
+            select new
             {
-                x.OfferId,
-                x.SellerPartyId,
-                x.FulfillmentResponsibility,
-                x.FulfillmentShippingTypeId,
-                x.ShippingSelectionMode,
-            })
-            .ToListAsync(cancellationToken);
+                offer.OfferId,
+                offer.SellerPartyId,
+                offer.FulfillmentResponsibility,
+                offer.FulfillmentShippingTypeId,
+                offer.ShippingSelectionMode,
+                MethodId = (Guid?)method.MethodId,
+            }).ToListAsync(cancellationToken);
 
-        var methodRows = await db.OfferShippingMethods.AsNoTracking()
-            .Where(x => ids.Contains(x.OfferId))
-            .Select(x => new { x.OfferId, x.MethodId })
-            .ToListAsync(cancellationToken);
-        var methodsById = methodRows
-            .GroupBy(x => x.OfferId)
-            .ToDictionary(
-                group => group.Key,
-                group => (IReadOnlyList<Guid>)group.Select(x => x.MethodId).OrderBy(x => x).ToArray());
-
-        foreach (var row in rows)
+        foreach (var group in rows.GroupBy(row => row.OfferId))
         {
+            var row = group.First();
+            var methods = group.Where(item => item.MethodId.HasValue)
+                .Select(item => item.MethodId!.Value).OrderBy(id => id).ToArray();
             result[row.OfferId] = new Tooba.Offer.Contracts.Dtos.OfferFulfillmentAssignmentSnapshot(
                 row.OfferId,
                 row.SellerPartyId,
@@ -304,7 +301,7 @@ public sealed partial class OfferStore(OfferDbContext db)
                 row.ShippingSelectionMode is null
                     ? Tooba.Offer.Contracts.Dtos.OfferShippingSelectionMode.Automatic
                     : (Tooba.Offer.Contracts.Dtos.OfferShippingSelectionMode)(int)row.ShippingSelectionMode.Value,
-                methodsById.TryGetValue(row.OfferId, out var methods) ? methods : []);
+                methods);
         }
 
         return result;
