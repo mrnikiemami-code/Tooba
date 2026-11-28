@@ -603,12 +603,16 @@ export async function findAdminActiveOffer(
   if (channel) params.set("channel", channel);
   try {
     const response = await fetch(`/v1/admin/offers/active-listing?${params.toString()}`, { headers: headers() });
-    if (!response.ok) return null;
-    const item = record(await response.json());
+    if (!response.ok) throw new Error("offer.duplicate_lookup.unavailable");
+    if (response.status === 204) return null;
+    const payload = await response.json();
+    if (payload === null) return null;
+    const item = record(payload);
     const offerId = item ? text(prop(item, "offerId", "OfferId")) : "";
-    return offerId ? { offerId } : null;
+    if (!offerId) throw new Error("offer.duplicate_lookup.unavailable");
+    return { offerId };
   } catch {
-    return null;
+    throw new Error("offer.duplicate_lookup.unavailable");
   }
 }
 
