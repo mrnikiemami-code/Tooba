@@ -1,0 +1,291 @@
+{
+  "runId": "b068781c-2f19-4895-abfc-a58993e19d44",
+  "candidate": "322ec85a68893b9f5af9da763d8af7791a90c059",
+  "identity": {
+    "head": "07c5d3fe289c4b09adddc8746a41115d24d01255",
+    "nextBuildId": "me05EbkWli-pVwYREX7uV",
+    "hostDll": "10098e16bfca69fa41a736609b2535aad8e911457db194ed916a112e4c379529",
+    "database": "tooba_alpha|local|local|1795063893.467474",
+    "legacyFractionalIrr": 0
+  },
+  "cases": {
+    "R11-PRICE-01-admin": {
+      "status": "PASS",
+      "role": "admin",
+      "offerId": "0070d7d6-23e3-0ab0-2fa7-42fb91d4572f",
+      "selected": "01a05388-7d6a-7000-a74e-41dd4951d87a",
+      "rows": [
+        {
+          "amount": 20.5,
+          "status": "Active",
+          "currency": "EUR"
+        },
+        {
+          "amount": 13.25,
+          "status": "Active",
+          "currency": "USD"
+        }
+      ],
+      "counts": {
+        "offers": 1,
+        "prices": 2,
+        "history": 1,
+        "positions": 0,
+        "priceFacts": 2,
+        "allocations": 0,
+        "offerOutbox": 1,
+        "pricingOutbox": 2,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      },
+      "primary": {
+        "currency": "IRR"
+      },
+      "revisions": [
+        {
+          "currency": "EUR",
+          "revision": "01a22122ae6f7000845a9c6aa57e95fb:63931449050730434"
+        },
+        {
+          "currency": "USD",
+          "revision": "01a22122b0b47000968b1e425b340c5c:63931449051315412"
+        }
+      ]
+    },
+    "R11-PRICE-01-seller": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "No actual seller actor has both global product.create and product.edit; no grant escalation"
+    },
+    "seller-create-permission-ui": {
+      "status": "PASS",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0"
+    },
+    "R11-REF-03-missing-market": {
+      "status": "PRESERVED",
+      "evidence": "direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-MARKET-MANUAL.json",
+      "reason": "Backend unchanged; real read-only 4/4 probe previously executed"
+    },
+    "R11-PRICE-05-concurrent": {
+      "status": "PRESERVED",
+      "evidence": "direct-evidence/2501a067-d637-4622-b0c2-cc4b4dffe887/DIRECT-RESULT.json",
+      "reason": "Backend unchanged; concurrent HTTP+SQL witness already recorded"
+    },
+    "R11-UAT-02-stock": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "No other seller scope available"
+    },
+    "seller-locale-geometry": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "seller geometry or duplicated variant at 390"
+    },
+    "R11-LOCALE-01-seller": {
+      "status": "PASS",
+      "results": [
+        {
+          "locale": "fa",
+          "code": "fa-IR",
+          "dir": "rtl",
+          "amount": "۱۰۰٬۰۰۰",
+          "heading": "قیمت‌گذاری"
+        },
+        {
+          "locale": "en",
+          "code": "en-US",
+          "dir": "ltr",
+          "amount": "100,000",
+          "heading": "Pricing"
+        },
+        {
+          "locale": "ru",
+          "code": "ru-RU",
+          "dir": "ltr",
+          "amount": "13,25",
+          "heading": "Цены"
+        }
+      ]
+    },
+    "R11-REG-01-new-currency-checkout": {
+      "status": "NOT_RUN",
+      "reason": "separate isolated checkout proof required; existing paid-order fixture cleanup not assumed safe"
+    }
+  },
+  "fixtures": [
+    {
+      "role": "admin",
+      "seller": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "sellerLabel": "دیجی‌استایل نمونه",
+        "writeAccess": {
+          "status": 200,
+          "create": false,
+          "edit": false
+        }
+      },
+      "channel": "Marketplace",
+      "product": {
+        "id": "01a05388-7c93-7000-a102-0160861d58cd",
+        "title": "نایک پیراهن مردانه سری 1"
+      },
+      "variant": {
+        "id": "01a05388-7d6a-7000-a74e-41dd4951d87a",
+        "code": "DEMO-demo-prod-fashion-men-men-shirts-1-6",
+        "label": "رنگ (clothing): مشکی · سایز (clothing): S",
+        "axes": [
+          {
+            "name": "رنگ (clothing)",
+            "value": "مشکی"
+          },
+          {
+            "name": "سایز (clothing)",
+            "value": "S"
+          }
+        ]
+      },
+      "sku": "R11-DIRECT-admin-b068781c-2f19-4895-abfc-a58993e19d44",
+      "id": "0070d7d6-23e3-0ab0-2fa7-42fb91d4572f",
+      "initial": {
+        "prices": [
+          {
+            "currency": "EUR",
+            "amount": 20.5,
+            "revision": "01a22122ae6f7000845a9c6aa57e95fb:63931449050730434"
+          }
+        ],
+        "amount": null,
+        "currency": "IRR"
+      },
+      "afterSecondCurrency": {
+        "primary": {
+          "amount": null,
+          "currency": "IRR"
+        },
+        "prices": [
+          {
+            "currency": "EUR",
+            "amount": 20.5,
+            "revision": "01a22122ae6f7000845a9c6aa57e95fb:63931449050730434"
+          },
+          {
+            "currency": "USD",
+            "amount": 13.25,
+            "revision": "01a22122b0b47000968b1e425b340c5c:63931449051315412"
+          }
+        ],
+        "sql": [
+          {
+            "amount": 20.5,
+            "status": "Active",
+            "currency": "EUR"
+          },
+          {
+            "amount": 13.25,
+            "status": "Active",
+            "currency": "USD"
+          }
+        ],
+        "counts": {
+          "offers": 1,
+          "prices": 2,
+          "history": 1,
+          "positions": 0,
+          "priceFacts": 2,
+          "allocations": 0,
+          "offerOutbox": 1,
+          "pricingOutbox": 2,
+          "inventoryFacts": 0,
+          "inventoryOutbox": 0
+        }
+      }
+    },
+    {
+      "role": "admin",
+      "seller": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "sellerLabel": "دیجی‌استایل نمونه",
+        "writeAccess": {
+          "status": 200,
+          "create": false,
+          "edit": false
+        }
+      },
+      "channel": "Marketplace",
+      "product": {
+        "id": "01a05388-7c93-7000-a102-0160861d58cd",
+        "title": "نایک پیراهن مردانه سری 1"
+      },
+      "variant": {
+        "id": "01a05388-7d6a-7000-8aee-58e46aafc7d5",
+        "code": "DEMO-demo-prod-fashion-men-men-shirts-1-7",
+        "label": "رنگ (clothing): قرمز · سایز (clothing): L",
+        "axes": [
+          {
+            "name": "رنگ (clothing)",
+            "value": "قرمز"
+          },
+          {
+            "name": "سایز (clothing)",
+            "value": "L"
+          }
+        ]
+      },
+      "sku": "R11-DIRECT-locale-b068781c-2f19-4895-abfc-a58993e19d44",
+      "id": "24a02a05-603c-8528-8ab7-14ff6111eaa9"
+    }
+  ],
+  "cleanup": [
+    {
+      "status": "PASS",
+      "sku": "R11-DIRECT-admin-b068781c-2f19-4895-abfc-a58993e19d44",
+      "id": "0070d7d6-23e3-0ab0-2fa7-42fb91d4572f",
+      "after": {
+        "offers": 0,
+        "prices": 0,
+        "history": 0,
+        "positions": 0,
+        "priceFacts": 0,
+        "allocations": 0,
+        "offerOutbox": 0,
+        "pricingOutbox": 0,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      }
+    },
+    {
+      "status": "PASS",
+      "sku": "R11-DIRECT-locale-b068781c-2f19-4895-abfc-a58993e19d44",
+      "id": "24a02a05-603c-8528-8ab7-14ff6111eaa9",
+      "after": {
+        "offers": 0,
+        "prices": 0,
+        "history": 0,
+        "positions": 0,
+        "priceFacts": 0,
+        "allocations": 0,
+        "offerOutbox": 0,
+        "pricingOutbox": 0,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      }
+    }
+  ],
+  "status": "REVIEW_REQUIRED",
+  "sellerCapabilities": [
+    {
+      "seller": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "status": 200,
+      "create": false,
+      "edit": false
+    },
+    {
+      "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+      "actor": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+      "status": 200,
+      "create": false,
+      "edit": false
+    }
+  ],
+  "legacyFractionalBreakdown": []
+}
