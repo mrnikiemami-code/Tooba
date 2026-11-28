@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { discardCreateDrafts } from "../../../lib/offer-workspace/draft-recovery";
 import { useMemo } from "react";
 import { Eye, Plus } from "lucide-react";
 import { AppDataGrid, useLegacyAdminGridDirectProps } from "../../../design-system";
@@ -197,6 +198,7 @@ export default function AdminOffersPage() {
         <Link
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
           href={localizePath("/admin/offers/new")}
+          onClick={() => discardCreateDrafts({ role: "admin" })}
           data-testid="admin-offer-create-link"
         >
           <Plus className="h-4 w-4" aria-hidden />
