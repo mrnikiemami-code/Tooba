@@ -48,7 +48,7 @@ public sealed partial class InventoryDirectory
 
         var operationId = request.OperationId;
         var reasonProvided = !string.IsNullOrWhiteSpace(request.Reason);
-        var reason = reasonProvided ? request.Reason!.Trim() : "inventory.initial_stock";
+        var reason = reasonProvided ? request.Reason!.Trim() : InventoryAdjustmentReasons.InitialStock;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         await LockOfferAllocationAsync(request.OfferId, cancellationToken);
