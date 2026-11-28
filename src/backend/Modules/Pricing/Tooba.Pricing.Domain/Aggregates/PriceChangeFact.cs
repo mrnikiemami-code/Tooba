@@ -27,6 +27,9 @@ public sealed class PriceChangeFact
     /// <summary>New committed amount.</summary>
     public decimal NewAmount { get; init; }
 
+    /// <summary>True for retirement: the retained amount is historical, not a new effective price.</summary>
+    public bool Retired { get; init; }
+
     /// <summary>Price currency.</summary>
     public string Currency { get; init; } = string.Empty;
 
