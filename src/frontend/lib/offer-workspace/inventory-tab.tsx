@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Warehouse } from "lucide-react";
-import { SearchableSelect } from "../../design-system";
+import { Trash2, Warehouse } from "lucide-react";
+import { IconButton, SearchableSelect } from "../../design-system";
+import { QuantityInput } from "./quantity-input";
 import type { OfferWorkspaceMessages } from "./messages";
 import type { OfferInventoryLocationOption, OfferLocalInventoryDraft, OfferWorkspaceDetail } from "./types";
 import { parseDecimal } from "./model";
@@ -56,6 +57,7 @@ export function InventoryTab(props: InventoryTabProps) {
                     <th>{t.inventoryOnHand}</th>
                     <th>{t.inventoryReserved}</th>
                     <th>{t.inventoryAvailable}</th>
+                    <th className={styles.tableAction}><span className="sr-only">{t.inventoryRemoveLocation}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -66,21 +68,13 @@ export function InventoryTab(props: InventoryTabProps) {
                         <td data-label={t.inventoryLocation}>
                           <span style={{ display: "block", fontWeight: 600 }}>{location.name || location.code}</span>
                           <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{location.code}</span>
-                          <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnQuiet}`} onClick={() => props.onLocalInventoryRemove?.(location.locationId)} data-testid="offer-inventory-remove-draft">{t.cancel}</button>
                         </td>
                         <td data-label={t.inventoryOnHand}>
-                          <input
-                            className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
-                            style={{ maxWidth: 128 }}
-                            value={draft?.onHand ?? ""}
-                            onChange={(event) => props.onLocalInventoryChange?.(location.locationId, { onHand: event.target.value })}
-                            inputMode="decimal"
-                            dir="ltr"
-                            data-testid="offer-inventory-input"
-                          />
+                          <QuantityInput compact value={draft?.onHand ?? ""} onChange={value => props.onLocalInventoryChange?.(location.locationId, { onHand: value })} scale={detail.unitQuantityDecimalPlaces} format={format} label={`${t.inventoryOnHand} ${location.name || location.code}`} testId="offer-inventory-input" />
                         </td>
                         <td data-label={t.inventoryReserved} className={styles.numCell}>—</td>
                         <td data-label={t.inventoryAvailable} className={styles.numCell}>—</td>
+                        <td className={styles.tableAction}><IconButton className="bg-transparent text-danger" label={`${t.inventoryRemoveLocation} ${location.name || location.code}`} onClick={() => props.onLocalInventoryRemove?.(location.locationId)} data-testid="offer-inventory-remove-draft"><Trash2 size={16} aria-hidden /></IconButton></td>
                       </tr>
                     );
                   })}
@@ -109,7 +103,7 @@ export function InventoryTab(props: InventoryTabProps) {
           {detail.capabilities?.canEditOfferedQuantity ? (
             <label className={styles.field} style={{ marginTop: 14, maxWidth: 420 }}>
               <span className={styles.fieldLabel}>{t.inventoryOfferedQuantity}</span>
-              <input className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`} value={props.offeredQuantity ?? ""} onChange={(event) => props.onOfferedQuantityChange?.(event.target.value)} inputMode="decimal" dir="ltr" data-testid="offer-offered-quantity-input" />
+              <QuantityInput value={props.offeredQuantity ?? ""} onChange={value => props.onOfferedQuantityChange?.(value)} scale={detail.unitQuantityDecimalPlaces} format={format} testId="offer-offered-quantity-input" />
               <span className={styles.fieldHint}>{t.inventoryOfferedHint}</span>
             </label>
           ) : null}
@@ -141,18 +135,7 @@ export function InventoryTab(props: InventoryTabProps) {
                             <span className={`${styles.resultMeta} hidden md:block`} dir="ltr">{row.locationCode}</span>
                           </td>
                           <td data-label={t.inventoryOnHand}>
-                            <input
-                              className={`${styles.ctl} ${styles.ctlNum} ${styles.ctlLtr}`}
-                              style={{ maxWidth: 128 }}
-                              value={props.onHand[row.stockItemId] ?? ""}
-                              onChange={(event) => props.onOnHandChange(row.stockItemId, event.target.value)}
-                              disabled={detail.capabilities?.canEditPhysicalInventory !== true}
-                              inputMode="decimal"
-                              dir="ltr"
-                              aria-invalid={invalid}
-                              aria-label={`${t.inventoryOnHand} ${row.locationName || row.locationCode}`}
-                              data-testid="offer-inventory-input"
-                            />
+                            <QuantityInput compact value={props.onHand[row.stockItemId] ?? ""} onChange={value => props.onOnHandChange(row.stockItemId, value)} scale={detail.unitQuantityDecimalPlaces} format={format} disabled={detail.capabilities?.canEditPhysicalInventory !== true} invalid={invalid} label={`${t.inventoryOnHand} ${row.locationName || row.locationCode}`} testId="offer-inventory-input" />
                           </td>
                           <td data-label={t.inventoryReserved} className={styles.numCell} data-testid="offer-inventory-reserved">
                             {format.number(row.reserved)}
