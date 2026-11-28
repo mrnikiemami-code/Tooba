@@ -47,7 +47,8 @@ public sealed partial class InventoryDirectory
                         location.OnHand,
                         location.Reserved,
                         location.Available,
-                        location.Revision)).ToList(),
+                        location.Revision,
+                        location.RequiresAdjustmentReason)).ToList(),
                     allocation?.Quantity,
                     allocation?.Held,
                     allocation?.Revision.ToString("N"));
@@ -72,6 +73,13 @@ public sealed partial class InventoryDirectory
         var allocations = await _db.OfferAllocations.AsNoTracking()
             .Where(x => distinct.Contains(x.OfferId))
             .ToDictionaryAsync(x => x.OfferId, cancellationToken);
+        var pristineIds = rows.Where(x => IsPristinePosition(x.position)).Select(x => x.position.StockItemId).ToArray();
+        var touchedIds = new HashSet<Guid>();
+        if (pristineIds.Length > 0)
+        {
+            touchedIds.UnionWith(await _db.OfferInventoryChanges.AsNoTracking().Where(x => x.StockItemId.HasValue && pristineIds.Contains(x.StockItemId.Value)).Select(x => x.StockItemId!.Value).Distinct().ToListAsync(cancellationToken));
+            touchedIds.UnionWith(await _db.Reservations.AsNoTracking().Where(x => pristineIds.Contains(x.StockItemId)).Select(x => x.StockItemId).Distinct().ToListAsync(cancellationToken));
+        }
         var marketplace = _commerce?.Current?.Edition.Edition == ToobaEdition.Marketplace;
         var offers = _commerce is not null ? await _offers.FindOffersBatchAsync(distinct, cancellationToken) : null;
         return rows
@@ -99,7 +107,8 @@ public sealed partial class InventoryDirectory
                         row.position.Reserved,
                         row.location.Status != InventoryLocationStatus.Active
                             ? 0m : Math.Min(cap, row.position.OnHand - row.position.Reserved),
-                        row.position.UpdatedAt.ToString("O"))).ToList();
+                        row.position.UpdatedAt.ToString("O"),
+                        !IsPristinePosition(row.position) || touchedIds.Contains(row.position.StockItemId))).ToList();
                     return new InventoryAvailability(
                         group.Key,
                         group.First().position.CatalogVariantId,
