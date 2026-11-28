@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "reviewerRole": "ARCHITECT",
+  "taskId": "TB-296-P1-FINAL-CLOSURE",
+  "decision": "NOT_ACCEPTED_MACHINE_GATE_AND_CLEANUP_PROVENANCE_PENDING",
+  "notAnAcceptanceReceipt": true,
+  "sourceCandidate": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+  "evidenceCommit": "5c5c139941efed420f3244365d1d569dd4a1ce04",
+  "previousEvidenceCommit": "ad1a7d10b2c089a433197219e978e9b8bb49981d",
+  "independentRemoteChecks": {
+    "rows": 60,
+    "unique": 60,
+    "missingIds": [],
+    "preservedPriorPass": 56,
+    "preservedMismatch": [],
+    "missingEvidencePaths": [],
+    "nonTaskProductChanges": [],
+    "duplicateEvidencePath": {
+      "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-inventory-feedback-result.json",
+      "ids": [
+        "R10-12-N",
+        "R10-13-N"
+      ]
+    },
+    "newD2GitBlobs": {
+      "D2-ORDER": "4cac7087deb510e91adb0caf052682ce8e5f0890",
+      "D2-HOLD": "a988d42ac26dfb4c77b54d9b243ae50efb283144",
+      "D2-PARTIAL": "b074afeb6567d80385f8d74c2b5077c1cc26fc44",
+      "D2-RECOVERY": "e304123e86a6092d1b7de58f1d83592a0e092dc6"
+    }
+  },
+  "deferredMatrix": {
+    "status": "ARCHITECT_TRANSCRIPTION_FOR_RECONCILIATION_NOT_PRE_EXECUTION_PLAN",
+    "sources": [
+      "docs/opencode/tasks/TB-296-R10-OFFER-PRODUCTION-READINESS/ARCHITECT-PHASE-TEST-SCHEDULING.md",
+      "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-f-cases.cjs (F-BENTRY-01/02 existing assertions)"
+    ],
+    "tests": [
+      {
+        "testId": "D2-ORDER",
+        "expected": [
+          "real order-line commitment denies reassignment",
+          "paid and restorable-cancelled commitment denies reassignment without writes",
+          "no-commit initial assignment/reassignment/clear persists correctly"
+        ]
+      },
+      {
+        "testId": "D2-HOLD",
+        "expected": [
+          "concurrent new hold and assignment leaves no stale owner or unsafe commitment",
+          "captured Checkout acceptance and reused hold versus assignment leave correct single hold and owner"
+        ]
+      },
+      {
+        "testId": "D2-ALLOCATION",
+        "expected": [
+          "concurrent allocation and assignment",
+          "first-allocation concurrency",
+          "stale-owner physical mutation denied",
+          "actual winner and no loser facts"
+        ]
+      },
+      {
+        "testId": "D2-PARTIAL",
+        "expected": [
+          "concurrent release/consume has correct winner and no incorrect mutation",
+          "partial-obligation release on same scoped context, freshness and exact remaining quantity"
+        ]
+      },
+      {
+        "testId": "D2-RECOVERY",
+        "expected": [
+          "full actual order-service recovery and replacement",
+          "unpaid retry cap",
+          "preserved paid obligations and no second commercial debit"
+        ]
+      },
+      {
+        "testId": "D2-HTTP",
+        "expected": [
+          "real authorized admin/seller capability, history target/location and owner revision checks",
+          "operation replay after subsequent mutation",
+          "truthful postcommit response reconciliation"
+        ]
+      },
+      {
+        "testId": "F-BENTRY-01",
+        "expected": [
+          "Marketplace seller availability exposes only eligible own location and totals",
+          "no ineligible labels or quantities disclosed",
+          "unassigned Marketplace exposes no locations or stock"
+        ]
+      },
+      {
+        "testId": "F-BENTRY-02",
+        "expected": [
+          "wrong-offer and duplicate reused holds rejected with inventory.reservation.conflict",
+          "rejected requests leave reservations and positions unchanged",
+          "valid single reuse returns exact original hold without new reservation"
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "GATE-FORMAT",
+      "observation": "Actual acceptance-gate.cjs requires per-ID distinct evidence, matching testId/scenarioSha256/sourceCommit and assertions, a frozen plan with scenario hashes, and exact candidate/build identity. Final ledger is not that run schema; two rows reuse one evidence path. Do not duplicate raw files or infer expected/observed facts from PASS. Reconcile with raw results and independent clause oracles, retaining source provenance.",
+      "status": "OPEN"
+    },
+    {
+      "id": "DEV-RESTORE",
+      "observation": "finalclosure-evidence/environment-identity.json reports drop/recreate of tooba_alpha from the older 20261127173245 dump, not targeted cleanup. Post-restore counts and health cannot prove no unrelated post-backup changes were lost. Need evidence of exclusive window or current pre-restore state comparison; do not perform another restore.",
+      "status": "OPEN"
+    },
+    {
+      "id": "RECOVERY-TIME",
+      "observation": "finalacceptance-d2-recovery.cjs forceExpire updates scoped checkout/reservation expiry timestamps with SQL before actual reclaimer and retry. Evidence supports real recovery, but is forced-expiry test setup, not natural elapsed-time test.",
+      "status": "DISCLOSED"
+    },
+    {
+      "id": "GATE-EXECUTION",
+      "observation": "Existing gate source and matrices found and read. Direct local bridge unavailable and container has no GitHub network. No full gate executed; no ARCHITECT-REVIEW.json ACCEPT issued. No product rerun requested.",
+      "status": "OPEN"
+    }
+  ],
+  "decisionScope": "Architecture review remains limited to reviewed Offer scope; operational worker ledger preserved. Formal final acceptance, owner UAT and Phase 2 not released under existing scheduling contract."
+}
