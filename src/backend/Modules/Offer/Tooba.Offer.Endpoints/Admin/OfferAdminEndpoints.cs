@@ -184,10 +184,10 @@ public static class OfferAdminEndpoints
         var actorUserId = await authorizer.RequireEditAsync(context, token);
         var owner = await SellerOfAsync(sender, offerId, token);
         if (owner.IsFailure) return api.From(owner);
-        if (body.Amount is not decimal amount)
+        if ((!body.Retire && body.Amount is null) || (body.Retire && (body.Amount is not null || string.IsNullOrWhiteSpace(body.Currency))))
             return api.FromFailure(new SemanticError(OfferErrorCodes.PriceAmountRequired));
         var result = await sender.Send(new SetOfferPriceCommand(
-            offerId, owner.Value, amount, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, true), token);
+            offerId, owner.Value, body.Amount ?? 0m, body.Currency, body.Market, body.ExpectedVersion, actorUserId, body.OperationId ?? Guid.Empty, true, body.Retire), token);
         return api.From(result);
     }
 
