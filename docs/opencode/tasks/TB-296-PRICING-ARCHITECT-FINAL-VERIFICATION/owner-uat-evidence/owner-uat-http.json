@@ -1,0 +1,226 @@
+{
+  "task": "TB-296-OWNER-UAT-FINAL-CLOSURE",
+  "head": "x",
+  "cases": {
+    "price-retire-eur": {
+      "status": "PASS",
+      "http": 200,
+      "receipt": {
+        "offerId": "a3414dc8-6ea0-eeef-6295-bf809dde1a61",
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "sellerDisplayName": "دیجی‌استایل نمونه",
+        "catalogVariantId": "01a05388-2ad0-7000-a5cf-706f26d6d28f",
+        "productId": "01a05388-2a14-7000-be0e-f0ee54a13a87",
+        "productTitle": "دل لپ‌تاپ دانشجویی مجموعه 4",
+        "brandName": "دل",
+        "sellerSku": "R11-UAT-f712266a-398a-46de-8a84-e84e04ed59cc",
+        "status": "Draft",
+        "channel": "Marketplace",
+        "amount": 100000,
+        "currency": "IRR",
+        "onHand": 0,
+        "reserved": 0,
+        "availableUnits": 0,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "variantCode": "DEMO-demo-prod-laptop-computer-laptops-student-laptops-4-8",
+        "primaryMediaAssetId": "01a05388-1637-7000-9a01-15e635eaa45b",
+        "lastUpdatedAt": "2026-11-28T09:02:38.769999+00:00",
+        "variantLabel": "رم (laptop): ۸ گیگ · حافظه (laptop): ۲۵۶ گیگ",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "01a221646aeb70009ee99da21b11d634:63931453358826204",
+        "offerRevision": "2026-11-28T09:02:38.7699990+00:00",
+        "revisions": {
+          "offer": "2026-11-28T09:02:38.7699990+00:00",
+          "price": "01a221646aeb70009ee99da21b11d634:63931453358826204",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "01a22164-6aeb-7000-9ee9-9da21b11d634",
+        "prices": [
+          {
+            "priceId": "01a22164-6b5b-7000-8064-1846718da377",
+            "currency": "EUR",
+            "amount": 20.5,
+            "revision": "01a221646b5b700080641846718da377:63931453359160995",
+            "status": "Retired"
+          },
+          {
+            "priceId": "01a22164-6aeb-7000-9ee9-9da21b11d634",
+            "currency": "IRR",
+            "amount": 100000,
+            "revision": "01a221646aeb70009ee99da21b11d634:63931453358826204",
+            "status": "Active"
+          },
+          {
+            "priceId": "01a22164-6b28-7000-83d4-da96fe438267",
+            "currency": "USD",
+            "amount": 13.25,
+            "revision": "01a221646b28700083d4da96fe438267:63931453358887603",
+            "status": "Active"
+          }
+        ]
+      },
+      "fact": {
+        "new": 20.5,
+        "old": 20.5,
+        "retired": true
+      },
+      "eur": {
+        "priceId": "01a22164-6b5b-7000-8064-1846718da377",
+        "currency": "EUR",
+        "amount": 20.5,
+        "revision": "01a221646b5b700080641846718da377:63931453359160995",
+        "status": "Retired"
+      },
+      "usd": {
+        "priceId": "01a22164-6b28-7000-83d4-da96fe438267",
+        "currency": "USD",
+        "amount": 13.25,
+        "revision": "01a221646b28700083d4da96fe438267:63931453358887603",
+        "status": "Active"
+      },
+      "irr": {
+        "priceId": "01a22164-6aeb-7000-9ee9-9da21b11d634",
+        "currency": "IRR",
+        "amount": 100000,
+        "revision": "01a221646aeb70009ee99da21b11d634:63931453358826204",
+        "status": "Active"
+      },
+      "before": {
+        "facts": 3,
+        "prices": 3,
+        "invfacts": 0,
+        "positions": 0
+      },
+      "after": {
+        "facts": 4,
+        "prices": 3,
+        "invfacts": 0,
+        "positions": 0
+      }
+    },
+    "price-retire-replay": {
+      "status": "PASS",
+      "http": 200,
+      "facts": 1
+    },
+    "price-retire-changed-intent": {
+      "status": "PASS",
+      "http": 409,
+      "errorCode": "concurrency.conflict"
+    },
+    "price-retire-concurrent": {
+      "status": "PASS",
+      "statuses": [
+        409,
+        200
+      ],
+      "codes": [
+        "concurrency.conflict"
+      ]
+    },
+    "inventory-initial-no-reason": {
+      "status": "PASS",
+      "http": 200
+    },
+    "inventory-subsequent-requires-reason": {
+      "status": "PASS",
+      "http": 400,
+      "errorCode": "inventory.adjustment.reason_required"
+    },
+    "inventory-zero-requires-reason": {
+      "status": "PASS",
+      "setZero": 200,
+      "http": 400,
+      "errorCode": "inventory.adjustment.reason_required"
+    },
+    "inventory-cross-seller-denied": {
+      "status": "PASS",
+      "http": 404,
+      "errorCode": "offer.not_found",
+      "before": {
+        "facts": 5,
+        "prices": 3,
+        "invfacts": 2,
+        "positions": 1
+      },
+      "after": {
+        "facts": 5,
+        "prices": 3,
+        "invfacts": 2,
+        "positions": 1
+      }
+    },
+    "primary-retire-prevents-purchase": {
+      "status": "PASS",
+      "activate": 200,
+      "addBefore": 200,
+      "retire": 200,
+      "primaryAfter": {
+        "currency": "IRR"
+      },
+      "addAfter": 409,
+      "addAfterCode": "cart.pricing.quote_missing"
+    },
+    "catalog-phone-unit-root-cause": {
+      "status": "PASS",
+      "phoneWithKilogram": {
+        "step": null,
+        "unit": "kg",
+        "title": "گوشی هوشمند سری 1",
+        "precision": 2,
+        "productId": "01a05387-fbd0-7000-acd3-4382ce92c773"
+      },
+      "phoneWithPcs": {
+        "step": null,
+        "unit": "pcs",
+        "title": "اپل گوشی هوشمند مدل 2",
+        "precision": 0,
+        "productId": "01a05387-fdf5-7000-95a0-5d7cd42a8747"
+      },
+      "rootCause": "Catalog seed data: product 01a05387-fbd0-7000-acd3-4382ce92c773 (گوشی هوشمند سری 1) references unit kg (Mass) with quantity_decimal_places 2; Offer/Inventory only project the Catalog unit. Other phone products use pcs/0. This is Catalog seed data, not an Offer projection bug."
+    }
+  },
+  "fixtures": [
+    {
+      "id": "a3414dc8-6ea0-eeef-6295-bf809dde1a61",
+      "seller": "01a030d1-40db-7000-b90c-a0705133f0eb",
+      "variant": "01a05388-2ad0-7000-a5cf-706f26d6d28f",
+      "sku": "R11-UAT"
+    }
+  ],
+  "cleanup": [
+    {
+      "status": "PASS",
+      "id": "a3414dc8-6ea0-eeef-6295-bf809dde1a61",
+      "before": {
+        "facts": 6,
+        "prices": 3,
+        "invfacts": 3,
+        "positions": 1
+      },
+      "after": {
+        "facts": 0,
+        "prices": 0,
+        "invfacts": 0,
+        "positions": 0
+      }
+    }
+  ],
+  "status": "PASS"
+}

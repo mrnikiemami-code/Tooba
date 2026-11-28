@@ -1,0 +1,18 @@
+﻿{
+  "task": "TB-296-OWNER-UAT-FINAL-CLOSURE",
+  "head": "a2c7fbe504178d22191889dd3c75fd8c3a3f0e38",
+  "host": "http://127.0.0.1:5088",
+  "hostDllSha256": "7500f9d64a477f3339f6e62c8d54d75955aaac463382c88d05e216f0a6f0298f",
+  "next": "http://127.0.0.1:3000",
+  "nextBuildId": "qap1J2RncEuNS1CCMIhKw",
+  "database": "tooba_alpha",
+  "migration": {
+    "name": "20261128120000_OfferPriceRetirementFact",
+    "applied": true,
+    "column": "pricing.offer_price_changes.retired boolean not null default false",
+    "mechanicalFix": "Added XML doc comments to the architect migration Up/Down to satisfy CS1591; no semantic change."
+  },
+  "legacyIrrFractional": 0,
+  "residue": { "p1cOffers": 0, "uatOffers": 0, "carts": 0 },
+  "productChanges": "only the mechanical CS1591 XML doc fix to the architect migration; no semantic product change."
+}

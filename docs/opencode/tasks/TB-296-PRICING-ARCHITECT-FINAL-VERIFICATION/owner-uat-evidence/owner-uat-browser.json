@@ -1,0 +1,67 @@
+{
+  "task": "TB-296-OWNER-UAT-FINAL-CLOSURE",
+  "fixture": {
+    "id": "e5f8a51d-e158-982a-8194-0e30536455c5",
+    "sku": "R11-UATB"
+  },
+  "cases": {
+    "price-retire-ui": {
+      "status": "PASS",
+      "eur": "EUR یورو\t۲۰٫۵ یورو\tغیرفعال",
+      "usd": "USD دلار آمریکا\t۱۳٫۲۵ دلار آمریکا\tفعال"
+    },
+    "messagebox-error-ui": {
+      "status": "PASS",
+      "message": "تعداد اعشار مبلغ با ارز انتخابی سازگار نیست.\n\nتلاش دوباره\nبستن",
+      "banner": 0
+    },
+    "warehouse-search-ui": {
+      "status": "PASS",
+      "needle": "انتخ",
+      "before": [
+        "انتخاب",
+        "انبار دمو ACC — WH-ACC-BOOK",
+        "انبار دمو ACC — WH-ACC-MOB",
+        "انبار نمایشی مشهد — WH-DEMO-MSH",
+        "انبار نمایشی تهران — WH-DEMO-THR",
+        "انبار اصفهان — WH-ISF",
+        "انبار فروشنده ب — WH-KSH",
+        "انبار schema موبایل — WH-SCHEMA-MOBILE",
+        "انبار تهران — WH-THR"
+      ],
+      "after": [
+        "انتخاب"
+      ]
+    },
+    "locale-rtl-ui": {
+      "status": "PASS",
+      "fa": {
+        "dir": "rtl",
+        "amount": "۱۰۰٬۰۰۰",
+        "heading": "قیمت‌گذاری"
+      },
+      "en": "PricingCurrencyAmountPrice statusEUR Euro20.5 EuroRetiredIRR Iranian Rial100,000 Iranian RialActiveU",
+      "ru": "ЦеныВалютаСуммаСтатус ценыEUR евро20,5 евроВыведена из действияIRR иранский риал100 000 иранский риа"
+    },
+    "mobile-geometry-ui": {
+      "status": "PASS",
+      "geoms": [
+        {
+          "width": 390,
+          "overflow": 0,
+          "dir": "rtl"
+        },
+        {
+          "width": 1440,
+          "overflow": 0,
+          "dir": "rtl"
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "offers": 0,
+    "prices": 0
+  },
+  "status": "PASS"
+}
