@@ -61,6 +61,8 @@ const workspaceOverrides: Partial<OfferWorkspaceMessages> = {
   pricingAmount: "Сумма",
   pricingStatus: "Статус цены",
   lifecycleActive: "Активно",
+  lifecycleDraft: "Черновик",
+  pricingRetired: "Выведена из действия",
   validationAmount: "Недопустимая сумма.",
   pricingStoreCurrency: "Валюта магазина по умолчанию",
   pricingSelectCurrency: "Выбрать валюту",
