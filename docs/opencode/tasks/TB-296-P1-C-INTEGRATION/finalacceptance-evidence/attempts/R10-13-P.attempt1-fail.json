@@ -1,0 +1,184 @@
+{
+  "id": "R10-13-P",
+  "requests": [],
+  "status": "FAIL",
+  "reused": {
+    "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-P.json",
+    "sha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+    "performance": {
+      "formMedianMs": 865,
+      "formP95Ms": 885,
+      "formSamples": [
+        885,
+        855,
+        867,
+        865,
+        865
+      ],
+      "pickerMedianMs": 53,
+      "pickerP95Ms": 79,
+      "pickerSamples": [
+        79,
+        47,
+        53,
+        71,
+        46
+      ],
+      "r8FormMs": 1598,
+      "r8PickerMs": 103
+    },
+    "regression": {
+      "orders": 10,
+      "products": 10,
+      "paging": {
+        "page1": 5,
+        "page2": 5,
+        "overlap": 0
+      },
+      "filteredDrafts": 3
+    },
+    "reason": "Warm form/picker performance, orders/products regressions, grid paging and status filter were already proven by the prior R10-13-P run; reused unchanged."
+  },
+  "campaigns": {
+    "status": 200,
+    "count": null,
+    "sample": {
+      "items": [
+        {
+          "campaignId": "019a16a0-0005-7000-8000-000000000005",
+          "title": "[DEV-SEED] Amazing Draft | شگفت‌انگیز پیش‌نویس",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Draft",
+          "runtimeLabel": "draft",
+          "startAt": "2026-11-27T20:46:19.669152+00:00",
+          "endAt": "2026-11-28T21:46:19.669152+00:00",
+          "priority": 50,
+          "memberCount": 1,
+          "updatedAt": "2026-11-27T21:46:20.41604+00:00"
+        },
+        {
+          "campaignId": "019a16a0-0004-7000-8000-000000000004",
+          "title": "[DEV-SEED] Amazing Expired | شگفت‌انگیز منقضی",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Published",
+          "runtimeLabel": "expired",
+          "startAt": "2026-11-24T21:46:19.669152+00:00",
+          "endAt": "2026-11-26T21:46:19.669152+00:00",
+          "priority": 90,
+          "memberCount": 1,
+          "updatedAt": "2026-11-27T21:46:20.374172+00:00"
+        },
+        {
+          "campaignId": "019a16a0-0003-7000-8000-000000000003",
+          "title": "[DEV-SEED] Amazing Future Teasing | فردای شگفت‌انگیز",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Published",
+          "runtimeLabel": "scheduled",
+          "startAt": "2026-11-28T21:46:19.669152+00:00",
+          "endAt": "2026-11-29T21:46:19.669152+00:00",
+          "priority": 80,
+          "memberCount": 3,
+          "updatedAt": "2026-11-27T21:46:20.339144+00:00"
+        },
+        {
+          "campaignId": "019a16a0-0002-7000-8000-000000000002",
+          "title": "[DEV-SEED] Amazing Active Loser | پیشنهاد شگفت‌انگیز بازنده",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Published",
+          "runtimeLabel": "active",
+          "startAt": "2026-11-27T20:46:19.669152+00:00",
+          "endAt": "2026-11-30T21:46:19.669152+00:00",
+          "priority": 10,
+          "memberCount": 2,
+          "updatedAt": "2026-11-27T21:46:20.277096+00:00"
+        },
+        {
+          "campaignId": "019a16a0-0001-7000-8000-000000000001",
+          "title": "[DEV-SEED] Amazing Active Primary | پیشنهاد شگفت‌انگیز فعال",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Published",
+          "runtimeLabel": "active",
+          "startAt": "2026-11-27T19:46:19.669152+00:00",
+          "endAt": "2026-12-04T21:46:19.669152+00:00",
+          "priority": 100,
+          "memberCount": 9,
+          "updatedAt": "2026-11-27T21:46:20.151775+00:00"
+        },
+        {
+          "campaignId": "01a0ba59-a5aa-7000-8730-0b6ae26d0a28",
+          "title": "کمپین ادمین R20 1789832832382",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:47:12.419+00:00",
+          "endAt": "2026-09-26T15:47:12.419+00:00",
+          "priority": 200,
+          "memberCount": 5,
+          "updatedAt": "2026-09-19T15:47:16.833058+00:00"
+        },
+        {
+          "campaignId": "01a0ba58-b7c7-7000-b3da-fe4bf02fc9f0",
+          "title": "کمپین ادمین R20 1789832771481",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:46:11.52+00:00",
+          "endAt": "2026-09-26T15:46:11.52+00:00",
+          "priority": 200,
+          "memberCount": 5,
+          "updatedAt": "2026-09-19T15:46:16.507649+00:00"
+        },
+        {
+          "campaignId": "01a0ba56-67aa-7000-8ee8-231796439884",
+          "title": "R20 Win Priority",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:43:39.907472+00:00",
+          "endAt": "2026-09-26T15:43:39.907472+00:00",
+          "priority": 200,
+          "memberCount": 1,
+          "updatedAt": "2026-09-19T15:46:02.059395+00:00"
+        },
+        {
+          "campaignId": "01a0ba55-6f7e-7000-9a39-f92c07d98a73",
+          "title": "کمپین ادمین R20 1789832556366",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:42:36.408+00:00",
+          "endAt": "2026-09-26T15:42:36.408+00:00",
+          "priority": 90,
+          "memberCount": 5,
+          "updatedAt": "2026-09-19T15:42:42.393823+00:00"
+        },
+        {
+          "campaignId": "01a0ba55-0e6d-7000-a0a6-7caa2a1a91da",
+          "title": "کمپین ادمین R20 1789832531516",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:42:11.557+00:00",
+          "endAt": "2026-09-26T15:42:11.557+00:00",
+          "priority": 90,
+          "memberCount": 5,
+          "updatedAt": "2026-09-19T15:42:17.288402+00:00"
+        },
+        {
+          "campaignId": "01a0ba54-2df6-7000-804e-d557eaf3194d",
+          "title": "کمپین ادمین R20 1789832473996",
+          "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+          "lifecycleStatus": "Archived",
+          "runtimeLabel": "archived",
+          "startAt": "2026-09-19T14:41:14.08+00:00",
+          "endAt": "2026-09-26T15:41:14.08+00:00",
+          "priority": 90,
+          "memberCount": 5,
+          "updatedAt": "2026-09-19T15:41:22.396385+00:00"
+        }
+      ],
+      "total": 11
+    }
+  },
+  "reason": "Error: campaign list is not an array\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g3-r1013p.cjs:21:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g3-r1013p.cjs:71:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

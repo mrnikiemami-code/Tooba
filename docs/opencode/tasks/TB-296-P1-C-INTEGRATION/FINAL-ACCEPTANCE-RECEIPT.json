@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "taskId": "TB-296-P1-FINAL-ACCEPTANCE",
+  "generatedAt": "2026-11-28T00:00:00+03:30",
+  "decision": "NOT_ISSUED",
+  "selfAuthorization": false,
+  "note": "This worker artifact records gate executions; it is NOT an architect acceptance receipt. Worker PASS != Architect ACCEPT != owner acceptance. No ACCEPT may be inferred from this file.",
+  "identity": {
+    "sourceHead": "8b6f54595e0efe519f500c41cffdb11172d2fceb",
+    "productSourceEquivalentTo": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+    "hostDllSha256": "5669d7b08199b4cc8b39d886d496399441cacb7b3d19da251569460a9a767976",
+    "nextBuildId": "hMU29Ej5cfQxp1-pC9yp6",
+    "database": "tooba_alpha",
+    "productChanges": 0
+  },
+  "counts": { "PASS": 56, "FAIL": 0, "NOT_RUN": 4, "total": 60 },
+  "notRunIds": ["D2-ORDER", "D2-HOLD", "D2-PARTIAL", "D2-RECOVERY"],
+  "gates": {
+    "acceptanceGateSelfTest": { "status": "PASS", "exit": 0, "detail": "positive fixture + 11 negative controls", "log": "finalacceptance-evidence/acceptance-gate-selftest.log" },
+    "architectReviewGateSelfTest": { "status": "PASS", "exit": 0, "detail": "positive fixture + 14 negative controls", "log": "finalacceptance-evidence/architect-review-gate-selftest.log" },
+    "acceptanceGateFullImmutableMatrix": {
+      "status": "NOT_RUN",
+      "reason": "A full 60-ID PLAN/RUN bound to the immutable matrices cannot honestly be produced with 4 NOT_RUN IDs; the gate rejects any NOT_RUN/non-executed test. Building fabricated expected==observed facts is forbidden."
+    },
+    "architectReviewGate": {
+      "status": "NOT_RUN",
+      "reason": "Requires an architect-authored ARCHITECT-REVIEW.json bound to base/candidate/evidence commit; a worker must not author it. No such file exists."
+    },
+    "openspecStrict": { "status": "PASS", "exit": 0, "change": "offer-production-readiness-296-r10", "log": "finalacceptance-evidence/openspec-strict.log" },
+    "frontendArchitecture": { "status": "PASS_BASELINE_ONLY", "exit": 1, "baselineSourceSizeViolations": 27, "offerOwnedViolations": 0, "log": "finalacceptance-evidence/architecture-frontend.log", "note": "27 historical violations outside Offer excluded from remediation, not marked resolved." },
+    "offerBackendArchitectureTests": { "status": "PASS", "exit": 0, "passed": 51, "failed": 0, "log": "finalacceptance-evidence/offer-architecture-tests.log" }
+  },
+  "closedThisTask": {
+    "R10-01-B": { "status": "PASS", "evidence": "finalacceptance-evidence/R10-01-B.json", "sha256": "a0f14c24add6cf6a840aa3cd4dbc95b8f629560402a1560699da42ea853bf2d5" },
+    "OWN-10": { "status": "PASS", "evidence": "finalacceptance-evidence/OWN-10.json", "sha256": "069327ecfab391454732ff1e9213686a1e2b463a0a3abd27388c3b9aeb98eb41" },
+    "OWN-08": { "status": "PASS", "evidence": "finalacceptance-evidence/OWN-08.json", "sha256": "459fa6d7d0b616b95ceb79d691362da294e55ad2c3e383f2a5bf6cb47638d26d" },
+    "R10-13-P": { "status": "PASS", "evidence": "finalacceptance-evidence/R10-13-P.json", "sha256": "5a60b06f41547933013c5f936b80e52f0920843954bc9fb5c28569d337be3d5d" }
+  },
+  "blockers": [
+    {
+      "id": "A05-D2-FULL-WORKFLOW",
+      "affects": ["D2-ORDER", "D2-HOLD", "D2-PARTIAL", "D2-RECOVERY"],
+      "exactEvidence": "POST /v1/storefront/checkout returned 401 checkout.authentication_required for a real guest cart (checkout.authentication_required; Host CheckoutIdentityGate enforces Catalog AuthenticatedOnly policy and does not honor X-Tooba-Dev-Actor-User-Id); the existing full Order relational suite requires a separate task-owned PostgreSQL at port 15433 / database order_tb231, which OrderEvidenceRelationalTestTarget explicitly rejects as not tooba_alpha.",
+      "whyBlocked": "Closing the assertions requires either an alternate database (forbidden) or new customer-authentication/fixture scope and a new checkout workflow harness beyond verification-only scope.",
+      "requiredArchitectDecision": "Authorize an in-scope customer-authenticated checkout path on tooba_alpha, or accept the retained owner-contract partial evidence for D2 with an explicit limited scope."
+    }
+  ],
+  "environmentRestored": true,
+  "testOwnedDatabaseResidue": "none",
+  "conclusion": "G1 (R10-01-B, OWN-10) and G3 (R10-13-P) closed with fresh executed evidence; OWN-08 strengthened; architecture reconciled with 0 new/Offer-owned violations. Final acceptance is NOT achieved because 4 immutable IDs remain NOT_RUN and no architect acceptance receipt exists. Status: BLOCKED."
+}

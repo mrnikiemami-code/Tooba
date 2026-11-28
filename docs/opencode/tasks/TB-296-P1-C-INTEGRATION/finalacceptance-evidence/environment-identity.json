@@ -1,0 +1,58 @@
+{
+  "taskId": "TB-296-P1-FINAL-ACCEPTANCE",
+  "generatedAt": "2026-11-28",
+  "governanceProtocol": "TOOBA-OPENCODE-DELIVERY-V1@1.5.3",
+  "mode": "VERIFICATION_ONLY",
+  "source": {
+    "head": "8b6f54595e0efe519f500c41cffdb11172d2fceb",
+    "productSourceEquivalentTo": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+    "productSourceDiffSinceBuiltCandidate": "none (git diff 84f3372a..HEAD touches docs/opencode/tasks/TB-296-P1-C-INTEGRATION only)",
+    "branch": "opencode/iso-agents-002",
+    "productCodeChanges": 0
+  },
+  "served": {
+    "host": "http://127.0.0.1:5088",
+    "hostBinary": ".tmp-p1c-final2-host/Tooba.Host.exe",
+    "hostDllSha256": "5669d7b08199b4cc8b39d886d496399441cacb7b3d19da251569460a9a767976",
+    "next": "http://127.0.0.1:3000",
+    "nextBuildId": "hMU29Ej5cfQxp1-pC9yp6",
+    "database": "tooba_alpha",
+    "databaseContainer": "postgres-db",
+    "databaseEngine": "PostgreSQL 17",
+    "databaseConnectionReference": "tenant-alpha"
+  },
+  "backup": {
+    "path": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-final-20261127173245.dump",
+    "sha256": "589f8c2a0cb525dca1238deee8c05e81bfaf71cab8a19b0862f4b5af74e68166",
+    "size": 3265393,
+    "verifiedVia": "pg_restore --list exit 0 + SHA-256 match (p1c-support preflight)"
+  },
+  "configuration": {
+    "changedForTests": [
+      "store-beta SingleStore tenant (SalesChannel=Direct, same tenant-alpha connection/tooba_alpha) added to the running Host published appsettings for R10-01-B",
+      "Edition=Marketplace bound to Marketplace.ConnectionReference=tenant-alpha (same tooba_alpha) for OWN-10"
+    ],
+    "restored": true,
+    "restoredFileSha256": "396ab642647b0dd0210a31e854e26847a26823816669aeb46d65ec889bfce421",
+    "restoredFileMatchesPreTestSnapshot": true,
+    "sourceAppsettingsUntrackedChanges": "none",
+    "postRestoreProbe": {
+      "adminDevContext": {"tenantId": "store-alpha", "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"},
+      "adminAllowedChannels": ["Marketplace"],
+      "storeBetaTenant": "404 store not found (removed)"
+    }
+  },
+  "databaseState": {
+    "baselineBefore": {"offers": 3323, "prices": 5223, "offers_history": 265, "seller_orders": 12, "checkouts": 11, "parties": 10, "langs": 3, "content": 23, "pages": 1, "stories": 6, "allocations": 0},
+    "afterAllTests": {"offers": 3323, "prices": 5231, "offers_history": 265, "allocations": 0, "p1cLeakedOffers": 0, "p1cLeakedCarts": 0, "p1cLeakedPrices": 0},
+    "priceDeltaExplanation": "prices +8 are normal Host-startup demo re-quotes on the pre-existing demo offers (timestamps match the two controlled Host restarts); no test-owned fixture row remains and offers/history/allocations are unchanged.",
+    "testOwnedResidue": "none"
+  },
+  "gates": {
+    "architectReviewGateSelfTest": {"exit": 0, "result": "PASS: positive fixture + 14 negative controls"},
+    "acceptanceGateSelfTest": {"exit": 0, "result": "PASS: positive fixture + 11 negative controls"},
+    "frontendArchitecture": {"exit": 1, "baselineSourceSizeViolations": 27, "offerOwnedViolations": 0, "note": "27 historical violations outside Offer; excluded from remediation per architect review, not marked resolved"},
+    "offerBackendArchitectureTests": {"exit": 0, "passed": 51, "failed": 0},
+    "openspecStrict": {"exit": 0, "change": "offer-production-readiness-296-r10", "warnings": "long-requirement warnings only"}
+  }
+}

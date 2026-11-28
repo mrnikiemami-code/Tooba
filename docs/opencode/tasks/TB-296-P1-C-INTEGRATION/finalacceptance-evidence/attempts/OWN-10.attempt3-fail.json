@@ -1,0 +1,258 @@
+{
+  "id": "OWN-10",
+  "requests": [],
+  "sql": [],
+  "status": "FAIL",
+  "channels": {
+    "status": 200,
+    "body": [
+      "Marketplace"
+    ]
+  },
+  "detail": {
+    "status": 200,
+    "body": {
+      "offerId": "964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "sellerDisplayName": "فروشگاه آرمان",
+      "catalogVariantId": "01a05388-1912-7000-8aaf-fb119bd5b5ae",
+      "productId": "01a05388-181d-7000-91fd-37ab0dcc6450",
+      "productTitle": "لنوو اولترابوک مدل 2",
+      "brandName": "لنوو",
+      "sellerSku": "VAR-01a05388191270008aaffb119bd5b5ae",
+      "status": "Active",
+      "channel": "Marketplace",
+      "amount": 2407839,
+      "currency": "IRR",
+      "onHand": 0,
+      "reserved": 0,
+      "availableUnits": 0,
+      "catalogReadOnly": true,
+      "returnPolicyChoice": "Default",
+      "defaultReturnWindowDays": 7,
+      "sellerCanOverrideReturnPolicy": true,
+      "minReturnWindowDays": 1,
+      "maxReturnWindowDays": 30,
+      "allowNonReturnableOffers": true,
+      "minimumOrderQuantity": 1,
+      "maximumOrderQuantity": 20,
+      "productUnitCode": "pcs",
+      "productUnitName": "عدد",
+      "productUnitShortName": "عدد",
+      "inventoryLocations": [],
+      "variantCode": "DEMO-demo-prod-laptop-computer-laptops-ultrabooks-2-8",
+      "primaryMediaAssetId": "01a05388-160f-7000-8253-34d8ceda0010",
+      "fulfillmentResponsibility": "Platform",
+      "fulfillmentShippingTypeId": "01a16f43-6b4a-7000-8670-4c16e14c6345",
+      "lastUpdatedAt": "2026-10-29T02:36:50.66591+00:00",
+      "variantLabel": "رم (laptop): ۸ گیگ · حافظه (laptop): ۲۵۶ گیگ · رنگ (laptop): خاکستری",
+      "unitQuantityDecimalPlaces": 0,
+      "unitRoundingMode": "Nearest",
+      "priceRevision": "9b6e9654f02c4c6697a780a1485def58:63924832819342464",
+      "offerRevision": "2026-10-29T02:36:50.6659100+00:00",
+      "revisions": {
+        "offer": "2026-10-29T02:36:50.6659100+00:00",
+        "price": "9b6e9654f02c4c6697a780a1485def58:63924832819342464",
+        "offeredQuantity": "absent"
+      },
+      "capabilities": {
+        "canEditPhysicalInventory": false,
+        "canEditOfferedQuantity": true,
+        "canAssignFulfillment": false,
+        "canEditShippingPolicy": false
+      },
+      "priceId": "9b6e9654-f02c-4c66-97a7-80a1485def58"
+    }
+  },
+  "capabilities": {
+    "canEditPhysicalInventory": false,
+    "canEditOfferedQuantity": true,
+    "canAssignFulfillment": false,
+    "canEditShippingPolicy": false
+  },
+  "languages": {
+    "endpoint": [
+      {
+        "languageId": "01a06a53-4139-7000-bb9b-3078a0d2e5c4",
+        "code": "fa-IR",
+        "urlPrefix": "fa",
+        "displayName": "Persian (Iran)",
+        "nativeName": "فارسی",
+        "direction": "rtl",
+        "culture": "fa-IR",
+        "calendarDisplay": "Jalali",
+        "isActive": true,
+        "isDefault": true,
+        "sortOrder": 0
+      },
+      {
+        "languageId": "01a06a53-4196-7000-9b98-fb3706490005",
+        "code": "en-US",
+        "urlPrefix": "en",
+        "displayName": "English (United States)",
+        "nativeName": "English",
+        "direction": "ltr",
+        "culture": "en-US",
+        "calendarDisplay": "Gregorian",
+        "isActive": true,
+        "isDefault": false,
+        "sortOrder": 1
+      },
+      {
+        "languageId": "01a0844c-829e-7000-ab25-64b381896053",
+        "code": "ru-RU",
+        "urlPrefix": "ru",
+        "displayName": "Russian",
+        "nativeName": "Русский",
+        "direction": "ltr",
+        "culture": "ru-RU",
+        "calendarDisplay": "Gregorian",
+        "isActive": true,
+        "isDefault": false,
+        "sortOrder": 20
+      }
+    ],
+    "db": [
+      {
+        "code": "fa-IR",
+        "active": true,
+        "prefix": "fa",
+        "default": true,
+        "calendar": "Jalali",
+        "direction": "Rtl"
+      },
+      {
+        "code": "en-US",
+        "active": true,
+        "prefix": "en",
+        "default": false,
+        "calendar": "Gregorian",
+        "direction": "Ltr"
+      },
+      {
+        "code": "ru-RU",
+        "active": true,
+        "prefix": "ru",
+        "default": false,
+        "calendar": "Gregorian",
+        "direction": "Ltr"
+      }
+    ]
+  },
+  "geometry": [
+    {
+      "width": 360,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "fa-IR",
+      "tabs": [
+        "offer-tab-button-identity",
+        "offer-tab-button-pricing",
+        "offer-tab-button-discounts",
+        "offer-tab-button-inventory",
+        "offer-tab-button-shipping",
+        "offer-tab-button-conditions",
+        "offer-tab-button-history"
+      ],
+      "title": "لنوو اولترابوک مدل 2"
+    },
+    {
+      "width": 768,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "fa-IR",
+      "tabs": [
+        "offer-tab-button-identity",
+        "offer-tab-button-pricing",
+        "offer-tab-button-discounts",
+        "offer-tab-button-inventory",
+        "offer-tab-button-shipping",
+        "offer-tab-button-conditions",
+        "offer-tab-button-history"
+      ],
+      "title": "لنوو اولترابوک مدل 2"
+    },
+    {
+      "width": 1440,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "fa-IR",
+      "tabs": [
+        "offer-tab-button-identity",
+        "offer-tab-button-pricing",
+        "offer-tab-button-discounts",
+        "offer-tab-button-inventory",
+        "offer-tab-button-shipping",
+        "offer-tab-button-conditions",
+        "offer-tab-button-history"
+      ],
+      "title": "لنوو اولترابوک مدل 2"
+    }
+  ],
+  "controls": {
+    "offeredPresent": true,
+    "offeredDisabled": false,
+    "reasonPresent": false,
+    "physicalCount": 0,
+    "physicalAllDisabled": true
+  },
+  "localeSwitch": {
+    "url": "/en/vendor-panel/products/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+    "dir": "ltr",
+    "lang": "en-US",
+    "overflow": 0,
+    "offeredValue": "7"
+  },
+  "thirdLocale": {
+    "dir": "ltr",
+    "lang": "ru-RU",
+    "overflow": 0
+  },
+  "invalidPrefix": {
+    "status": 200,
+    "url": "/zz/vendor-panel/products/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+    "lang": "fa-IR",
+    "dir": "rtl",
+    "hasWorkspace": false,
+    "reused": "R10-09-N/R10-09-B"
+  },
+  "apiHeaders": [
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "fa-IR"
+    },
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "fa-IR"
+    },
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "fa-IR"
+    },
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "fa-IR"
+    },
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "en-US"
+    },
+    {
+      "url": "http://127.0.0.1:3000/v1/seller/offers/964ac1b4-b39e-4f29-9d41-e4402fdf21f1",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "actor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "acceptLanguage": "ru-RU"
+    }
+  ],
+  "reason": "Error: Command failed: D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-psql.exe -X -qAt -v ON_ERROR_STOP=1 -d tooba_alpha -c SELECT jsonb_build_object('responsibility',(SELECT fulfillment_responsibility FROM offer.offers WHERE offer_id='964ac1b4-b39e-4f29-9d41-e4402fdf21f1'),'onHand',(SELECT coalesce(sum(on_hand),0) FROM inventory.stock_positions WHERE offer_id='964ac1b4-b39e-4f29-9d41-e4402fdf21f1'),'offered',(SELECT coalesce(sum(offered_quantity),0) FROM inventory.stock_positions WHERE offer_id='964ac1b4-b39e-4f29-9d41-e4402fdf21f1'),'allocations',(SELECT count(*) FROM inventory.offer_allocations WHERE offer_id='964ac1b4-b39e-4f29-9d41-e4402fdf21f1'))\nERROR:  column \"offered_quantity\" does not exist\nLINE 1: ...d41-e4402fdf21f1'),'offered',(SELECT coalesce(sum(offered_qu...\n                                                             ^\n\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execFileSync (node:child_process:961:15)\n    at psqlJson (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g1-own10.cjs:36:15)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g1-own10.cjs:182:23)"
+}

@@ -1,0 +1,120 @@
+{
+  "id": "R10-13-P",
+  "requests": [],
+  "status": "FAIL",
+  "reused": {
+    "path": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/p1c-group-de-final2-evidence/R10-13-P.json",
+    "sha256": "bda4f6db5cc868d3be5f93bebfbc712799d24d498a7321a248934f6dc08cb400",
+    "performance": {
+      "formMedianMs": 865,
+      "formP95Ms": 885,
+      "formSamples": [
+        885,
+        855,
+        867,
+        865,
+        865
+      ],
+      "pickerMedianMs": 53,
+      "pickerP95Ms": 79,
+      "pickerSamples": [
+        79,
+        47,
+        53,
+        71,
+        46
+      ],
+      "r8FormMs": 1598,
+      "r8PickerMs": 103
+    },
+    "regression": {
+      "orders": 10,
+      "products": 10,
+      "paging": {
+        "page1": 5,
+        "page2": 5,
+        "overlap": 0
+      },
+      "filteredDrafts": 3
+    },
+    "reason": "Warm form/picker performance, orders/products regressions, grid paging and status filter were already proven by the prior R10-13-P run; reused unchanged."
+  },
+  "campaigns": {
+    "status": 200,
+    "total": 11,
+    "count": 11,
+    "sample": [
+      {
+        "campaignId": "019a16a0-0005-7000-8000-000000000005",
+        "title": "[DEV-SEED] Amazing Draft | شگفت‌انگیز پیش‌نویس",
+        "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+        "lifecycleStatus": "Draft",
+        "runtimeLabel": "draft",
+        "startAt": "2026-11-27T20:46:19.669152+00:00",
+        "endAt": "2026-11-28T21:46:19.669152+00:00",
+        "priority": 50,
+        "memberCount": 1,
+        "updatedAt": "2026-11-27T21:46:20.41604+00:00"
+      },
+      {
+        "campaignId": "019a16a0-0004-7000-8000-000000000004",
+        "title": "[DEV-SEED] Amazing Expired | شگفت‌انگیز منقضی",
+        "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+        "lifecycleStatus": "Published",
+        "runtimeLabel": "expired",
+        "startAt": "2026-11-24T21:46:19.669152+00:00",
+        "endAt": "2026-11-26T21:46:19.669152+00:00",
+        "priority": 90,
+        "memberCount": 1,
+        "updatedAt": "2026-11-27T21:46:20.374172+00:00"
+      },
+      {
+        "campaignId": "019a16a0-0003-7000-8000-000000000003",
+        "title": "[DEV-SEED] Amazing Future Teasing | فردای شگفت‌انگیز",
+        "promotionTypeDisplayName": "پیشنهاد شگفت‌انگیز",
+        "lifecycleStatus": "Published",
+        "runtimeLabel": "scheduled",
+        "startAt": "2026-11-28T21:46:19.669152+00:00",
+        "endAt": "2026-11-29T21:46:19.669152+00:00",
+        "priority": 80,
+        "memberCount": 3,
+        "updatedAt": "2026-11-27T21:46:20.339144+00:00"
+      }
+    ]
+  },
+  "cart": {
+    "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+    "create": {
+      "cartId": "01a21ffb-273b-7000-90d3-26d56effe6ca",
+      "version": 1,
+      "market": "IR",
+      "defaultCurrency": "IRR",
+      "channel": "Marketplace",
+      "itemCount": 0,
+      "totalsByCurrency": [],
+      "lines": [],
+      "guestSecret": "96a5caf6680390fe5b489464849bfea7d0a286b2e820efa51e99d94b883e444b",
+      "status": "Active"
+    },
+    "addedStatus": 200,
+    "readBack": {
+      "status": 200,
+      "itemCount": 1,
+      "lines": 1
+    }
+  },
+  "sort": {
+    "ascIndicator": "وضعیت",
+    "descIndicator": "وضعیت",
+    "queryBodies": [
+      null,
+      null,
+      null
+    ]
+  },
+  "reason": "Error: status header did not show a sort indicator: {\"ascIndicator\":\"وضعیت\",\"descIndicator\":\"وضعیت\",\"queryBodies\":[null,null,null]}\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g3-r1013p.cjs:21:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-g3-r1013p.cjs:127:5)",
+  "cartCleanup": {
+    "cartsLeft": 0,
+    "linesLeft": 0
+  }
+}
