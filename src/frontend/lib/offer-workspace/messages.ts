@@ -93,6 +93,7 @@ export interface OfferWorkspaceMessages {
   pricingLegacyDecimals: string;
   pricingUnavailable: string;
   pricingSelectCurrency: string;
+  pricingSaveBeforeSwitch: string;
   pricingNoPrices: string;
   pricingPrimaryPrefix: string;
   discountsTitle: string;
@@ -315,10 +316,11 @@ const fa: OfferWorkspaceMessages = {
   pricingValidity: "اعتبار",
   pricingCurrent: "قیمت جاری",
   pricingStoreCurrency: "ارز پیش‌فرض فروشگاه",
-  pricingNoDecimals: "مبلغ ریال بدون اعشار است.",
+  pricingNoDecimals: "این ارز بدون اعشار است.",
   pricingLegacyDecimals: "این قیمت اعشار دارد؛ تا زمانی که آن را تغییر ندهید، مقدار ذخیره‌شده دست‌نخورده می‌ماند.",
   pricingUnavailable: "ثبت قیمت برای بازارها و ارزهای دیگر از این صفحه در دسترس نیست.",
   pricingSelectCurrency: "انتخاب ارز",
+  pricingSaveBeforeSwitch: "ابتدا قیمت فعلی را ذخیره کنید یا تغییر آن را برگردانید.",
   pricingNoPrices: "هنوز قیمتی برای این آفر ثبت نشده است.",
   pricingPrimaryPrefix: "قیمت پایه",
   discountsTitle: "تخفیفات",
@@ -438,7 +440,7 @@ const fa: OfferWorkspaceMessages = {
   conflictChecking: "بررسی آفر موجود…",
   validationAmount: "مبلغ نامعتبر است.",
   priceRequired: "برای ذخیره، مبلغ را وارد کنید یا تغییر قیمت را لغو کنید. مبلغ خالی صفر ثبت نمی‌شود.",
-  validationDecimals: "ریال بدون اعشار است.",
+  validationDecimals: "تعداد اعشار مبلغ با ارز انتخابی سازگار نیست.",
   validationInventory: "موجودی نامعتبر است.",
   validationBelowReserved: "موجودی فیزیکی نباید کمتر از رزرو باشد.",
   validationReason: "دلیل اصلاح الزامی است.",
@@ -542,10 +544,11 @@ const en: OfferWorkspaceMessages = {
   pricingValidity: "Validity",
   pricingCurrent: "Current price",
   pricingStoreCurrency: "Store default currency",
-  pricingNoDecimals: "IRR has no decimals.",
+  pricingNoDecimals: "This currency has no decimals.",
   pricingLegacyDecimals: "This price has decimals; the stored value stays untouched until you change it.",
   pricingUnavailable: "Recording prices for other markets and currencies is not available on this screen.",
   pricingSelectCurrency: "Select currency",
+  pricingSaveBeforeSwitch: "Save or revert the current price before switching currencies.",
   pricingNoPrices: "No price has been recorded for this offer yet.",
   pricingPrimaryPrefix: "Primary price",
   discountsTitle: "Discounts",
@@ -665,7 +668,7 @@ const en: OfferWorkspaceMessages = {
   conflictChecking: "Checking existing offer…",
   validationAmount: "Invalid amount.",
   priceRequired: "Enter an amount, or undo the price change. An empty amount is never saved as zero.",
-  validationDecimals: "IRR has no decimals.",
+  validationDecimals: "The amount exceeds the selected currency precision.",
   validationInventory: "Invalid stock value.",
   validationBelowReserved: "On-hand must not be below reserved.",
   validationReason: "Adjustment reason is required.",
