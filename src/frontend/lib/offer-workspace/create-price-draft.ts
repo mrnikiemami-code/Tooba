@@ -16,6 +16,12 @@ export function switchCreateCurrency(draft: OfferWorkspaceDraft, currency: strin
   const code = currency.toUpperCase();
   return { createPrices: rows, currency: code, amount: rows[code] ?? (!draft.currency ? draft.amount : "") };
 }
+export function removeCreateCurrency(draft: OfferWorkspaceDraft, currency: string): Partial<OfferWorkspaceDraft> {
+  const code = currency.toUpperCase();
+  const rows = createPriceEntries(draft);
+  delete rows[code];
+  return { createPrices: rows, ...(draft.currency.toUpperCase() === code ? { currency: "", amount: "" } : {}) };
+}
 export function createPriceRows(draft: OfferWorkspaceDraft): OfferPriceView[] {
   return Object.entries(createPriceEntries(draft)).flatMap(([currency, text]) => {
     const amount = parseDecimal(text);
