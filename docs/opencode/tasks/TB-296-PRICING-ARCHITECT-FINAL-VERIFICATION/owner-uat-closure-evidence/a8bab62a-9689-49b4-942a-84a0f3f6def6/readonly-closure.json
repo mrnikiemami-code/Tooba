@@ -1,0 +1,42 @@
+{
+  "runId": "a8bab62a-9689-49b4-942a-84a0f3f6def6",
+  "cases": {
+    "warehouse-positive-name-code": {
+      "status": "PASS",
+      "before": 8,
+      "results": [
+        {
+          "needle": "انبار دمو ACC",
+          "matched": [
+            "01a04402-79ef-7000-bac7-522a8dcab501",
+            "01a0440a-5c48-7000-b995-232803e19be5",
+            "01a0440a-5bbe-7000-b5b5-60f90286cfa9"
+          ]
+        },
+        {
+          "needle": "WH-ACC-ACC-DEMO",
+          "matched": [
+            "01a04402-79ef-7000-bac7-522a8dcab501"
+          ]
+        }
+      ]
+    },
+    "duplicate-admin": {
+      "status": "PASS",
+      "role": "admin",
+      "locale": "en",
+      "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+      "variant": "01a05388-1c80-7000-baf7-af1487e24bdf",
+      "from": "http://127.0.0.1:3000/en/admin/offers/new",
+      "to": "/en/admin/offers/005e50c2-c260-4cb3-994c-8179e2d5213b"
+    },
+    "duplicate-seller": {
+      "status": "FAIL",
+      "error": "locator.waitFor: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('offer-workspace') to be visible\u001b[22m\n"
+    }
+  },
+  "writeAttempts": 0,
+  "status": "BLOCKED",
+  "head": "4718ba4f26fa8966a2d7838deb707898ea392909",
+  "database": "tooba_alpha"
+}

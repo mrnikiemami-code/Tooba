@@ -17,10 +17,8 @@ import {
 import { OfferWorkspace } from "../../../lib/offer-workspace/offer-workspace.tsx";
 import { normalizeDigits } from "../../../lib/offer-workspace/model.ts";
 import { offerWorkspaceMessages } from "../../../lib/offer-workspace/messages.ts";
-import type {
-  OfferWorkspaceAdapter,
-  OfferWorkspaceDetail,
-} from "../../../lib/offer-workspace/types.ts";
+import type { OfferWorkspaceAdapter } from "../../../lib/offer-workspace/types.ts";
+import { baseDetail } from "./offer-workspace.mount.fixtures.ts";
 
 ensureDom();
 test.beforeEach(() => {
@@ -28,60 +26,6 @@ test.beforeEach(() => {
   window.localStorage.setItem("tooba.adminActorUserId", "actor-1");
   window.localStorage.setItem("tooba.sellerActorUserId", "seller-actor-1");
 });
-
-function baseDetail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorkspaceDetail {
-  return {
-    offerId: "offer-1",
-    sellerPartyId: "seller-1",
-    sellerDisplayName: "فروشگاه نیلوا",
-    catalogVariantId: "variant-1",
-    productId: "product-1",
-    productTitle: "نایک شلوار مردانه",
-    brandName: "Nike",
-    sellerSku: "SKU-1",
-    status: "Active",
-    channel: "Marketplace",
-    amount: 1000,
-    currency: "IRR",
-    onHand: 10,
-    reserved: 2,
-    availableUnits: 8,
-    catalogReadOnly: true,
-    returnPolicyChoice: "Default",
-    customReturnWindowDays: null,
-    defaultReturnWindowDays: 7,
-    sellerCanOverrideReturnPolicy: true,
-    minReturnWindowDays: 1,
-    maxReturnWindowDays: 30,
-    allowNonReturnableOffers: true,
-    minimumOrderQuantity: 1,
-    maximumOrderQuantity: 5,
-    productUnitCode: "pcs",
-    productUnitName: "عدد",
-    productUnitShortName: "عدد",
-    offerRevision: "offer-rev",
-    priceRevision: "price-rev",
-    allocationRevision: "alloc-rev",
-    offeredQuantity: null,
-    allocationHeld: null,
-    revisions: { offer: "offer-rev", price: "price-rev", offeredQuantity: "alloc-rev" },
-    capabilities: { canEditPhysicalInventory: true, canEditOfferedQuantity: false, canAssignFulfillment: true, canEditShippingPolicy: true },
-    fulfillmentResponsibility: null,
-    fulfillmentShippingTypeId: null,
-    lastUpdatedAt: null,
-    variantCode: null,
-    variantLabel: null,
-    primaryMediaAssetId: null,
-    unitQuantityDecimalPlaces: 0,
-    unitQuantityStep: null,
-    unitRoundingMode: null,
-    inventoryLocations: [
-      { stockItemId: "stock-a", locationId: "loc-a", revision: "stock-rev", locationCode: "WH-A", onHand: 10, reserved: 2, available: 8 },
-      { stockItemId: "stock-b", locationId: "loc-b", revision: "stock-rev", locationCode: "WH-B", onHand: 4, reserved: 0, available: 4 },
-    ],
-    ...over,
-  };
-}
 
 interface Calls {
   commercial: number;

@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 // Read-only connected duplicate and warehouse UI witness. Never create or modify an offer.
 const fs=require("node:fs"),path=require("node:path"),{execFileSync}=require("node:child_process"),{randomUUID}=require("node:crypto");
 const H="http://127.0.0.1:5088",F="http://127.0.0.1:3000";
@@ -33,7 +33,7 @@ async function findExisting(role,actor,seller,language){
 }
 async function selectIdentity(p,role,seller,d,locale){
  const base=role==="admin"?"/admin/offers/":"/vendor-panel/products/";
- await p.goto(F+"/"+locale+base+"new");await t(p,"offer-workspace").waitFor();
+ await p.goto(F+"/"+locale+base+"new"+(role==="seller"?"?sellerPartyId="+encodeURIComponent(seller.sellerPartyId):""));await t(p,"offer-workspace").waitFor({timeout:30000});
  if(role==="admin"){
   await t(p,"offer-seller-picker-toggle").click();const s=t(p,"offer-seller-dialog-search");await s.fill(seller.sellerLabel);await s.press("Enter");
   const o=t(p,"offer-seller-dialog-option").filter({hasText:seller.sellerLabel});await o.first().waitFor();check(await o.count()===1,"seller ambiguous");await o.click();
@@ -62,7 +62,7 @@ async function main(){
   const admin=await get("/v1/admin/dev-context"),seller=await get("/v1/seller/dev-contexts");
   check(admin.status===200&&Array.isArray(seller.body?.actors),"real context unavailable");
   const actors=seller.body.actors;const authorized=[];
-  for(const a of actors){const caps=await get("/v1/seller/access-control/me/capabilities",headers(a.actorUserId,a.sellerPartyId));if(caps.status===200&&caps.body?.permissions?.some(g=>g.permissionId==="product.create"&&g.scopeKind===1&&!g.deniedByCeiling))authorized.push(a)}
+  for(const a of actors){const caps=await get("/v1/seller/access-control/me/capabilities",headers(a.actorUserId,a.sellerPartyId));if(caps.status===200&&caps.body?.permissions?.some(g=>g.permissionId==="product.create"&&(g.scopeKind===1||g.scopeKind==="GlobalWithinOwner")&&!g.deniedByCeiling))authorized.push(a)}
   check(PW,"Playwright missing");browser=await require(PW).chromium.launch({timeout:20000});
   for(const [role,locale,language] of [["admin","en","en-US"],["seller","fa","fa-IR"]]){
    await stage("duplicate-"+role,async()=>{
