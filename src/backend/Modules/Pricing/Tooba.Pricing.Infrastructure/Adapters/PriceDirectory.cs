@@ -121,19 +121,9 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
         if (_currencyReference is not null)
         {
-            // An explicitly configured reference enables multi-currency; an empty reference means
-            // multi-currency is not configured and preserves the historical single-currency restriction.
-            var active = await _currencyReference.ListActiveAsync(cancellationToken);
-            if (active.Count > 0)
-            {
-                if (!await _currencyReference.IsActiveAsync(currency, cancellationToken))
-                    return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
-            }
-            else if (_storeCommerce is not null
-                     && !string.Equals(currency, storeCurrency, StringComparison.OrdinalIgnoreCase))
-            {
-                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.MarketInvalid));
-            }
+            // A registered reference is authoritative even when no currencies are active.
+            if (!await _currencyReference.IsActiveAsync(currency, cancellationToken))
+                return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.CurrencyInvalid));
         }
         else if (_storeCommerce is not null
                  && !string.Equals(currency, storeCurrency, StringComparison.OrdinalIgnoreCase))
@@ -146,6 +136,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             return Result.Failure<SellerPriceWriteReceipt>(currencyError!);
         market = marketCode.Value;
         currency = currencyCode.Value;
+        var normalizedAmount = Money.Create(request.Amount, currency).Amount;
         var channel = ToPriceChannel(offer.Channel);
         if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.ExpectedRevision))
             return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(FoundationErrorCodes.ConcurrencyConflict));
@@ -158,7 +149,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
         if (replay is not null)
         {
-            if (replay.OfferId != request.OfferId || replay.NewAmount != request.Amount
+            if (replay.OfferId != request.OfferId || replay.NewAmount != normalizedAmount
                 || replay.ActorUserId != request.ActorUserId
                 || !string.Equals(replay.Currency, currency, StringComparison.Ordinal)
                 || !await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == replay.PriceId
@@ -188,7 +179,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             if (await HasActiveBaseOverlapAsync(request.OfferId, market, channel, currency, Guid.Empty, cancellationToken))
                 return Result.Failure<SellerPriceWriteReceipt>(new SemanticError(PricingErrorCodes.Overlap));
             price = AuthoredPrice.Create(_ids.NewId(), request.OfferId, market, channel,
-                request.Amount, currency, now.AddYears(-1), null, now);
+                normalizedAmount, currency, now.AddYears(-1), null, now);
             price.Activate(now);
             _db.Prices.Add(price);
             oldAmount = null;
@@ -198,7 +189,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             price = existing;
             oldAmount = price.Amount;
             await EnsureNoOverlapAsync(price, price.PriceId, cancellationToken);
-            price.ChangeAmount(request.Amount, currency, now);
+            price.ChangeAmount(normalizedAmount, currency, now);
             if (price.Status != PriceStatus.Active)
                 price.Activate(now);
         }
@@ -212,7 +203,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             ActorUserId = request.ActorUserId,
             OccurredAt = now,
             OldAmount = oldAmount,
-            NewAmount = request.Amount,
+            NewAmount = price.Amount,
             Currency = currency,
             Revision = PriceRevision(price),
         };
@@ -233,7 +224,7 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
             await transaction.RollbackAsync(cancellationToken);
             var raced = await _db.PriceChanges.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.OperationId == operationId, cancellationToken);
-            if (raced is not null && raced.OfferId == request.OfferId && raced.NewAmount == request.Amount
+            if (raced is not null && raced.OfferId == request.OfferId && raced.NewAmount == normalizedAmount
                 && raced.ActorUserId == request.ActorUserId
                 && string.Equals(raced.Currency, currency, StringComparison.Ordinal)
                 && await _db.Prices.AsNoTracking().AnyAsync(p => p.PriceId == raced.PriceId
@@ -290,17 +281,16 @@ public sealed class PriceDirectory : IPriceDirectory, IPriceLookupGateway, ISell
 
         var channel = ToPriceChannel(offer.Channel);
         var market = _storeCommerce?.Current?.Market?.Trim().ToUpperInvariant();
-        var query = _db.Prices.AsNoTracking()
+        if (string.IsNullOrWhiteSpace(market))
+            return [];
+
+        var rows = await _db.Prices.AsNoTracking()
             .Where(x => x.OfferId == offerId
+                        && x.Market == market
                         && x.Channel == channel
                         && x.QualifierKind == PriceQualifierKind.Base
-                        && x.Status == PriceStatus.Active);
-        if (!string.IsNullOrWhiteSpace(market))
-        {
-            query = query.Where(x => x.Market == market);
-        }
-
-        var rows = await query.ToListAsync(cancellationToken);
+                        && x.Status == PriceStatus.Active)
+            .ToListAsync(cancellationToken);
         return rows
             .GroupBy(x => x.Currency, StringComparer.Ordinal)
             .Select(group => group.OrderByDescending(x => x.ValidFrom).ThenByDescending(x => x.PriceId).First())
