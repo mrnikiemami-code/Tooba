@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
+import { useOfferWriteAccess } from "../use-offer-write-access";
 import { useEffect, useMemo, useState } from "react";
 import { useRegistryLocale } from "../../../../lib/i18n/registry-locale";
 import { offerWorkspaceMessagesForRegistry } from "../../../../lib/offer-workspace/messages-ru";
@@ -37,6 +38,7 @@ export default function VendorCreateOfferPage() {
   const resourceLocale = useLocale();
   const workspaceMessages = offerWorkspaceMessagesForRegistry(registry.locale.language) ?? offerWorkspaceMessages[resourceLocale];
   const [sellerPartyId, setSellerPartyId] = useState<string | null>(null);
+  const createAccess = useOfferWriteAccess(sellerPartyId, "product.create");
 
   useEffect(() => {
     setSellerPartyId(readSellerPartyId(window.location.search) ?? "");
@@ -160,19 +162,19 @@ export default function VendorCreateOfferPage() {
     };
   }, [sellerPartyId, router, localizePath, offerLocale.code]);
 
-  if (sellerPartyId === null) {
+  if (sellerPartyId === null || (sellerPartyId && createAccess === "loading")) {
     return (
       <main className="mx-auto w-full max-w-6xl">
         <Skeleton className="h-16 w-full" />
       </main>
     );
   }
-  if (sellerPartyId.length === 0) {
+  if (sellerPartyId.length === 0 || createAccess === "denied" || createAccess === "unavailable") {
     return (
       <main className="mx-auto w-full max-w-6xl">
         <ErrorState
-          title={workspaceMessages.denied}
-          detail={workspaceMessages.sellerSessionHint}
+          title={createAccess === "unavailable" ? workspaceMessages.dataUnavailable : workspaceMessages.denied}
+          detail={sellerPartyId.length === 0 ? workspaceMessages.sellerSessionHint : createAccess === "unavailable" ? workspaceMessages.dataUnavailable : workspaceMessages.offerCreatePermissionRequired}
           onRetry={() => window.location.reload()}
           retryLabel={workspaceMessages.retry}
         />
