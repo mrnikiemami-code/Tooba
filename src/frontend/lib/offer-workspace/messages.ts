@@ -121,6 +121,7 @@ export interface OfferWorkspaceMessages {
   inventoryReasonHint: string;
   inventoryEmpty: string;
   inventoryAddLocation: string;
+  inventoryRemoveLocation: string;
   inventoryNoEligible: string;
   inventoryUnavailable: string;
   inventoryProvisionNote: string;
@@ -355,6 +356,7 @@ const fa: OfferWorkspaceMessages = {
   inventoryReasonHint: "برای هر اصلاح موجودی الزامی است.",
   inventoryEmpty: "برای این آفر هنوز موجودی ثبت نشده است.",
   inventoryAddLocation: "افزودن انبار",
+  inventoryRemoveLocation: "حذف انبار",
   inventoryNoEligible: "انبار قابل انتخاب در دسترس نیست.",
   inventoryUnavailable: "افزودن انبار جدید از این صفحه ممکن نیست.",
   inventoryProvisionNote: "موقعیت‌های انبار پس از ذخیره پیش‌نویس به‌صورت واقعی ایجاد می‌شوند.",
@@ -590,6 +592,7 @@ const en: OfferWorkspaceMessages = {
   inventoryReasonHint: "Required for every inventory adjustment.",
   inventoryEmpty: "No inventory is recorded for this offer yet.",
   inventoryAddLocation: "Add warehouse",
+  inventoryRemoveLocation: "Remove warehouse",
   inventoryNoEligible: "No warehouse is available to select.",
   inventoryUnavailable: "Adding a new warehouse is not available on this screen.",
   inventoryProvisionNote: "Warehouse positions are created for real after the draft is saved.",
