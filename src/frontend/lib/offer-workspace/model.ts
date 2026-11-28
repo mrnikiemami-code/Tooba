@@ -39,7 +39,7 @@ export function parseDecimal(input: string | null | undefined): number | null {
 export function draftFromDetail(detail: OfferWorkspaceDetail): OfferWorkspaceDraft {
   return {
     sellerSku: detail.sellerSku ?? "",
-    amount: detail.amount != null ? String(detail.amount) : "",
+    amount: (() => { const row = priceRowFor(detail, detail.currency); return row ? String(row.amount) : ""; })(),
     currency: detail.currency,
     inventoryOnHand: Object.fromEntries(
       detail.inventoryLocations.map((row) => [row.stockItemId, String(row.onHand)]),
