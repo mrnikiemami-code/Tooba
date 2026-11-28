@@ -1,0 +1,58 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a22018-96de-7000-b022-d4b67377c59b",
+    "order": {
+      "lines": [
+        {
+          "id": "01a22018-96ea-7000-82de-831fe5b9f374",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a22018-970d-7000-927b-ffaa267d032b"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:01:12.126508+00:00",
+          "reservations": "01a22018-970d-7000-927b-ffaa267d032b"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22018-96e6-7000-8f54-089e6708b463",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:01:12.126508+00:00",
+        "reservations": "01a22018-970d-7000-927b-ffaa267d032b"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a22018-970d-7000-927b-ffaa267d032b",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:01:12.126508+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "reason": "Error: cycle 1 not active: [{\"n\":1,\"status\":\"Active\",\"expires\":\"2026-11-28T03:01:12.126508+00:00\",\"reservations\":\"01a22018-970d-7000-927b-ffaa267d032b\"}]\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:54:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "taskId": "TB-296-P1-FINAL-CLOSURE",
+  "generatedAt": "2026-11-28",
+  "governanceProtocol": "TOOBA-OPENCODE-DELIVERY-V1@1.5.3",
+  "mode": "VERIFICATION_ONLY",
+  "source": {
+    "head": "ad1a7d10b2c089a433197219e978e9b8bb49981d",
+    "productSourceEquivalentTo": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+    "productCodeChanges": 0
+  },
+  "served": {
+    "host": "http://127.0.0.1:5088",
+    "hostBinary": ".tmp-p1c-final2-host/Tooba.Host.exe",
+    "hostDllSha256": "5669d7b08199b4cc8b39d886d496399441cacb7b3d19da251569460a9a767976",
+    "next": "http://127.0.0.1:3000",
+    "nextBuildId": "hMU29Ej5cfQxp1-pC9yp6",
+    "database": "tooba_alpha",
+    "databaseContainer": "postgres-db",
+    "postRestoreHealth": 200,
+    "postRestoreAdminDevContext": { "tenantId": "store-alpha", "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db" },
+    "postRestoreAllowedChannels": ["Marketplace"]
+  },
+  "backupAndRestore": {
+    "backupPath": "C:\\Users\\User\\AppData\\Local\\Temp\\opencode\\p1c-final-20261127173245.dump",
+    "backupSha256": "589f8c2a0cb525dca1238deee8c05e81bfaf71cab8a19b0862f4b5af74e68166",
+    "method": "drop/recreate tooba_alpha from the verified custom-format dump via pg_restore --no-owner --no-privileges",
+    "restoreExit": 0,
+    "postRestoreCounts": { "offers": 3323, "prices": 5215, "offer_history": 265, "order_lines": 14, "checkouts": 11, "seller_orders": 12, "identity_users": 101, "reserved": 5, "allocations": 0, "p1cOffers": 0 },
+    "note": "All synthetic customers, carts, checkouts, payments and reservation fixtures created by this task were removed by the verified baseline restore; the only post-restore increase (prices 5207->5215) is normal Host-startup demo re-quoting."
+  },
+  "d2Evidence": {
+    "D2-ORDER": { "status": "PASS", "sha256": "3988f1a353f108e71487e709a1366534c654f2d6a49f3d7a8813c6eb5e1a9321" },
+    "D2-HOLD": { "status": "PASS", "sha256": "410b66addcd9108d4898dc43180556fb53dadb86feec255dcadb1ba98e69dd89" },
+    "D2-PARTIAL": { "status": "PASS", "sha256": "1fee3d4879720e690db355592e6598817f0c8c5c2f8bee4cedf80fdcaec56c91" },
+    "D2-RECOVERY": { "status": "PASS", "sha256": "acd6e712f49c6c626f83034a396013974c18ba6f7c60cb29f6948d671ea1f45d" }
+  },
+  "authentication": {
+    "method": "existing standard /v1/auth/register + /v1/auth/login synthetic DEV customer on tooba_alpha",
+    "bypass": false,
+    "securityPolicyChanges": 0,
+    "sessionsCleanedByBaselineRestore": true
+  },
+  "gates": {
+    "acceptanceGateSelfTest": { "exit": 0, "result": "PASS: positive fixture + 11 negative controls" },
+    "architectReviewGateSelfTest": { "exit": 0, "result": "PASS: positive fixture + 14 negative controls" },
+    "reconciledLedgerStructural": { "rows": 60, "unique": 60, "evidenceChecked": 60, "hashMismatches": 0, "pass": 60, "fail": 0, "not_run": 0 },
+    "fullAcceptanceGate": {
+      "status": "NOT_RUN",
+      "reason": "The 8 deferred D2/F-BENTRY scenarios have no issued immutable JSON scenario matrix (only prose in ARCHITECT-PHASE-TEST-SCHEDULING.md), and no non-fabricated per-assertion expected/observed PLAN/RUN exists for all 60 IDs. A worker must not author the expected/observed facts that the gate equates. The independent architect must confirm the deferred matrix and run the gate."
+    },
+    "architectReviewGate": {
+      "status": "NOT_RUN",
+      "reason": "Requires an architect-authored ARCHITECT-REVIEW.json bound to base/candidate/evidence; a worker must not author it."
+    }
+  }
+}

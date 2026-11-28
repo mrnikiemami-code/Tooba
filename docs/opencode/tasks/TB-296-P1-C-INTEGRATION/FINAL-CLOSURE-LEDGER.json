@@ -1,0 +1,1399 @@
+{
+  "ledgerName": "TB-296-P1-FINAL-CLOSURE-LEDGER",
+  "taskId": "TB-296-P1-FINAL-CLOSURE",
+  "generatedAt": "2026-11-28T03:15:04.735Z",
+  "mode": "VERIFICATION_ONLY",
+  "immutableIdSet": {
+    "count": 60,
+    "unique": 60,
+    "order": [
+      "R10-01-P",
+      "R10-01-N",
+      "R10-01-B",
+      "R10-02-P",
+      "R10-02-N",
+      "R10-02-B",
+      "R10-03-P",
+      "R10-03-N",
+      "R10-03-B",
+      "R10-04-P",
+      "R10-04-N",
+      "R10-04-B",
+      "R10-05-P",
+      "R10-05-N",
+      "R10-05-B",
+      "R10-06-P",
+      "R10-06-N",
+      "R10-06-B",
+      "R10-07-P",
+      "R10-07-N",
+      "R10-07-B",
+      "R10-08-P",
+      "R10-08-N",
+      "R10-08-B",
+      "R10-09-P",
+      "R10-09-N",
+      "R10-09-B",
+      "R10-10-P",
+      "R10-10-N",
+      "R10-10-B",
+      "R10-11-P",
+      "R10-11-N",
+      "R10-11-B",
+      "R10-12-P",
+      "R10-12-N",
+      "R10-12-B",
+      "R10-13-P",
+      "R10-13-N",
+      "R10-13-B",
+      "R10-14-P",
+      "R10-14-N",
+      "R10-14-B",
+      "OWN-01",
+      "OWN-02",
+      "OWN-03",
+      "OWN-04",
+      "OWN-05",
+      "OWN-06",
+      "OWN-07",
+      "OWN-08",
+      "OWN-09",
+      "OWN-10",
+      "D2-ORDER",
+      "D2-HOLD",
+      "D2-ALLOCATION",
+      "D2-PARTIAL",
+      "D2-RECOVERY",
+      "D2-HTTP",
+      "F-BENTRY-01",
+      "F-BENTRY-02"
+    ],
+    "source": "FINAL-LEDGER.json (existing immutable 60-ID order)"
+  },
+  "counts": {
+    "PASS": 60,
+    "FAIL": 0,
+    "NOT_RUN": 0
+  },
+  "passIds": [
+    "R10-01-P",
+    "R10-01-N",
+    "R10-01-B",
+    "R10-02-P",
+    "R10-02-N",
+    "R10-02-B",
+    "R10-03-P",
+    "R10-03-N",
+    "R10-03-B",
+    "R10-04-P",
+    "R10-04-N",
+    "R10-04-B",
+    "R10-05-P",
+    "R10-05-N",
+    "R10-05-B",
+    "R10-06-P",
+    "R10-06-N",
+    "R10-06-B",
+    "R10-07-P",
+    "R10-07-N",
+    "R10-07-B",
+    "R10-08-P",
+    "R10-08-N",
+    "R10-08-B",
+    "R10-09-P",
+    "R10-09-N",
+    "R10-09-B",
+    "R10-10-P",
+    "R10-10-N",
+    "R10-10-B",
+    "R10-11-P",
+    "R10-11-N",
+    "R10-11-B",
+    "R10-12-P",
+    "R10-12-N",
+    "R10-12-B",
+    "R10-13-P",
+    "R10-13-N",
+    "R10-13-B",
+    "R10-14-P",
+    "R10-14-N",
+    "R10-14-B",
+    "OWN-01",
+    "OWN-02",
+    "OWN-03",
+    "OWN-04",
+    "OWN-05",
+    "OWN-06",
+    "OWN-07",
+    "OWN-08",
+    "OWN-09",
+    "OWN-10",
+    "D2-ORDER",
+    "D2-HOLD",
+    "D2-ALLOCATION",
+    "D2-PARTIAL",
+    "D2-RECOVERY",
+    "D2-HTTP",
+    "F-BENTRY-01",
+    "F-BENTRY-02"
+  ],
+  "failIds": [],
+  "notRunIds": [],
+  "identity": {
+    "sourceHead": "ad1a7d10b2c089a433197219e978e9b8bb49981d",
+    "productSourceEquivalentTo": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+    "hostDllSha256": "5669d7b08199b4cc8b39d886d496399441cacb7b3d19da251569460a9a767976",
+    "nextBuildId": "hMU29Ej5cfQxp1-pC9yp6",
+    "database": "tooba_alpha",
+    "productChanges": 0
+  },
+  "sources": {
+    "GROUP-ABC-RESULT.json": "d9a409c0b604f7d45277de8ff98f02090b811a1bbe0ad78018def5038cd3a774",
+    "p1c-group-abc-ledger-r2.json": "ce50ad0e4454b99cbacc4ac26a472e6d1ea2235919f5a1fbcc6ca82e1cc0fe7e",
+    "p1c-group-de-summary.json": "5b1cdc916e16e9f7f335137b4fe4b00dee7d41bbda8295c55ea80d1b02d8c0fb",
+    "p1c-group-de-consolidated-ledger.json": "56be605c5e9c513671d3a41b5cdf1dcd84fbd30f574eee85a02d8bdb6ac52d1e",
+    "p1c-executed-ledger4.json": "d4083adc694dde1df90fcd1870106c75ff58c39f0c4ca28d10f9145f319d9efb",
+    "p1c-group-f-summary.json": "0c4cbbb8c56920d5b95f4b72355805dd76f01d04c76932f3e94fea7e8020d538",
+    "FINAL-LEDGER.json": "0f48acfc88b8a7b0dcf296c0d5147117ccf22d79af672c6863176f72338576b6"
+  },
+  "scopeLimitations": [
+    "All 60 immutable IDs are PASS with executed evidence: 56 preserved unchanged from the prior verified ledger and 4 D2 IDs closed in this task through real authenticated checkout/payment/OrderSupplyService and real Inventory owner-workflow harness executions.",
+    "Architecture: 27 pre-existing frontend source-size violations outside Offer remain excluded from remediation, not marked resolved; Offer backend architecture guards 51/51 PASS; 0 new/Offer-owned violations.",
+    "No architect-authored ARCHITECT-REVIEW.json or machine ACCEPT receipt exists; final acceptance remains architect-owned and is not self-authorized."
+  ],
+  "rows": [
+    {
+      "id": "R10-01-P",
+      "status": "PASS",
+      "reason": "Eligible DEV identity created exactly one Draft with the selected allowed channel 'Marketplace', confirmed by the owner GET and independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-01-P.json",
+      "evidenceSha256": "6efc583da7f7b9bede584895ca40692c0e2464848358c69d119a8bd4835f4930",
+      "finishedAt": "2026-11-27T07:40:00.430Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-01-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-01-N.json",
+      "evidenceSha256": "cb655450390fc7ed80e8167927cf092f6b3ccd43a80ff235cace807435cc49c9",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-01-B",
+      "status": "PASS",
+      "reason": "Two independently authorized DEV seller contexts on the same tooba_alpha DB (store-alpha SalesChannel=Marketplace; reversible test-only store-beta SalesChannel=Direct on the same tenant-alpha connection) created two distinct Draft offers for the same seller+variant; a changed-channel replay of the same creation intent was rejected with offer.create.intent_conflict and wrote nothing.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalacceptance-evidence/R10-01-B.json",
+      "evidenceSha256": "a0f14c24add6cf6a840aa3cd4dbc95b8f629560402a1560699da42ea853bf2d5",
+      "finishedAt": "2026-11-28T02:35:03.334Z",
+      "provenance": [
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g1-channel-two-contexts",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-01-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-P",
+      "status": "PASS",
+      "reason": "One populated save persisted exactly one durable Draft (SKU, Custom return policy 9, limits 2/6) confirmed by owner GET and SQL; the real shared-workspace mounted regression preserved typed values across tab switches (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-P.json",
+      "evidenceSha256": "0bad69e80ec6633f547f7d5f356f0fcebc0c931b15dda3413d27e95a2b3d3d09",
+      "finishedAt": "2026-11-27T07:40:07.684Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-N",
+      "status": "PASS",
+      "reason": "Invalid drafts (min>max and out-of-range custom return window) were rejected as typed 4xx before any Offer-owned write; independent SQL shows zero offers, history and outbox rows.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-N.json",
+      "evidenceSha256": "ccb67246283d94aca8fd6fa8a33821778c3d1eca1667a509a248df67d53e2dde",
+      "finishedAt": "2026-11-27T07:40:08.381Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-02-B",
+      "status": "PASS",
+      "reason": "Three concurrent identical create intents resolved to one durable Offer with one Created history entry and one outbox message (deterministic replay); the shared-workspace mounted regression also created exactly one draft on rapid double submit (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-02-B.json",
+      "evidenceSha256": "cc597807f1c6d11f8aedb7822f2be8970657797248ffaf80868486b24f8f3e62",
+      "finishedAt": "2026-11-27T07:40:09.337Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-02-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-P",
+      "status": "PASS",
+      "reason": "Two eligible locations each received a real stock position with on-hand/available 7 and 4 and reserved 0, matching the owner GET and independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-P.json",
+      "evidenceSha256": "987a11441727b9feb2cc13ac97e505af2d363fe7b8d7a3ae2a3dfb1cdeeee142",
+      "finishedAt": "2026-11-27T07:40:10.425Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-N",
+      "status": "PASS",
+      "reason": "A direct API provisioning attempt at a foreign/ineligible location (5b88a2a5-8c9f-4ab0-8ceb-e523ade88cae) was denied with typed inventory.location.not_found and no stock position was created for the offer.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-N.json",
+      "evidenceSha256": "8dfa88baeda1116ae86f125e0990ff0b4146132c2b3f1bf2e7d5ea5e2a855513",
+      "finishedAt": "2026-11-27T07:40:11.373Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-03-B",
+      "status": "PASS",
+      "reason": "The first position write persisted; the second failed with a typed revision conflict leaving its own state unchanged and no duplicate position; retrying only the failed remainder persisted it, keeping both successes and their recorded reasons.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-03-B.json",
+      "evidenceSha256": "fcd1f5ada99187779dd2533008c5f1a8aeceb2597a756f361470f6ed7a8e040e",
+      "finishedAt": "2026-11-27T07:40:12.536Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-03-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-P",
+      "status": "PASS",
+      "reason": "Create then commercial edit reread all requested fields exactly from the owner GET and SQL (P1C-86b6131e-d296-4d51-9ef5-1d20d9988c41-EDIT, Custom/9, 3/7); the real shared-workspace mounted regression confirmed a committed create clears scoped recovery before navigation and create-page re-entry never restores the old draft (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-04-P.json",
+      "evidenceSha256": "f84287c1c0b05fee38a535807851c162067499982c0e2cbc5dcea90ef909b06f",
+      "finishedAt": "2026-11-27T07:40:13.540Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-N",
+      "status": "PASS",
+      "reason": "After a simulated lost create response, re-sending the exact intent deterministically recovered the same committed Offer; a changed value under the same request id was rejected with offer.create.intent_conflict and the durable state stayed intact; the committed response seller matched the requested seller; the shared-workspace mounted regression kept the uncertain-response draft/recovery paths honest (log p1c-mount-regression.log).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-04-N.json",
+      "evidenceSha256": "7153c565b5efd0c319cf83adc9f31124f882ed16b354cc59289b4f3577893787",
+      "finishedAt": "2026-11-27T07:40:14.470Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-04-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-04-B.json",
+      "evidenceSha256": "4f1a7021d9c85273b2a4848e2cfa750f8549f70799e05ec4b913a57fe1137576",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-04-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-P",
+      "status": "PASS",
+      "reason": "Two sessions shared one offer revision; the first write persisted and the stale second write was denied with a typed conflict while the first value remained.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-P.json",
+      "evidenceSha256": "7c89434ca96713dbc2fc69c31d720d4ba87db6b4d2ca3b152b95582982e747ae",
+      "finishedAt": "2026-11-27T07:40:15.443Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-N",
+      "status": "PASS",
+      "reason": "A stale price write and stale stock write were both denied with typed conflicts; the first price and physical count remained, and no extra price fact was recorded.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-N.json",
+      "evidenceSha256": "86174880c699d7dc48078911a225882839c9a54e8800646ff8fca4d7e7990f63",
+      "finishedAt": "2026-11-27T07:40:16.676Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-05-B",
+      "status": "PASS",
+      "reason": "Two concurrent same-revision stock writes and two concurrent same-revision price writes each produced exactly one winner; persisted values equal the winners and on-hand (4) >= reserved (0).",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-05-B.json",
+      "evidenceSha256": "659f2927556b9a0d931061649e7694d03557d5af53ceab476cfce4e796c49056",
+      "finishedAt": "2026-11-27T07:40:17.801Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-05-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-P",
+      "status": "PASS",
+      "reason": "Authorized history returned the real recorded create, inventory, price and commercial changes with scope, timestamps, actor and old/new values matching independent SQL.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-P.json",
+      "evidenceSha256": "15841ea5163be48728686bb84f7ed6e3ad1d127748c221f43297279cfe7d35a4",
+      "finishedAt": "2026-11-27T07:40:18.846Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-N",
+      "status": "PASS",
+      "reason": "A different current DEV seller was denied both detail and history for the owned offer with typed not-found and no history disclosure.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-N.json",
+      "evidenceSha256": "079701fa46771f44f28dbb51e5d5da503274781f16676c7f5c63b16f2c0561c6",
+      "finishedAt": "2026-11-27T07:40:19.763Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-06-B",
+      "status": "PASS",
+      "reason": "A newly persisted offer exposed exactly one honest create event with the recorded actor; a page beyond the set was empty while total count and page metadata stayed stable.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-06-B.json",
+      "evidenceSha256": "b5c0767d4a530d69ca1570318f274abbd700bcccdfacb83352fd4829b07c9fe8",
+      "finishedAt": "2026-11-27T07:40:20.474Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-06-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-P",
+      "status": "PASS",
+      "reason": "Integer and fractional Catalog variants accepted their exact aligned limits and stock: 1/5 and 3, 0.25/1.75 and 1.5, with congruent independent GET and SQL reads.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-P.json",
+      "evidenceSha256": "0c61d592043818a34dc813dbc7bf76b9c19540e52b9dbf6726cc2dd8689956cc",
+      "finishedAt": "2026-11-27T07:40:22.236Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-N",
+      "status": "PASS",
+      "reason": "Wrong precision on integer and fractional variants, min>max, and an out-of-range custom return window were rejected with typed errors while persisted limits and policy stayed unchanged.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-N.json",
+      "evidenceSha256": "f3d792abbef4e6e22f612f8a51d2da613668c560fa090eecb5c657ea48631967",
+      "finishedAt": "2026-11-27T07:40:23.843Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-07-B",
+      "status": "PASS",
+      "reason": "Clearing limits produced true nulls while retaining the Custom policy; return-window boundaries 1 and 30 persisted exactly and the below-boundary value was rejected without changing state.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-07-B.json",
+      "evidenceSha256": "e73a1823d006d1740d668d0a6c2d0174461eddcffa9965d1a6e0766d76881313",
+      "finishedAt": "2026-11-27T07:40:25.018Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-07-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-08-P",
+      "status": "PASS",
+      "reason": "Base price 123456 IRR and authorized Seller fulfillment with a real active shipping type both persisted and reread exactly from the owning Pricing/Offer stores.",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-abc-evidence-r2\\R10-08-P.json",
+      "evidenceSha256": "2fb5f976726f36ad6483f5a7e7534a2ba467af8ab7e3e8498ade87c0e1a88989",
+      "finishedAt": "2026-11-27T07:40:26.347Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "group-abc-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-08-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-08-N",
+      "status": "PASS",
+      "reason": "Blank price variants were rejected as typed 4xx without write and an unauthorized seller fulfillment attempt was denied without writing responsibility.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-08-N.json",
+      "evidenceSha256": "eaccce0039002457084018183e0141fdc0dcfe9e2fddedc988ea41a4e6eade47",
+      "finishedAt": "2026-11-27T14:27:35.847Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 39399,
+        "sha256": "eaccce0039002457084018183e0141fdc0dcfe9e2fddedc988ea41a4e6eade47",
+        "testId": "R10-08-N"
+      }
+    },
+    {
+      "id": "R10-08-B",
+      "status": "PASS",
+      "reason": "Policy-approved zero price persisted, negative price was denied without overwrite, and shipping assignment cleared to true null while an orphan shipping type was rejected by owner policy.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-08-B.json",
+      "evidenceSha256": "f43e584b7c6eacf8bc790aa514449196537d42b3dd8bece4d12679233738692e",
+      "finishedAt": "2026-11-27T14:27:37.429Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 42936,
+        "sha256": "f43e584b7c6eacf8bc790aa514449196537d42b3dd8bece4d12679233738692e",
+        "testId": "R10-08-B"
+      }
+    },
+    {
+      "id": "R10-09-P",
+      "status": "PASS",
+      "reason": "Actual create/edit/list routes at FA/EN/RU obeyed live registry code/direction and preserved local drafts across real locale switches.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-09-P.json",
+      "evidenceSha256": "06383d06610fbe7a652a59c1152c8306032f7ab4ba8e437bd19b8fdcab8d4346",
+      "finishedAt": "2026-11-27T14:27:41.457Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 10191,
+        "sha256": "06383d06610fbe7a652a59c1152c8306032f7ab4ba8e437bd19b8fdcab8d4346",
+        "testId": "R10-09-P"
+      }
+    },
+    {
+      "id": "R10-09-N",
+      "status": "PASS",
+      "reason": "Invalid public two-letter prefix returned a real 404; unknown panel prefix canonicalized to the active default /fa/admin/offers with zero offer writes.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-09-N.json",
+      "evidenceSha256": "89efad570bbcf900e36328c48dd0cbb4064bb2279b5061209a7f437bddadb7c8",
+      "finishedAt": "2026-11-27T14:27:42.518Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 722,
+        "sha256": "89efad570bbcf900e36328c48dd0cbb4064bb2279b5061209a7f437bddadb7c8",
+        "testId": "R10-09-N"
+      }
+    },
+    {
+      "id": "R10-09-B",
+      "status": "PASS",
+      "reason": "Live DB registry matched the public API, and the actual shared resolver honored an isolated changed default (en-US) plus code-differs-from-prefix (de-DE) fixture; module SHA captured.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-09-B.json",
+      "evidenceSha256": "62ac31d2219a74547112df13b5d972aeda733f9a1566f147c967d0f76260790a",
+      "finishedAt": "2026-11-27T14:27:42.773Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 3949,
+        "sha256": "62ac31d2219a74547112df13b5d972aeda733f9a1566f147c967d0f76260790a",
+        "testId": "R10-09-B"
+      }
+    },
+    {
+      "id": "R10-10-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-P.json",
+      "evidenceSha256": "807c768a1416a6371da57d2d4dcdb0267d4b272390782610c1e6aebef59ca35a",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-10-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-N.json",
+      "evidenceSha256": "735c324f3802640ba0bddb40a157bdb892fc84e905a8ff0f89951bb08bbe8ec0",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-10-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-final-evidence3\\R10-10-B.json",
+      "evidenceSha256": "7fddcf4a6f05c5c9aa156df4c8604101652bfc03aba0f2bded8b6f671f49cc41",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-10-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-P.json",
+      "evidenceSha256": "9efa9d7bba42c4a52fab8a2633578442d37e683d2880501b321c9b8fccd3e328",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-N.json",
+      "evidenceSha256": "7193fb332ec86494911680b41f1f5a598ff8aa4de070cfd3173e0a6c2229da57",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-11-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-11-B.json",
+      "evidenceSha256": "c338bb47ac87a70d250e2894ec45f6e4a6b1696336e778bcaeb399c37a58ce81",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-11-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-12-P.json",
+      "evidenceSha256": "f23a315f3e3d18a2b11314294fe66f0a2dbb120cfee0aec20940ee782f30502d",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-12-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-inventory-feedback-result.json",
+      "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": null,
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-12-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-12-B.json",
+      "evidenceSha256": "73fe40098d3813067f507a54b00afd518b2f3086f0e728286751b66d8a831a17",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-12-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-P",
+      "status": "PASS",
+      "reason": "Original-spec regression clauses newly executed: real campaign owner rows, real Stage2 guest cart create+line+read-back, admin grid sort model (aria-sort none->ascending->descending), CSV export with real rows/headers, and a named saved view persisted/rendered with the original preference restored. Performance/orders/products/paging/filter reused unchanged from prior R10-13-P evidence.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalacceptance-evidence/R10-13-P.json",
+      "evidenceSha256": "5a60b06f41547933013c5f936b80e52f0920843954bc9fb5c28569d337be3d5d",
+      "finishedAt": "2026-11-28T02:35:03.334Z",
+      "provenance": [
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g3-regression-supplement",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-13-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-inventory-feedback-result.json",
+      "evidenceSha256": "ed722d0004aebe0be306b25a67cd8db69611f4fbed608e586ff1b0ed30940abf",
+      "finishedAt": "2026-11-27T07:41:24.698Z",
+      "provenance": [
+        {
+          "source": "GROUP-ABC-RESULT.json",
+          "stage": "preserved-prior-pass",
+          "status": "PASS"
+        },
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "preserved-prior-pass"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": null,
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-13-B",
+      "status": "PASS",
+      "reason": "Actual long-label offer form and third-locale grid stayed within viewport at 360/768/1440 with visible usable save/tab controls and zero unintended horizontal overflow.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence2/R10-13-B.json",
+      "evidenceSha256": "4b1debeb85c883a1acf8160f940bf126fead62f6788bf0a78c1af8a9322f448b",
+      "finishedAt": "2026-11-27T14:27:49.499Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 13010,
+        "sha256": "4b1debeb85c883a1acf8160f940bf126fead62f6788bf0a78c1af8a9322f448b",
+        "testId": "R10-13-B"
+      }
+    },
+    {
+      "id": "R10-14-P",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-P.json",
+      "evidenceSha256": "7e708d646fd217a130be1a499c90de54cd26fb4c79639b64cfa42125285cbb95",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-P",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-14-N",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-N.json",
+      "evidenceSha256": "6fd7cee8466763f540fccbeb21e07c0f73213370a4f3c10035fea8ba8eb408bc",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-N",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "R10-14-B",
+      "status": "PASS",
+      "reason": null,
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-de-final2-evidence\\R10-14-B.json",
+      "evidenceSha256": "cb4f6bbc45f4d8423287126d830565f868b8ff8f85f4b87251a27d9f90cd64d9",
+      "finishedAt": "2026-11-27T07:50:34.745Z",
+      "provenance": [
+        {
+          "source": "p1c-group-de-summary.json",
+          "stage": "group-de-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "R10-14-B",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-01.json",
+      "evidenceSha256": "7e1c80f86bfbe915faf24d3bcf8f241956667c3caf33d5ae5e4c83aebf412938",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-01",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-02.json",
+      "evidenceSha256": "3e0b2657b79bc35e1db6f8fe18bd72707f1f694f0b3355dd7fffea39fd00bbd8",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-02",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-03",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-03.json",
+      "evidenceSha256": "d3c7ddb734d367048b771f0212058caf607ae0895eb0012fe60898f0dee39e2e",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-03",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-04",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-04.json",
+      "evidenceSha256": "ef5dad77a2aaad5efc52f0eac609edddf26830cee0c8e3b5dfcd9a5779e05117",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-04",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-05",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-05.json",
+      "evidenceSha256": "1447f5924b105aacf3fc3f8961da8ed1d8feec73903988e56f930aa1bbe6a0dc",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-05",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-06",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-06.json",
+      "evidenceSha256": "e5b105fdf924ca51685e213e821f0ef99b8e2d5213817541f2be39f9579cefd2",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-06",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-07",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\OWN-07.json",
+      "evidenceSha256": "cdab3f11ee1f4da2eb6278b5b21b4c519c01f00c429fdfec4cf8ff0e87f8d094",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-07",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-08",
+      "status": "PASS",
+      "reason": "Simultaneous owner-revision races on the real Host: exactly one price winner and one physical-stock winner; single typed 409 concurrency.conflict / inventory.position.revision_conflict losers; winner payloads persisted; two durable price facts and two durable inventory facts (losers wrote none); independent price/physical/allocation revisions; price and inventory outbox events published.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalacceptance-evidence/OWN-08.json",
+      "evidenceSha256": "459fa6d7d0b616b95ceb79d691362da294e55ad2c3e383f2a5bf6cb47638d26d",
+      "finishedAt": "2026-11-28T02:35:03.334Z",
+      "provenance": [
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g2-simultaneous-price-and-stock",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-08",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "OWN-09",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalverify-evidence3/OWN-09.json",
+      "evidenceSha256": "a35d4ea6d691345de9f8a5b7e7a0e29d567e4537083de808766d65934e425d38",
+      "finishedAt": "2026-11-27T14:31:20.518Z",
+      "provenance": "final verification 84f3372a4 / candidate evidence",
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "bytes": 18780,
+        "sha256": "a35d4ea6d691345de9f8a5b7e7a0e29d567e4537083de808766d65934e425d38",
+        "testId": "OWN-09"
+      }
+    },
+    {
+      "id": "OWN-10",
+      "status": "PASS",
+      "reason": "Live Marketplace edition bound to the same tooba_alpha DB: real seller browser at 360/768/1440 shows platform physical read-only (no physical reason control), allocation editable, fa/rtl+en/ltr+ru/ltr shells without overflow, in-app locale switch preserved the unsaved offered-quantity draft, authorized seller/actor headers present, independent SQL confirmed no write.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalacceptance-evidence/OWN-10.json",
+      "evidenceSha256": "069327ecfab391454732ff1e9213686a1e2b463a0a3abd27388c3b9aeb98eb41",
+      "finishedAt": "2026-11-28T02:35:03.334Z",
+      "provenance": [
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g1-marketplace-capability",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "OWN-10",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-ORDER",
+      "status": "PASS",
+      "reason": "Real authenticated storefront checkout + fake-gateway payment produced a Paid order and a Paid-then-cancelled (restorable) order for two previously uncommitted offers; both real admin fulfillment reassignments were rejected with 409 offer.fulfillment.change_protected and wrote nothing. A third uncommitted offer completed initial assignment/reassignment/clear (Seller->Platform->null->Seller) with persisted state and history, then was restored to unassigned.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalclosure-evidence/D2-ORDER.json",
+      "evidenceSha256": "3988f1a353f108e71487e709a1366534c654f2d6a49f3d7a8813c6eb5e1a9321",
+      "finishedAt": "2026-11-28T03:15:04.735Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        },
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g2-a05-full-workflow",
+          "status": "NOT_RUN"
+        },
+        {
+          "source": "FINAL-CLOSURE",
+          "stage": "g2-d2-real-workflow",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-ORDER",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-HOLD",
+      "status": "PASS",
+      "reason": "Real captured checkout acceptance created a durable held reservation + order line; a reused-hold OrderSupplyService retry versus assignment preserved the exact single hold, denied the assignment with offer.fulfillment.change_protected, and left no stale owner. A concurrent new checkout hold versus assignment kept the held reservation on an eligible Store-owned location and the resulting commitment protected every subsequent assignment (no unsafe commitment).",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalclosure-evidence/D2-HOLD.json",
+      "evidenceSha256": "410b66addcd9108d4898dc43180556fb53dadb86feec255dcadb1ba98e69dd89",
+      "finishedAt": "2026-11-28T03:15:04.735Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        },
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g2-a05-full-workflow",
+          "status": "NOT_RUN"
+        },
+        {
+          "source": "FINAL-CLOSURE",
+          "stage": "g2-d2-real-workflow",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-HOLD",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-ALLOCATION",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-ALLOCATION.json",
+      "evidenceSha256": "6daec2cbeec2089e14aa631c295bb3eac50cbb51de6a5d4e5886983bf1375deb",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-ALLOCATION",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-PARTIAL",
+      "status": "PASS",
+      "reason": "Dedicated P1C fixture Inventory owner workflows on tooba_alpha: concurrent release/consume had exactly one winner with zero negative availability and exact physical/reserved outcome; partial-obligation release of 2 then 3 on the same scoped reservation reported PartiallyHeld then Released with exact remaining quantities (17 then 20), no double release on replay, and an advancing allocation revision.",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalclosure-evidence/D2-PARTIAL.json",
+      "evidenceSha256": "1fee3d4879720e690db355592e6598817f0c8c5c2f8bee4cedf80fdcaec56c91",
+      "finishedAt": "2026-11-28T03:15:04.735Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        },
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g2-a05-full-workflow",
+          "status": "NOT_RUN"
+        },
+        {
+          "source": "FINAL-CLOSURE",
+          "stage": "g2-d2-real-workflow",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-PARTIAL",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-RECOVERY",
+      "status": "PASS",
+      "reason": "Real unpaid checkout drove the actual OrderSupplyService through the storefront retry path: cycle 1 expired and was released by the real expiry reclaimer -> real reacquire to cycle 2 (new Held reservation on the same order line, old released, reserved delta exactly 2) -> next retry denied with inventory.reservation.retry_limit_reached at the resolved policy cap of 2 cycles (no extra cycle). A real paid order denied retry with pending.retry.not_allowed and kept exactly one succeeded payment, unchanged line/stock (no second commercial debit).",
+      "evidence": "docs/opencode/tasks/TB-296-P1-C-INTEGRATION/finalclosure-evidence/D2-RECOVERY.json",
+      "evidenceSha256": "acd6e712f49c6c626f83034a396013974c18ba6f7c60cb29f6948d671ea1f45d",
+      "finishedAt": "2026-11-28T03:15:04.735Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        },
+        {
+          "source": "FINAL-ACCEPTANCE",
+          "stage": "g2-a05-full-workflow",
+          "status": "NOT_RUN"
+        },
+        {
+          "source": "FINAL-CLOSURE",
+          "stage": "g2-d2-real-workflow",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-RECOVERY",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "D2-HTTP",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\D2-HTTP.json",
+      "evidenceSha256": "31cc051005c7ffe1c7599611ac5ba1e52cd20e94f5dbbba6aae4256f0edaae1b",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "D2-HTTP",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "F-BENTRY-01",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-01.json",
+      "evidenceSha256": "6ebe9a7b74a2032cc30028e0a89927bc39d8febd7b6cfc6d94b13efd780210e7",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "F-BENTRY-01",
+        "hasObservations": true
+      }
+    },
+    {
+      "id": "F-BENTRY-02",
+      "status": "PASS",
+      "reason": "All executable assertions observed on actual HTTP/owner-contract/PostgreSQL execution",
+      "evidence": "D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-group-f-final-evidence3\\F-BENTRY-02.json",
+      "evidenceSha256": "ea4de4b690ceaf18f0cb89b86912216a667e8a6e7488f3764ee821c47c4bd9ff",
+      "finishedAt": "2026-11-27T08:08:43.204Z",
+      "provenance": [
+        {
+          "source": "p1c-group-f-summary.json",
+          "stage": "group-f-executed",
+          "status": "PASS"
+        }
+      ],
+      "evidenceVerified": true,
+      "evidenceContent": {
+        "topLevelId": "F-BENTRY-02",
+        "hasObservations": true
+      }
+    }
+  ]
+}

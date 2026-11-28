@@ -1,0 +1,285 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [
+    {
+      "label": "retry-cycle2",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a2201d-be78-7000-ac54-a9d5f65c06eb",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:06:55.892148+00:00",
+        "secondsRemaining": 59
+      }
+    },
+    {
+      "label": "retry-cycle3",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.",
+        "status": 409,
+        "instance": "/v1/storefront/checkout/01a2201d-be78-7000-ac54-a9d5f65c06eb/retry-reservation",
+        "errorCode": "inventory.reservation.retry_limit_reached",
+        "traceId": "e4d60a32ece6a36ada8f7898280a3d8b",
+        "correlationId": "138e71dceff440ca980c8b5a2cfa4be1",
+        "requestId": "0HNQCPVNALM3H:00000002"
+      }
+    },
+    {
+      "label": "paid-payment"
+    },
+    {
+      "label": "paid-retry-denied",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "برای این سفارش امکان بررسی مجدد موجودی وجود ندارد.",
+        "status": 409,
+        "instance": "/v1/storefront/checkout/01a2201d-e98f-7000-b579-1e109b172e5e/retry-reservation",
+        "errorCode": "pending.retry.not_allowed",
+        "traceId": "e2287ac9c0fce525d2b003be753e9f25",
+        "correlationId": "11dd12f7cdfb40d785fc2339a6d2600b",
+        "requestId": "0HNQCPVNALM3H:00000005"
+      }
+    }
+  ],
+  "status": "PASS",
+  "unpaid": {
+    "checkoutId": "01a2201d-be78-7000-ac54-a9d5f65c06eb",
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201d-be83-7000-a8c0-394aebcc3cbd",
+          "qty": 2,
+          "offer": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+          "reservation": "01a2201d-be92-7000-a84c-9b8b1c7a33b6"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:06:49.944216+00:00",
+          "reservations": "01a2201d-be92-7000-a84c-9b8b1c7a33b6"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201d-be7f-7000-b843-6134fbbafc6f",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:06:49.944216+00:00",
+        "reservations": "01a2201d-be92-7000-a84c-9b8b1c7a33b6"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201d-be92-7000-a84c-9b8b1c7a33b6",
+        "qty": 2,
+        "stock": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+        "status": "Held",
+        "expires": "2026-11-28T03:06:49.944216+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "reacquires": [
+    {
+      "attempt": 2,
+      "expiredReservation": {
+        "id": "01a2201d-be92-7000-a84c-9b8b1c7a33b6",
+        "qty": 2,
+        "stock": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+        "status": "Released",
+        "expires": "2026-11-28T03:04:50.981948+00:00"
+      },
+      "retry": {
+        "ok": true,
+        "checkoutId": "01a2201d-be78-7000-ac54-a9d5f65c06eb",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:06:55.892148+00:00",
+        "secondsRemaining": 59
+      },
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Expired",
+          "expires": "2026-11-28T03:04:50.787304+00:00",
+          "reservations": "01a2201d-be92-7000-a84c-9b8b1c7a33b6"
+        },
+        {
+          "n": 2,
+          "status": "Active",
+          "expires": "2026-11-28T03:06:55.892148+00:00",
+          "reservations": "01a2201d-d657-7000-9777-b4c868e7ad51"
+        }
+      ],
+      "held": [
+        {
+          "id": "01a2201d-d657-7000-9777-b4c868e7ad51",
+          "qty": 2,
+          "stock": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+          "status": "Held",
+          "expires": "2026-11-28T03:06:55.909455+00:00"
+        }
+      ],
+      "stock": {
+        "onHand": 200,
+        "reserved": 2,
+        "positions": [
+          {
+            "stock": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+            "onHand": 200,
+            "reserved": 2
+          }
+        ]
+      }
+    }
+  ],
+  "cap": {
+    "attempt": 3,
+    "expiredReservation": {
+      "id": "01a2201d-d657-7000-9777-b4c868e7ad51",
+      "qty": 2,
+      "stock": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+      "status": "Released",
+      "expires": "2026-11-28T03:04:57.001618+00:00"
+    },
+    "status": 409,
+    "errorCode": "inventory.reservation.retry_limit_reached",
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Expired",
+        "expires": "2026-11-28T03:04:50.787304+00:00",
+        "reservations": "01a2201d-be92-7000-a84c-9b8b1c7a33b6"
+      },
+      {
+        "n": 2,
+        "status": "Expired",
+        "expires": "2026-11-28T03:04:56.854733+00:00",
+        "reservations": "01a2201d-d657-7000-9777-b4c868e7ad51"
+      }
+    ]
+  },
+  "paid": {
+    "checkoutId": "01a2201d-e98f-7000-b579-1e109b172e5e",
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201d-e99e-7000-8a82-46f3709040d4",
+          "qty": 1,
+          "offer": "00ecf5ba-c5b4-4cdf-8734-04b2f1f5e224",
+          "reservation": "01a2201d-e9af-7000-b4a7-c786553a4e55"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "CommittedPaid",
+          "expires": "2026-11-28T03:07:00.975636+00:00",
+          "reservations": "01a2201d-e9af-7000-b4a7-c786553a4e55"
+        }
+      ],
+      "payments": [
+        {
+          "id": "01a2201d-e9cb-7000-9646-ded0d1d552ec",
+          "status": "Succeeded",
+          "provider": "fake"
+        }
+      ],
+      "sellerOrders": [
+        {
+          "id": "01a2201d-e996-7000-aa38-baafad3d1abe",
+          "status": "Paid",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "stock": {
+      "onHand": 200,
+      "reserved": 1,
+      "positions": [
+        {
+          "stock": "f00464f1-7b02-44bb-a165-b70d9c89d279",
+          "onHand": 200,
+          "reserved": 1
+        }
+      ]
+    },
+    "reservations": [
+      {
+        "id": "01a2201d-e9af-7000-b4a7-c786553a4e55",
+        "qty": 1,
+        "stock": "f00464f1-7b02-44bb-a165-b70d9c89d279",
+        "status": "Held",
+        "expires": null,
+        "purpose": "NewSale"
+      }
+    ],
+    "after": {
+      "order": {
+        "lines": [
+          {
+            "id": "01a2201d-e99e-7000-8a82-46f3709040d4",
+            "qty": 1,
+            "offer": "00ecf5ba-c5b4-4cdf-8734-04b2f1f5e224",
+            "reservation": "01a2201d-e9af-7000-b4a7-c786553a4e55"
+          }
+        ],
+        "cycles": [
+          {
+            "n": 1,
+            "status": "CommittedPaid",
+            "expires": "2026-11-28T03:07:00.975636+00:00",
+            "reservations": "01a2201d-e9af-7000-b4a7-c786553a4e55"
+          }
+        ],
+        "payments": [
+          {
+            "id": "01a2201d-e9cb-7000-9646-ded0d1d552ec",
+            "status": "Succeeded",
+            "provider": "fake"
+          }
+        ],
+        "sellerOrders": [
+          {
+            "id": "01a2201d-e996-7000-aa38-baafad3d1abe",
+            "status": "Paid",
+            "cancelledFrom": null
+          }
+        ]
+      },
+      "stock": {
+        "onHand": 200,
+        "reserved": 1,
+        "positions": [
+          {
+            "stock": "f00464f1-7b02-44bb-a165-b70d9c89d279",
+            "onHand": 200,
+            "reserved": 1
+          }
+        ]
+      },
+      "retry": {
+        "status": 409,
+        "errorCode": "pending.retry.not_allowed"
+      }
+    }
+  },
+  "reason": "Real unpaid checkout drove the actual OrderSupplyService through the storefront retry path: cycle 1 expired and was released by the real expiry reclaimer -> real reacquire to cycle 2 (new Held reservation on the same order line, old released, reserved delta exactly 2) -> the next retry was denied with inventory.reservation.retry_limit_reached at the resolved policy cap of 2 cycles (no extra cycle). A real paid order denied retry with pending.retry.not_allowed and kept exactly one succeeded payment, unchanged line/stock (no second commercial debit).",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

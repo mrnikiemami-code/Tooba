@@ -1,0 +1,58 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a22019-7fb4-7000-a562-1789e9abbdec",
+    "order": {
+      "lines": [
+        {
+          "id": "01a22019-7fc3-7000-a865-0712d160dc53",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a22019-7fd5-7000-af71-b9fc592169e8"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:02:11.732774+00:00",
+          "reservations": "01a22019-7fd5-7000-af71-b9fc592169e8"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22019-7fbd-7000-bfab-46b27a46a283",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:02:11.732774+00:00",
+        "reservations": "01a22019-7fd5-7000-af71-b9fc592169e8"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a22019-7fd5-7000-af71-b9fc592169e8",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:02:11.732774+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "reason": "Error: Command failed: D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\p1c-psql.exe -X -qAt -v ON_ERROR_STOP=1 -d tooba_alpha -c UPDATE inventory.reservations SET expires_at = now() - interval '1 minute' WHERE reservation_id IN (SELECT unnest(reservation_ids) FROM \"order\".reservation_cycles WHERE checkout_id='01a22019-7fb4-7000-a562-1789e9abbdec') AND status='Held';\nERROR:  function unnest(character varying) does not exist\nLINE 1: ...terval '1 minute' WHERE reservation_id IN (SELECT unnest(res...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execFileSync (node:child_process:961:15)\n    at Object.psql (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:15:10)\n    at forceExpire (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:15:5)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:59:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

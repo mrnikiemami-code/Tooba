@@ -1,0 +1,85 @@
+{
+  "id": "D2-HOLD",
+  "requests": [
+    {
+      "label": "race-detail",
+      "status": 200,
+      "body": {
+        "offerId": "006b35dc-f472-4298-80a4-8ad215c6efd4",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a0967d-d071-7000-aacd-6a4a28135453",
+        "productId": "01a0967d-cfe1-7000-97d4-7b779bff00b7",
+        "productTitle": "رژ لب سری 6",
+        "sellerSku": "ENR-ARM-01a0967dd0717000aacd6a4a28135453",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 4482012,
+        "currency": "IRR",
+        "onHand": 200,
+        "reserved": 0,
+        "availableUnits": 200,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "4d87b6c0-630a-459f-99cd-622327188775",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 200,
+            "reserved": 0,
+            "available": 200,
+            "revision": "2026-09-13T13:39:08.9672860+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-beauty-makeup-lipstick-6-1",
+        "primaryMediaAssetId": "01a05388-2dd8-7000-833b-41299937cbf6",
+        "lastUpdatedAt": "2026-09-12T16:41:53.534+00:00",
+        "variantLabel": "رنگ (clothing): بژ",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "e2ceb7451fed4fd9a1dc8b48b078cace:63924828113534000",
+        "offerRevision": "2026-09-12T16:41:53.5340000+00:00",
+        "revisions": {
+          "offer": "2026-09-12T16:41:53.5340000+00:00",
+          "price": "e2ceb7451fed4fd9a1dc8b48b078cace:63924828113534000",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "e2ceb745-1fed-4fd9-a1dc-8b48b078cace"
+      }
+    }
+  ],
+  "status": "FAIL",
+  "customer": {
+    "userId": "01a22013-8f62-7000-9e13-3c41a7c67bcd"
+  },
+  "race": {
+    "submitStatus": 200,
+    "assignStatus": 200,
+    "holdSucceeded": true,
+    "assignSucceeded": true
+  },
+  "reason": "Error: both the checkout hold and the assignment committed (unsafe commitment)\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-hold.cjs:52:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "id": "D2-PARTIAL",
+  "requests": [],
+  "status": "FAIL",
+  "offer": {
+    "offerId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+    "sellerId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+    "variantId": "63dca62d-2d4e-434c-9055-4a452918f259",
+    "responsibilityBefore": null
+  },
+  "race": {
+    "command": "race-release-consume",
+    "edition": "Marketplace",
+    "runId": "p1c-d2-partial-mwzu1pyf",
+    "fixture": [
+      {
+        "OfferKey": "A",
+        "OfferId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+        "SellerId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+        "VariantId": "63dca62d-2d4e-434c-9055-4a452918f259",
+        "LocationId": "01a22022-0446-7000-9a5e-2ad1bb629149",
+        "Code": "P1C-F-P1C-D2-PARTIAL-MWZU1PYF-1",
+        "StockItemId": "01a22022-0686-7000-8d7a-55ee6a6d6e0b",
+        "Stock": 100,
+        "Eligible": true
+      }
+    ],
+    "steps": [
+      {
+        "label": "allocate20",
+        "ok": true,
+        "value": {
+          "ok": true,
+          "code": null,
+          "receipt": {
+            "Quantity": 20,
+            "Held": 0,
+            "Available": 20,
+            "Revision": "01a2202207ce700081ac932d20058ff5"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "reservationId": "01a22022-0804-7000-b345-68c8ba3f79fc",
+        "quantity": 5,
+        "status": "Held"
+      },
+      [
+        {
+          "op": "release",
+          "ok": true
+        },
+        {
+          "op": "consume",
+          "ok": false,
+          "code": "inventory.reservation.not_active"
+        }
+      ],
+      {
+        "label": "after concurrent release/consume",
+        "offers": [
+          {
+            "offer_id": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+            "fulfillment_responsibility": "Platform"
+          }
+        ],
+        "allocations": [
+          {
+            "OfferId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+            "Quantity": 20,
+            "Held": 0,
+            "Revision": "01a2202208297000a5bf7de6fdb22c60"
+          }
+        ],
+        "positions": [
+          {
+            "OfferId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+            "StockItemId": "01a22022-0686-7000-8d7a-55ee6a6d6e0b",
+            "LocationId": "01a22022-0446-7000-9a5e-2ad1bb629149",
+            "OnHand": 100,
+            "Reserved": 0,
+            "UpdatedAt": "2026-11-28T03:10:30.9530350+00:00"
+          },
+          {
+            "OfferId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+            "StockItemId": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+            "LocationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "OnHand": 200,
+            "Reserved": 0,
+            "UpdatedAt": "2026-11-28T03:05:59.8758930+00:00"
+          }
+        ],
+        "reservations": [
+          {
+            "ReservationId": "01a2201d-d657-7000-9777-b4c868e7ad51",
+            "StockItemId": "b5c5b3e0-ac00-4c49-b5b7-bacfd00d07b1",
+            "Quantity": 2,
+            "Status": "Released",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T03:04:57.0016180+00:00"
+          },
+          {
+            "ReservationId": "01a22022-0804-7000-b345-68c8ba3f79fc",
+            "StockItemId": "01a22022-0686-7000-8d7a-55ee6a6d6e0b",
+            "Quantity": 5,
+            "Status": "Released",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T04:10:30.8921700+00:00"
+          }
+        ],
+        "facts": [
+          {
+            "FactId": "01a22022-07d2-7000-89ff-5353d85df922",
+            "OfferId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+            "StockItemId": null,
+            "LocationId": null,
+            "Kind": "AllocationChanged",
+            "OperationId": "a0f655c4-4298-463c-9cee-cf902884b7f0",
+            "OldAllocation": null,
+            "NewAllocation": 20,
+            "OldOnHand": null,
+            "NewOnHand": null,
+            "Reason": "seller-offered-quantity",
+            "ActorUserId": "8ba6223f-72c6-45fa-a7eb-6a2d179eefbe",
+            "OccurredAt": "2026-11-28T03:10:30.736512+00:00"
+          }
+        ],
+        "consumptions": 0,
+        "heldReleases": 0
+      }
+    ],
+    "ok": true,
+    "winner": "release"
+  },
+  "reason": "Error: harness partial-release failed: \"DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.\"\n    at runHarness (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-partial.cjs:30:33)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-partial.cjs:96:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "positionsLeft": 0,
+    "responsibility": null
+  }
+}

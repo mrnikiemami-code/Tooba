@@ -1,0 +1,228 @@
+{
+  "id": "D2-HOLD",
+  "requests": [
+    {
+      "label": "race-detail",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "sellerDisplayName": "کالاگستر پارس",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "productId": "01a0967d-dac6-7000-bca3-449026d7da8d",
+        "productTitle": "بوش قابلمه سری 6",
+        "brandName": "بوش",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 8441781.59,
+        "currency": "IRR",
+        "onHand": 200,
+        "reserved": 0,
+        "availableUnits": 200,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "ed28c62a-1f06-4ed8-a4d0-29c03aad3b19",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 200,
+            "reserved": 0,
+            "available": 200,
+            "revision": "2026-09-13T13:39:08.9672860+00:00"
+          }
+        ],
+        "variantCode": "ENR-demo-prod-home-kitchen-cookware-pots-6",
+        "primaryMediaAssetId": "01a05388-3e24-7000-ad1f-e79496131000",
+        "lastUpdatedAt": "2026-11-28T02:53:47.698165+00:00",
+        "variantLabel": "رنگ: سیاه",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "7f3f7c7d570f498698b813bc3d3b0604:63924828113534000",
+        "offerRevision": "2026-11-28T02:53:47.6981650+00:00",
+        "revisions": {
+          "offer": "2026-11-28T02:53:47.6981650+00:00",
+          "price": "7f3f7c7d570f498698b813bc3d3b0604:63924828113534000",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "7f3f7c7d-570f-4986-98b8-13bc3d3b0604"
+      }
+    },
+    {
+      "label": "race-post-assignment-denied",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/0066f3d5-1d00-4808-9cfa-f92059ab7894/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "4acc3c38101f1d4ed833aff5b6fab472",
+        "correlationId": "58572f0633a94fc787051a1ea7511518",
+        "requestId": "0HNQCPVNALM2U:00000005"
+      }
+    }
+  ],
+  "status": "PASS",
+  "customer": {
+    "userId": "01a22017-8f9c-7000-bad2-d2de3b08193c"
+  },
+  "race": {
+    "offer": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+    "submitStatus": 200,
+    "assignStatus": 200,
+    "holdSucceeded": true,
+    "assignSucceeded": true,
+    "order": {
+      "lines": [
+        {
+          "id": "01a22017-9192-7000-b4d4-93cff11ebb7a",
+          "qty": 1,
+          "offer": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+          "reservation": "01a22017-91a9-7000-9d36-42b24c0f8c21"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:00:05.221243+00:00",
+          "reservations": "01a22017-91a9-7000-9d36-42b24c0f8c21"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22017-918d-7000-b892-1e3d10d3ee4a",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "reservations": [
+      {
+        "id": "01a22017-91a9-7000-9d36-42b24c0f8c21",
+        "qty": 1,
+        "stock": "ed28c62a-1f06-4ed8-a4d0-29c03aad3b19",
+        "status": "Held",
+        "expires": "2026-11-28T03:00:05.221243+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "offerAfter": {
+      "lines": 1,
+      "history": 6,
+      "updatedAt": "2026-11-28T02:59:05.201485+00:00",
+      "responsibility": "Seller"
+    },
+    "locationOwner": "Store|",
+    "postAssignment": {
+      "status": 409,
+      "errorCode": "offer.fulfillment.change_protected"
+    }
+  },
+  "reuse": {
+    "checkpoint": "captured-acceptance",
+    "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+    "checkoutId": "01a22017-9554-7000-91ec-daa2d9907666",
+    "order": {
+      "lines": [
+        {
+          "id": "01a22017-955f-7000-b1a5-8f5aa344ba11",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a22017-9571-7000-8206-5ee31aac0469"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:00:06.196019+00:00",
+          "reservations": "01a22017-9571-7000-8206-5ee31aac0469"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22017-955b-7000-96bc-36f3d9affe8b",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "held": [
+      {
+        "id": "01a22017-9571-7000-8206-5ee31aac0469",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:00:06.196019+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "retry": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a22017-9554-7000-91ec-daa2d9907666",
+        "cycleNumber": 1,
+        "holdEndsAt": "2026-11-28T03:00:06.196019+00:00",
+        "secondsRemaining": 59
+      }
+    },
+    "assign": {
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/006b47d4-9570-4371-bd05-2ebe2b7f0b88/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "29873cf5daad698816fcc2e88ad7d490",
+        "correlationId": "a1f829f43d7241be858acc6b6a4bae08",
+        "requestId": "0HNQCPVNALM30:00000002"
+      }
+    },
+    "heldAfter": [
+      {
+        "id": "01a22017-9571-7000-8206-5ee31aac0469",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:00:06.196019+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "offerAfter": {
+      "lines": 1,
+      "history": 0,
+      "updatedAt": "2026-09-12T16:41:53.534+00:00",
+      "responsibility": null
+    }
+  },
+  "reason": "Real captured checkout acceptance created a durable held reservation + order line; a reused-hold OrderSupplyService retry versus assignment preserved the exact single hold, denied the assignment with offer.fulfillment.change_protected, and left no stale owner. A concurrent new checkout hold versus assignment kept the held reservation on an eligible Store-owned location and the resulting commitment protected every subsequent assignment (no unsafe commitment).",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

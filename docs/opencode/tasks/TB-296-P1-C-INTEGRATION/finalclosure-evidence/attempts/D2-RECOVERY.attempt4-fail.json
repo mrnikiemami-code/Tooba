@@ -1,0 +1,126 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [
+    {
+      "label": "retry-cycle2",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a2201a-1fa6-7000-9cd4-208293f9269a",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:02:53.629351+00:00",
+        "secondsRemaining": 59
+      }
+    }
+  ],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a2201a-1fa6-7000-9cd4-208293f9269a",
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201a-1fb3-7000-96d7-7ac6a89d6431",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a2201a-1fc4-7000-a8d8-e1ead43ad582"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:02:52.678675+00:00",
+          "reservations": "01a2201a-1fc4-7000-a8d8-e1ead43ad582"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201a-1faf-7000-b606-5f4486517bdf",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:02:52.678675+00:00",
+        "reservations": "01a2201a-1fc4-7000-a8d8-e1ead43ad582"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201a-1fc4-7000-a8d8-e1ead43ad582",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:02:52.678675+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "cycle2": {
+    "retry": {
+      "ok": true,
+      "checkoutId": "01a2201a-1fa6-7000-9cd4-208293f9269a",
+      "cycleNumber": 2,
+      "holdEndsAt": "2026-11-28T03:02:53.629351+00:00",
+      "secondsRemaining": 59
+    },
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201a-1fb3-7000-96d7-7ac6a89d6431",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a2201a-2380-7000-881d-f55d9eb323c3"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 2,
+          "status": "Active",
+          "expires": "2026-11-28T03:02:53.629351+00:00",
+          "reservations": "01a2201a-2380-7000-881d-f55d9eb323c3"
+        },
+        {
+          "n": 1,
+          "status": "Expired",
+          "expires": "2026-11-28T03:00:53.373322+00:00",
+          "reservations": "01a2201a-1fc4-7000-a8d8-e1ead43ad582"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201a-1faf-7000-b606-5f4486517bdf",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Expired",
+        "expires": "2026-11-28T03:00:53.373322+00:00",
+        "reservations": "01a2201a-1fc4-7000-a8d8-e1ead43ad582"
+      },
+      {
+        "n": 2,
+        "status": "Active",
+        "expires": "2026-11-28T03:02:53.629351+00:00",
+        "reservations": "01a2201a-2380-7000-881d-f55d9eb323c3"
+      }
+    ],
+    "held": []
+  },
+  "reason": "Error: cycle 2 did not hold exactly one 2-unit reservation: []\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:71:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

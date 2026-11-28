@@ -1,0 +1,146 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [
+    {
+      "label": "retry-cycle2",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a2201a-b9fc-7000-b2cc-39b721b1ff44",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:03:33.123551+00:00",
+        "secondsRemaining": 59
+      }
+    }
+  ],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a2201a-b9fc-7000-b2cc-39b721b1ff44",
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201a-ba12-7000-bbc2-9f776f8b910a",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a2201a-ba20-7000-b475-36656aff418f"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:03:32.188477+00:00",
+          "reservations": "01a2201a-ba20-7000-b475-36656aff418f"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201a-ba02-7000-9368-f4ae552d7852",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:03:32.188477+00:00",
+        "reservations": "01a2201a-ba20-7000-b475-36656aff418f"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201a-ba20-7000-b475-36656aff418f",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:03:32.188477+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "cycle2": {
+    "retry": {
+      "ok": true,
+      "checkoutId": "01a2201a-b9fc-7000-b2cc-39b721b1ff44",
+      "cycleNumber": 2,
+      "holdEndsAt": "2026-11-28T03:03:33.123551+00:00",
+      "secondsRemaining": 59
+    },
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201a-ba12-7000-bbc2-9f776f8b910a",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a2201a-bdc2-7000-8d9f-d1ab8fe1535f"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Expired",
+          "expires": "2026-11-28T03:01:32.938784+00:00",
+          "reservations": "01a2201a-ba20-7000-b475-36656aff418f"
+        },
+        {
+          "n": 2,
+          "status": "Active",
+          "expires": "2026-11-28T03:03:33.123551+00:00",
+          "reservations": "01a2201a-bdc2-7000-8d9f-d1ab8fe1535f"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201a-ba02-7000-9368-f4ae552d7852",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Expired",
+        "expires": "2026-11-28T03:01:32.938784+00:00",
+        "reservations": "01a2201a-ba20-7000-b475-36656aff418f"
+      },
+      {
+        "n": 2,
+        "status": "Active",
+        "expires": "2026-11-28T03:03:33.123551+00:00",
+        "reservations": "01a2201a-bdc2-7000-8d9f-d1ab8fe1535f"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201a-bdc2-7000-8d9f-d1ab8fe1535f",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:03:33.134449+00:00"
+      }
+    ],
+    "reacquiredSameReservationId": false,
+    "stock": {
+      "onHand": 200,
+      "reserved": 14,
+      "positions": [
+        {
+          "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+          "onHand": 200,
+          "reserved": 14
+        }
+      ]
+    }
+  },
+  "reason": "Error: stock reserved not exactly 2 after reacquire (double debit?): {\"onHand\":200,\"reserved\":14,\"positions\":[{\"stock\":\"9d493c33-941f-4673-bb3f-02861ea56950\",\"onHand\":200,\"reserved\":14}]}\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:78:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

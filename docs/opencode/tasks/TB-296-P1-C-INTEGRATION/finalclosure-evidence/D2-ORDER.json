@@ -1,0 +1,440 @@
+{
+  "id": "D2-ORDER",
+  "requests": [
+    {
+      "label": "paid-offer-before",
+      "status": 200,
+      "body": {
+        "offerId": "004cb738-0f70-4937-bdd5-d4daca74bcb6",
+        "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+        "sellerDisplayName": "تجارت الکترونیک پارس",
+        "catalogVariantId": "8070eaf5-e839-4dcc-9989-b65dfc88c3fb",
+        "productId": "01a05389-0405-7000-b775-03aca57b5c86",
+        "productTitle": "ال‌جی روشنایی نسخه 3",
+        "brandName": "ال‌جی",
+        "sellerSku": "ENR-PARS-8070eaf5e8394dcc9989b65dfc88c3fb",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 561630.16,
+        "currency": "IRR",
+        "onHand": 200,
+        "reserved": 0,
+        "availableUnits": 200,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "120c5f6a-309c-4619-a7eb-c8b7b034bca4",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 200,
+            "reserved": 0,
+            "available": 200,
+            "revision": "2026-09-13T13:39:08.9672860+00:00"
+          }
+        ],
+        "variantCode": "ENR-demo-prod-home-kitchen-decor-lighting-3",
+        "primaryMediaAssetId": "01a05388-3e0a-7000-911e-9e077af05461",
+        "lastUpdatedAt": "2026-09-12T16:35:16.438088+00:00",
+        "variantLabel": "رنگ: سیاه",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "65821f38801b41938e81822ce45b5c89:63924827716438088",
+        "offerRevision": "2026-09-12T16:35:16.4380880+00:00",
+        "revisions": {
+          "offer": "2026-09-12T16:35:16.4380880+00:00",
+          "price": "65821f38801b41938e81822ce45b5c89:63924827716438088",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "65821f38-801b-4193-8e81-822ce45b5c89"
+      }
+    },
+    {
+      "label": "paid-payment"
+    },
+    {
+      "label": "paid-assignment-denied",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/004cb738-0f70-4937-bdd5-d4daca74bcb6/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "4f1bd69f0b140b857cd3f218ffd46dc2",
+        "correlationId": "044bf244a3ff49878121b6211daee2ef",
+        "requestId": "0HNQCPVNALM2J:00000006"
+      }
+    },
+    {
+      "label": "cancelled-offer-before",
+      "status": 200,
+      "body": {
+        "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-1c80-7000-baf7-af1487e24bdf",
+        "productId": "01a05388-1bcd-7000-953a-62e5219310a1",
+        "productTitle": "دل اولترابوک مجموعه 4",
+        "brandName": "دل",
+        "sellerSku": "VAR-01a053881c807000baf7af1487e24bdf",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 6769412,
+        "currency": "IRR",
+        "onHand": 199,
+        "reserved": 0,
+        "availableUnits": 199,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "13587665-012b-433e-a891-c4c8e70c4ae8",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 199,
+            "reserved": 0,
+            "available": 199,
+            "revision": "2026-10-12T10:11:57.1867730+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-laptop-computer-laptops-ultrabooks-4-6",
+        "primaryMediaAssetId": "01a05388-1637-7000-9a01-15e635eaa45b",
+        "lastUpdatedAt": "2026-09-12T18:00:19.342464+00:00",
+        "variantLabel": "رم (laptop): ۸ گیگ · حافظه (laptop): ۲۵۶ گیگ · رنگ (laptop): خاکستری",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "e51fad49b7544cefb4710605e13f1263:63924832819342464",
+        "offerRevision": "2026-09-12T18:00:19.3424640+00:00",
+        "revisions": {
+          "offer": "2026-09-12T18:00:19.3424640+00:00",
+          "price": "e51fad49b7544cefb4710605e13f1263:63924832819342464",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "e51fad49-b754-4cef-b471-0605e13f1263"
+      }
+    },
+    {
+      "label": "cancelled-payment"
+    },
+    {
+      "label": "admin-cancel",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "code": "cancel",
+        "checkoutId": "01a22012-adfb-7000-b0af-6388a2e91d70",
+        "sellerOrderIds": [
+          "01a22012-ae01-7000-a2aa-cfafa47ed8cf"
+        ]
+      }
+    },
+    {
+      "label": "cancelled-assignment-denied",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/005e50c2-c260-4cb3-994c-8179e2d5213b/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "19b07599c7a61ac527dbb152dff85f88",
+        "correlationId": "46a5bf2a7cfb4ce9bb11153f2a2673aa",
+        "requestId": "0HNQCPVNALM2K:00000008"
+      }
+    },
+    {
+      "label": "free-detail",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "sellerDisplayName": "کالاگستر پارس",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "productId": "01a0967d-dac6-7000-bca3-449026d7da8d",
+        "productTitle": "بوش قابلمه سری 6",
+        "brandName": "بوش",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 8441781.59,
+        "currency": "IRR",
+        "onHand": 200,
+        "reserved": 0,
+        "availableUnits": 200,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "ed28c62a-1f06-4ed8-a4d0-29c03aad3b19",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 200,
+            "reserved": 0,
+            "available": 200,
+            "revision": "2026-09-13T13:39:08.9672860+00:00"
+          }
+        ],
+        "variantCode": "ENR-demo-prod-home-kitchen-cookware-pots-6",
+        "primaryMediaAssetId": "01a05388-3e24-7000-ad1f-e79496131000",
+        "lastUpdatedAt": "2026-09-12T16:41:53.534+00:00",
+        "variantLabel": "رنگ: سیاه",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "7f3f7c7d570f498698b813bc3d3b0604:63924828113534000",
+        "offerRevision": "2026-09-12T16:41:53.5340000+00:00",
+        "revisions": {
+          "offer": "2026-09-12T16:41:53.5340000+00:00",
+          "price": "7f3f7c7d570f498698b813bc3d3b0604:63924828113534000",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "7f3f7c7d-570f-4986-98b8-13bc3d3b0604"
+      }
+    },
+    {
+      "label": "free-assign-Seller",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Seller"
+      }
+    },
+    {
+      "label": "free-assign-Platform",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Platform"
+      }
+    },
+    {
+      "label": "free-assign-null",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    },
+    {
+      "label": "free-assign-Seller",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "fulfillmentResponsibility": "Seller"
+      }
+    },
+    {
+      "label": "free-restore-null",
+      "status": 200,
+      "body": {
+        "offerId": "0066f3d5-1d00-4808-9cfa-f92059ab7894",
+        "catalogVariantId": "6f9731bf-8f13-4133-9721-47167298bea3",
+        "sellerPartyId": "01a0ffff-0004-7000-8000-000000000004",
+        "channel": "Marketplace",
+        "status": "Active",
+        "sellerSku": "ENR-KG-6f9731bf8f134133972147167298bea3",
+        "returnPolicyChoice": "Default",
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20
+      }
+    }
+  ],
+  "status": "PASS",
+  "customer": {
+    "userId": "01a22012-a557-7000-aa7f-f049df764b70",
+    "email": "p1c-d2-order-a8c1e477-5ba@tooba.local"
+  },
+  "paidCheckout": {
+    "checkoutId": "01a22012-a7e9-7000-b957-e46ed5035c93",
+    "cartId": "01a22012-a6a1-7000-bb7c-f0c712825583",
+    "submitStatus": 200
+  },
+  "paidOrderState": {
+    "lines": [
+      {
+        "id": "01a22012-a7f6-7000-b0be-61b82db1cfa3",
+        "qty": 1,
+        "offer": "004cb738-0f70-4937-bdd5-d4daca74bcb6",
+        "reservation": "01a22012-a804-7000-b803-62b78946dfad"
+      }
+    ],
+    "cycles": [
+      {
+        "n": 1,
+        "status": "CommittedPaid",
+        "expires": "2026-11-28T02:54:43.273784+00:00",
+        "reservations": "01a22012-a804-7000-b803-62b78946dfad"
+      }
+    ],
+    "payments": [
+      {
+        "id": "01a22012-a82a-7000-8fcb-697c394feb06",
+        "status": "Succeeded",
+        "provider": "fake"
+      }
+    ],
+    "sellerOrders": [
+      {
+        "id": "01a22012-a7f2-7000-8d38-09e454ceb1d1",
+        "status": "Paid",
+        "cancelledFrom": null
+      }
+    ]
+  },
+  "cancelledCheckout": {
+    "checkoutId": "01a22012-adfb-7000-b0af-6388a2e91d70",
+    "cartId": "01a22012-adc5-7000-b0f8-1e91bf85903d"
+  },
+  "cancelledOrderState": {
+    "lines": [
+      {
+        "id": "01a22012-ae05-7000-afac-668dd3e21e4f",
+        "qty": 1,
+        "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+        "reservation": "01a22012-ae13-7000-bdd9-0c8c59035cc2"
+      }
+    ],
+    "cycles": [
+      {
+        "n": 1,
+        "status": "CommittedPaid",
+        "expires": "2026-11-28T02:54:44.827746+00:00",
+        "reservations": "01a22012-ae13-7000-bdd9-0c8c59035cc2"
+      }
+    ],
+    "payments": [
+      {
+        "id": "01a22012-ae2d-7000-b3d5-d91a36ef3f6b",
+        "status": "Refunded",
+        "provider": "fake"
+      }
+    ],
+    "sellerOrders": [
+      {
+        "id": "01a22012-ae01-7000-a2aa-cfafa47ed8cf",
+        "status": "Cancelled",
+        "cancelledFrom": "Paid"
+      }
+    ]
+  },
+  "positiveAssignments": [
+    {
+      "responsibility": "Seller",
+      "status": 200
+    },
+    {
+      "responsibility": "Platform",
+      "status": 200
+    },
+    {
+      "responsibility": null,
+      "status": 200
+    },
+    {
+      "responsibility": "Seller",
+      "status": 200
+    }
+  ],
+  "freeOffer": {
+    "before": {
+      "lines": 0,
+      "history": 0,
+      "updatedAt": "2026-09-12T16:41:53.534+00:00",
+      "responsibility": null
+    },
+    "after": {
+      "lines": 0,
+      "history": 5,
+      "updatedAt": "2026-11-28T02:53:47.698165+00:00",
+      "responsibility": null
+    }
+  },
+  "reason": "Real authenticated checkout + fake-gateway payment created a Paid order and a Paid-then-cancelled (restorable) order for two previously uncommitted offers; both real admin fulfillment reassignments were rejected with 409 offer.fulfillment.change_protected and wrote nothing. A third uncommitted offer completed initial assignment/reassignment/clear (Seller->Platform->null->Seller) with persisted state and history, then was restored to unassigned.",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

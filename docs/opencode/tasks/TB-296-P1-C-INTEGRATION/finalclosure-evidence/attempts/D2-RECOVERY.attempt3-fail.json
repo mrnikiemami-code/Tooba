@@ -1,0 +1,135 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [
+    {
+      "label": "retry-cycle2",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a22019-b814-7000-8452-559c8a22f4f4",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:02:27.132971+00:00",
+        "secondsRemaining": 59
+      }
+    }
+  ],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a22019-b814-7000-8452-559c8a22f4f4",
+    "order": {
+      "lines": [
+        {
+          "id": "01a22019-b81f-7000-ad02-6da13e96deed",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a22019-b82d-7000-b62a-fa15bc8edecb"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:02:26.164846+00:00",
+          "reservations": "01a22019-b82d-7000-b62a-fa15bc8edecb"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22019-b81b-7000-ade9-5da11f6c45c0",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:02:26.164846+00:00",
+        "reservations": "01a22019-b82d-7000-b62a-fa15bc8edecb"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a22019-b82d-7000-b62a-fa15bc8edecb",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:02:26.164846+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "cycle2": {
+    "retry": {
+      "ok": true,
+      "checkoutId": "01a22019-b814-7000-8452-559c8a22f4f4",
+      "cycleNumber": 2,
+      "holdEndsAt": "2026-11-28T03:02:27.132971+00:00",
+      "secondsRemaining": 59
+    },
+    "order": {
+      "lines": [
+        {
+          "id": "01a22019-b81f-7000-ad02-6da13e96deed",
+          "qty": 2,
+          "offer": "006b47d4-9570-4371-bd05-2ebe2b7f0b88",
+          "reservation": "01a22019-bc00-7000-a1ad-f2c06cecba47"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Expired",
+          "expires": "2026-11-28T03:00:26.948539+00:00",
+          "reservations": "01a22019-b82d-7000-b62a-fa15bc8edecb"
+        },
+        {
+          "n": 2,
+          "status": "Active",
+          "expires": "2026-11-28T03:02:27.132971+00:00",
+          "reservations": "01a22019-bc00-7000-a1ad-f2c06cecba47"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22019-b81b-7000-ade9-5da11f6c45c0",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Expired",
+        "expires": "2026-11-28T03:00:26.948539+00:00",
+        "reservations": "01a22019-b82d-7000-b62a-fa15bc8edecb"
+      },
+      {
+        "n": 2,
+        "status": "Active",
+        "expires": "2026-11-28T03:02:27.132971+00:00",
+        "reservations": "01a22019-bc00-7000-a1ad-f2c06cecba47"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a22019-b82d-7000-b62a-fa15bc8edecb",
+        "qty": 2,
+        "stock": "9d493c33-941f-4673-bb3f-02861ea56950",
+        "status": "Held",
+        "expires": "2026-11-28T03:00:27.093836+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "reason": "Error: cycle 2 did not reacquire exactly one new 2-unit hold: [{\"id\":\"01a22019-b82d-7000-b62a-fa15bc8edecb\",\"qty\":2,\"stock\":\"9d493c33-941f-4673-bb3f-02861ea56950\",\"status\":\"Held\",\"expires\":\"2026-11-28T03:00:27.093836+00:00\",\"purpose\":\"NewSale\"}]\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:71:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

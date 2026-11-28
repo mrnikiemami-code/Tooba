@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "taskId": "TB-296-P1-FINAL-CLOSURE",
+  "generatedAt": "2026-11-28T00:00:00+03:30",
+  "decision": "NOT_ISSUED",
+  "selfAuthorization": false,
+  "note": "Worker evidence package only. Worker PASS != Architect ACCEPT != owner acceptance. No ACCEPT may be inferred from this file.",
+  "identity": {
+    "sourceHead": "ad1a7d10b2c089a433197219e978e9b8bb49981d",
+    "productSourceEquivalentTo": "84f3372a443119fd26eb8ca6e0e533da279c946f",
+    "hostDllSha256": "5669d7b08199b4cc8b39d886d496399441cacb7b3d19da251569460a9a767976",
+    "nextBuildId": "hMU29Ej5cfQxp1-pC9yp6",
+    "database": "tooba_alpha",
+    "productChanges": 0
+  },
+  "counts": { "PASS": 60, "FAIL": 0, "NOT_RUN": 0, "total": 60 },
+  "closedThisTask": {
+    "D2-ORDER": { "status": "PASS", "evidence": "finalclosure-evidence/D2-ORDER.json", "sha256": "3988f1a353f108e71487e709a1366534c654f2d6a49f3d7a8813c6eb5e1a9321" },
+    "D2-HOLD": { "status": "PASS", "evidence": "finalclosure-evidence/D2-HOLD.json", "sha256": "410b66addcd9108d4898dc43180556fb53dadb86feec255dcadb1ba98e69dd89" },
+    "D2-PARTIAL": { "status": "PASS", "evidence": "finalclosure-evidence/D2-PARTIAL.json", "sha256": "1fee3d4879720e690db355592e6598817f0c8c5c2f8bee4cedf80fdcaec56c91" },
+    "D2-RECOVERY": { "status": "PASS", "evidence": "finalclosure-evidence/D2-RECOVERY.json", "sha256": "acd6e712f49c6c626f83034a396013974c18ba6f7c60cb29f6948d671ea1f45d" }
+  },
+  "authorizationUsed": {
+    "syntheticDevCustomer": "existing standard /v1/auth/register + /v1/auth/login on tooba_alpha",
+    "authenticationBypass": false,
+    "securityPolicyChange": false,
+    "newHostOrDatabase": false,
+    "productCodeChange": false,
+    "fixtureCleanup": "verified baseline restore from p1c-final-20261127173245.dump (SHA-256 589f8c2a…), restore exit 0; no P1C fixture residue"
+  },
+  "gates": {
+    "acceptanceGateSelfTest": { "status": "PASS", "exit": 0, "detail": "positive fixture + 11 negative controls" },
+    "architectReviewGateSelfTest": { "status": "PASS", "exit": 0, "detail": "positive fixture + 14 negative controls" },
+    "reconciledLedgerStructural": { "status": "PASS", "rows": 60, "unique": 60, "evidenceChecked": 60, "hashMismatches": 0 },
+    "fullAcceptanceGate": {
+      "status": "NOT_RUN",
+      "reason": "The 8 deferred D2/F-BENTRY scenarios have no issued immutable JSON scenario matrix (only prose in ARCHITECT-PHASE-TEST-SCHEDULING.md); a worker must not author the per-assertion expected/observed facts the gate equates. The architect must confirm the deferred matrix and run the gate."
+    },
+    "architectReviewGate": {
+      "status": "NOT_RUN",
+      "reason": "Requires an architect-authored ARCHITECT-REVIEW.json bound to base/candidate/evidence commit; a worker must not author it."
+    }
+  },
+  "remainingForArchitect": [
+    "Confirm/issue the deferred D2/F-BENTRY scenario matrix and run acceptance-gate.cjs over all 60 IDs.",
+    "Author ARCHITECT-REVIEW.json and run architect-review-gate.cjs; perform the independent source/evidence audit.",
+    "Owner UAT decision."
+  ],
+  "conclusion": "All 60 immutable IDs are PASS with executed evidence (56 preserved; D2-ORDER/D2-HOLD/D2-PARTIAL/D2-RECOVERY closed via real authenticated checkout/payment, real reused-hold/assignment, real OrderSupplyService retry cap, and real Inventory partial-release/consume). Final ACCEPT is architect/owner-owned and is not self-authorized."
+}

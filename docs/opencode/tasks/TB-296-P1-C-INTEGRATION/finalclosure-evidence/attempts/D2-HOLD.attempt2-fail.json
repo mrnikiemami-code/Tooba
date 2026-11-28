@@ -1,0 +1,228 @@
+{
+  "id": "D2-HOLD",
+  "requests": [
+    {
+      "label": "race-detail",
+      "status": 200,
+      "body": {
+        "offerId": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "sellerDisplayName": "فروشگاه آرمان",
+        "catalogVariantId": "01a05388-1c80-7000-baf7-af1487e24bdf",
+        "productId": "01a05388-1bcd-7000-953a-62e5219310a1",
+        "productTitle": "دل اولترابوک مجموعه 4",
+        "brandName": "دل",
+        "sellerSku": "VAR-01a053881c807000baf7af1487e24bdf",
+        "status": "Active",
+        "channel": "Marketplace",
+        "amount": 6769412,
+        "currency": "IRR",
+        "onHand": 199,
+        "reserved": 0,
+        "availableUnits": 199,
+        "catalogReadOnly": true,
+        "returnPolicyChoice": "Default",
+        "defaultReturnWindowDays": 7,
+        "sellerCanOverrideReturnPolicy": true,
+        "minReturnWindowDays": 1,
+        "maxReturnWindowDays": 30,
+        "allowNonReturnableOffers": true,
+        "minimumOrderQuantity": 1,
+        "maximumOrderQuantity": 20,
+        "productUnitCode": "pcs",
+        "productUnitName": "عدد",
+        "productUnitShortName": "عدد",
+        "inventoryLocations": [
+          {
+            "stockItemId": "13587665-012b-433e-a891-c4c8e70c4ae8",
+            "locationId": "01a03826-97cb-7000-9b33-5dba87e73980",
+            "locationCode": "WH-DEMO-THR",
+            "locationName": "انبار نمایشی تهران",
+            "onHand": 199,
+            "reserved": 0,
+            "available": 199,
+            "revision": "2026-11-28T02:53:46.3703240+00:00"
+          }
+        ],
+        "variantCode": "DEMO-demo-prod-laptop-computer-laptops-ultrabooks-4-6",
+        "primaryMediaAssetId": "01a05388-1637-7000-9a01-15e635eaa45b",
+        "lastUpdatedAt": "2026-09-12T18:00:19.342464+00:00",
+        "variantLabel": "رم (laptop): ۸ گیگ · حافظه (laptop): ۲۵۶ گیگ · رنگ (laptop): خاکستری",
+        "unitQuantityDecimalPlaces": 0,
+        "unitRoundingMode": "Nearest",
+        "priceRevision": "e51fad49b7544cefb4710605e13f1263:63924832819342464",
+        "offerRevision": "2026-09-12T18:00:19.3424640+00:00",
+        "revisions": {
+          "offer": "2026-09-12T18:00:19.3424640+00:00",
+          "price": "e51fad49b7544cefb4710605e13f1263:63924832819342464",
+          "offeredQuantity": "absent"
+        },
+        "capabilities": {
+          "canEditPhysicalInventory": true,
+          "canEditOfferedQuantity": false,
+          "canAssignFulfillment": true,
+          "canEditShippingPolicy": true
+        },
+        "priceId": "e51fad49-b754-4cef-b471-0605e13f1263"
+      }
+    },
+    {
+      "label": "race-post-assignment-denied",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/005e50c2-c260-4cb3-994c-8179e2d5213b/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "f8ce1136d1295fcb513efc819725656d",
+        "correlationId": "a8659e4180c240579b21494f6cdae208",
+        "requestId": "0HNQCPVNALM2R:00000005"
+      }
+    }
+  ],
+  "status": "FAIL",
+  "customer": {
+    "userId": "01a22016-d876-7000-aa25-0262e8f590cc"
+  },
+  "race": {
+    "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+    "submitStatus": 200,
+    "assignStatus": 200,
+    "holdSucceeded": true,
+    "assignSucceeded": true,
+    "order": {
+      "lines": [
+        {
+          "id": "01a22016-dc4c-7000-864d-99d94c5774f5",
+          "qty": 1,
+          "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+          "reservation": "01a22016-dc6c-7000-8746-286c3bfa7fd5"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T02:59:18.817738+00:00",
+          "reservations": "01a22016-dc6c-7000-8746-286c3bfa7fd5"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22016-dc48-7000-9c92-39ff9b9d6f8d",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "reservations": [
+      {
+        "id": "01a22016-dc6c-7000-8746-286c3bfa7fd5",
+        "qty": 1,
+        "stock": "13587665-012b-433e-a891-c4c8e70c4ae8",
+        "status": "Held",
+        "expires": "2026-11-28T02:59:18.817738+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "offerAfter": {
+      "lines": 1,
+      "history": 1,
+      "updatedAt": "2026-11-28T02:58:18.757075+00:00",
+      "responsibility": "Seller"
+    },
+    "locationOwner": "Store|",
+    "postAssignment": {
+      "status": 409,
+      "errorCode": "offer.fulfillment.change_protected"
+    }
+  },
+  "reuse": {
+    "checkpoint": "captured-acceptance",
+    "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+    "checkoutId": "01a22016-dfe4-7000-aef0-c93c4798cbf6",
+    "order": {
+      "lines": [
+        {
+          "id": "01a22016-dfee-7000-b4a7-c3d6f05a4b6a",
+          "qty": 2,
+          "offer": "005e50c2-c260-4cb3-994c-8179e2d5213b",
+          "reservation": "01a22016-e000-7000-ba8c-e0fd5d6fca20"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T02:59:19.7481+00:00",
+          "reservations": "01a22016-e000-7000-ba8c-e0fd5d6fca20"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a22016-dfea-7000-be08-b736831db2ba",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "held": [
+      {
+        "id": "01a22016-e000-7000-ba8c-e0fd5d6fca20",
+        "qty": 2,
+        "stock": "13587665-012b-433e-a891-c4c8e70c4ae8",
+        "status": "Held",
+        "expires": "2026-11-28T02:59:19.7481+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "retry": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a22016-dfe4-7000-aef0-c93c4798cbf6",
+        "cycleNumber": 1,
+        "holdEndsAt": "2026-11-28T02:59:19.7481+00:00",
+        "secondsRemaining": 59
+      }
+    },
+    "assign": {
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تا زمانی که تعهدات یا مقدار عرضهٔ حفاظت‌شده وجود دارد، تغییر مسئولیت ارسال مجاز نیست.",
+        "status": 409,
+        "instance": "/v1/admin/offers/005e50c2-c260-4cb3-994c-8179e2d5213b/fulfillment",
+        "errorCode": "offer.fulfillment.change_protected",
+        "traceId": "8d36427c3ed1952a67a99572b7a97ba0",
+        "correlationId": "c1b64054ae334964a3ab69ae81f1a9aa",
+        "requestId": "0HNQCPVNALM2T:00000002"
+      }
+    },
+    "heldAfter": [
+      {
+        "id": "01a22016-e000-7000-ba8c-e0fd5d6fca20",
+        "qty": 2,
+        "stock": "13587665-012b-433e-a891-c4c8e70c4ae8",
+        "status": "Held",
+        "expires": "2026-11-28T02:59:19.7481+00:00",
+        "purpose": "NewSale"
+      }
+    ],
+    "offerAfter": {
+      "lines": 2,
+      "history": 1,
+      "updatedAt": "2026-11-28T02:58:18.757075+00:00",
+      "responsibility": "Seller"
+    }
+  },
+  "reason": "Error: captured commitment disappeared after assignment attempt\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-hold.cjs:108:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

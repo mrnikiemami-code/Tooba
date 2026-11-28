@@ -1,0 +1,160 @@
+{
+  "id": "D2-RECOVERY",
+  "requests": [
+    {
+      "label": "retry-cycle2",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "checkoutId": "01a2201b-455d-7000-974b-8babce852fd5",
+        "cycleNumber": 2,
+        "holdEndsAt": "2026-11-28T03:04:08.745488+00:00",
+        "secondsRemaining": 59
+      }
+    },
+    {
+      "label": "retry-cycle3",
+      "status": 409,
+      "body": {
+        "type": "about:blank",
+        "title": "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.",
+        "status": 409,
+        "instance": "/v1/storefront/checkout/01a2201b-455d-7000-974b-8babce852fd5/retry-reservation",
+        "errorCode": "inventory.reservation.retry_limit_reached",
+        "traceId": "1a20bbd5e73200d6e7b8ce0126b458ff",
+        "correlationId": "9379bcbf255f499bb7a498cf1da550ca",
+        "requestId": "0HNQCPVNALM3C:00000004"
+      }
+    }
+  ],
+  "status": "FAIL",
+  "unpaid": {
+    "checkoutId": "01a2201b-455d-7000-974b-8babce852fd5",
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201b-456e-7000-9ed6-23ec445c1566",
+          "qty": 2,
+          "offer": "0076b634-303c-4803-828a-4a5d04560f84",
+          "reservation": "01a2201b-4583-7000-a49b-44e2a280f3c6"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Active",
+          "expires": "2026-11-28T03:04:07.869978+00:00",
+          "reservations": "01a2201b-4583-7000-a49b-44e2a280f3c6"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201b-4566-7000-a301-cdc83b68d231",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Active",
+        "expires": "2026-11-28T03:04:07.869978+00:00",
+        "reservations": "01a2201b-4583-7000-a49b-44e2a280f3c6"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201b-4583-7000-a49b-44e2a280f3c6",
+        "qty": 2,
+        "stock": "fa5b8d88-c5eb-49e4-b64e-54470a6759c3",
+        "status": "Held",
+        "expires": "2026-11-28T03:04:07.869978+00:00",
+        "purpose": "NewSale"
+      }
+    ]
+  },
+  "cycle2": {
+    "retry": {
+      "ok": true,
+      "checkoutId": "01a2201b-455d-7000-974b-8babce852fd5",
+      "cycleNumber": 2,
+      "holdEndsAt": "2026-11-28T03:04:08.745488+00:00",
+      "secondsRemaining": 59
+    },
+    "order": {
+      "lines": [
+        {
+          "id": "01a2201b-456e-7000-9ed6-23ec445c1566",
+          "qty": 2,
+          "offer": "0076b634-303c-4803-828a-4a5d04560f84",
+          "reservation": "01a2201b-48e3-7000-a527-b938cc321ba3"
+        }
+      ],
+      "cycles": [
+        {
+          "n": 1,
+          "status": "Expired",
+          "expires": "2026-11-28T03:02:08.559326+00:00",
+          "reservations": "01a2201b-4583-7000-a49b-44e2a280f3c6"
+        },
+        {
+          "n": 2,
+          "status": "Active",
+          "expires": "2026-11-28T03:04:08.745488+00:00",
+          "reservations": "01a2201b-48e3-7000-a527-b938cc321ba3"
+        }
+      ],
+      "payments": [],
+      "sellerOrders": [
+        {
+          "id": "01a2201b-4566-7000-a301-cdc83b68d231",
+          "status": "PendingPayment",
+          "cancelledFrom": null
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "n": 1,
+        "status": "Expired",
+        "expires": "2026-11-28T03:02:08.559326+00:00",
+        "reservations": "01a2201b-4583-7000-a49b-44e2a280f3c6"
+      },
+      {
+        "n": 2,
+        "status": "Active",
+        "expires": "2026-11-28T03:04:08.745488+00:00",
+        "reservations": "01a2201b-48e3-7000-a527-b938cc321ba3"
+      }
+    ],
+    "held": [
+      {
+        "id": "01a2201b-48e3-7000-a527-b938cc321ba3",
+        "qty": 2,
+        "stock": "fa5b8d88-c5eb-49e4-b64e-54470a6759c3",
+        "status": "Held",
+        "expires": "2026-11-28T03:04:08.758362+00:00"
+      }
+    ],
+    "reacquiredSameReservationId": false,
+    "stock": {
+      "onHand": 200,
+      "reserved": 2,
+      "positions": [
+        {
+          "stock": "fa5b8d88-c5eb-49e4-b64e-54470a6759c3",
+          "onHand": 200,
+          "reserved": 2
+        }
+      ]
+    }
+  },
+  "reason": "Error: cycle-3 retry failed: 409 {\"type\":\"about:blank\",\"title\":\"تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.\",\"status\":409,\"instance\":\"/v1/storefront/checkout/01a2201b-455d-7000-974b-8babce852fd5/retry-reservation\",\"errorCode\":\"inventory.reservation.retry_limit_reached\",\"traceId\":\"1a20bbd5e73200d6e7b8ce0126b\n    at check (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-lib.cjs:12:60)\n    at main (D:\\Users\\User\\source\\repos\\SarvNewVer-opencode-iso-002\\docs\\opencode\\tasks\\TB-296-P1-C-INTEGRATION\\finalacceptance-d2-recovery.cjs:84:5)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "cleanup": {
+    "cartsLeft": 0,
+    "checkoutsLeft": 0,
+    "userLeft": 0
+  }
+}

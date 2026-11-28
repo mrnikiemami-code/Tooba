@@ -1,0 +1,21 @@
+{
+  "edition": "Marketplace",
+  "runId": "p1c-d2-partial-mwzu1pyf",
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "httpBase": "http://127.0.0.1:5088",
+  "offers": [
+    {
+      "key": "A",
+      "offerId": "00e72c47-4c4a-4b8e-9cf6-837df471769f",
+      "sellerId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "variantId": "63dca62d-2d4e-434c-9055-4a452918f259",
+      "positions": [
+        {
+          "ownerKind": "Marketplace",
+          "stock": 100,
+          "eligible": true
+        }
+      ]
+    }
+  ]
+}

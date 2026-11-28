@@ -1,0 +1,382 @@
+{
+  "id": "D2-PARTIAL",
+  "status": "PASS",
+  "fixtures": [
+    {
+      "offerId": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+      "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "variantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6"
+    },
+    {
+      "offerId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+      "sellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "variantId": "01a05388-8aa2-7000-870b-beb8efae6ec5"
+    }
+  ],
+  "race": {
+    "command": "race-release-consume",
+    "edition": "Marketplace",
+    "runId": "p1c-d2-partial-mwzu32m8-bd6656",
+    "fixture": [
+      {
+        "OfferKey": "A",
+        "OfferId": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+        "SellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "VariantId": "01a05388-8aa2-7000-826b-b4b1158dd0e6",
+        "LocationId": "01a22022-fa9c-7000-bc47-591946a264af",
+        "Code": "P1C-F-P1C-D2-PARTIAL-MWZU32M8-BD",
+        "StockItemId": "01a22022-fcc9-7000-99e7-cbbddcc49b0a",
+        "Stock": 100,
+        "Eligible": true
+      }
+    ],
+    "steps": [
+      {
+        "label": "allocate20",
+        "ok": true,
+        "value": {
+          "ok": true,
+          "code": null,
+          "receipt": {
+            "Quantity": 20,
+            "Held": 0,
+            "Available": 20,
+            "Revision": "01a22022fd5e70008af5e6cff533d00e"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "reservationId": "01a22022-fd97-7000-a78c-e35a8db812d8",
+        "quantity": 5,
+        "status": "Held"
+      },
+      [
+        {
+          "op": "release",
+          "ok": true
+        },
+        {
+          "op": "consume",
+          "ok": false,
+          "code": "inventory.reservation.not_active"
+        }
+      ],
+      {
+        "label": "after concurrent release/consume",
+        "offers": [
+          {
+            "offer_id": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+            "fulfillment_responsibility": "Platform"
+          }
+        ],
+        "allocations": [
+          {
+            "OfferId": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+            "Quantity": 20,
+            "Held": 0,
+            "Revision": "01a22022fdbe70008488b25ea9acb8b1"
+          }
+        ],
+        "positions": [
+          {
+            "OfferId": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+            "StockItemId": "01a22022-fcc9-7000-99e7-cbbddcc49b0a",
+            "LocationId": "01a22022-fa9c-7000-bc47-591946a264af",
+            "OnHand": 100,
+            "Reserved": 0,
+            "UpdatedAt": "2026-11-28T03:11:33.8225100+00:00"
+          }
+        ],
+        "reservations": [
+          {
+            "ReservationId": "01a22022-fd97-7000-a78c-e35a8db812d8",
+            "StockItemId": "01a22022-fcc9-7000-99e7-cbbddcc49b0a",
+            "Quantity": 5,
+            "Status": "Released",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T04:11:33.7553650+00:00"
+          }
+        ],
+        "facts": [
+          {
+            "FactId": "01a22022-fd62-7000-9168-5bda2a60c700",
+            "OfferId": "bd66568f-8d11-3f7a-9089-22d0075d8d64",
+            "StockItemId": null,
+            "LocationId": null,
+            "Kind": "AllocationChanged",
+            "OperationId": "85187495-ba3b-4ba0-82ea-5efb2c8c9a38",
+            "OldAllocation": null,
+            "NewAllocation": 20,
+            "OldOnHand": null,
+            "NewOnHand": null,
+            "Reason": "seller-offered-quantity",
+            "ActorUserId": "24323a57-dc96-4509-8dc1-1ba473d1538a",
+            "OccurredAt": "2026-11-28T03:11:33.673657+00:00"
+          }
+        ],
+        "consumptions": 0,
+        "heldReleases": 0
+      }
+    ],
+    "ok": true,
+    "winner": "release"
+  },
+  "partial": {
+    "command": "partial-release",
+    "edition": "Marketplace",
+    "runId": "p1c-d2-partial-mwzu33g2-c396ef",
+    "fixture": [
+      {
+        "OfferKey": "A",
+        "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+        "SellerId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "VariantId": "01a05388-8aa2-7000-870b-beb8efae6ec5",
+        "LocationId": "01a22022-fecd-7000-bd5f-8129ad666ed4",
+        "Code": "P1C-F-P1C-D2-PARTIAL-MWZU33G2-C3",
+        "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+        "Stock": 100,
+        "Eligible": true
+      }
+    ],
+    "steps": [
+      {
+        "label": "allocate20",
+        "ok": true,
+        "value": {
+          "ok": true,
+          "code": null,
+          "receipt": {
+            "Quantity": 20,
+            "Held": 0,
+            "Available": 20,
+            "Revision": "01a2202301957000a5f3dd41d9ad7b2f"
+          }
+        }
+      },
+      {
+        "ok": true,
+        "reservationId": "01a22023-0266-7000-9e2a-888384025751",
+        "quantity": 5,
+        "status": "Held"
+      },
+      {
+        "phase": "release2",
+        "ReservationId": "01a22023-0266-7000-9e2a-888384025751",
+        "RequestedQuantity": 2,
+        "ReleasedQuantity": 2,
+        "Status": "PartiallyHeld",
+        "Outcome": "PartiallyHeld"
+      },
+      {
+        "label": "after release2",
+        "offers": [
+          {
+            "offer_id": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "fulfillment_responsibility": "Platform"
+          }
+        ],
+        "allocations": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "Quantity": 20,
+            "Held": 3,
+            "Revision": "01a22023029c70009f6bc59fb72366db"
+          }
+        ],
+        "positions": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "LocationId": "01a22022-fecd-7000-bd5f-8129ad666ed4",
+            "OnHand": 100,
+            "Reserved": 3,
+            "UpdatedAt": "2026-11-28T03:11:35.0590930+00:00"
+          }
+        ],
+        "reservations": [
+          {
+            "ReservationId": "01a22023-0266-7000-9e2a-888384025751",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "Quantity": 3,
+            "Status": "Held",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T04:11:34.8343310+00:00"
+          }
+        ],
+        "facts": [
+          {
+            "FactId": "01a22023-019a-7000-b392-79bcbdc5b13d",
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": null,
+            "LocationId": null,
+            "Kind": "AllocationChanged",
+            "OperationId": "b42a0f94-3335-4b98-9673-496b523da759",
+            "OldAllocation": null,
+            "NewAllocation": 20,
+            "OldOnHand": null,
+            "NewOnHand": null,
+            "Reason": "seller-offered-quantity",
+            "ActorUserId": "f6c4a1c3-9282-4344-8a31-a313ae6a8afe",
+            "OccurredAt": "2026-11-28T03:11:34.748355+00:00"
+          }
+        ],
+        "consumptions": 0,
+        "heldReleases": 1
+      },
+      {
+        "phase": "release3",
+        "ReservationId": "01a22023-0266-7000-9e2a-888384025751",
+        "RequestedQuantity": 3,
+        "ReleasedQuantity": 3,
+        "Status": "Released",
+        "Outcome": "Released"
+      },
+      {
+        "label": "after release3",
+        "offers": [
+          {
+            "offer_id": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "fulfillment_responsibility": "Platform"
+          }
+        ],
+        "allocations": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "Quantity": 20,
+            "Held": 0,
+            "Revision": "01a2202302f270008162810d788b7daf"
+          }
+        ],
+        "positions": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "LocationId": "01a22022-fecd-7000-bd5f-8129ad666ed4",
+            "OnHand": 100,
+            "Reserved": 0,
+            "UpdatedAt": "2026-11-28T03:11:35.1525600+00:00"
+          }
+        ],
+        "reservations": [
+          {
+            "ReservationId": "01a22023-0266-7000-9e2a-888384025751",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "Quantity": 0,
+            "Status": "Released",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T04:11:34.8343310+00:00"
+          }
+        ],
+        "facts": [
+          {
+            "FactId": "01a22023-019a-7000-b392-79bcbdc5b13d",
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": null,
+            "LocationId": null,
+            "Kind": "AllocationChanged",
+            "OperationId": "b42a0f94-3335-4b98-9673-496b523da759",
+            "OldAllocation": null,
+            "NewAllocation": 20,
+            "OldOnHand": null,
+            "NewOnHand": null,
+            "Reason": "seller-offered-quantity",
+            "ActorUserId": "f6c4a1c3-9282-4344-8a31-a313ae6a8afe",
+            "OccurredAt": "2026-11-28T03:11:34.748355+00:00"
+          }
+        ],
+        "consumptions": 0,
+        "heldReleases": 2
+      },
+      {
+        "phase": "replay",
+        "ReleasedQuantity": 3,
+        "Status": "Replayed",
+        "Outcome": "Released"
+      },
+      {
+        "label": "after replay",
+        "offers": [
+          {
+            "offer_id": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "fulfillment_responsibility": "Platform"
+          }
+        ],
+        "allocations": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "Quantity": 20,
+            "Held": 0,
+            "Revision": "01a2202302f270008162810d788b7daf"
+          }
+        ],
+        "positions": [
+          {
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "LocationId": "01a22022-fecd-7000-bd5f-8129ad666ed4",
+            "OnHand": 100,
+            "Reserved": 0,
+            "UpdatedAt": "2026-11-28T03:11:35.1525600+00:00"
+          }
+        ],
+        "reservations": [
+          {
+            "ReservationId": "01a22023-0266-7000-9e2a-888384025751",
+            "StockItemId": "01a22023-00fe-7000-9b74-03e1482d0995",
+            "Quantity": 0,
+            "Status": "Released",
+            "Purpose": "NewSale",
+            "ExpiresAt": "2026-11-28T04:11:34.8343310+00:00"
+          }
+        ],
+        "facts": [
+          {
+            "FactId": "01a22023-019a-7000-b392-79bcbdc5b13d",
+            "OfferId": "c396efaf-f41d-cfbe-79d3-04a992b2e78f",
+            "StockItemId": null,
+            "LocationId": null,
+            "Kind": "AllocationChanged",
+            "OperationId": "b42a0f94-3335-4b98-9673-496b523da759",
+            "OldAllocation": null,
+            "NewAllocation": 20,
+            "OldOnHand": null,
+            "NewOnHand": null,
+            "Reason": "seller-offered-quantity",
+            "ActorUserId": "f6c4a1c3-9282-4344-8a31-a313ae6a8afe",
+            "OccurredAt": "2026-11-28T03:11:34.748355+00:00"
+          }
+        ],
+        "consumptions": 0,
+        "heldReleases": 2
+      }
+    ],
+    "ok": true
+  },
+  "partialAssertions": {
+    "reservationId": "01a22023-0266-7000-9e2a-888384025751",
+    "release2": {
+      "released": 2,
+      "outcome": "PartiallyHeld",
+      "reserved": 3,
+      "held": 3,
+      "remaining": 17
+    },
+    "release3": {
+      "released": 3,
+      "outcome": "Released",
+      "reserved": 0,
+      "held": 0,
+      "remaining": 20
+    },
+    "replay": {
+      "released": 3,
+      "status": "Replayed"
+    },
+    "allocationRevisionAdvanced": true
+  },
+  "reason": "Dedicated P1C fixture Inventory owner workflows on tooba_alpha: concurrent release/consume had exactly one winner with zero negative availability and exact physical/reserved outcome; partial-obligation release of 2 then 3 on the same scoped reservation reported PartiallyHeld then Released with exact remaining quantities (17 then 20), no double release on replay, and an advancing allocation revision.",
+  "cleanup": {
+    "offersLeft": 0
+  }
+}
