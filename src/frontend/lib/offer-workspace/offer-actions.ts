@@ -4,6 +4,7 @@ import { draftFromDetail, changedInventoryRows, detailVersionChanged, parseDecim
 import { offerErrorText, type OfferWorkspaceMessages } from "./messages.ts";
 import type {
   OfferCommercialPatch,
+  OfferCurrencyOption,
   OfferFulfillmentResponsibility,
   OfferProductOption,
   OfferSellerOption,
@@ -32,6 +33,7 @@ export interface OfferActionsContext {
   saveNeedsReload: boolean;
   saveReloading: boolean;
   priceChanged: boolean;
+  currencies?: OfferCurrencyOption[];
   commercialChanged: boolean;
   stockChanged: boolean;
   offeredChanged: boolean;
@@ -147,7 +149,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       ctx.showBlocking("reload", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
       return;
     }
-    const errors = validateDraft(ctx.detail, ctx.draft);
+    const errors = validateDraft(ctx.detail, ctx.draft, ctx.currencies);
     if (errors.length > 0) {
       const first = errors[0]!;
       ctx.setTabError({ tab: first.tab, code: first.code });
@@ -356,7 +358,7 @@ export function createOfferActions(ctx: OfferActionsContext) {
       return;
     }
     const parsedAmount = ctx.draft.amount.trim() ? parseDecimal(ctx.draft.amount) : null;
-    if (ctx.priceChanged && (parsedAmount == null || validatePrice(ctx.draft.amount, ctx.draft.currency))) {
+    if (ctx.priceChanged && (parsedAmount == null || validatePrice(ctx.draft.amount, ctx.draft.currency, ctx.currencies))) {
       ctx.setActiveTab("pricing"); ctx.setSaveError(ctx.t.validationAmount); return;
     }
     const parsedMin = ctx.draft.minimumOrderQuantity.trim() ? parseDecimal(ctx.draft.minimumOrderQuantity) : null;
@@ -494,12 +496,27 @@ export function reconcileDraft(previous: OfferWorkspaceDetail, latest: OfferWork
   if (previous.offerId !== latest.offerId || previous.sellerPartyId !== latest.sellerPartyId || previous.catalogVariantId !== latest.catalogVariantId || previous.channel !== latest.channel) return null;
   const before = draftFromDetail(previous);
   const after = draftFromDetail(latest);
-  const keys = ["sellerSku", "amount", "currency", "offeredQuantity", "returnPolicyChoice", "customReturnWindowDays", "minimumOrderQuantity", "maximumOrderQuantity", "status"] as const;
+  const keys = ["sellerSku", "offeredQuantity", "returnPolicyChoice", "customReturnWindowDays", "minimumOrderQuantity", "maximumOrderQuantity", "status"] as const;
   const merged = { ...after, inventoryOnHand: { ...after.inventoryOnHand } };
   for (const key of keys) {
     if (desired[key] === before[key]) continue;
     if (after[key] !== before[key] && after[key] !== desired[key]) return null;
     merged[key] = desired[key];
+  }
+  // Currency and amount are a single intent; never merge a foreign-currency draft
+  // against the store-primary amount or overwrite a changed currency revision.
+  const previousPrice = priceRowFor(previous, desired.currency);
+  const latestPrice = priceRowFor(latest, desired.currency);
+  const wantedAmount = parseDecimal(desired.amount);
+  const priceChanged = desired.amount.trim() !== "" ? wantedAmount !== (previousPrice?.amount ?? null) || wantedAmount == null : previousPrice != null;
+  if (priceChanged) {
+    if ((previousPrice?.revision ?? null) !== (latestPrice?.revision ?? null)
+        && (wantedAmount == null || latestPrice?.amount !== wantedAmount)) return null;
+    merged.currency = desired.currency;
+    merged.amount = desired.amount;
+  } else if (desired.currency) {
+    merged.currency = desired.currency;
+    merged.amount = latestPrice ? String(latestPrice.amount) : "";
   }
   for (const [id, value] of Object.entries(desired.inventoryOnHand)) {
     if (value === before.inventoryOnHand[id]) continue;
