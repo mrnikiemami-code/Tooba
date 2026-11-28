@@ -26,7 +26,7 @@ public sealed record SellerPriceWriteReceipt(
     decimal NewAmount,
     string Currency);
 
-/// <summary>One current base authored price for an offer and currency.</summary>
+/// <summary>Latest base authoring record for an offer and currency, including its real status and write revision; not an effective quote.</summary>
 public sealed record SellerOfferPriceView(
     Guid PriceId,
     string Currency,
