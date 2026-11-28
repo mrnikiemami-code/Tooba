@@ -423,7 +423,7 @@ export async function writeAdminOfferInventory(
     const response = await fetch(`/v1/admin/offers/${offerId}/inventory`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ onHand: input.onHand, reason: input.reason, stockItemId: input.stockItemId, expectedVersion, operationId: input.operationId }),
+      body: JSON.stringify({ onHand: input.onHand, reason: input.reason?.trim() || undefined, stockItemId: input.stockItemId, expectedVersion, operationId: input.operationId }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
