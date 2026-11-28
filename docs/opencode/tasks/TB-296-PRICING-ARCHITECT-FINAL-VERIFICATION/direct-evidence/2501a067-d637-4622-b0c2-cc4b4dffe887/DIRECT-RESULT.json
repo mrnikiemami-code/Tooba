@@ -1,0 +1,234 @@
+{
+  "runId": "2501a067-d637-4622-b0c2-cc4b4dffe887",
+  "candidate": "4f19708be3d980a22535fb446d3cfaa1a2ddfc9c",
+  "identity": {
+    "head": "0b1a6973829d69418bee79d46677259f7e1d022d",
+    "nextBuildId": "fzXq0vXgQ2zeCrG2p_IBW",
+    "hostDll": "10098e16bfca69fa41a736609b2535aad8e911457db194ed916a112e4c379529",
+    "database": "tooba_alpha|local|local|1795063893.467474",
+    "legacyFractionalIrr": 2310
+  },
+  "cases": {
+    "R11-PRICE-01-admin": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "foreign currency overwrote primary/other revision"
+    },
+    "R11-PRICE-01-seller": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "create HTTP 403"
+    },
+    "independent-probe-fixture": {
+      "status": "PASS",
+      "offerId": "3a923556-b5ca-13db-f367-cab531947840",
+      "prices": [
+        {
+          "amount": 100000,
+          "status": "Active",
+          "currency": "IRR"
+        },
+        {
+          "amount": 13.25,
+          "status": "Active",
+          "currency": "USD"
+        }
+      ]
+    },
+    "R11-REF-03-missing-market": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "direct-market-probe exit=null; inspect local dotnet output without credentials"
+    },
+    "R11-UAT-02-stock": {
+      "status": "BLOCKED_OR_FAIL",
+      "reason": "fetch failed"
+    },
+    "R11-PRICE-05-concurrent": {
+      "status": "PASS",
+      "statuses": [
+        200,
+        200
+      ],
+      "operationId": "fb59772c-3db3-4e54-b67c-a26bf7fd6a82",
+      "revision": "01a220d0540f70008d916afb1e12dd64:63931443804770874",
+      "before": {
+        "offers": 1,
+        "prices": 2,
+        "history": 1,
+        "positions": 0,
+        "priceFacts": 2,
+        "allocations": 0,
+        "offerOutbox": 1,
+        "pricingOutbox": 2,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      },
+      "after": {
+        "offers": 1,
+        "prices": 2,
+        "history": 1,
+        "positions": 0,
+        "priceFacts": 3,
+        "allocations": 0,
+        "offerOutbox": 1,
+        "pricingOutbox": 2,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      },
+      "factsForOperation": 1
+    },
+    "R11-LOCALE-01-seller": {
+      "status": "NOT_RUN",
+      "reason": "seller create fixture unavailable"
+    },
+    "R11-UAT-03-seller": {
+      "status": "NOT_RUN",
+      "reason": "seller create fixture unavailable"
+    },
+    "R11-REG-01-new-currency-checkout": {
+      "status": "NOT_RUN",
+      "reason": "separate isolated checkout proof required; existing paid-order fixture cleanup not assumed safe"
+    }
+  },
+  "fixtures": [
+    {
+      "role": "admin",
+      "seller": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "sellerLabel": "دیجی‌استایل نمونه"
+      },
+      "channel": "Marketplace",
+      "product": {
+        "id": "01a05388-7c93-7000-a102-0160861d58cd",
+        "title": "نایک پیراهن مردانه سری 1"
+      },
+      "variant": {
+        "id": "01a05388-7d6a-7000-a74e-41dd4951d87a",
+        "code": "DEMO-demo-prod-fashion-men-men-shirts-1-6",
+        "label": "رنگ (clothing): مشکی · سایز (clothing): S",
+        "axes": [
+          {
+            "name": "رنگ (clothing)",
+            "value": "مشکی"
+          },
+          {
+            "name": "سایز (clothing)",
+            "value": "S"
+          }
+        ]
+      },
+      "sku": "R11-DIRECT-admin-2501a067-d637-4622-b0c2-cc4b4dffe887",
+      "id": "d85fffcd-215f-d9d0-4811-6c8b778f4cfc",
+      "initial": {
+        "prices": [
+          {
+            "currency": "EUR",
+            "amount": 20.5,
+            "revision": "01a220d044287000a2d8b2d706d53831:63931443649576204"
+          }
+        ],
+        "currency": "IRR"
+      }
+    },
+    {
+      "role": "seller",
+      "seller": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "sellerLabel": "دیجی‌استایل نمونه"
+      },
+      "channel": "Marketplace",
+      "product": {
+        "id": "01a05388-7c93-7000-a102-0160861d58cd",
+        "title": "نایک پیراهن مردانه سری 1"
+      },
+      "variant": {
+        "id": "01a05388-7d6a-7000-8aee-58e46aafc7d5",
+        "code": "DEMO-demo-prod-fashion-men-men-shirts-1-7",
+        "label": "رنگ (clothing): قرمز · سایز (clothing): L",
+        "axes": [
+          {
+            "name": "رنگ (clothing)",
+            "value": "قرمز"
+          },
+          {
+            "name": "سایز (clothing)",
+            "value": "L"
+          }
+        ]
+      },
+      "sku": "R11-DIRECT-seller-2501a067-d637-4622-b0c2-cc4b4dffe887"
+    },
+    {
+      "role": "admin",
+      "seller": {
+        "sellerPartyId": "01a030d1-40db-7000-b90c-a0705133f0eb",
+        "actorUserId": "01a03628-3ff0-7000-a04e-6420c2e76f72",
+        "sellerLabel": "دیجی‌استایل نمونه"
+      },
+      "channel": "Marketplace",
+      "product": {
+        "id": "01a05388-7c93-7000-a102-0160861d58cd",
+        "title": "نایک پیراهن مردانه سری 1"
+      },
+      "variant": {
+        "id": "01a05388-7d6a-7000-b84a-683fe1cb5a53",
+        "code": "DEMO-demo-prod-fashion-men-men-shirts-1-8",
+        "label": "رنگ (clothing): قرمز · سایز (clothing): M",
+        "axes": [
+          {
+            "name": "رنگ (clothing)",
+            "value": "قرمز"
+          },
+          {
+            "name": "سایز (clothing)",
+            "value": "M"
+          }
+        ]
+      },
+      "sku": "R11-DIRECT-probe-2501a067-d637-4622-b0c2-cc4b4dffe887",
+      "id": "3a923556-b5ca-13db-f367-cab531947840"
+    }
+  ],
+  "cleanup": [
+    {
+      "status": "PASS",
+      "sku": "R11-DIRECT-admin-2501a067-d637-4622-b0c2-cc4b4dffe887",
+      "id": "d85fffcd-215f-d9d0-4811-6c8b778f4cfc",
+      "after": {
+        "offers": 0,
+        "prices": 0,
+        "history": 0,
+        "positions": 0,
+        "priceFacts": 0,
+        "allocations": 0,
+        "offerOutbox": 0,
+        "pricingOutbox": 0,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      }
+    },
+    {
+      "status": "PASS",
+      "sku": "R11-DIRECT-seller-2501a067-d637-4622-b0c2-cc4b4dffe887",
+      "offers": 0
+    },
+    {
+      "status": "PASS",
+      "sku": "R11-DIRECT-probe-2501a067-d637-4622-b0c2-cc4b4dffe887",
+      "id": "3a923556-b5ca-13db-f367-cab531947840",
+      "after": {
+        "offers": 0,
+        "prices": 0,
+        "history": 0,
+        "positions": 0,
+        "priceFacts": 0,
+        "allocations": 0,
+        "offerOutbox": 0,
+        "pricingOutbox": 0,
+        "inventoryFacts": 0,
+        "inventoryOutbox": 0
+      }
+    }
+  ],
+  "status": "REVIEW_REQUIRED"
+}
