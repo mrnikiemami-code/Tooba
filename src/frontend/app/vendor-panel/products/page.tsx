@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { useOfferWriteAccess } from "./use-offer-write-access";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, Plus } from "lucide-react";
 import { AppDataGrid, ErrorState, useLegacyAdminGridDirectProps } from "../../../design-system";
@@ -163,6 +164,7 @@ export default function VendorProductsPage() {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [denied, setDenied] = useState(false);
   const [sellerPartyId, setSellerPartyId] = useState("");
+  const createAccess = useOfferWriteAccess(sellerPartyId, "product.create");
   const savedViewStore = useMemo(() => createHostSavedViewStore(SELLER_OFFER_GRID_VIEW_KEY), []);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -218,14 +220,14 @@ export default function VendorProductsPage() {
             {format.integer(total)} {t.offersNoun}
           </p>
         </div>
-        <Link
+        {createAccess === "allowed" ? <Link
           href={localizePath("/vendor-panel/products/new")}
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm"
           data-testid="seller-create-offer"
         >
           <Plus className="h-4 w-4" aria-hidden />
           {t.create}
-        </Link>
+        </Link> : null}
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
