@@ -1,4 +1,5 @@
 ﻿import { parseOfferHistory } from "../../../lib/offer-workspace/history-contract.ts";
+import { parseOfferCurrencies } from "../../../lib/offer-workspace/currency-contract.ts";
 ﻿import type { HostReadSource, SellerOfferDetail } from "../seller-api.ts";
 import { sellerHeaders, readJson, currentActor, isDeniedStatus, readProp, asString, asNullableString, asNumber, asNullableNumber, mapSellerOfferDetail } from "../seller-api.ts";
 
@@ -190,21 +191,7 @@ export async function loadSellerOfferCurrencies(sellerPartyId: string): Promise<
     });
     if (!response.ok) return [];
     const body = await readJson(response);
-    if (!Array.isArray(body)) return [];
-    return body
-      .map((row) => {
-        if (!row || typeof row !== "object") return null;
-        const r = row as Record<string, unknown>;
-        const code = asString(readProp(r, "code", "Code"));
-        if (!code) return null;
-        return {
-          code,
-          englishName: asString(readProp(r, "englishName", "EnglishName"), code),
-          nativeName: asString(readProp(r, "nativeName", "NativeName"), code),
-          decimalPlaces: asNumber(readProp(r, "decimalPlaces", "DecimalPlaces")),
-        };
-      })
-      .filter((row): row is SellerOfferCurrencyOption => row != null);
+    return parseOfferCurrencies(body);
   } catch {
     return [];
   }
