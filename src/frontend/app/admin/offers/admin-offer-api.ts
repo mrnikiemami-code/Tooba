@@ -139,6 +139,7 @@ function mapInventoryLocations(value: unknown): OfferInventoryLocation[] {
       reserved: number(prop(row, "reserved", "Reserved")),
       available: number(prop(row, "available", "Available")),
       revision: prop(row, "revision", "Revision") == null ? null : text(prop(row, "revision", "Revision")),
+      requiresAdjustmentReason: prop(row, "requiresAdjustmentReason", "RequiresAdjustmentReason") !== false,
     }))
     .filter((row) => row.stockItemId.length > 0);
 }
@@ -362,7 +363,7 @@ export async function patchAdminOffer(
 
 export async function writeAdminOfferPrice(
   offerId: string,
-  input: { amount: number; currency?: string; market?: string; operationId?: string },
+  input: { amount: number; currency?: string; market?: string; operationId?: string; retire?: boolean },
   expectedVersion?: string,
 ): Promise<{ ok: true; detail: AdminOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   if (!expectedVersion?.trim() || !input.operationId) return { ok: false, errorCode: "concurrency.conflict" };
@@ -372,7 +373,7 @@ export async function writeAdminOfferPrice(
     const response = await fetch(`/v1/admin/offers/${offerId}/price`, {
       method: "PUT",
       headers: headers({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ amount: input.amount, currency, market: input.market, expectedVersion, operationId: input.operationId }),
+      body: JSON.stringify({ amount: input.retire ? null : input.amount, retire: input.retire || undefined, currency, market: input.market, expectedVersion, operationId: input.operationId }),
     });
     if (response.status === 401 || response.status === 403) return { ok: false, errorCode: "admin.authorization.denied", denied: true };
     if (!response.ok) {
@@ -381,7 +382,7 @@ export async function writeAdminOfferPrice(
     }
     const detail = mapAdminOfferDetail(await response.json());
     const written = detail?.prices?.find((row) => row.currency.toUpperCase() === (currency ?? "").toUpperCase());
-    const amountOk = written ? written.amount === input.amount : (detail?.amount === input.amount && (currency === undefined || detail.currency === currency));
+    const amountOk = input.retire ? written?.status === "Retired" && (detail?.currency !== currency || detail?.amount == null) : written ? written.status !== "Retired" && written.amount === input.amount : (detail?.amount === input.amount && (currency === undefined || detail.currency === currency));
     if (!detail || detail.offerId !== offerId || !amountOk) {
       return { ok: false, errorCode: "admin.price.response_mismatch" };
     }
