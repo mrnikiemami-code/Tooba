@@ -9,6 +9,7 @@ using Tooba.BuildingBlocks.Presentation.Errors;
 using Tooba.BuildingBlocks.Results;
 using Tooba.BuildingBlocks.Security;
 using Tooba.Offer.Application.Offers.Commands.AssignOfferFulfillment;
+using Tooba.Offer.Application.Offers.Queries.GetOfferShippingMethods;
 using Tooba.Offer.Contracts.Errors;
 using Tooba.Offer.Contracts.Dtos;
 
@@ -125,11 +126,17 @@ public sealed class OfferFulfillmentAdminAuthorizer(
 /// <param name="ResponsibilitySupplied">آیا کلید مسئولیت در بدنه آمده است.</param>
 /// <param name="Responsibility">مسئولیت یا تهی.</param>
 /// <param name="ShippingTypeId">شناسهٔ نوع ارسال یا تهی.</param>
+/// <param name="ShippingModeSupplied">آیا کلید حالت انتخاب روش ارسال آمده است.</param>
+/// <param name="ShippingMode">حالت انتخاب روش ارسال یا تهی.</param>
+/// <param name="ShippingMethodIds">شناسه‌های پایدار روش‌های انتخاب‌شده یا تهی.</param>
 public sealed record OfferFulfillmentAssignmentBody(
     bool ResponsibilitySupplied,
     OfferFulfillmentResponsibility? Responsibility,
     Guid? ShippingTypeId,
-    string? ExpectedVersion = null);
+    string? ExpectedVersion = null,
+    bool ShippingModeSupplied = false,
+    OfferShippingSelectionMode? ShippingMode = null,
+    IReadOnlyList<Guid>? ShippingMethodIds = null);
 
 /// <summary>خوانندهٔ بدنهٔ انتساب؛ بدشکلی به کد پایدار canonical نگاشت می‌شود.</summary>
 public static class OfferFulfillmentBodyReader
@@ -166,6 +173,9 @@ public static class OfferFulfillmentBodyReader
             OfferFulfillmentResponsibility? responsibility = null;
             Guid? shippingTypeId = null;
             string? expectedVersion = null;
+            var modeSupplied = false;
+            OfferShippingSelectionMode? mode = null;
+            IReadOnlyList<Guid>? methodIds = null;
 
             foreach (var property in root.EnumerateObject())
             {
@@ -184,10 +194,65 @@ public static class OfferFulfillmentBodyReader
                         ? property.Value.GetString()
                         : throw Malformed();
                 }
+                else if (string.Equals(property.Name, "shippingMode", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(property.Name, "mode", StringComparison.OrdinalIgnoreCase))
+                {
+                    modeSupplied = true;
+                    mode = ReadOptionalShippingMode(property.Value);
+                }
+                else if (string.Equals(property.Name, "shippingMethodIds", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(property.Name, "methodIds", StringComparison.OrdinalIgnoreCase))
+                {
+                    methodIds = ReadGuidArray(property.Value);
+                }
             }
 
-            return new OfferFulfillmentAssignmentBody(supplied, responsibility, shippingTypeId, expectedVersion);
+            return new OfferFulfillmentAssignmentBody(
+                supplied, responsibility, shippingTypeId, expectedVersion, modeSupplied, mode, methodIds);
         }
+    }
+
+    private static OfferShippingSelectionMode? ReadOptionalShippingMode(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (element.ValueKind != JsonValueKind.String
+            || !Enum.TryParse<OfferShippingSelectionMode>(element.GetString(), ignoreCase: true, out var parsed)
+            || !Enum.IsDefined(parsed))
+        {
+            throw Malformed();
+        }
+
+        return parsed;
+    }
+
+    private static IReadOnlyList<Guid>? ReadGuidArray(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (element.ValueKind != JsonValueKind.Array)
+        {
+            throw Malformed();
+        }
+
+        var values = new List<Guid>(element.GetArrayLength());
+        foreach (var item in element.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String || !item.TryGetGuid(out var value))
+            {
+                throw Malformed();
+            }
+
+            values.Add(value);
+        }
+
+        return values;
     }
 
     private static OfferFulfillmentResponsibility? ReadOptionalResponsibility(JsonElement element)
@@ -238,6 +303,86 @@ public static class OfferFulfillmentAdminEndpoints
     {
         ArgumentNullException.ThrowIfNull(admin);
         admin.MapPut("/offers/{offerId:guid}/fulfillment", AssignAsync);
+        admin.MapGet("/offers/{offerId:guid}/shipping-methods", GetMethodsAsync);
+        admin.MapGet("/offers/shipping-methods", ListMethodsAsync);
+    }
+
+    private static async Task<IResult> GetMethodsAsync(
+        Guid offerId,
+        ISender sender,
+        IOfferFulfillmentAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        await authorizer.RequireManageAsync(context, cancellationToken);
+        var result = await sender.Send(
+            new Tooba.Offer.Application.Offers.Queries.GetOfferShippingMethods.GetOfferShippingMethodsQuery(
+                offerId, RequestLanguage(context)),
+            cancellationToken);
+        return api.From(result);
+    }
+
+    private static async Task<IResult> ListMethodsAsync(
+        ISender sender,
+        IOfferFulfillmentAdminAuthorizer authorizer,
+        ApiResponseFactory api,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        await authorizer.RequireManageAsync(context, cancellationToken);
+        var query = context.Request.Query;
+        OfferFulfillmentResponsibility? responsibility = null;
+        var responsibilityText = query["responsibility"].ToString();
+        if (!string.IsNullOrWhiteSpace(responsibilityText))
+        {
+            if (!Enum.TryParse<OfferFulfillmentResponsibility>(responsibilityText, ignoreCase: true, out var parsed)
+                || !Enum.IsDefined(parsed))
+            {
+                throw new SemanticException(new SemanticError(OfferErrorCodes.FulfillmentBodyMalformed));
+            }
+
+            responsibility = parsed;
+        }
+
+        Guid? shippingTypeId = ParseOptionalGuid(query["shippingTypeId"].ToString());
+        Guid? sellerPartyId = ParseOptionalGuid(query["sellerPartyId"].ToString());
+
+        var result = await sender.Send(
+            new Tooba.Offer.Application.Offers.Queries.GetOfferShippingMethods.ListOfferShippingMethodOptionsQuery(
+                responsibility, shippingTypeId, sellerPartyId, RequestLanguage(context)),
+            cancellationToken);
+        return api.From(result);
+    }
+
+    private static string? RequestLanguage(HttpContext context)
+    {
+        var explicitLanguage = context.Request.Query["language"].ToString();
+        if (!string.IsNullOrWhiteSpace(explicitLanguage))
+        {
+            return explicitLanguage.Trim();
+        }
+
+        var header = context.Request.Headers.AcceptLanguage.ToString();
+        if (string.IsNullOrWhiteSpace(header))
+        {
+            return null;
+        }
+
+        var first = header.Split(',', 2, StringSplitOptions.TrimEntries)[0];
+        return first.Length == 0 ? null : first;
+    }
+
+    private static Guid? ParseOptionalGuid(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        return Guid.TryParse(text, out var value) && value != Guid.Empty
+            ? value
+            : throw new SemanticException(new SemanticError(OfferErrorCodes.FulfillmentBodyMalformed));
     }
 
     private static async Task<IResult> AssignAsync(
@@ -259,7 +404,15 @@ public static class OfferFulfillmentAdminEndpoints
         }
 
         var result = await sender.Send(
-            new AssignOfferFulfillmentCommand(offerId, body.Responsibility, body.ShippingTypeId, body.ExpectedVersion ?? string.Empty, actorUserId),
+            new AssignOfferFulfillmentCommand(
+                offerId,
+                body.Responsibility,
+                body.ShippingTypeId,
+                body.ExpectedVersion ?? string.Empty,
+                actorUserId,
+                body.ShippingModeSupplied,
+                body.ShippingMode,
+                body.ShippingMethodIds),
             cancellationToken);
         return api.From(result);
     }

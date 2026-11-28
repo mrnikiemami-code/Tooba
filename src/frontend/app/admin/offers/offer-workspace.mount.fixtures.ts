@@ -40,6 +40,8 @@ export function baseDetail(over: Partial<OfferWorkspaceDetail> = {}): OfferWorks
     capabilities: { canEditPhysicalInventory: true, canEditOfferedQuantity: false, canAssignFulfillment: true, canEditShippingPolicy: true },
     fulfillmentResponsibility: null,
     fulfillmentShippingTypeId: null,
+    fulfillmentShippingMode: "Automatic",
+    fulfillmentShippingMethodIds: [],
     lastUpdatedAt: null,
     variantCode: null,
     variantLabel: null,

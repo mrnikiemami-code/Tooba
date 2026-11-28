@@ -40,12 +40,18 @@ public sealed class OfferDbContext : DbContext
     /// </summary>
     public DbSet<OfferHistoryEntry> OfferHistoryEntries => Set<OfferHistoryEntry>();
 
+    /// <summary>
+    /// Offer-owned stable shipping method link rows (Specific selection only).
+    /// </summary>
+    public DbSet<OfferShippingMethod> OfferShippingMethods => Set<OfferShippingMethod>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new SellerOfferConfiguration());
         modelBuilder.ApplyConfiguration(new OfferHistoryConfiguration());
+        modelBuilder.ApplyConfiguration(new OfferShippingMethodConfiguration());
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }

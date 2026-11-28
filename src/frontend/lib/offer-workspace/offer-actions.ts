@@ -42,6 +42,8 @@ export interface OfferActionsContext {
   shippingChanged: boolean;
   responsibility: OfferFulfillmentResponsibility | null;
   shippingTypeId: string;
+  shippingMode: import("./types.ts").OfferShippingSelectionMode;
+  shippingMethodIds: string[];
   setDraft: (updater: (current: OfferWorkspaceDraft) => OfferWorkspaceDraft) => void;
   setDetail: (detail: OfferWorkspaceDetail) => void;
   setSaving: (value: boolean) => void;
@@ -121,9 +123,15 @@ export function createOfferActions(ctx: OfferActionsContext) {
       }
       // Only merge fields whose server value is unchanged or already matches our intent.
       const merged = reconcileDraft(ctx.detail, result.detail, ctx.draft);
-      const oldShipping = [ctx.detail.fulfillmentResponsibility, ctx.detail.fulfillmentShippingTypeId ?? ""];
-      const nextShipping = [result.detail.fulfillmentResponsibility, result.detail.fulfillmentShippingTypeId ?? ""];
-      const wantedShipping = [ctx.responsibility, ctx.shippingTypeId];
+      const shippingSignature = (detail: OfferWorkspaceDetail) => [
+        detail.fulfillmentResponsibility,
+        detail.fulfillmentShippingTypeId ?? "",
+        detail.fulfillmentShippingMode ?? "Automatic",
+        [...(detail.fulfillmentShippingMethodIds ?? [])].sort(),
+      ];
+      const oldShipping = shippingSignature(ctx.detail);
+      const nextShipping = shippingSignature(result.detail);
+      const wantedShipping = [ctx.responsibility, ctx.shippingTypeId, ctx.shippingMode, [...ctx.shippingMethodIds].sort()];
       const shippingSafe = JSON.stringify(oldShipping) === JSON.stringify(nextShipping) || JSON.stringify(nextShipping) === JSON.stringify(wantedShipping);
       if (!merged || !shippingSafe) {
         ctx.showBlocking("error", ctx.t.saveErrorTitle, ctx.t.concurrentChange);
@@ -284,11 +292,21 @@ export function createOfferActions(ctx: OfferActionsContext) {
         ctx.setShippingSaving(true);
         const revision = current.revisions?.offer ?? current.offerRevision;
         if (!revision) { ctx.setShippingSaving(false); return finishSaveFailure("shipping", { errorCode: "concurrency.conflict" }, savedAny); }
-        const result = await ctx.adapter.saveFulfillment({ responsibility: ctx.responsibility, shippingTypeId: ctx.shippingTypeId || null }, revision);
+        const requestedMethodIds = [...ctx.shippingMethodIds].sort();
+        const result = await ctx.adapter.saveFulfillment({
+          responsibility: ctx.responsibility,
+          shippingTypeId: ctx.shippingTypeId || null,
+          mode: ctx.shippingMode,
+          methodIds: requestedMethodIds,
+        }, revision);
         ctx.setShippingSaving(false);
         if (!result.ok) return finishSaveFailure("shipping", result, savedAny);
         const verification = ctx.adapter.loadDetail ? await ctx.adapter.loadDetail() : null;
-        if (!verification || !verification.ok || verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)) {
+        if (!verification || !verification.ok
+          || verification.detail.fulfillmentResponsibility !== ctx.responsibility
+          || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)
+          || (verification.detail.fulfillmentShippingMode ?? "Automatic") !== ctx.shippingMode
+          || JSON.stringify([...(verification.detail.fulfillmentShippingMethodIds ?? [])].sort()) !== JSON.stringify(requestedMethodIds)) {
           ctx.setShippingError(ctx.t.perTabError);
           return finishSaveFailure("shipping", { errorCode: "seller.shipping.response_mismatch" }, savedAny);
         }
@@ -323,7 +341,11 @@ export function createOfferActions(ctx: OfferActionsContext) {
           || commercialMismatch
           || (ctx.offeredChanged && verification.detail.offeredQuantity !== parseDecimal(ctx.draft.offeredQuantity))
           || (ctx.priceChanged && !priceMatches(verification.detail))
-          || (ctx.shippingChanged && (verification.detail.fulfillmentResponsibility !== ctx.responsibility || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)))
+          || (ctx.shippingChanged && (
+            verification.detail.fulfillmentResponsibility !== ctx.responsibility
+            || (verification.detail.fulfillmentShippingTypeId ?? null) !== (ctx.shippingTypeId || null)
+            || (verification.detail.fulfillmentShippingMode ?? "Automatic") !== ctx.shippingMode
+            || JSON.stringify([...(verification.detail.fulfillmentShippingMethodIds ?? [])].sort()) !== JSON.stringify([...ctx.shippingMethodIds].sort())))
           || (ctx.stockChanged && ctx.detail.inventoryLocations.some((row) => {
             const expected = expectedInventory.get(row.stockItemId);
             if (expected == null) return false;
@@ -415,6 +437,8 @@ export function createOfferActions(ctx: OfferActionsContext) {
         maximumOrderQuantity: parseDecimal(ctx.draft.maximumOrderQuantity),
         responsibility: ctx.adapter.role === "admin" ? ctx.responsibility : null,
         shippingTypeId: ctx.adapter.role === "admin" ? ctx.shippingTypeId || null : null,
+        shippingMode: ctx.adapter.role === "admin" ? ctx.shippingMode : "Automatic" as const,
+        shippingMethodIds: ctx.adapter.role === "admin" ? ctx.shippingMethodIds : [],
       };
       const result = ctx.adapter.createAndSaveDraft
         ? await ctx.adapter.createAndSaveDraft(createInput)

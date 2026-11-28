@@ -63,6 +63,12 @@ public static class OfferValidationCodes
     /// <summary>Fulfillment shipping type id must not be empty when supplied.</summary>
     public const string FulfillmentShippingTypeIdShape = "offer.validation.fulfillment_shipping_type_id_shape";
 
+    /// <summary>Shipping selection mode must be one of the supported values when supplied.</summary>
+    public const string ShippingModeShape = "offer.validation.shipping_mode_shape";
+
+    /// <summary>Each shipping method identity must be a non-empty GUID.</summary>
+    public const string ShippingMethodIdShape = "offer.validation.shipping_method_id_shape";
+
     /// <summary>History page number must be at least one.</summary>
     public const string HistoryPageMin = "offer.validation.history_page_min";
 

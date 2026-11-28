@@ -64,6 +64,8 @@ public sealed class OfferModule : IToobaModule
         // projection; a distinct Offer row read, never a cross-module join.
         services.AddScoped<Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup>(
             sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
+        services.AddScoped<Tooba.Offer.Application.Offers.Ports.IOfferShippingMethodStore>(
+            sp => (OfferStore)sp.GetRequiredService<IOfferStore>());
         services.AddScoped<IOfferSchemaMigrator, OfferSchemaMigrator>();
         services.AddScoped<IOfferDevelopmentSeedGateway, OfferDevelopmentSeedGateway>();
         services.AddModuleSchemaMigrator("Offer", ModuleSchemaMigrationOrder.Offer, (sp, ct) => sp.GetRequiredService<IOfferSchemaMigrator>().MigrateAsync(ct));

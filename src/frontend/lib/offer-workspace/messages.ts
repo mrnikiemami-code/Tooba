@@ -2,6 +2,8 @@
  * Offer workspace copy (fa default, en mirror). Natural product language only; no internal
  * architecture vocabulary is exposed to the operator.
  */
+import { shippingMessagesEn, shippingMessagesFa } from "./messages-shipping.ts";
+
 export interface OfferWorkspaceMessages {
   titleCreate: string;
   titleEdit: string;
@@ -137,6 +139,23 @@ export interface OfferWorkspaceMessages {
   shippingServiceUnavailable: string;
   shippingAdminOnly: string;
   shippingSaved: string;
+  shippingMode: string;
+  shippingModeAuto: string;
+  shippingModeAutoHint: string;
+  shippingModeSpecific: string;
+  shippingModeSpecificHint: string;
+  shippingMethods: string;
+  shippingAddMethod: string;
+  shippingSearchMethod: string;
+  shippingNoMethodResults: string;
+  shippingNoMethods: string;
+  shippingMethodsError: string;
+  shippingNoSelection: string;
+  shippingSelectAtLeastOne: string;
+  shippingRemoveMethod: string;
+  shippingLockedAuto: string;
+  shippingMethodNote: string;
+  shippingMethodStale: string;
   conditionsTitle: string;
   quantityTitle: string;
   returnPolicyDesc: string;
@@ -372,6 +391,7 @@ const fa: OfferWorkspaceMessages = {
   shippingServiceUnavailable: "انتخاب سرویس ارسال برای این آفر در این نسخه ممکن نیست.",
   shippingAdminOnly: "تعیین مسئولیت ارسال فقط توسط مدیر پلتفرم انجام می‌شود.",
   shippingSaved: "مسئولیت ارسال ثبت شد.",
+  ...shippingMessagesFa,
   conditionsTitle: "شرایط فروش",
   quantityTitle: "مقدار و واحد فروش",
   returnPolicyDesc: "سیاست مرجوعی این آفر؛ پیش‌فرض فروشگاه یا مهلت اختصاصی.",
@@ -608,6 +628,7 @@ const en: OfferWorkspaceMessages = {
   shippingServiceUnavailable: "Choosing a shipping service for this offer is not available in this version.",
   shippingAdminOnly: "Only the platform admin assigns fulfilment responsibility.",
   shippingSaved: "Fulfilment responsibility recorded.",
+  ...shippingMessagesEn,
   conditionsTitle: "Sales conditions",
   quantityTitle: "Quantity and unit",
   returnPolicyDesc: "This offer's return policy; store default or a custom window.",

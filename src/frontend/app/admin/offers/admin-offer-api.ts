@@ -225,6 +225,10 @@ export function mapAdminOfferDetail(value: unknown): AdminOfferDetail | null {
       return raw === "Seller" || raw === "Platform" ? raw : null;
     })(),
     fulfillmentShippingTypeId: prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId") == null ? null : text(prop(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId")),
+    fulfillmentShippingMode: text(prop(item, "fulfillmentShippingMode", "FulfillmentShippingMode")) === "Specific" ? "Specific" : "Automatic",
+    fulfillmentShippingMethodIds: Array.isArray(prop(item, "fulfillmentShippingMethodIds", "FulfillmentShippingMethodIds"))
+      ? (prop(item, "fulfillmentShippingMethodIds", "FulfillmentShippingMethodIds") as unknown[]).filter((x): x is string => typeof x === "string")
+      : [],
     lastUpdatedAt: prop(item, "lastUpdatedAt", "LastUpdatedAt") == null ? null : text(prop(item, "lastUpdatedAt", "LastUpdatedAt")),
     offerRevision: prop(item, "offerRevision", "OfferRevision") == null ? null : text(prop(item, "offerRevision", "OfferRevision")),
     priceRevision: prop(item, "priceRevision", "PriceRevision") == null ? null : text(prop(item, "priceRevision", "PriceRevision")),
@@ -443,7 +447,12 @@ export async function writeAdminOfferInventory(
 
 export async function assignAdminOfferFulfillment(
   offerId: string,
-  input: { responsibility: "Seller" | "Platform" | null; shippingTypeId: string | null },
+  input: {
+    responsibility: "Seller" | "Platform" | null;
+    shippingTypeId: string | null;
+    mode?: "Automatic" | "Specific";
+    methodIds?: string[];
+  },
   expectedVersion?: string,
 ): Promise<{ ok: true } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
@@ -454,6 +463,8 @@ export async function assignAdminOfferFulfillment(
       body: JSON.stringify({
         responsibility: input.responsibility,
         shippingTypeId: input.shippingTypeId,
+        ...(input.mode ? { shippingMode: input.mode } : {}),
+        ...(input.methodIds ? { shippingMethodIds: input.methodIds } : {}),
         expectedVersion,
       }),
     });
@@ -491,6 +502,81 @@ export async function loadAdminShippingTypes(): Promise<OfferShippingTypeOption[
       };
     })
     .filter((row) => row.shippingTypeId.length > 0);
+}
+
+export interface AdminShippingMethodOptionRow {
+  methodId: string;
+  serviceCode: string;
+  optionCode: string | null;
+  label: string;
+}
+
+export interface AdminShippingMethodOptionsPage {
+  responsibility: "Seller" | "Platform" | null;
+  shippingTypeId: string | null;
+  mode: "Automatic" | "Specific";
+  selectedMethodIds: string[];
+  methods: AdminShippingMethodOptionRow[];
+}
+
+function mapShippingMethodsPage(value: unknown): AdminShippingMethodOptionsPage | null {
+  const item = record(value);
+  if (!item) return null;
+  const responsibility = text(prop(item, "responsibility", "Responsibility"));
+  const rawMethods = prop(item, "methods", "Methods");
+  const methods = Array.isArray(rawMethods)
+    ? rawMethods.flatMap((raw): AdminShippingMethodOptionRow[] => {
+        const row = record(raw);
+        if (!row) return [];
+        const methodId = text(prop(row, "methodId", "MethodId"));
+        if (!methodId) return [];
+        return [{
+          methodId,
+          serviceCode: text(prop(row, "serviceCode", "ServiceCode")),
+          optionCode: prop(row, "optionCode", "OptionCode") == null ? null : text(prop(row, "optionCode", "OptionCode")),
+          label: text(prop(row, "label", "Label"), text(prop(row, "serviceCode", "ServiceCode"))),
+        }];
+      })
+    : [];
+  const rawSelected = prop(item, "selectedMethodIds", "SelectedMethodIds");
+  return {
+    responsibility: responsibility === "Seller" || responsibility === "Platform" ? responsibility : null,
+    shippingTypeId: prop(item, "shippingTypeId", "ShippingTypeId") == null ? null : text(prop(item, "shippingTypeId", "ShippingTypeId")),
+    mode: text(prop(item, "mode", "Mode")) === "Specific" ? "Specific" : "Automatic",
+    selectedMethodIds: Array.isArray(rawSelected) ? rawSelected.filter((x): x is string => typeof x === "string") : [],
+    methods,
+  };
+}
+
+export async function loadAdminOfferShippingMethods(offerId: string): Promise<AdminShippingMethodOptionsPage | null> {
+  try {
+    await prepareAdminDevActor();
+    const response = await fetch(`/v1/admin/offers/${offerId}/shipping-methods`, { headers: headers() });
+    if (!response.ok) return null;
+    return mapShippingMethodsPage(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function loadAdminShippingMethodOptions(
+  sellerPartyId: string | null,
+  responsibility: "Seller" | "Platform" | null,
+  shippingTypeId: string | null,
+): Promise<AdminShippingMethodOptionsPage | null> {
+  try {
+    await prepareAdminDevActor();
+    const params = new URLSearchParams();
+    if (responsibility) params.set("responsibility", responsibility);
+    if (shippingTypeId) params.set("shippingTypeId", shippingTypeId);
+    if (sellerPartyId) params.set("sellerPartyId", sellerPartyId);
+    params.set("language", typeof document !== "undefined" ? document.documentElement.lang || "fa" : "fa");
+    const response = await fetch(`/v1/admin/offers/shipping-methods?${params.toString()}`, { headers: headers() });
+    if (!response.ok) return null;
+    return mapShippingMethodsPage(await response.json());
+  } catch {
+    return null;
+  }
 }
 
 export interface AdminCatalogProductOption {

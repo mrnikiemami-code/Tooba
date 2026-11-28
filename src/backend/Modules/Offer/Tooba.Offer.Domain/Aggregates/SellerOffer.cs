@@ -88,6 +88,16 @@ public sealed class SellerOffer : IHasDomainEvents
     public Guid? FulfillmentShippingTypeId { get; private set; }
 
     /// <summary>
+    /// Offer-owned shipping method selection mode, or <c>null</c> for a legacy offer that predates the field.
+    /// </summary>
+    /// <remarks>
+    /// A <c>null</c> value is read as <see cref="ValueObjects.ShippingSelectionMode.Automatic"/> by consumers;
+    /// it never fabricates link rows. The mode is meaningful only together with an explicit responsibility and
+    /// shipping type: an unassigned offer stays unassigned.
+    /// </remarks>
+    public ShippingSelectionMode? ShippingSelectionMode { get; private set; }
+
+    /// <summary>
     /// Durable fingerprint of the immutable original creation intent, or <c>null</c> for legacy rows
     /// created before intent identity was recorded.
     /// </summary>
@@ -232,6 +242,35 @@ public sealed class SellerOffer : IHasDomainEvents
 
         FulfillmentResponsibility = responsibility;
         FulfillmentShippingTypeId = shippingTypeId;
+        UpdatedAt = now;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Sets the explicit shipping method selection mode.
+    /// </summary>
+    /// <remarks>
+    /// <b>Specific requires a real assignment.</b> A nonempty specific set can only be expressed when this
+    /// offer has an explicit responsibility and shipping type; the caller validates membership against the
+    /// owning Shipping contract and persists the link rows in the same unit of work. This method only records
+    /// the mode — it never invents links and never widens a restriction to Automatic implicitly.
+    /// </remarks>
+    /// <param name="mode">Explicit mode, or <c>null</c> to fall back to the legacy Automatic reading.</param>
+    /// <param name="now">Current server instant.</param>
+    public Result AssignShippingSelectionMode(ShippingSelectionMode? mode, DateTimeOffset now)
+    {
+        if (Status == OfferStatus.Archived)
+        {
+            return Result.Failure(new SemanticError(OfferErrorCodes.ArchivedCannotAssignFulfillment));
+        }
+
+        if (mode == ValueObjects.ShippingSelectionMode.Specific
+            && (FulfillmentResponsibility is null || FulfillmentShippingTypeId is null))
+        {
+            return Result.Failure(new SemanticError(OfferErrorCodes.ShippingAssignmentRequired));
+        }
+
+        ShippingSelectionMode = mode;
         UpdatedAt = now;
         return Result.Success();
     }

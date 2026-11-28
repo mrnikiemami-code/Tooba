@@ -39,6 +39,10 @@ public sealed class StorefrontShippingService
     private readonly IShippingOneLevelCanonicalMethodReader? _canonicalMethods;
     private readonly Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? _capturedPreview;
     private readonly Shipping.CapturedPreview.StorefrontCapturedSelectionWriter? _capturedSelection;
+    private readonly Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup? _offerAssignments;
+    private readonly Tooba.Shipping.Contracts.Authoring.IOfferShippingMethodLookup? _offerShippingMethods;
+    private readonly Tooba.BuildingBlocks.ICurrentEdition? _edition;
+    private readonly Tooba.BuildingBlocks.ICurrentTenant? _tenant;
 
     /// <summary>
     /// وابستگی اختیاریِ آخر عمداً پیش‌فرض‌دار است: هر ترکیب‌کننده‌ای که آن را تأمین نکند رفتار قدیمی را
@@ -59,7 +63,11 @@ public sealed class StorefrontShippingService
         StorefrontShippingOwnedRateResolver? ownedRates = null,
         IShippingOneLevelCanonicalMethodReader? canonicalMethods = null,
         Shipping.CapturedPreview.StorefrontCapturedPreviewPlanner? capturedPreview = null,
-        Shipping.CapturedPreview.StorefrontCapturedSelectionWriter? capturedSelection = null)
+        Shipping.CapturedPreview.StorefrontCapturedSelectionWriter? capturedSelection = null,
+        Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup? offerAssignments = null,
+        Tooba.Shipping.Contracts.Authoring.IOfferShippingMethodLookup? offerShippingMethods = null,
+        Tooba.BuildingBlocks.ICurrentEdition? edition = null,
+        Tooba.BuildingBlocks.ICurrentTenant? tenant = null)
     {
         _carts = carts;
         _checkouts = checkouts;
@@ -76,6 +84,10 @@ public sealed class StorefrontShippingService
         _canonicalMethods = canonicalMethods;
         _capturedPreview = capturedPreview;
         _capturedSelection = capturedSelection;
+        _offerAssignments = offerAssignments;
+        _offerShippingMethods = offerShippingMethods;
+        _edition = edition;
+        _tenant = tenant;
     }
 
     /// <summary>
@@ -107,6 +119,7 @@ public sealed class StorefrontShippingService
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
         var eligible = await LoadEligibleMethodsAsync(
+            cart,
             cartSubtotal,
             provinceName,
             language,
@@ -427,6 +440,7 @@ public sealed class StorefrontShippingService
 
         var (soleCurrency, cartSubtotal) = StorefrontCartCurrencyCompatibility.ResolveSoleCurrencyAndSubtotal(cart);
         var eligibleMethods = await LoadEligibleMethodsAsync(
+            cart,
             cartSubtotal,
             prepared.Shipping.ProvinceName,
             null,
@@ -886,7 +900,116 @@ public sealed class StorefrontShippingService
                 group.AcceptedEvidence))
             .ToArray();
 
+    /// <summary>
+    /// Canonical method codes allowed by the explicit Offer-specific allowlists of the cart, or <c>null</c>
+    /// when no offer restricts its methods. Multiple restricted offers intersect; an unresolved owner/type
+    /// yields an empty set (fail-closed), never Automatic or the union of another offer's methods.
+    /// </summary>
+    private async Task<HashSet<string>?> ResolveOfferAllowedMethodCodesAsync(
+        CartPage cart,
+        CancellationToken cancellationToken)
+    {
+        if (_offerAssignments is null || _offerShippingMethods is null)
+        {
+            return null;
+        }
+
+        var offerIds = cart.Lines.Select(line => line.OfferId).Distinct().ToArray();
+        if (offerIds.Length == 0)
+        {
+            return null;
+        }
+
+        var assignments = await _offerAssignments.GetAssignmentsAsync(offerIds, cancellationToken);
+        HashSet<string>? intersection = null;
+
+        foreach (var line in cart.Lines)
+        {
+            if (!assignments.TryGetValue(line.OfferId, out var assignment)
+                || assignment is null
+                || assignment.ShippingMode != Tooba.Offer.Contracts.Dtos.OfferShippingSelectionMode.Specific)
+            {
+                continue;
+            }
+
+            if (assignment.ShippingTypeId is not Guid typeId)
+            {
+                return [];
+            }
+
+            var owner = ResolveOfferOwner(assignment.Responsibility, line.SellerPartyId);
+            if (owner is null)
+            {
+                return [];
+            }
+
+            var rows = await _offerShippingMethods.ListAsync(
+                new Tooba.Shipping.Contracts.Authoring.OfferShippingMethodQuery(
+                    owner.Value.Kind, owner.Value.TenantId, owner.Value.SellerPartyId, typeId),
+                cancellationToken);
+            var allowedIds = (assignment.ShippingMethodIds ?? []).ToHashSet();
+            var codes = rows
+                .Where(row => allowedIds.Contains(row.MethodId))
+                .Select(row => row.OptionCode is null
+                    ? row.ServiceCode
+                    : $"{row.ServiceCode}:{row.OptionCode}")
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (intersection is null)
+            {
+                intersection = codes;
+            }
+            else
+            {
+                intersection.IntersectWith(codes);
+            }
+
+            if (intersection.Count == 0)
+            {
+                return intersection;
+            }
+        }
+
+        return intersection;
+    }
+
+    private (Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteOwnerKind Kind, string? TenantId, Guid? SellerPartyId)?
+        ResolveOfferOwner(Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility? responsibility, Guid sellerPartyId)
+    {
+        switch (_edition?.Current?.Edition)
+        {
+            case Tooba.BuildingBlocks.ToobaEdition.SingleStore
+                when responsibility == Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Platform:
+                var current = _tenant?.Current;
+                var tenantId = current?.TenantId.Value;
+                if (current is null
+                    || current.Status != Tooba.BuildingBlocks.TenantStatus.Active
+                    || string.IsNullOrWhiteSpace(tenantId))
+                {
+                    return null;
+                }
+
+                return (Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteOwnerKind.Store, tenantId, null);
+
+            case Tooba.BuildingBlocks.ToobaEdition.Marketplace
+                when responsibility == Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Platform:
+                return _tenant?.Current is not null
+                    ? null
+                    : (Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteOwnerKind.Marketplace, null, null);
+
+            case Tooba.BuildingBlocks.ToobaEdition.Marketplace
+                when responsibility == Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility.Seller:
+                return _tenant?.Current is not null || sellerPartyId == Guid.Empty
+                    ? null
+                    : (Tooba.Shipping.Contracts.Rates.ShippingCapturedQuoteOwnerKind.Seller, null, sellerPartyId);
+
+            default:
+                return null;
+        }
+    }
+
     private async Task<StorefrontEligibleMethods> LoadEligibleMethodsAsync(
+        CartPage cart,
         decimal cartSubtotal,
         string? provinceName,
         string? language,
@@ -936,6 +1059,16 @@ public sealed class StorefrontShippingService
             }
         }
 
+        // TB-296: enforce the Offer-owned specific restriction on the ACTUAL served legacy list too, not only
+        // behind the captured-preview gate. The allowlist is intersected across every restricted offer of the
+        // cart (never unioned); a missing owner/type or an empty intersection hides the method rather than
+        // widening. Automatic offers impose no restriction.
+        var allowedMethodCodes = await ResolveOfferAllowedMethodCodesAsync(cart, cancellationToken);
+        if (allowedMethodCodes is not null)
+        {
+            result.RemoveAll(method => !allowedMethodCodes.Contains(method.MethodCode));
+        }
+
         // TB-SHIPPING-STOREFRONT-STRICT-RATE-CUTOVER-163: دروازهٔ نرخ مالک. خاموش (پیش‌فرض) یعنی
         // صفر فراخوانی و همان فهرست/قیمت/خطای قدیمی. روشن یعنی تنها نرخ authoritative مالک قیمت
         // می‌دهد و هر روش بدون نرخ مالک از فهرست حذف می‌شود (نه صفر، نه رایگان، نه نرخ سرویس/provider).
@@ -946,6 +1079,12 @@ public sealed class StorefrontShippingService
             // و در فهرست قدیمی نیست. فقط وقتی دروازهٔ نرخ مالک روشن است هویت آن خوانده می‌شود و فقط
             // با نرخ واقعی همان دور به مشتری نمایش داده می‌شود؛ دروازهٔ خاموش ⇒ صفر فراخوانی.
             var canonicalOnly = await LoadCanonicalOnlyMethodsAsync(cancellationToken);
+            if (allowedMethodCodes is not null)
+            {
+                canonicalOnly = canonicalOnly
+                    .Where(method => allowedMethodCodes.Contains(method.MethodCode))
+                    .ToArray();
+            }
             var legacyCandidates = result
                 .Select(m => new StorefrontShippingOwnedRateCandidate(m.MethodCode, m.ServiceCode, m.OptionCode))
                 .ToArray();

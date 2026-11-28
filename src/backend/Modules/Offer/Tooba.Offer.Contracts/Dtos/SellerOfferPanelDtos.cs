@@ -86,7 +86,9 @@ public sealed record SellerOfferDetailPage(
     OfferRevisions? Revisions = null,
     OfferCapabilities? Capabilities = null,
     Guid? PriceId = null,
-    IReadOnlyList<OfferPriceView>? Prices = null);
+    IReadOnlyList<OfferPriceView>? Prices = null,
+    OfferShippingSelectionMode FulfillmentShippingMode = OfferShippingSelectionMode.Automatic,
+    IReadOnlyList<Guid>? FulfillmentShippingMethodIds = null);
 
 /// <summary>One current base authored price for this offer and currency.</summary>
 public sealed record OfferPriceView(

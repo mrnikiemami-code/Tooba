@@ -19,4 +19,6 @@ public static class OfferErrorCodes
     public const string FulfillmentTypeWithoutResponsibility = "offer.fulfillment.type_without_responsibility";
     /// <summary>The fulfillment shipping type identity is structurally invalid.</summary>
     public const string FulfillmentTypeInvalid = "offer.fulfillment.type_invalid";
+    /// <summary>A specific shipping method selection requires an explicit responsibility and shipping type.</summary>
+    public const string ShippingAssignmentRequired = "offer.shipping.assignment_required";
 }

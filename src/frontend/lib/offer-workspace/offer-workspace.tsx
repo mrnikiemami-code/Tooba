@@ -35,7 +35,9 @@ import { InventoryTab } from "./inventory-tab";
 import { PricingTab } from "./pricing-tab";
 import { createPriceEntries, createPriceRows, removeCreateCurrency, switchCreateCurrency } from "./create-price-draft";
 import { useOfferCurrencies } from "./use-offer-currencies";
-import { ShippingTab } from "./shipping-tab";
+import { ShippingTabConnected } from "./shipping-tab-connected";
+import { useOfferShippingMethods } from "./use-offer-shipping-methods";
+import { emptyDraft } from "./empty-draft";
 import { DirtyDot, StatusPill } from "./tab-shared";
 import styles from "./offer-workspace.module.css";
 import type {
@@ -46,6 +48,7 @@ import type {
   OfferLocalInventoryDraft,
   OfferProductOption,
   OfferSellerOption,
+  OfferShippingSelectionMode,
   OfferShippingTypeOption,
   OfferTabId,
   OfferVariantOption,
@@ -129,6 +132,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [typesError, setTypesError] = useState<string | null>(null);
   const [responsibility, setResponsibility] = useState<OfferFulfillmentResponsibility | null>(null);
   const [shippingTypeId, setShippingTypeId] = useState("");
+  const [shippingMode, setShippingMode] = useState<OfferShippingSelectionMode>("Automatic");
+  const [shippingMethodIds, setShippingMethodIds] = useState<string[]>([]);
   const [shippingNotice, setShippingNotice] = useState<string | null>(null);
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [shippingSaving, setShippingSaving] = useState(false);
@@ -151,6 +156,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     setDraft(draftFromDetail(next));
     setResponsibility(next.fulfillmentResponsibility);
     setShippingTypeId(next.fulfillmentShippingTypeId ?? "");
+    setShippingMode(next.fulfillmentShippingMode ?? "Automatic");
+    setShippingMethodIds([...(next.fulfillmentShippingMethodIds ?? [])].sort());
     setShippingNotice(null);
     setShippingError(null);
   }, []);
@@ -199,11 +206,14 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const priceChanged = isEdit ? Boolean(dirtyDetail && priceDirty(dirtyDetail, draft)) : Boolean(draft.amount.trim() || Object.keys(createPriceEntries(draft)).length);
   const stockChanged = detail ? inventoryDirty(detail, draft) : false;
   const offeredChanged = detail ? offeredQuantityDirty(detail, draft) : false;
+  const sortedShippingMethodIds = [...shippingMethodIds].sort();
   const shippingChanged = Boolean(
     dirtyDetail &&
       adapter.saveFulfillment &&
       (responsibility !== dirtyDetail.fulfillmentResponsibility ||
-        (shippingTypeId || null) !== (dirtyDetail.fulfillmentShippingTypeId ?? null)),
+        (shippingTypeId || null) !== (dirtyDetail.fulfillmentShippingTypeId ?? null) ||
+        shippingMode !== (dirtyDetail.fulfillmentShippingMode ?? "Automatic") ||
+        JSON.stringify(sortedShippingMethodIds) !== JSON.stringify([...(dirtyDetail.fulfillmentShippingMethodIds ?? [])].sort())),
   );
   const createReady = identityReady;
   const conflictKey = JSON.stringify([selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId, selectedVariant?.catalogVariantId, selectedChannel]);
@@ -217,7 +227,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     || Boolean(selectedVariant)
     || draft.sellerSku.trim().length > 0
     || localInventory.some((row) => row.onHand.trim().length > 0)
-    || (localDetail ? priceChanged || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "")) : false)
+    || (localDetail ? priceChanged || commercialDirty(localDetail, draft) || (adapter.role === "admin" && (responsibility !== localDetail.fulfillmentResponsibility || shippingTypeId !== "" || shippingMode !== "Automatic" || shippingMethodIds.length > 0)) : false)
   );
   const anyDirty = isEdit
     ? commercialChanged || priceChanged || stockChanged || offeredChanged || shippingChanged
@@ -303,6 +313,8 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       if (stored.selectedVariant) setSelectedVariant(stored.selectedVariant);
       if (stored.responsibility !== undefined) setResponsibility(stored.responsibility);
       if (stored.shippingTypeId !== undefined) setShippingTypeId(stored.shippingTypeId);
+      if (stored.shippingMode !== undefined) setShippingMode(stored.shippingMode);
+      if (stored.shippingMethodIds !== undefined) setShippingMethodIds(stored.shippingMethodIds);
       if (stored.selectedChannel !== undefined) setSelectedChannel(stored.selectedChannel);
       if (stored.localInventory !== undefined) setLocalInventory(stored.localInventory);
       if (isEdit && detail && stored.baseVersion !== draftVersion(detail)) {
@@ -321,9 +333,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     if (!anyDirty) { discardDraft(persistKey, adapter); return; }
     writeDraft(persistKey, adapter, {
       draft, selectedSeller, selectedProduct, selectedVariant, responsibility, shippingTypeId,
-      selectedChannel, localInventory, baseVersion: detail ? draftVersion(detail) : undefined,
+      shippingMode, shippingMethodIds, selectedChannel, localInventory, baseVersion: detail ? draftVersion(detail) : undefined,
     });
-  }, [anyDirty, detail, draft, restored, saveNeedsReload, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId, adapter]);
+  }, [anyDirty, detail, draft, restored, saveNeedsReload, localInventory, persistKey, responsibility, selectedChannel, selectedProduct, selectedSeller, selectedVariant, shippingTypeId, shippingMode, shippingMethodIds, adapter]);
   function clearPersistedDraft() { if (!isEdit) { createCommitted.current = true; discardCreateDrafts(adapter); } else discardDraft(persistKey, adapter); }
   useEffect(() => {
     if (!adapter.loadShippingTypes) return;
@@ -335,6 +347,17 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
       })
       .catch(() => setTypesError(t.pickerError));
   }, [adapter, t.pickerError]);
+  const shippingMethods = useOfferShippingMethods({
+    adapter,
+    isEdit,
+    sellerPartyId: isEdit ? detail?.sellerPartyId ?? null : selectedSeller?.sellerPartyId ?? adapter.fixedSeller?.sellerPartyId ?? null,
+    responsibility,
+    shippingTypeId,
+    errorMessage: t.shippingMethodsError,
+  });
+  const shippingMethodOptions = shippingMethods.options;
+  const shippingMethodsLoading = shippingMethods.loading;
+  const shippingMethodsError = shippingMethods.error;
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab && (TAB_ORDER as string[]).includes(tab)) setActiveTab(tab as OfferTabId);
@@ -366,7 +389,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const actions = createOfferActions({
     adapter, t, isEdit, detail, draft, selectedSeller, selectedProduct, selectedVariant, selectedChannel, localInventory, currencies, currencyReferenceUnavailable: currencyReference.status === "loading" || currencyReference.status === "unavailable",
     createReady: createReady && !createCommitted.current, identityReady, activeConflict, saving, saveRef, saveNeedsReload, saveReloading,
-    priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId,
+    priceChanged, commercialChanged, stockChanged, offeredChanged, shippingChanged, responsibility, shippingTypeId, shippingMode, shippingMethodIds,
     setDraft, setDetail, setSaving, setSaveError, setSaveNotice, setSaveNeedsReload, setSaveRetryable,
     setSaveReloading, setTabError, setActiveTab, setActiveConflict, setShippingSaving, setShippingError,
     setShippingNotice, setShowCreateErrors, showBlocking, applyLoadedDetail,
@@ -479,7 +502,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 </div>
               </div>
             </div>
-
             <div className={styles.meta} data-testid="offer-workspace-meta">
               <div className={styles.metaItem}>
                 <span className={styles.metaK}>{t.seller}</span>
@@ -506,7 +528,6 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 </span>
               </div>
             </div>
-
             <div className={styles.price} data-testid="offer-workspace-price">
               <span className={styles.priceCap}>{t.priceSummary}</span>
               {detail?.amount != null ? (
@@ -724,7 +745,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         );
       case "shipping":
         return (
-          <ShippingTab
+          <ShippingTabConnected
             t={t}
             role={adapter.role}
             detail={localDetail}
@@ -732,23 +753,22 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             typesError={typesError}
             responsibility={responsibility}
             shippingTypeId={shippingTypeId}
+            mode={shippingMode}
+            selectedMethodIds={shippingMethodIds}
+            methodOptions={shippingMethodOptions}
+            methodsLoading={shippingMethodsLoading}
+            methodsError={shippingMethodsError}
             saving={shippingSaving}
             notice={shippingNotice}
             error={shippingError}
-            onResponsibilityChange={(value) => {
-              setResponsibility(value);
-              setShippingNotice(null);
-              setShippingError(null);
-              if (value == null) setShippingTypeId("");
-            }}
-            onShippingTypeChange={(value) => {
-              setShippingTypeId(value);
-              setShippingNotice(null);
-              setShippingError(null);
-            }}
+            setResponsibility={setResponsibility}
+            setShippingTypeId={setShippingTypeId}
+            setMode={setShippingMode}
+            setSelectedMethodIds={setShippingMethodIds}
+            setNotice={setShippingNotice}
+            setError={setShippingError}
           />
-        );
-      case "conditions":
+        );      case "conditions":
         return (
           <ConditionsTab
             t={t}
@@ -776,20 +796,4 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         return null;
     }
   }
-}
-
-function emptyDraft(): OfferWorkspaceDraft {
-  return {
-    sellerSku: "",
-    amount: "",
-    currency: "",
-    inventoryOnHand: {},
-    inventoryReason: "",
-    offeredQuantity: "",
-    returnPolicyChoice: "Default",
-    customReturnWindowDays: "",
-    minimumOrderQuantity: "",
-    maximumOrderQuantity: "",
-    status: "Draft",
-  };
 }

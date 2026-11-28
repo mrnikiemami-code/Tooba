@@ -133,7 +133,7 @@ export default function VendorCreateOfferPage() {
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           onCommitted: () => clearOfferIntent(scope),
-        }, input);
+        }, { ...input, shippingMode: input.shippingMode ?? "Automatic", shippingMethodIds: input.shippingMethodIds ?? [] });
       },
       createDraft: async ({ catalogVariantId, sellerSku, channel }) => {
         const scope = offerIntentScope("seller", sellerPartyId, catalogVariantId, channel ?? "");

@@ -1,4 +1,4 @@
-﻿import type { OfferFulfillmentResponsibility, OfferPriceView } from "../../lib/offer-workspace/types.ts";
+﻿import type { OfferFulfillmentResponsibility, OfferPriceView, OfferShippingSelectionMode } from "../../lib/offer-workspace/types.ts";
 import { ownerWriteIntent } from "../../lib/offer-workspace/owner-write-intent.ts";
 import { priceRowFor, priceRevisionFor } from "../../lib/offer-workspace/model.ts";
 
@@ -16,6 +16,8 @@ export interface OfferCreateAndApplyInput {
   maximumOrderQuantity: number | null;
   responsibility: OfferFulfillmentResponsibility | null;
   shippingTypeId: string | null;
+  shippingMode: OfferShippingSelectionMode;
+  shippingMethodIds: string[];
   inventory: Array<{ locationId: string; onHand: number; reason: string }>;
 }
 
@@ -35,6 +37,8 @@ export interface OfferCreateAndApplyDetail {
   maximumOrderQuantity: number | null;
   fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
   fulfillmentShippingTypeId: string | null;
+  fulfillmentShippingMode?: OfferShippingSelectionMode;
+  fulfillmentShippingMethodIds?: string[];
   status: string;
   inventoryLocations: Array<{ locationId: string; stockItemId: string; onHand: number; revision: string | null }>;
   revisions: { offer: string; price: string; offeredQuantity: string } | null;
@@ -61,6 +65,14 @@ function sameNumber(left: number | null, right: number | null): boolean {
   return left == null ? right == null : right != null && Number(left) === Number(right);
 }
 
+function sameShipping(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyInput): boolean {
+  return detail.fulfillmentResponsibility === input.responsibility
+    && (detail.fulfillmentShippingTypeId ?? null) === (input.shippingTypeId ?? null)
+    && (detail.fulfillmentShippingMode ?? "Automatic") === input.shippingMode
+    && JSON.stringify([...(detail.fulfillmentShippingMethodIds ?? [])].sort())
+      === JSON.stringify([...input.shippingMethodIds].sort());
+}
+
 function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyInput, offerId: string): boolean {
   return detail.offerId === offerId
     && detail.sellerPartyId !== ""
@@ -74,8 +86,7 @@ function matches(detail: OfferCreateAndApplyDetail, input: OfferCreateAndApplyIn
     && sameNumber(detail.customReturnWindowDays, input.customReturnWindowDays)
     && sameNumber(detail.minimumOrderQuantity, input.minimumOrderQuantity)
     && sameNumber(detail.maximumOrderQuantity, input.maximumOrderQuantity)
-    && detail.fulfillmentResponsibility === input.responsibility
-    && (detail.fulfillmentShippingTypeId ?? null) === (input.shippingTypeId ?? null)
+    && sameShipping(detail, input)
     && input.inventory.every((position) => detail.inventoryLocations.some((row) => row.locationId === position.locationId && row.onHand === position.onHand));
 }
 
@@ -113,13 +124,12 @@ export async function createAndApplyOffer(
         || !sameNumber(current.minimumOrderQuantity, input.minimumOrderQuantity)
         || !sameNumber(current.maximumOrderQuantity, input.maximumOrderQuantity))
       return partial("offer.create.response_mismatch");
-    if (transport.saveFulfillment && (current.fulfillmentResponsibility !== input.responsibility || (current.fulfillmentShippingTypeId ?? null) !== input.shippingTypeId)) {
+    if (transport.saveFulfillment && !sameShipping(current, input)) {
       if (!current.capabilities?.canAssignFulfillment || !current.revisions?.offer) return partial("denied");
       const result = await transport.saveFulfillment(offerId, input, current.revisions.offer);
       if (!result.ok) return partial(result.errorCode);
       current = await read();
-      if (current.fulfillmentResponsibility !== input.responsibility || (current.fulfillmentShippingTypeId ?? null) !== input.shippingTypeId)
-        return partial("offer.create.response_mismatch");
+      if (!sameShipping(current, input)) return partial("offer.create.response_mismatch");
     }
     const currency = input.currency || current.currency;
     const intendedPrices = input.prices ?? (input.amount == null ? [] : [{ currency, amount: input.amount }]);

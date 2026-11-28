@@ -86,6 +86,8 @@ export interface OfferWorkspaceDetail {
   primaryMediaAssetId: string | null;
   fulfillmentResponsibility: OfferFulfillmentResponsibility | null;
   fulfillmentShippingTypeId: string | null;
+  fulfillmentShippingMode: OfferShippingSelectionMode;
+  fulfillmentShippingMethodIds: string[];
   lastUpdatedAt: string | null;
   offerRevision: string | null;
   priceRevision: string | null;
@@ -137,6 +139,25 @@ export interface OfferShippingTypeOption {
   code: string;
   label: string;
   isActive: boolean;
+}
+
+export type OfferShippingSelectionMode = "Automatic" | "Specific";
+
+/** One published, active method available for this offer's owner and shipping type. */
+export interface OfferShippingMethodOption {
+  methodId: string;
+  serviceCode: string;
+  optionCode: string | null;
+  label: string;
+}
+
+/** Current selection plus the bounded eligible method list for one offer/owner/type. */
+export interface OfferShippingMethodOptionsPage {
+  responsibility: OfferFulfillmentResponsibility | null;
+  shippingTypeId: string | null;
+  mode: OfferShippingSelectionMode;
+  selectedMethodIds: string[];
+  methods: OfferShippingMethodOption[];
 }
 
 export interface OfferInventoryLocationOption {
@@ -245,6 +266,8 @@ export interface OfferWorkspaceAdapter {
     maximumOrderQuantity: number | null;
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;
+    shippingMode?: OfferShippingSelectionMode;
+    shippingMethodIds?: string[];
     inventory: Array<{ locationId: string; onHand: number; reason: string }>;
   }) => Promise<OfferCreateResult & { createdOfferId?: string; partial?: boolean }>;
   saveCommercial: (patch: OfferCommercialPatch, expectedVersion?: string) => Promise<OfferMutationResult>;
@@ -259,8 +282,16 @@ export interface OfferWorkspaceAdapter {
   saveFulfillment?: (input: {
     responsibility: OfferFulfillmentResponsibility | null;
     shippingTypeId: string | null;
+    mode?: OfferShippingSelectionMode;
+    methodIds?: string[];
   }, expectedVersion?: string) => Promise<OfferSimpleResult>;
   loadShippingTypes?: () => Promise<OfferShippingTypeOption[]>;
+  loadShippingMethodOptions?: (input: {
+    offerId?: string;
+    sellerPartyId?: string | null;
+    responsibility: OfferFulfillmentResponsibility | null;
+    shippingTypeId: string | null;
+  }) => Promise<OfferShippingMethodOptionsPage | null>;
   onCreated: (offerId: string) => void;
   onCancel: () => void;
 }

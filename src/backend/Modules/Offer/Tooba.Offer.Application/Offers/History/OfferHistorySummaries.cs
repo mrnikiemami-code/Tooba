@@ -54,6 +54,24 @@ internal static class OfferHistorySummaries
     public static string Fulfillment(FulfillmentResponsibility? responsibility, Guid? shippingTypeId) =>
         $"responsibility={responsibility?.ToString() ?? "null"};type={shippingTypeId?.ToString() ?? "null"}";
 
+    /// <summary>Deterministic shipping summary including the selection mode and sorted stable method set.</summary>
+    public static string Shipping(
+        FulfillmentResponsibility? responsibility,
+        Guid? shippingTypeId,
+        ShippingSelectionMode mode,
+        IReadOnlyList<Guid> methodIds)
+    {
+        var methods = methodIds
+            .Distinct()
+            .OrderBy(id => id)
+            .Select(id => id.ToString())
+            .ToArray();
+        return $"responsibility={responsibility?.ToString() ?? "null"}"
+            + $";type={shippingTypeId?.ToString() ?? "null"}"
+            + $";mode={mode}"
+            + $";methods=[{string.Join(",", methods)}]";
+    }
+
     private static string Decimal(decimal? value) =>
         value?.ToString("0.######", CultureInfo.InvariantCulture) ?? "null";
 }

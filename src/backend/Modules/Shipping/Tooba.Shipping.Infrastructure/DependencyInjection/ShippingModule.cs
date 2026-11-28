@@ -11,6 +11,7 @@ using Tooba.Shipping.Application.Authoring.Ports;
 using Tooba.Shipping.Application.Carriers.Ports;
 using Tooba.Shipping.Application.Rates.Ports;
 using Tooba.Shipping.Application.Scheduling.Ports;
+using Tooba.Shipping.Contracts.Authoring;
 using Tooba.Shipping.Contracts.Packaging;
 using Tooba.Shipping.Contracts.Rates;
 using Tooba.Shipping.Contracts.Scheduling;
@@ -149,6 +150,10 @@ public sealed class ShippingModule : IToobaModule
             provider => provider.GetRequiredService<ShippingSelectedCapturedRevisionDirectory>());
         services.AddScoped<IShippingSelectedCapturedRevisionLookup>(
             provider => provider.GetRequiredService<ShippingSelectedCapturedRevisionDirectory>());
+        // TB-296: read-only Offer shipping binding seam. Lists the published, active methods of one trusted
+        // owner + real shipping type using the same single selection authority and the immutable draft id as
+        // the stable method identity. No publication, no write, no fallback to a draft/current revision.
+        services.AddScoped<IOfferShippingMethodLookup, ShippingOfferMethodLookup>();
         services.AddDbContext<ShippingDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(

@@ -89,6 +89,8 @@ export interface SellerOfferDetail {
   primaryMediaAssetId: string | null;
   fulfillmentResponsibility: "Seller" | "Platform" | null;
   fulfillmentShippingTypeId: string | null;
+  fulfillmentShippingMode: "Automatic" | "Specific";
+  fulfillmentShippingMethodIds: string[];
   lastUpdatedAt: string | null;
   offerRevision: string | null;
   priceRevision: string | null;
@@ -548,6 +550,10 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     fulfillmentShippingTypeId: asNullableString(
       readProp(item, "fulfillmentShippingTypeId", "FulfillmentShippingTypeId"),
     ),
+    fulfillmentShippingMode: asString(readProp(item, "fulfillmentShippingMode", "FulfillmentShippingMode")) === "Specific" ? "Specific" : "Automatic",
+    fulfillmentShippingMethodIds: Array.isArray(readProp(item, "fulfillmentShippingMethodIds", "FulfillmentShippingMethodIds"))
+      ? (readProp(item, "fulfillmentShippingMethodIds", "FulfillmentShippingMethodIds") as unknown[]).filter((x): x is string => typeof x === "string")
+      : [],
     lastUpdatedAt: asNullableString(readProp(item, "lastUpdatedAt", "LastUpdatedAt")),
     offerRevision: asNullableString(readProp(item, "offerRevision", "OfferRevision")),
     priceRevision: asNullableString(readProp(item, "priceRevision", "PriceRevision")),

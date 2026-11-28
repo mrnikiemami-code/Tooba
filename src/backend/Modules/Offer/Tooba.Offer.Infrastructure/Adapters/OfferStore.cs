@@ -13,7 +13,9 @@ namespace Tooba.Offer.Infrastructure.Adapters;
 
 /// <summary>EF-backed persistence adapter for Offer aggregates and Host read queries.</summary>
 public sealed partial class OfferStore(OfferDbContext db)
-    : IOfferStore, IOfferQueryGateway, Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup, Tooba.Offer.Application.Offers.Ports.IOfferListQueryPort
+    : IOfferStore, IOfferQueryGateway, Tooba.Offer.Contracts.Ports.IOfferFulfillmentAssignmentLookup,
+      Tooba.Offer.Application.Offers.Ports.IOfferListQueryPort,
+      Tooba.Offer.Application.Offers.Ports.IOfferShippingMethodStore
 {
     /// <inheritdoc />
     public Task<SellerOffer?> GetByIdAsync(Guid offerId, CancellationToken token) =>
@@ -276,8 +278,19 @@ public sealed partial class OfferStore(OfferDbContext db)
                 x.SellerPartyId,
                 x.FulfillmentResponsibility,
                 x.FulfillmentShippingTypeId,
+                x.ShippingSelectionMode,
             })
             .ToListAsync(cancellationToken);
+
+        var methodRows = await db.OfferShippingMethods.AsNoTracking()
+            .Where(x => ids.Contains(x.OfferId))
+            .Select(x => new { x.OfferId, x.MethodId })
+            .ToListAsync(cancellationToken);
+        var methodsById = methodRows
+            .GroupBy(x => x.OfferId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<Guid>)group.Select(x => x.MethodId).OrderBy(x => x).ToArray());
 
         foreach (var row in rows)
         {
@@ -287,10 +300,46 @@ public sealed partial class OfferStore(OfferDbContext db)
                 row.FulfillmentResponsibility is null
                     ? null
                     : (Tooba.Offer.Contracts.Dtos.OfferFulfillmentResponsibility)(int)row.FulfillmentResponsibility.Value,
-                row.FulfillmentShippingTypeId);
+                row.FulfillmentShippingTypeId,
+                row.ShippingSelectionMode is null
+                    ? Tooba.Offer.Contracts.Dtos.OfferShippingSelectionMode.Automatic
+                    : (Tooba.Offer.Contracts.Dtos.OfferShippingSelectionMode)(int)row.ShippingSelectionMode.Value,
+                methodsById.TryGetValue(row.OfferId, out var methods) ? methods : []);
         }
 
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> ListMethodIdsAsync(Guid offerId, CancellationToken cancellationToken) =>
+        (await db.OfferShippingMethods.AsNoTracking()
+            .Where(x => x.OfferId == offerId)
+            .Select(x => x.MethodId)
+            .ToListAsync(cancellationToken))
+        .OrderBy(x => x)
+        .ToArray();
+
+    /// <inheritdoc />
+    public async Task ReplaceMethodIdsAsync(
+        Guid offerId,
+        IReadOnlyList<Guid> methodIds,
+        CancellationToken cancellationToken)
+    {
+        var target = methodIds.Distinct().OrderBy(x => x).ToHashSet();
+        var existing = await db.OfferShippingMethods
+            .Where(x => x.OfferId == offerId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in existing.Where(row => !target.Contains(row.MethodId)))
+        {
+            db.OfferShippingMethods.Remove(row);
+        }
+
+        var current = existing.Select(row => row.MethodId).ToHashSet();
+        foreach (var methodId in target.Where(methodId => !current.Contains(methodId)))
+        {
+            db.OfferShippingMethods.Add(new OfferShippingMethod { OfferId = offerId, MethodId = methodId });
+        }
     }
 
     private static OfferListItem ToListItem(SellerOffer offer) => new(

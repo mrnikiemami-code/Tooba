@@ -88,6 +88,24 @@
   <data name="offer.price.amount_required" xml:space="preserve">
     <value>Price amount is required.</value>
   </data>
+  <data name="offer.shipping.assignment_required" xml:space="preserve">
+    <value>Select a fulfillment responsibility and shipping type before choosing specific methods.</value>
+  </data>
+  <data name="offer.shipping.methods_required" xml:space="preserve">
+    <value>Select at least one shipping method.</value>
+  </data>
+  <data name="offer.shipping.method_invalid" xml:space="preserve">
+    <value>The shipping method selection is invalid.</value>
+  </data>
+  <data name="offer.shipping.method_duplicate" xml:space="preserve">
+    <value>A shipping method was selected more than once.</value>
+  </data>
+  <data name="offer.shipping.method_unavailable" xml:space="preserve">
+    <value>A selected shipping method is not a published, active method for this owner and type.</value>
+  </data>
+  <data name="offer.shipping.reconciliation_required" xml:space="preserve">
+    <value>Changing the responsibility or shipping type requires explicitly reconciling the selected methods.</value>
+  </data>
 </root>
 
 

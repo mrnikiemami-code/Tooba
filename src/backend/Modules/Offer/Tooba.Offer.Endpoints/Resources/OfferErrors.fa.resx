@@ -88,6 +88,24 @@
   <data name="offer.price.amount_required" xml:space="preserve">
     <value>وارد کردن مبلغ قیمت الزامی است.</value>
   </data>
+  <data name="offer.shipping.assignment_required" xml:space="preserve">
+    <value>پیش از انتخاب روش‌های اختصاصی، مسئولیت ارسال و نوع ارسال را تعیین کنید.</value>
+  </data>
+  <data name="offer.shipping.methods_required" xml:space="preserve">
+    <value>حداقل یک روش ارسال انتخاب کنید.</value>
+  </data>
+  <data name="offer.shipping.method_invalid" xml:space="preserve">
+    <value>انتخاب روش ارسال نامعتبر است.</value>
+  </data>
+  <data name="offer.shipping.method_duplicate" xml:space="preserve">
+    <value>یک روش ارسال بیش از یک بار انتخاب شده است.</value>
+  </data>
+  <data name="offer.shipping.method_unavailable" xml:space="preserve">
+    <value>روش ارسال انتخاب‌شده برای این مالک و نوع، منتشرشده و فعال نیست.</value>
+  </data>
+  <data name="offer.shipping.reconciliation_required" xml:space="preserve">
+    <value>تغییر مسئولیت یا نوع ارسال نیازمند بازتنظیم صریح روش‌های انتخاب‌شده است.</value>
+  </data>
 </root>
 
 

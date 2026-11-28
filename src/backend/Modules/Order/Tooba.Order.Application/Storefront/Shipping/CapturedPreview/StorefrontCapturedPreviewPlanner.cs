@@ -58,6 +58,12 @@ public static class StorefrontCapturedPreviewReasons
 
     /// <summary>رد کردن انتخاب/ثبت تا برش parity و شواهد فشردهٔ سفارش — هرگز «آمادهٔ تسویه» نیست.</summary>
     public const string PreviewNotReady = "storefront.captured_preview.not_ready";
+
+    /// <summary>
+    /// Every offer in the group is restricted to specific methods and their intersection is empty; the group
+    /// is unavailable rather than widened to Automatic or another method.
+    /// </summary>
+    public const string NoEligibleAfterRestriction = "storefront.captured_preview.no_eligible_method";
 }
 
 /// <summary>
@@ -423,6 +429,13 @@ public sealed class StorefrontCapturedPreviewPlanner(
                     continue;
                 }
 
+                // Specific restriction: the immutable draft identity must be in the group intersection.
+                // Automatic groups (no restricted offer) keep every eligible method including future ones.
+                if (group.HasSpecific && !group.AllowedMethodIds.Contains(draftId))
+                {
+                    continue;
+                }
+
                 // هویت Binding برگشتی باید همان درخواست باشد؛ هیچ تطبیق تقریبی/پارس برچسب مجاز نیست.
                 // مالک همان مالک درخواست است (خواندن با هویت دقیق انجام شد)، پس مقایسهٔ سرویس/گزینه با
                 // همان سیاست متعارف trim + OrdinalIgnoreCase کافی و دقیق است.
@@ -461,7 +474,9 @@ public sealed class StorefrontCapturedPreviewPlanner(
 
             if (candidates.Count == 0)
             {
-                unavailable[group.GroupKey] = StorefrontCapturedPreviewReasons.NoSelectedCapture;
+                unavailable[group.GroupKey] = group.HasSpecific
+                    ? StorefrontCapturedPreviewReasons.NoEligibleAfterRestriction
+                    : StorefrontCapturedPreviewReasons.NoSelectedCapture;
             }
 
             plans.Add(new StorefrontCapturedGroupPlan(group.GroupKey, group.CartLineIds, candidates, group.TypeLabel));
@@ -732,6 +747,14 @@ public sealed class StorefrontCapturedPreviewPlanner(
             {
                 group.UnavailableReason = reason;
             }
+
+            // The group is the existing owner/type/seller group. Multiple restricted offers in the same
+            // group intersect their allowlists; an Automatic offer imposes no restriction. The set is never
+            // unioned (which would allow a method forbidden by another offer).
+            if (assignment.ShippingMode == OfferShippingSelectionMode.Specific)
+            {
+                group.Restrict(assignment.ShippingMethodIds);
+            }
         }
 
         groups = order
@@ -787,5 +810,33 @@ public sealed class StorefrontCapturedPreviewPlanner(
         public Guid? OwnerSellerPartyId { get; } = ownerSellerPartyId;
         public List<Guid> CartLineIds { get; } = cartLineIds;
         public string? UnavailableReason { get; set; } = unavailableReason;
+
+        /// <summary>At least one offer in this group is restricted to a specific method set.</summary>
+        public bool HasSpecific { get; set; }
+
+        /// <summary>Whether the intersection was initialized from the first restricted offer.</summary>
+        public bool SpecificInitialized { get; set; }
+
+        /// <summary>Intersection of every restricted offer's stable method ids in this group.</summary>
+        public HashSet<Guid> AllowedMethodIds { get; } = [];
+
+        /// <summary>Intersects another restricted offer's allowed set into this group.</summary>
+        public void Restrict(IReadOnlyList<Guid>? methodIds)
+        {
+            var allowed = new HashSet<Guid>(methodIds ?? []);
+            if (!SpecificInitialized)
+            {
+                SpecificInitialized = true;
+                HasSpecific = true;
+                foreach (var id in allowed)
+                {
+                    AllowedMethodIds.Add(id);
+                }
+
+                return;
+            }
+
+            AllowedMethodIds.IntersectWith(allowed);
+        }
     }
 }

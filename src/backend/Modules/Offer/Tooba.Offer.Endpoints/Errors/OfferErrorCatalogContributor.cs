@@ -62,6 +62,18 @@ public sealed class OfferErrorCatalogContributor : IErrorCatalogContributor
             "Fulfillment responsibility cannot change while existing commitments or allocation are protected."),
         D(OfferErrorCodes.FulfillmentBodyMalformed, ErrorClassification.Business, StatusCodes.Status400BadRequest,
             "Fulfillment assignment body is malformed."),
+        D(OfferErrorCodes.ShippingAssignmentRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Select a fulfillment responsibility and shipping type before choosing specific methods."),
+        D(OfferErrorCodes.ShippingMethodsRequired, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "Select at least one shipping method."),
+        D(OfferErrorCodes.ShippingMethodInvalid, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "The shipping method selection is invalid."),
+        D(OfferErrorCodes.ShippingMethodDuplicate, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "A shipping method was selected more than once."),
+        D(OfferErrorCodes.ShippingMethodUnavailable, ErrorClassification.Business, StatusCodes.Status400BadRequest,
+            "A selected shipping method is not published and active for this owner and type."),
+        D(OfferErrorCodes.ShippingReconciliationRequired, ErrorClassification.Conflict, StatusCodes.Status409Conflict,
+            "Changing the responsibility or shipping type requires explicitly reconciling the selected methods."),
     ];
 
     private static ErrorDescriptor D(

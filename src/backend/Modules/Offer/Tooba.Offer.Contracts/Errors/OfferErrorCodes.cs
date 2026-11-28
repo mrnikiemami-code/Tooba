@@ -80,6 +80,24 @@ public static class OfferErrorCodes
 
     /// <summary>The fulfillment assignment body is empty, malformed or has an unsupported shape.</summary>
     public const string FulfillmentBodyMalformed = "offer.fulfillment.body_malformed";
+
+    /// <summary>A specific shipping method selection requires an explicit responsibility and shipping type.</summary>
+    public const string ShippingAssignmentRequired = "offer.shipping.assignment_required";
+
+    /// <summary>A specific selection must contain at least one method identity.</summary>
+    public const string ShippingMethodsRequired = "offer.shipping.methods_required";
+
+    /// <summary>The submitted method identity is structurally invalid.</summary>
+    public const string ShippingMethodInvalid = "offer.shipping.method_invalid";
+
+    /// <summary>The same method identity was submitted more than once.</summary>
+    public const string ShippingMethodDuplicate = "offer.shipping.method_duplicate";
+
+    /// <summary>A submitted method is not a published active eligible method of this owner and type.</summary>
+    public const string ShippingMethodUnavailable = "offer.shipping.method_unavailable";
+
+    /// <summary>Changing the owner/type requires explicitly reconciling the existing specific selection.</summary>
+    public const string ShippingReconciliationRequired = "offer.shipping.reconciliation_required";
 }
 
 

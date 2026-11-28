@@ -28,6 +28,9 @@ public sealed class SellerOfferConfiguration : IEntityTypeConfiguration<SellerOf
         // unassigned and is never implicitly Seller/Platform. Only the stable id is copied, never a type code.
         entity.Property(x => x.FulfillmentResponsibility).HasConversion<string>().HasMaxLength(16);
         entity.Property(x => x.FulfillmentShippingTypeId);
+        // TB-296: explicit shipping selection mode. Nullable so legacy rows read as Automatic and are never
+        // silently rewritten by the migration.
+        entity.Property(x => x.ShippingSelectionMode).HasConversion<string>().HasMaxLength(16);
         // TB-287: durable immutable creation-intent fingerprint; nullable so legacy rows stay unbackfilled.
         entity.Property(x => x.CreationIntentFingerprint).HasMaxLength(64);
         entity.UseXminAsConcurrencyToken();

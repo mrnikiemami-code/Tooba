@@ -46,6 +46,8 @@ export function buildLocalDetail(
     primaryMediaAssetId: product.primaryMediaAssetId ?? variant.primaryMediaAssetId ?? null,
     fulfillmentResponsibility: null,
     fulfillmentShippingTypeId: null,
+    fulfillmentShippingMode: "Automatic",
+    fulfillmentShippingMethodIds: [],
     lastUpdatedAt: null,
     offerRevision: null,
     priceRevision: null,

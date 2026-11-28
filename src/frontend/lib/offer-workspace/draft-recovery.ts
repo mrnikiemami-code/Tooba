@@ -1,5 +1,5 @@
 import type { OfferWorkspaceDraft } from "./model.ts";
-import type { OfferWorkspaceAdapter, OfferWorkspaceDetail, OfferSellerOption, OfferProductOption, OfferVariantOption, OfferLocalInventoryDraft, OfferFulfillmentResponsibility } from "./types.ts";
+import type { OfferWorkspaceAdapter, OfferWorkspaceDetail, OfferSellerOption, OfferProductOption, OfferVariantOption, OfferLocalInventoryDraft, OfferFulfillmentResponsibility, OfferShippingSelectionMode } from "./types.ts";
 export type PersistedOfferWorkspace = {
   draft?: Partial<OfferWorkspaceDraft>;
   selectedSeller?: OfferSellerOption | null;
@@ -7,6 +7,8 @@ export type PersistedOfferWorkspace = {
   selectedVariant?: OfferVariantOption | null;
   responsibility?: OfferFulfillmentResponsibility | null;
   shippingTypeId?: string;
+  shippingMode?: OfferShippingSelectionMode;
+  shippingMethodIds?: string[];
   selectedChannel?: string;
   localInventory?: OfferLocalInventoryDraft[];
   baseVersion?: string;

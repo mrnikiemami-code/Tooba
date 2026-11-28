@@ -149,7 +149,9 @@ public sealed class OfferReadModelComposer(
                 adminSurface,
                 adminSurface || fulfillment?.Responsibility == OfferFulfillmentResponsibility.Seller),
             price?.PriceId,
-            prices);
+            prices,
+            fulfillment?.ShippingMode ?? OfferShippingSelectionMode.Automatic,
+            fulfillment?.ShippingMethodIds ?? []);
     }
 
     /// <summary>Creates the canonical seller-scoped not-found failure.</summary>

@@ -17,6 +17,7 @@ import {
   loadAdminOfferCurrencies,
   loadAdminInventoryLocations,
   loadAdminOfferDetail,
+  loadAdminShippingMethodOptions,
   loadAdminShippingTypes,
   loadAdminProductVariants,
   patchAdminOffer,
@@ -86,6 +87,8 @@ export default function AdminCreateOfferPage() {
       findActiveOffer: async (sellerPartyId, catalogVariantId, channel) =>
         findAdminActiveOffer(sellerPartyId, catalogVariantId, channel),
       loadShippingTypes: () => loadAdminShippingTypes(),
+      loadShippingMethodOptions: (input) =>
+        loadAdminShippingMethodOptions(input.sellerPartyId ?? null, input.responsibility, input.shippingTypeId),
       loadChannels: () => loadAdminAllowedOfferChannels(),
       loadCurrencies: () => loadAdminOfferCurrencies(),
       loadInventoryLocations: (sellerId, responsibility) => responsibility === "Platform" ? loadAdminInventoryLocations() : sellerId ? loadAdminInventoryLocations(sellerId) : Promise.resolve([]),
@@ -146,11 +149,13 @@ export default function AdminCreateOfferPage() {
             const result = await assignAdminOfferFulfillment(offerId, {
               responsibility: value.responsibility,
               shippingTypeId: value.shippingTypeId,
+              mode: value.shippingMode,
+              methodIds: value.shippingMethodIds,
             }, version);
             return result.ok ? { ok: true } : { ok: false, errorCode: result.errorCode };
           },
           onCommitted: () => clearAdminOfferIntent(scope),
-        }, input);
+        }, { ...input, shippingMode: input.shippingMode ?? "Automatic", shippingMethodIds: input.shippingMethodIds ?? [] });
       },
       createDraft: async ({ sellerPartyId, catalogVariantId, sellerSku, channel }) => {
         if (!sellerPartyId) return { ok: false, errorCode: "offer.seller.required" };
