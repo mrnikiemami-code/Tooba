@@ -66,7 +66,7 @@ export function priceDirty(detail: OfferWorkspaceDetail, draft: OfferWorkspaceDr
 }
 
 /** Current authored row for the selected currency, or the primary detail price as fallback. */
-export function priceRowFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "priceRevision" | "revisions">, currency: string): OfferPriceView | null {
+export function priceRowFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "revisions"> & Partial<Pick<OfferWorkspaceDetail, "priceRevision">>, currency: string): OfferPriceView | null {
   const code = (currency || "").toUpperCase();
   const row = (detail.prices ?? []).find((item) => item.currency.toUpperCase() === code);
   if (row) return row;
@@ -83,7 +83,7 @@ export function priceRowFor(detail: Pick<OfferWorkspaceDetail, "prices" | "curre
 }
 
 /** Revision used as CAS for the selected currency (independent per authored price row). */
-export function priceRevisionFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "priceRevision" | "revisions">, currency: string): string | null {
+export function priceRevisionFor(detail: Pick<OfferWorkspaceDetail, "prices" | "currency" | "amount" | "revisions"> & Partial<Pick<OfferWorkspaceDetail, "priceRevision">>, currency: string): string | null {
   const row = priceRowFor(detail, currency);
   if (row) return row.revision || null;
   if (detail.currency && detail.currency.toUpperCase() === (currency || "").toUpperCase()) {
