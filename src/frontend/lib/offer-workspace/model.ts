@@ -8,6 +8,8 @@ export interface OfferWorkspaceDraft {
   sellerSku: string;
   amount: string;
   currency: string;
+  /** Unsaved additional currency amounts in a new Offer only. */
+  createPrices?: Record<string, string>;
   inventoryOnHand: Record<string, string>;
   inventoryReason: string;
   offeredQuantity: string;
