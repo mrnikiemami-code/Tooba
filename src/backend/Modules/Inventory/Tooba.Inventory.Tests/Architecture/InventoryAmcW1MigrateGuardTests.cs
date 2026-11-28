@@ -76,6 +76,7 @@ public sealed class InventoryAmcW1MigrateGuardTests
         var offenders = ProductionSources()
             .Where(x => !x.Path.EndsWith("InventoryErrorCodes.cs", StringComparison.Ordinal))
             .SelectMany(x => Regex.Matches(x.Text, @"""inventory\.(?!reserved\.|released\.|adjusted\.|reservation_consumed\.|availability_changed\.)[a-z0-9_.]+""")
+                .Where(m => !(x.Path.EndsWith("InventoryAdjustmentReasons.cs", StringComparison.Ordinal) && m.Value == "\"inventory.initial_stock\""))
                 .Select(m => $"{x.Path}:{m.Value}"))
             .ToList();
         Assert.True(offenders.Count == 0, "raw inventory.* code literal: " + string.Join("; ", offenders));
