@@ -53,6 +53,23 @@ public sealed class SystemCurrencyReferenceTests
     }
 
     [Fact]
+    public void Precision_must_match_the_pricing_money_policy()
+    {
+        Assert.Throws<InvalidOperationException>(() => Reference(Entry("USD", 3)));
+        Assert.Throws<InvalidOperationException>(() => Reference(Entry("IRR", 2)));
+    }
+
+    [Fact]
+    public async Task All_inactive_currencies_remain_inactive()
+    {
+        var reference = Reference(Entry("IRR", 0, active: false), Entry("USD", 2, active: false));
+
+        Assert.Empty(await reference.ListActiveAsync(CancellationToken.None));
+        Assert.False(await reference.IsActiveAsync("IRR", CancellationToken.None));
+        Assert.False(await reference.IsActiveAsync("USD", CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Empty_reference_fails_closed_without_inventing_currencies()
     {
         var reference = Reference();
