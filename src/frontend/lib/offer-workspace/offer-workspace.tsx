@@ -90,7 +90,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const [activeConflict, setActiveConflict] = useState<{ offerId: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
-  const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm"; title: string; text: string; offerId?: string } | null>(null);
+  const [messageBox, setMessageBox] = useState<{ kind: "duplicate" | "reload" | "error" | "confirm" | "retire"; title: string; text: string; offerId?: string } | null>(null);
   useEffect(() => {
     if (!saveNotice) return;
     const options = { autoClose: 3000 };
@@ -99,7 +99,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
     else toast.success(saveNotice, options);
     setSaveNotice(null);
   }, [saveNotice, t.draftRestored, t.noChanges, t.partialSaved, t.reloaded]);
-  function showBlocking(kind: "duplicate" | "reload" | "error" | "confirm", title: string, text: string, offerId?: string) {
+  function showBlocking(kind: "duplicate" | "reload" | "error" | "confirm" | "retire", title: string, text: string, offerId?: string) {
     setMessageBox({ kind, title, text, offerId });
   }
   function setSaveError(value: string | null) { if (value) showBlocking("error", t.saveErrorTitle, value); }
@@ -424,6 +424,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
   const currentStatus = detail ? draft.status : "Draft";
   const existingOfferId = messageBox?.offerId ?? activeConflict?.offerId;
   const saveLabel = saveNeedsReload ? t.reloadState : isEdit ? t.save : activeConflict ? t.viewExistingOffer : t.saveDraft;
+  function requestSave() {
+    if (saveNeedsReload) { showBlocking("reload", t.saveErrorTitle, t.concurrentChange); return; }
+    if (isEdit && priceChanged && draft.amount.trim() === "") { showBlocking("retire", t.pricingRemove, t.pricingRemoveConfirm); return; }
+    void (isEdit ? actions.runSave() : actions.runCreate());
+  }
   const saveTestId = isEdit
     ? adapter.role === "admin" ? "admin-offer-save" : "offer-save"
     : adapter.role === "admin" ? "admin-offer-submit" : "seller-create-submit";
@@ -508,7 +513,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
-                onClick={() => { if (saveNeedsReload) showBlocking("reload", t.saveErrorTitle, t.concurrentChange); else void (isEdit ? actions.runSave() : actions.runCreate()); }}
+                onClick={requestSave}
                 disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
                 data-offer-save="true"
                 data-testid={saveTestId}
@@ -568,7 +573,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
         <button
           type="button"
           className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={() => { if (saveNeedsReload) showBlocking("reload", t.saveErrorTitle, t.concurrentChange); else void (isEdit ? actions.runSave() : actions.runCreate()); }}
+          onClick={requestSave}
           disabled={saving || saveReloading || (!isEdit && (createCommitted.current || !createReady))}
           data-offer-save="true"
         >
@@ -596,8 +601,9 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
                 </button>
               ) : null}
               {messageBox.kind === "error" && saveRetryable && !messageBox.offerId && !saveNeedsReload ? (
-                <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} onClick={() => { setMessageBox(null); void (isEdit ? actions.runSave() : actions.runCreate()); }} disabled={saving} data-testid="offer-save-retry">{t.retry}</button>
+                <button type="button" className={`${styles.btn} ${styles.btnQuiet}`} onClick={() => { setMessageBox(null); requestSave(); }} disabled={saving} data-testid="offer-save-retry">{t.retry}</button>
               ) : null}
+              {messageBox.kind === "retire" ? <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); void actions.runSave(); }} data-testid="offer-confirm-price-remove">{t.pricingRemove}</button> : null}
               {messageBox.kind === "confirm" ? (
                 <>
                   <button type="button" className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => { setMessageBox(null); clearPersistedDraft(); adapter.onCancel(); }} data-testid="offer-message-confirm">
@@ -671,10 +677,11 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             currency={draft.currency}
             dirty={priceChanged}
             onAmountChange={(value) => patchDraft({ amount: value })}
+            onRemove={isEdit && priceRowFor(localDetail, draft.currency)?.status !== "Retired" && priceRowFor(localDetail, draft.currency) ? () => patchDraft({ amount: "" }) : undefined}
             onCurrencyChange={(code) => {
               if (priceChanged && draft.currency) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
               const row = priceRowFor(localDetail, code);
-              patchDraft({ currency: code, amount: row ? String(row.amount) : draft.currency ? "" : draft.amount });
+              patchDraft({ currency: code, amount: row && row.status !== "Retired" ? String(row.amount) : draft.currency ? "" : draft.amount });
             }}
           />
         );
