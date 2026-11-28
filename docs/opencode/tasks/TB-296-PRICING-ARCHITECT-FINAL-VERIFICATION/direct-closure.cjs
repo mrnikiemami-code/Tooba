@@ -49,7 +49,6 @@ async function detail(f,role=f.role){
 }
 const priceRow=(d,c)=>d.prices?.find(x=>x.currency===c);
 const t=(p,id)=>p.getByTestId(id);
-const exact=(loc,title)=>loc.filter({hasText:title}).filter({has:undefined});
 const routeIs=(r,pathname,method="GET")=>r.request().method()===method&&new URL(r.url()).pathname===pathname;
 const norm=s=>String(s).replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
 async function stage(id,fn){
@@ -274,16 +273,17 @@ async function main(){
   check((await fetch(HOST+"/health",{signal:AbortSignal.timeout(10000)})).ok,"Host unhealthy");
   check((await fetch(FRONT+"/fa/admin/offers/new",{signal:AbortSignal.timeout(20000)})).ok,"Next unhealthy");
   const dev=requireOK(await call("/v1/admin/dev-context"),"admin context");admin=actorHeaders(uuid(dev.actorUserId));
-  const sellerRows=requireOK(await call("/v1/seller/dev-contexts"),"seller contexts");
+  const sellerPayload=requireOK(await call("/v1/seller/dev-contexts"),"seller contexts");
+  const sellerRows=sellerPayload.actors;
   check(Array.isArray(sellerRows),"seller context shape");
-  const sellers=sellerRows.filter(x=>x.sellerPartyId&&x.actorUserId&&x.sellerLabel).map(x=>({...x,sellerPartyId:uuid(x.sellerPartyId),actorUserId:uuid(x.actorUserId)}));
+  const sellers=sellerRows.filter(x=>x.sellerPartyId&&x.actorUserId&&x.sellerLabel).map(x=>({sellerPartyId:uuid(x.sellerPartyId),actorUserId:uuid(x.actorUserId),sellerLabel:x.sellerLabel}));
   check(sellers.length>=2,"at least two authorized seller contexts required");
   out.identity.legacyFractionalIrr=Number(sql("select count(*) from pricing.prices where currency='IRR' and status='Active' and amount<>trunc(amount)"));
   save();check(PW,"existing Playwright not found");browser=await require(PW).chromium.launch({timeout:20000});
   await stage("R11-PRICE-01-admin",async()=>{a=await discover("admin",sellers);ap=await newPage(a);return verifyCreate(a,ap)});
   await stage("R11-PRICE-01-seller",async()=>{s=await discover("seller",sellers,true);sp=await newPage(s);return verifyCreate(s,sp)});
-  if(a?.id||s?.id){
-   const f=a?.id?a:s;
+  if(out.cases["R11-PRICE-01-admin"]?.status==="PASS"||out.cases["R11-PRICE-01-seller"]?.status==="PASS"){
+   const f=out.cases["R11-PRICE-01-admin"]?.status==="PASS"?a:s;
    await stage("R11-REF-03-missing-market",()=>missingMarket(f));
    await stage("R11-UAT-02-stock",()=>deniedStock(f,sellers.find(x=>x.sellerPartyId!==f.seller.sellerPartyId)));
    await stage("R11-PRICE-05-concurrent",()=>concurrent(f));
