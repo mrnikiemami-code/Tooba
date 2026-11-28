@@ -1,0 +1,18 @@
+﻿.headRow { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.headTexts { display:flex; align-items:center; gap:10px; min-width:0; flex-wrap:wrap; }
+.actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cardTitle { margin: 0; font-size: 15px; font-weight: 700; }
+.cardDesc { margin: 4px 0 0; font-size: 12px; color: var(--ow-muted, #6b7280); }
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+@media (max-width: 640px) { .segmented { grid-template-columns: 1fr; } }
+.seg, .segActive { display: flex; gap: 10px; align-items: flex-start; text-align: start; border: 1px solid var(--ow-border, #d1d5db); background: var(--ow-surface, #fff); border-radius: 10px; padding: 12px; min-height: 56px; cursor: pointer; }
+.segActive { border-color: var(--ow-accent, #2563eb); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ow-accent, #2563eb) 22%, transparent); }
+.seg span, .segActive span { display: grid; gap: 2px; }
+.seg strong, .segActive strong { font-size: 13px; }
+.seg small, .segActive small { font-size: 11px; color: var(--ow-muted, #6b7280); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+.chipCode { font-size: 10px; color: var(--ow-muted, #6b7280); margin-inline-start: 4px; }
+.chipRemove { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; min-height: 22px; margin-inline-start: 4px; border: 0; border-radius: 999px; background: transparent; color: var(--ow-danger, #b91c1c); cursor: pointer; }
+.chipRemove:hover { background: color-mix(in srgb, var(--ow-danger, #b91c1c) 12%, transparent); }
+.methodPicker { position: relative; max-width: 420px; }
+.pickerPlus { position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ow-muted, #6b7280); }
