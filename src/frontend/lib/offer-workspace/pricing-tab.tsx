@@ -112,7 +112,7 @@ export function PricingTab(props: PricingTabProps) {
                     <th>{t.pricingCurrency}</th>
                     <th>{t.pricingAmount}</th>
                     <th>{t.pricingStatus}</th>
-                    <th><span className="sr-only">{t.pricingRemove}</span></th>
+                    <th className={styles.tableAction}><span className="sr-only">{t.pricingRemove}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,7 +128,7 @@ export function PricingTab(props: PricingTabProps) {
                       <td data-label={t.pricingStatus}>
                         <span className={`${styles.pill} ${row.status === "Active" ? styles.pillOk : styles.pillNeutral}`}>{row.status === "Active" ? t.lifecycleActive : row.status === "Draft" ? t.lifecycleDraft : row.status === "Retired" ? t.pricingRetired : "—"}</span>
                       </td>
-                      <td data-label={t.pricingRemove}>{props.onRemove && row.status !== "Retired" ? <IconButton label={`${t.pricingRemove} ${format.currencyName(row.currency) || row.currency}`} className="text-danger bg-transparent" disabled={unavailable} onClick={() => props.onRemove?.(row.currency)} data-testid="offer-price-remove" data-currency={row.currency}><Trash2 size={16} aria-hidden /></IconButton> : null}</td>
+                      <td className={styles.tableAction}>{props.onRemove && row.status !== "Retired" ? <IconButton label={`${t.pricingRemove} ${format.currencyName(row.currency) || row.currency}`} className="text-danger bg-transparent" disabled={unavailable} onClick={() => props.onRemove?.(row.currency)} data-testid="offer-price-remove" data-currency={row.currency}><Trash2 size={16} aria-hidden /></IconButton> : null}</td>
                     </tr>
                   ))}
                 </tbody>
