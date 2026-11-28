@@ -17,3 +17,6 @@ Read this file and OWNER-UAT-NEW-FORM-MULTICURRENCY.md. Git pull --ff-only; exac
 
 ## Recovery method
 Actual worker OpenCode on opencode/iso-agents-002. Read docs/architecture/TOOBA-ARCHITECT-AGENT-ROUTING.md then docs/opencode/ARCHITECT-DELIVERY-METHOD.md v1.5.3 and ARCHITECT-QUALITY-GATE.md. Historical TMAR/Cursor certifications and tmar-current-state.json are untouched. Read latest branch HEAD and current evidence rather than trusting this checkpoint's older candidate. User prefers architect owns repairs, OpenCode runs bounded build/operational tests, no endless task loops.
+
+## Superseding checkpoint — 2026-11-28 final build
+Worker evidence c3f1ed2ce3b49ccfc725260774abb9de3d1637cf, product candidate 00cc92b35a0ad49083f8c1269841f67e63ce5c12. Both rebuilt; 204 absence and one-save three-currency create verified. Read [ARCHITECT-REVIEW.md](ARCHITECT-REVIEW.md) before any next action. DEVELOPMENT_FREEZE / OWNER_UAT_PENDING / FORMAL_ACCEPTANCE_NOT_ISSUED. No further broad OpenCode task. User checks current DEV behavior, especially dirty locale switch; actual gaps, global guard debt and seller fixture limitation recorded. Next Discount discovery may proceed independently; no dependent implementation without acceptance/explicit governed exception. This supersedes prior next-action build instruction above.
