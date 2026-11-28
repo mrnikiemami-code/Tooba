@@ -33,7 +33,7 @@ import { DiscountsTab, HistoryTab, NeedsCreateTab } from "./gated-tabs";
 import { IdentityTab } from "./identity-tab";
 import { InventoryTab } from "./inventory-tab";
 import { PricingTab } from "./pricing-tab";
-import { createPriceEntries, createPriceRows, switchCreateCurrency } from "./create-price-draft";
+import { createPriceEntries, createPriceRows, removeCreateCurrency, switchCreateCurrency } from "./create-price-draft";
 import { useOfferCurrencies } from "./use-offer-currencies";
 import { ShippingTab } from "./shipping-tab";
 import { DirtyDot, StatusPill } from "./tab-shared";
@@ -688,7 +688,7 @@ export function OfferWorkspace({ adapter, renderExtras, localeDefinition, messag
             dirty={priceChanged}
             onAddCurrency={!isEdit && draft.currency && draft.amount.trim() && currencies.some(row => !Object.prototype.hasOwnProperty.call(createPriceEntries(draft), row.code)) ? () => patchDraft(switchCreateCurrency(draft, "")) : undefined}
             onAmountChange={(value) => patchDraft({ amount: value })}
-            onRemove={(!isEdit || (priceRowFor(localDetail, draft.currency)?.status !== "Retired" && priceRowFor(localDetail, draft.currency))) ? () => patchDraft({ amount: "" }) : undefined}
+            onRemove={(code) => { if (!isEdit) { patchDraft(removeCreateCurrency(draft, code)); return; } if (priceChanged && draft.currency !== code) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; } patchDraft({ currency: code, amount: "" }); }}
             onCurrencyChange={(code) => {
               if (!isEdit) { patchDraft(switchCreateCurrency(draft, code)); return; }
               if (priceChanged && draft.currency) { showBlocking("error", t.saveErrorTitle, t.pricingSaveBeforeSwitch); return; }
